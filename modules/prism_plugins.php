@@ -1,9 +1,9 @@
 <?php
-/* PHPInSimMod
-*
-* by the PHPInSimMod Development Team.
-*
-*/
+/**
+ * PHPInSimMod - Plugin Module
+ * @package PRISM
+ * @subpackage Plugin
+ */
 
 abstract class plugins
 {

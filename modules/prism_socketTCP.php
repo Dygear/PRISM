@@ -16,9 +16,11 @@
 */
 
 /**
- * TCP Socket Class
+ * PHPInSimMod - tcpSocket Module
+ * @package PRISM
+ * @subpackage tcpSocket
  * @author morpha (Constantin Köpplinger) <morpha@xigmo.net>
- * @coauthor Dygear (Mark Tomlin) <Dygear@gmail.com>
+ * @author Dygear (Mark Tomlin) <Dygear@gmail.com>
 */
 class socketTCP extends socket
 {

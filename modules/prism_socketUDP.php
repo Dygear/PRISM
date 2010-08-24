@@ -16,10 +16,13 @@
 */
 
 /**
- * UDP Socket Class
+ * PHPInSimMod - udpSocket Module
+ * @package PRISM
+ * @subpackage udpSocket
  * @author morpha (Constantin Köpplinger) <morpha@xigmo.net>
- * @coauthor Dygear (Mark Tomlin) <Dygear@gmail.com>
+ * @author Dygear (Mark Tomlin) <Dygear@gmail.com>
 */
+
 class socketUDP
 {
 	public $socket;

@@ -1,9 +1,9 @@
 <?php
-/** PHPInSimMod
-*
-* by the PHPInSimMod Development Team.
-* 
-*/
+/**
+ * PHPInSimMod - Packet Module
+ * @package PRISM
+ * @subpackage Packet
+ */
 
 /* Start of PRISM PACKET HEADER */
 abstract class struct
@@ -228,7 +228,7 @@ $ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'I
 // =============================
 
 // the second byte of any packet is one of these
-define('ISP_NONE',	0);	//  0					: not used
+#define('ISP_NONE',	0);	//  0					: not used
 define('ISP_ISI',	1);	//  1 - instruction		: insim initialise
 define('ISP_VER',	2);	//  2 - info			: version info
 define('ISP_TINY',	3);	//  3 - both ways		: multi purpose
@@ -278,7 +278,7 @@ define('ISP_BTC',	46);// 46 - info			: sent when a user clicks a button
 define('ISP_BTT',	47);// 47 - info			: sent after typing into a button
 define('ISP_RIP',	48);// 48 - both ways		: replay information packet
 define('ISP_SSH',	49);// 49 - both ways		: screenshot
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NPL => 'ISP_NPL', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
+$ISP = array(/*0 => 'ISP_NONE',*/ ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NPL => 'ISP_NPL', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',	0);	//  0 - keep alive		: see "maintaining the connection"
@@ -637,12 +637,12 @@ class IS_MSL extends struct // MSg Local - message to appear on local computer o
 	const PACK = 'CCxCa128';
 	const UNPACK = 'CSize/CType/CReqI/CSound/a128Msg';
 
-	public $Size = 132;	// 132
-	public $Type = ISP_MSL;// ISP_MSL
-	public $ReqI;		// 0
-	public $Sound;			// sound effect (see Message Sounds below)
+	public $Size = 132;			// 132
+	public $Type = ISP_MSL;		// ISP_MSL
+	public $ReqI = 0;			// 0
+	public $Sound = SND_SILENT;	// sound effect (see Message Sounds below)
 
-	public $Msg;		// last byte must be zero
+	public $Msg;				// last byte must be zero
 };
 
 class IS_MTC extends struct // Msg To Connection - hosts only - send to a connection or a player
@@ -651,8 +651,8 @@ class IS_MTC extends struct // Msg To Connection - hosts only - send to a connec
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
 
 	public $Size = 72;		// 72
-	public $Type = ISP_MTC;// ISP_MTC
-	public $ReqI;		// 0
+	public $Type = ISP_MTC;	// ISP_MTC
+	public $ReqI;			// 0
 	public $Zero;
 
 	public $UCID;			// connection's unique id (0 = host)
@@ -660,7 +660,7 @@ class IS_MTC extends struct // Msg To Connection - hosts only - send to a connec
 	public $Sp2;
 	public $Sp3;
 
-	public $Msg;		// last byte must be zero
+	public $Msg;			// last byte must be zero
 };
 
 // Message Sounds (for Sound byte)

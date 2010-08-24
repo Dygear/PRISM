@@ -1,15 +1,24 @@
+0.1.6
+	+ Added Console Options (Now Logs to File)
+	* Fixed some packet parsing problems when there was a race with only AI as reported by dawesdust_12.
+	* Fixed Shift + R resulting in a crash when there was a race with only AI as reportred by dawesdust_12.
+
+0.1.5
+	= First Public Release
+	= Core is complete, will maintain connection to InSim and parse all packets with debug information shown in the console.
+
 0.1.4
-	- Fixed packet's being sent when there was no socket connection (In TCP).
+	= Fixed packet's being sent when there was no socket connection (In TCP).
 
 0.1.3
-	- Made some inroads into the packet dispatch system.
-	- Fixed the Ping / Pong Keep Connection Alive Stuff.
+	= Made some inroads into the packet dispatch system.
+	= Fixed the Ping / Pong Keep Connection Alive Stuff.
 
 0.1.2
-	- Alpha Dev Release
+	= Alpha Dev Release
 
-0.1.1 (
-	- Alpha Dev Release
+0.1.1
+	= Alpha Dev Release
 
 0.0.1 (6th June 2010, 15:42)
-	- Core Dev Release
+	= Core Dev Release

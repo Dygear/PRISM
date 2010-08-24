@@ -16,10 +16,14 @@
 */
 
 /**
- * Socket Class
+ * PHPInSimMod - Socket Module
+ * @package PRISM
+ * @subpackage Socket
  * @author morpha (Constantin Köpplinger) <morpha@xigmo.net>
- * @coauthor Dygear (Mark Tomlin) <Dygear@gmail.com>
+ * @author Dygear (Mark Tomlin) <Dygear@gmail.com>
 */
+
+
 class socket
 {
 	public function isConnected()
