@@ -1,0 +1,15 @@
+0.1.4
+	- Fixed packet's being sent when there was no socket connection (In TCP).
+
+0.1.3
+	- Made some inroads into the packet dispatch system.
+	- Fixed the Ping / Pong Keep Connection Alive Stuff.
+
+0.1.2
+	- Alpha Dev Release
+
+0.1.1 (
+	- Alpha Dev Release
+
+0.0.1 (6th June 2010, 15:42)
+	- Core Dev Release
