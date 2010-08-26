@@ -1,25 +1,31 @@
-<?
+<?php
+/**
+ * PHPInSimMod - Connections Module
+ * @package PRISM
+ * @subpackage Connections
+*/
 
-define('CONNTYPE_HOST', 0);			// object is connected directly to a host
-define('CONNTYPE_RELAY', 1);		// object is connected to host via relay
+define('CONNTYPE_HOST',			0);			# object is connected directly to a host
+define('CONNTYPE_RELAY',		1);			# object is connected to host via relay
 
 define('KEEPALIVE_TIME',		29);		# the time in seconds of write inactivity, after which we'll send a ping
 define('HOST_TIMEOUT', 			90);		# the time in seconds of silence after we will disconnect from a host
 define('HOST_RECONN_TIMEOUT',	3);
 define('HOST_RECONN_TRIES',		5);
 
-define('CONN_TIMEOUT', 10);					# host long may a connection attempt last
-define('CONN_NOTCONNECTED', 0);
-define('CONN_CONNECTING', 1);
-define('CONN_CONNECTED', 2);
+define('CONN_TIMEOUT',			10);		# host long may a connection attempt last
+define('CONN_NOTCONNECTED',		0);
+define('CONN_CONNECTING',		1);
+define('CONN_CONNECTED',		2);
 
-define('SOCKTYPE_BEST', 0);
-define('SOCKTYPE_TCP', 1);
-define('SOCKTYPE_UDP', 2);
+define('SOCKTYPE_BEST',			0);
+define('SOCKTYPE_TCP',			1);
+define('SOCKTYPE_UDP',			2);
 
-define ('STREAM_READ_BYTES', 1024);
+define('STREAM_READ_BYTES',		1024);
 
-class insimConnection {
+class InsimConnection
+{
 	private $connType;
 	private $socketType;
 	
@@ -40,17 +46,17 @@ class insimConnection {
 	private $streamBufLen	= 0;
 
 	// send queue used in emergency cases (if host appears lagged or overflown with packets)
-	public $sendQ				= array();
-	public $sendQStatus			= 0;
-	public $sendQTime			= 0;
+	public $sendQ			= array();
+	public $sendQStatus		= 0;
+	public $sendQTime		= 0;
 	
 	// connection & host info
-	public $id				= '';			// the section id from the ini file
-	public $ip				= '';			// ip or hostname to connect to
-	public $port			= 0;			// the port
-	public $hostName		= '';			// the hostname. Can be populated by user in case of relay.
-	public $adminPass		= '';			// adminpass for both relay and direct usage
-	public $specPass		= '';			// specpass for relay usage
+	public $id				= '';			# the section id from the ini file
+	public $ip				= '';			# ip or hostname to connect to
+	public $port			= 0;			# the port
+	public $hostName		= '';			# the hostname. Can be populated by user in case of relay.
+	public $adminPass		= '';			# adminpass for both relay and direct usage
+	public $specPass		= '';			# specpass for relay usage
 	public $pps				= 3;		
 	
 	public function __construct($connType = CONNTYPE_HOST, $socketType = SOCKTYPE_TCP)
@@ -71,22 +77,24 @@ class insimConnection {
 
 		// Figure out the proper IP address. We do this every time we connect in case of dynamic IP addresses.
 		$ip = $this->getIP();
-		if (!$ip) {
-	    	console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port.' : '.$this->sockErrStr);
-		    $this->socket		= NULL;
+		if (!$ip)
+		{
+			console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port.' : '.$this->sockErrStr);
+			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
 			return FALSE;
 		}
 		
 		// Here we create the socket and initiate the connection. This is done asynchronously.
-	    $this->socket = @stream_socket_client('tcp://'.$ip.':'.$this->port, $this->sockErrNo, $this->sockErrStr, CONN_TIMEOUT, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
-		if ($this->sockErrNo) {
-	    	console ('Error opening socket for '.$ip.':'.$this->port.' : '.$this->sockErrStr);
-		    $this->socket		= NULL;
+		$this->socket = @stream_socket_client('tcp://'.$ip.':'.$this->port, $this->sockErrNo, $this->sockErrStr, CONN_TIMEOUT, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
+		if ($this->sockErrNo)
+		{
+			console ('Error opening socket for '.$ip.':'.$this->port.' : '.$this->sockErrStr);
+			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
-		    return FALSE;
+			return FALSE;
 		}
 		
 		// Set socket status to 'SYN sent'
@@ -94,7 +102,7 @@ class insimConnection {
 		// We set the connection time here, so we can track how long we're trying to connect
 		$this->connTime = time();
 		
-		stream_set_blocking ($this->socket, 0);
+		stream_set_blocking($this->socket, 0);
 		
 		console('Connecting to '.$this->ip.':'.$this->port.' ... #'.($this->connTries + 1));
 		
@@ -143,9 +151,9 @@ class insimConnection {
 		if (!$result)
 		{
 			// AHA! the connection failed
-	    	console ('Could not connect to '.$this->ip.':'.$this->port);
-	    	$this->connStatus	= CONN_CONNECTING;
-	    	$this->close();
+			console ('Could not connect to '.$this->ip.':'.$this->port);
+			$this->connStatus	= CONN_CONNECTING;
+			$this->close();
 		}
 		else
 		{
@@ -175,7 +183,7 @@ class insimConnection {
 		}
 		
 		// (re)set some variables.
-	    $this->socket			= NULL;
+		$this->socket			= NULL;
 		$this->connStatus		= CONN_NOTCONNECTED;
 		$this->sendQ			= array();
 		$this->sendQStatus		= 0;
@@ -216,18 +224,18 @@ class insimConnection {
 		{
 			// This packet came from the sendQ. We just try to send this and don't bother too much about error checking.
 			// That's done from the sendQ flushing code.
-		    $bytes = @fwrite ($this->socket, $data);
+			$bytes = @fwrite ($this->socket, $data);
 		}
 		else
 		{
 			if ($this->sendQStatus == 0)
 			{
 				// It's Ok to send packet
-			    $bytes = @fwrite ($this->socket, $data);
+				$bytes = @fwrite ($this->socket, $data);
 				$this->lastWriteTime = time();
 		
-			    if (!$bytes || $bytes != strlen($data)) {
-			    	console('Writing '.strlen($data).' bytes to socket '.$this->ip.':'.$this->port.' failed (wrote '.$bytes.' bytes). Error : '.(($this->connStatus == CONN_CONNECTING) ? 'Socket connection not completed.' : $this->sockErrStr).' (connStatus : '.$this->connStatus.')');
+				if (!$bytes || $bytes != strlen($data)) {
+					console('Writing '.strlen($data).' bytes to socket '.$this->ip.':'.$this->port.' failed (wrote '.$bytes.' bytes). Error : '.(($this->connStatus == CONN_CONNECTING) ? 'Socket connection not completed.' : $this->sockErrStr).' (connStatus : '.$this->connStatus.')');
 					$this->addPacketToSendQ (substr($data, $bytes));
 				}
 			}
@@ -244,7 +252,7 @@ class insimConnection {
 	public function addPacketToSendQ($data)
 	{
 		if ($this->sendQStatus == 0)
-			$this->sendQTime	= time ();
+			$this->sendQTime	= time();
 		$this->sendQ[]			= $data;
 		$this->sendQStatus++;
 	}
@@ -252,7 +260,7 @@ class insimConnection {
 	public function read()
 	{
 		$buffer = fread($this->socket, STREAM_READ_BYTES);
-		$this->lastReadTime = time ();
+		$this->lastReadTime = time();
 		
 		return $buffer;
 	}
@@ -266,9 +274,9 @@ class insimConnection {
 	public function findNextPacket()
 	{
 		if ($this->streamBufLen == 0)
-		    return FALSE;
+			return FALSE;
 		
-	    $sizebyte = ord($this->streamBuf[0]);
+		$sizebyte = ord($this->streamBuf[0]);
 		if ($sizebyte == 0)
 		{
 			return FALSE;
@@ -276,48 +284,41 @@ class insimConnection {
 		else if ($this->streamBufLen < $sizebyte)
 		{
 			console('Split packet ...');
-		    return FALSE;
+			return FALSE;
 		}
 		
 		// We should have a whole packet in the buffer now
 		$packet					= substr($this->streamBuf, 0, $sizebyte);
 //		$packetType				= strtolower(ISPackets::$types[ord ($packet[1])]);
 		$packetType				= ord($packet[1]);
-//		$packet_func			= "proc_".strtolower ($packet_type);
+//		$packet_func			= "proc_".strtolower($packet_type);
 
 		// Cleanup streamBuffer
-		$this->streamBuf		= substr ($this->streamBuf, $sizebyte);
-		$this->streamBufLen		= strlen ($this->streamBuf);
+		$this->streamBuf		= substr($this->streamBuf, $sizebyte);
+		$this->streamBufLen		= strlen($this->streamBuf);
 		
 		console('Bytes left in buffer : '.$this->streamBufLen);
 		
 		return $packet;
 	}
 	
-	private function getIP() {
-		if ($this->verifyIP($this->ip)) {
+	private function getIP()
+	{
+		if ($this->verifyIP($this->ip))
 			return $this->ip;
-		} else {
+		else
+		{
 			$tmp_ip = @gethostbyname($this->ip);
-			if ($this->verifyIP($tmp_ip)) {
+			if ($this->verifyIP($tmp_ip))
 				return $tmp_ip;
-			}
 		}
 		
 		return FALSE;
 	}
 	
-	private function verifyIP($ip) {
-		$exp = explode('.', $ip);
-		if (!is_array($exp) || count($exp) != 4)
-			return FALSE;
-		
-		foreach ($exp as $v) {
-			$val = (int) $v;
-			if ($val != $v || $val > 255)
-				return FALSE;
-		}
-		return TRUE;
+	private function verifyIP($ip)
+	{
+		return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
 	}
 }
 

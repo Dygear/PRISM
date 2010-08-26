@@ -3,7 +3,7 @@
  * PHPInSimMod - Plugin Module
  * @package PRISM
  * @subpackage Plugin
- */
+*/
 
 abstract class plugins
 {

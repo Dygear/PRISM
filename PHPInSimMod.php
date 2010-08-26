@@ -13,7 +13,7 @@ define('PRISM_DEBUG_MODULES',	4);			# Shows Debug Messages From the all Modules
 define('PRISM_DEBUG_PLUGINS',	8);			# Shows Debug Messages From the Plugins
 define('PRISM_DEBUG_ALL',		15);		# Shows Debug Messages From All
 
-define('MAINT_INTERVAL', 		2);			# The frequency in seconds to do connection maintenance checks.
+define('MAINTENANCE_INTERVAL', 	2);			# The frequency in seconds to do connection maintenance checks.
 
 // Admin
 define('ADMIN_ALL',				0);			# Everyone
@@ -46,7 +46,7 @@ define('PLUGIN_CONTINUE',		0);			# Plugin passes through operation. Whatever cal
 define('PLUGIN_HANDLED',		1);			# Plugin halts continued operation. Plugins following in the plugins.ini won't be called.
 
 error_reporting(E_ALL);
-ini_set ('display_errors', 'true');
+ini_set('display_errors',		'true');
 
 define('ROOTPATH', dirname(realpath(__FILE__)));
 
@@ -59,9 +59,10 @@ $PRISM = new PHPInSimMod($argc, $argv);
 /**
  * PHPInSimMod
  * @package PRISM
- * @coauthor Dygear (Mark Tomlin) <Dygear@gmail.com>
- * @coauthor ripnet (Tom Young) <ripnet@gmail.com>
- * @coauthor morpha (Constantin Köpplinger) <morpha@xigmo.net>
+ * @author Dygear (Mark Tomlin) <Dygear@gmail.com>
+ * @author ripnet (Tom Young) <ripnet@gmail.com>
+ * @author morpha (Constantin Köpplinger) <morpha@xigmo.net>
+ * @author Victor (Victor van Vlaardingen) <vic@lfs.net>
 */
 class PHPInSimMod
 {
@@ -76,16 +77,16 @@ class PHPInSimMod
 	private $connvars		= array();
 	private $pluginvars		= array();
 
-	private $hosts			= array();			// Stores references to the hosts we're connected to
-	private $nextMaint		= 0;
+	private $hosts			= array();			# Stores references to the hosts we're connected to
+	private $nextMaintenance= 0;
 
 	// InSim Changed Arrays
-//	private $clients = array();
-//	private $players = array();
+	private $clients		= array();
+	private $players		= array();
 
 	# Time outs
-	private $sleep = 0;
-	private $uSleep = 1000;
+	private $sleep			= NULL;
+	private $uSleep			= NULL;
 
 	// Main while loop will run as long as this is set to TRUE.
 	private $isRunning = TRUE;
@@ -205,7 +206,7 @@ class PHPInSimMod
 			unset($timeZoneGuess);
 		}
 
-		$this->nextMaint = time () + MAINT_INTERVAL;
+		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 		$this->main();
 	}
 
@@ -224,7 +225,7 @@ class PHPInSimMod
 				if ($hostName == '')
 					continue;
 				
-				$ic				= new insimConnection(CONNTYPE_RELAY, SOCKTYPE_TCP);
+				$ic				= new InsimConnection(CONNTYPE_RELAY, SOCKTYPE_TCP);
 				$ic->id			= $hostID;
 				$ic->ip			= $this->cvars['relayIP'];
 				$ic->port		= $this->cvars['relayPort'];
@@ -263,7 +264,7 @@ class PHPInSimMod
 				}
 				
 				// Create new ic object
-				$ic				= new insimConnection(CONNTYPE_HOST, $socketType);
+				$ic				= new InsimConnection(CONNTYPE_HOST, $socketType);
 				$ic->id			= $hostID;
 				$ic->ip			= $ip;
 				$ic->port		= $port;
@@ -279,8 +280,6 @@ class PHPInSimMod
 	{
 		while ($this->isRunning === TRUE)
 		{
-			$this->getSocketTimeOut();
-	
 			// Setup our listen arrays
 			$sockReads = array(STDIN);
 			$sockWrites = array();
@@ -313,7 +312,8 @@ class PHPInSimMod
 			}
 			unset($host);
 	
-			// select
+			$this->getSocketTimeOut();
+
 			$numReady = stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
 			
 			// Keep looping until you've handled all activities on the sockets.
@@ -324,22 +324,22 @@ class PHPInSimMod
 				{
 					// Finalise a connection?
 					if ($host->connStatus == CONN_CONNECTING && 
-				    	in_array($host->socket, $sockWrites))
-				    {
-		       			$numReady--;
-		       			
-		       			// The socket has become available for writing (or not)
-		       			$host->connectFinish();
-			    	}
+						in_array($host->socket, $sockWrites))
+					{
+						$numReady--;
+						
+						// The socket has become available for writing (or not)
+						$host->connectFinish();
+					}
 
 					// Recover a lagged host?
 					if ($host->connStatus == CONN_CONNECTED && 
 						$host->sendQStatus > 0 &&
-				    	in_array($host->socket, $sockWrites))
-				    {
-		       			$numReady--;
-		       			
-		       			// Flush the sendQ and handle possible overload again
+						in_array($host->socket, $sockWrites))
+					{
+						$numReady--;
+						
+						// Flush the sendQ and handle possible overload again
 						for ($a=0; $a<$host->sendQStatus; $a++)
 						{
 							$bytes = $host->write($host->sendQ[$a], TRUE);
@@ -370,39 +370,39 @@ class PHPInSimMod
 								// sending queued data completely failed. We stop trying and will see if we can send more later on.
 								break;
 							}
-		       			}
-			    	}
+						}
+					}
 
 					// Did the host send us something?
-				    if (in_array($host->socket, $sockReads))
-				    {
-		       			$numReady--;
-		       			$data = $packet = '';
-		       			
-		       			// Incoming traffic from a host
-		       			$data = $host->read();
-		       			
-		       			if (!$data)
-		       			{
-		       				$host->close();
-		       			}
-		       			else
-		       			{
-			       			$host->appendToBuffer($data);
-			       			while (true) {
-			       				//console('findloop');
-			       				$packet = $host->findNextPacket();
-			       				if (!$packet)
-			       					break;
-			       				
-			       				// Handle the packet here
-			       				$this->handlePacket($packet, $hostID);
-			       			}
-			       		}
-		       			
-		   	    		if ($numReady == 0)
-		       			    break 2;
-		       		}
+					if (in_array($host->socket, $sockReads))
+					{
+						$numReady--;
+						$data = $packet = '';
+						
+						// Incoming traffic from a host
+						$data = $host->read();
+						
+						if (!$data)
+						{
+							$host->close();
+						}
+						else
+						{
+							$host->appendToBuffer($data);
+							while (true) {
+								//console('findloop');
+								$packet = $host->findNextPacket();
+								if (!$packet)
+									break;
+								
+								// Handle the packet here
+								$this->handlePacket($packet, $hostID);
+							}
+						}
+						
+						if ($numReady == 0)
+							break 2;
+					}
 				}
 				unset($host);
 				
@@ -415,35 +415,35 @@ class PHPInSimMod
 					$exp = explode (' ', $kbInput);
 	
 					// Process the command (the first char or word of the line)
-    				switch ($exp[0])
-    				{
-    					case 'h':
-    						foreach ($this->hosts as $hostID => $host)
-    						{
-    							console($hostID.' => '.$host->ip.':'.$host->port.' -> '.(($host->connStatus == CONN_CONNECTED) ? '' : 'not').' connected');
-    						}
-    						break;
-    					
-    					case 'x':
-    						$this->isRunning = FALSE;
-    						break;
-    					
-    					default :
-    						console('Available keys :');
-    						console('h - show host info');
-    						console('x - exit PHPInSimMod');
-    				}
+					switch ($exp[0])
+					{
+						case 'h':
+							foreach ($this->hosts as $hostID => $host)
+							{
+								console($hostID.' => '.$host->ip.':'.$host->port.' -> '.(($host->connStatus == CONN_CONNECTED) ? '' : 'not').' connected');
+							}
+							break;
+						
+						case 'x':
+							$this->isRunning = FALSE;
+							break;
+						
+						default :
+							console('Available keys :');
+							console('h - show host info');
+							console('x - exit PHPInSimMod');
+					}
 				}
 
 				if ($numReady == 0)
-				    break;
+					break;
 			
 			} // End while(numReady)
 			
 			// No need to do the maintenance check every turn
-			if ($this->nextMaint > time ())
+			if ($this->nextMaintenance > time ())
 				continue;
-			$this->nextMaint = time () + MAINT_INTERVAL;
+			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 	
 			// Connection maintenance
 			foreach($this->hosts as $hostID => $host)
@@ -455,7 +455,7 @@ class PHPInSimMod
 					// Check to see if a connection attempt is going to time out.
 					if ($host->connTime < time() - CONN_TIMEOUT)
 					{
-					    console('Connection attempt to '.$host->ip.':'.$host->port.' timed out');
+						console('Connection attempt to '.$host->ip.':'.$host->port.' timed out');
 						$host->close();
 					}
 					continue;
@@ -464,8 +464,8 @@ class PHPInSimMod
 				// Does the connection appear to be dead? (LFS host not sending anything for more than HOST_TIMEOUT seconds
 				if ($host->lastReadTime < time () - HOST_TIMEOUT)
 				{
-				    console('Host '.$host->ip.':'.$host->port.' timed out');
-				    $host->close();
+					console('Host '.$host->ip.':'.$host->port.' timed out');
+					$host->close();
 				}
 				
 				// Do we need to keep the connection alive with a ping?
