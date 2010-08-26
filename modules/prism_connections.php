@@ -55,8 +55,8 @@ class insimConnection {
 	
 	public function __construct($connType = CONNTYPE_HOST, $socketType = SOCKTYPE_TCP)
 	{
-		$this->connType		= $connType;
-		$this->socketType	= $socketType;
+		$this->connType		= ($connType == CONNTYPE_RELAY) ? $connType : CONNTYPE_HOST;
+		$this->socketType	= ($socketType == SOCKTYPE_UDP) ? $socketType : SOCKTYPE_TCP;
 	}
 	
 	public function __destruct()
@@ -75,6 +75,7 @@ class insimConnection {
 	    	console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port.' : '.$this->sockErrStr);
 		    $this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
+			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
 			return FALSE;
 		}
 		
@@ -84,6 +85,7 @@ class insimConnection {
 	    	console ('Error opening socket for '.$ip.':'.$this->port.' : '.$this->sockErrStr);
 		    $this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
+			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
 		    return FALSE;
 		}
 		

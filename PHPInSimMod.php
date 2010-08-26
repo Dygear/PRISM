@@ -13,7 +13,7 @@ define('PRISM_DEBUG_MODULES',	4);			# Shows Debug Messages From the all Modules
 define('PRISM_DEBUG_PLUGINS',	8);			# Shows Debug Messages From the Plugins
 define('PRISM_DEBUG_ALL',		15);		# Shows Debug Messages From All
 
-define('MAINT_INERVAL', 		3);			# The frequency in seconds to do connection maintenance checks. 3 should be totally fine.
+define('MAINT_INTERVAL', 		2);			# The frequency in seconds to do connection maintenance checks.
 
 // Admin
 define('ADMIN_ALL',				0);			# Everyone
@@ -97,6 +97,10 @@ class PHPInSimMod
 		{
 			if (!isset($this->cvars['debugMode']))
 				$this->cvars['debugMode'] = '';
+				
+			// ADD MORE MISSING CONFIG VALUS HERE AS EMERGENCY DEFAULTS?
+			
+			
 			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
 				console('Loaded cvars.ini');
 		}
@@ -108,6 +112,14 @@ class PHPInSimMod
 		// Load connections.ini
 		if ($this->loadIniFile($this->connvars, 'connections.ini'))
 		{
+			foreach ($this->connvars as $hostID => $v)
+			{
+				if (!is_array($v))
+				{
+					console('Section error in connections.ini file!');
+					return FALSE;
+				}
+			}
 			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
 				console('Loaded connections.ini');
 		}
@@ -119,6 +131,14 @@ class PHPInSimMod
 		// Load plugins.ini
 		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
 		{
+			foreach ($this->pluginvars as $plguinID => $v)
+			{
+				if (!is_array($v))
+				{
+					console('Section error in plugins.ini file!');
+					return FALSE;
+				}
+			}
 			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
 				console('Loaded plugins.ini');
 		}
@@ -149,7 +169,7 @@ class PHPInSimMod
 		$target = $iniVARs;
 
 		# At this point we're always successful
-		return true;
+		return TRUE;
 	}
 
 	// Pseudo Magic Functions
@@ -185,7 +205,7 @@ class PHPInSimMod
 			unset($timeZoneGuess);
 		}
 
-		$this->nextMaint = time () + MAINT_INERVAL;
+		$this->nextMaint = time () + MAINT_INTERVAL;
 		$this->main();
 	}
 
@@ -193,12 +213,14 @@ class PHPInSimMod
 	{
 		foreach ($this->connvars as $hostID => $v)
 		{
-			if (isset($v['useRelay']))
+			if (isset($v['useRelay']) && $v['useRelay'] > 0)
 			{
 				// This is a Relay connection
 				$hostName		= isset($v['hostname']) ? substr($v['hostname'], 0, 31) : '';
 				$adminPass		= isset($v['adminPass']) ? substr($v['adminPass'], 0, 15) : '';
 				$specPass		= isset($v['specPass']) ? substr($v['specPass'], 0, 15) : '';
+
+				// Some value checking - guess we should output some user notices here too if things go wrong.
 				if ($hostName == '')
 					continue;
 				
@@ -219,9 +241,28 @@ class PHPInSimMod
 				$ip				= isset($v['ip']) ? $v['ip'] : '';
 				$port			= isset($v['port']) ? (int) $v['port'] : 0;
 				$pps			= isset($v['pps']) ? (int) $v['pps'] : 3;
-				$adminPass		= isset($v['password']) ? $v['password'] : '';
-				$socketType		= isset($v['socketType']) ? $v['socketType'] : SOCKTYPE_TCP;
+				$adminPass		= isset($v['password']) ? substr($v['password'], 0, 15) : '';
+				$socketType		= isset($v['socketType']) ? (int) $v['socketType'] : SOCKTYPE_TCP;
 				
+				// Some value checking
+				if ($port < 1 || $port > 65535)
+					continue;
+				if ($pps < 1 || $pps > 1000)		// I guess more than 1000 packets per sec isn't cool :)
+					continue;
+				if ($socketType != SOCKTYPE_TCP && $socketType != SOCKTYPE_UDP)
+				{
+					console('Invalid socket type set for '.$ip.':'.$port);
+					continue;
+				}
+				
+				// temporary TCP only check
+				if ($socketType != SOCKTYPE_TCP)
+				{
+					console('Sorry, so far only TCP direct host connections are supported. Will add UDP later on');
+					continue;
+				}
+				
+				// Create new ic object
 				$ic				= new insimConnection(CONNTYPE_HOST, $socketType);
 				$ic->id			= $hostID;
 				$ic->ip			= $ip;
@@ -287,7 +328,7 @@ class PHPInSimMod
 				    {
 		       			$numReady--;
 		       			
-		       			// The socket has become available for writing
+		       			// The socket has become available for writing (or not)
 		       			$host->connectFinish();
 			    	}
 
@@ -402,7 +443,7 @@ class PHPInSimMod
 			// No need to do the maintenance check every turn
 			if ($this->nextMaint > time ())
 				continue;
-			$this->nextMaint = time () + MAINT_INERVAL;
+			$this->nextMaint = time () + MAINT_INTERVAL;
 	
 			// Connection maintenance
 			foreach($this->hosts as $hostID => $host)
