@@ -296,7 +296,7 @@ class PHPInSimMod
 					console('Host '.$hostID.' will be excluded.');
 					continue;
 				}
-				if ($udpPort != 0 && ($udpPort < 1 || $udpPort > 65535))
+				if ($udpPort < 0 || $udpPort > 65535)
 				{
 					console('Invalid port '.$udpPort.' for '.$hostID);
 					console('Host '.$hostID.' will be excluded.');
