@@ -69,6 +69,8 @@ class PHPInSimMod
 	const VERSION = '0.1.6';
 	const ROOTPATH = ROOTPATH;
 
+	private $isWindows		= FALSE;
+
 	/* Run Time Arrays */
 	// Resources
 	private $sql;
@@ -185,6 +187,11 @@ class PHPInSimMod
 		// This reregisters our autoload magic function into the class.
 		spl_autoload_register(__CLASS__ . '::_autoload');
 
+		// Windows OS check
+		$shell = getenv('SHELL');
+		if (!$shell || $shell[0] != '/')
+			$this->isWindows = TRUE;
+		
 		// Load ini files
 		if (!$this->loadIniFiles())
 		{
@@ -281,8 +288,11 @@ class PHPInSimMod
 		while ($this->isRunning === TRUE)
 		{
 			// Setup our listen arrays
-			$sockReads = array(STDIN);
+			$sockReads = array();
 			$sockWrites = array();
+			
+			if (!$this->isWindows)
+				$sockReads[] = STDIN;
 			
 			// Add host sockets to the arrays as needed
 			// While at it, check if we need to connect to any of the hosts.
