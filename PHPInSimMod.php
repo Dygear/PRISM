@@ -537,7 +537,9 @@ class PHPInSimMod
 		if (isset($ISP[$pH['Type']]) || isset($IRP[$pH['Type']]))
 		{
 			console('FROM '.$hostID);
-			$this->dispatchPacket(new $TYPEs[$pH['Type']]($rawPacket), $hostID);
+			$packet = new $TYPEs[$pH['Type']]($rawPacket);
+			$this->inspectPacket($packet, $hostID);
+			$this->dispatchPacket($packet, $hostID);
 		}
 		else
 		{
@@ -545,14 +547,28 @@ class PHPInSimMod
 		}
 	}
 	
-	private function dispatchPacket($packetObject, &$hostID)
+	// inspectPacket is used to act upon certain packets like error messages
+	private function inspectPacket(&$packet, &$hostID)
 	{
-		if (!isset($this->packetDispatch[$packetObject->Type]))
+		switch($packet->Type)
+		{
+			case ISP_VER :
+				echo "WHEEEEEEEEEEE!\n";
+				break;
+
+			case IRP_ERR :
+				break;
+		}
+	}
+	
+	private function dispatchPacket(&$packet, &$hostID)
+	{
+		if (!isset($this->packetDispatch[$packet->Type]))
 		{	# Optimization, if the packet we are looking for has no listeners don't go though the loop.
 			return PLUGIN_HANDLED;
 		}
 
-		foreach ($this->packetDispatch[$packetObject->Type] as $listener)
+		foreach ($this->packetDispatch[$packet->Type] as $listener)
 		{
 			echo $listener;
 		}
