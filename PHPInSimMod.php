@@ -179,11 +179,45 @@ class PHPInSimMod
 		require_once(ROOTPATH . "/modules/prism_{$className}.php");
 	}
 
+	public static function _errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
+	{
+		# This error code is not included in error_reporting
+		if (!(error_reporting() & $errno))
+			return;
+
+		switch ($errno)
+		{
+			case E_ERROR:
+			case E_USER_ERROR:
+					echo "PHP ERROR: $errstr in $errfile on line $errline".PHP_EOL;
+					exit(1);
+				break;
+			case E_WARNING:
+			case E_USER_WARNING:
+					echo "PHP WARNING: $errstr in $errfile on line $errline".PHP_EOL;
+				break;
+			case E_NOTICE:
+			case E_USER_NOTICE:
+					echo "PHP NOTICE: $errstr in $errfile on line $errline".PHP_EOL;
+				break;
+			case E_STRICT:
+					echo "PHP STRICT: $errstr in $errfile on line $errline".PHP_EOL;
+				break;
+			default:
+					echo "UNKNOWN: $errstr in $errfile on line $errline".PHP_EOL;
+				break;
+		}
+
+		# Don't execute PHP internal error handler
+		return true;
+	}
+
 	// Real Magic Functions
 	public function __construct($argc, $argv)
 	{
 		// This reregisters our autoload magic function into the class.
 		spl_autoload_register(__CLASS__ . '::_autoload');
+		set_error_handler(__CLASS__ . '::_errorHandler', E_ALL | E_STRICT);
 
 		// Load ini files
 		if (!$this->loadIniFiles())
@@ -314,7 +348,8 @@ class PHPInSimMod
 	
 			$this->getSocketTimeOut();
 
-			$numReady = stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
+			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
+			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
 			
 			// Keep looping until you've handled all activities on the sockets.
 			while($numReady > 0)

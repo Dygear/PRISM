@@ -588,7 +588,7 @@ $MSO = array(MSO_SYSTEM => 'MSO_SYSTEM', MSO_USER => 'MSO_USER', MSO_PREFIX => '
 class IS_III extends struct // InsIm Info - /i message from user to host's InSim
 {
 	const PACK = 'CCxxCCxxa64';
-	const UNPACk = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
+	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
 
 	public $Size;		// 72
 	public $Type;		// ISP_III
@@ -1521,7 +1521,7 @@ class IS_MCI extends struct // Multi Car Info - if more than 8 in race then more
 	const UNPACK = 'CSize/CType/CReqI/CNumC';
 
 	public $Size;			// 4 + NumC * 28
-	public $Type = ISP_MCI;// ISP_MCI
+	public $Type = ISP_MCI;	// ISP_MCI
 	public $ReqI;			// 0 unless this is a reply to an TINY_MCI request
 	public $NumC;			// number of valid CompCar structs in this packet
 
@@ -2266,7 +2266,7 @@ class IR_ARP extends struct // Admin Response
 class IR_ERR extends struct
 {
 	const PACK = 'CCCC';
-	const UNPACk = 'CSize/CType/CReqI/CErrNo';
+	const UNPACK = 'CSize/CType/CReqI/CErrNo';
 
 	public $Size = 4;		// 4
 	public $Type = IRP_ERR;// IRP_ERR
