@@ -25,10 +25,22 @@ abstract class struct
 		$unPackFormat = $this::parsePackFormat();
 		$propertyNumber = -1;
 		$pkClass = unpack($this::UNPACK, $rawPacket);
+		if ($this instanceof IS_MCI)
+		{
+			for ($i = 0; $i <= $this->NumC; ++$i)
+				$this->Info[] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
+		}
+		if ($this instanceof IS_NLP)
+		{
+			for ($i = 0; $i <= $this->NumP; ++$i)
+				$this->Info[] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
+		}
+
 		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
 			$pkFnkFormat = $unPackFormat[++$propertyNumber];
+			# Assign the value to the unpacked packet.
 			$this->$property = $pkClass[$property];
 			echo "\t{$pkFnkFormat}\t{$property}\t= " . var_export($this->$property, TRUE) . PHP_EOL;
 		}
@@ -40,6 +52,8 @@ abstract class struct
 		$return = '';
 		$packFormat = $this::parsePackFormat();
 		$propertyNumber = -1;
+
+		//
 		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
@@ -60,8 +74,7 @@ abstract class struct
 	public function parseUnpackFormat()
 	{
 		$return = array();
-		$elements = split('/', $this::UNPACK);
-		foreach ($elements as $element)
+		foreach (split('/', $this::UNPACK) as $element)
 		{
 			for ($i = 1; is_numeric($element{$i}); ++$i) {}
 			$dataType = substr($element, 0, $i);
@@ -612,8 +625,8 @@ class IS_MST extends struct // MSg Type - send to LFS to type message or command
 	const UNPACK = 'CSize/CType/CReqI/CZero/a64Msg';
 
 	public $Size = 68;		// 68
-	public $Type = ISP_MST;// ISP_MST
-	public $ReqI;		// 0
+	public $Type = ISP_MST;	// ISP_MST
+	public $ReqI;			// 0
 	public $Zero;
 
 	public $Msg;		// last byte must be zero
@@ -1478,7 +1491,7 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 	public $ReqI;			// 0 unless this is a reply to an TINY_NLP request
 	public $NumP;			// number of players in race
 
-	public $Info;		// node and lap of each player, 1 to 32 of these (NumP)
+	public $Info = array();	// node and lap of each player, 1 to 32 of these (NumP)
 };
 
 // If ISF_MCI flag is set, a set of IS_MCI packets is sent...
@@ -1525,7 +1538,7 @@ class IS_MCI extends struct // Multi Car Info - if more than 8 in race then more
 	public $ReqI;			// 0 unless this is a reply to an TINY_MCI request
 	public $NumC;			// number of valid CompCar structs in this packet
 
-	public $Info;		// car info for each player, 1 to 8 of these (NumC)
+	public $Info = array();	// car info for each player, 1 to 8 of these (NumC)
 };
 
 // You can change the rate of NLP or MCI after initialisation by sending this IS_SMALL :
