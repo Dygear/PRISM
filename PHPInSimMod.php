@@ -253,6 +253,8 @@ class PHPInSimMod
 
 	private function populateHostsFromVars()
 	{
+		$udpPortBuf = array();		// Duplicate udpPort (NLP/MCI port) value check array. Must have one socket per host to listen on.
+		
 		foreach ($this->connvars as $hostID => $v)
 		{
 			if (isset($v['useRelay']) && $v['useRelay'] > 0)
@@ -282,25 +284,34 @@ class PHPInSimMod
 				// This is a direct to host connection
 				$ip				= isset($v['ip']) ? $v['ip'] : '';
 				$port			= isset($v['port']) ? (int) $v['port'] : 0;
+				$udpPort		= isset($v['udpPort']) ? (int) $v['udpPort'] : 0;
 				$pps			= isset($v['pps']) ? (int) $v['pps'] : 3;
 				$adminPass		= isset($v['password']) ? substr($v['password'], 0, 15) : '';
 				$socketType		= isset($v['socketType']) ? (int) $v['socketType'] : SOCKTYPE_TCP;
 				
 				// Some value checking
 				if ($port < 1 || $port > 65535)
+				{
+					console('Invalid port '.$port.' for '.$hostID);
+					console('Host '.$hostID.' will be excluded.');
 					continue;
-				if ($pps < 1 || $pps > 1000)		// I guess more than 1000 packets per sec isn't cool :)
+				}
+				if ($udpPort < 1 || $udpPort > 65535)
+				{
+					console('Invalid port '.$udpPort.' for '.$hostID);
+					console('Host '.$hostID.' will be excluded.');
 					continue;
+				}
+				if ($pps < 1 || $pps > 100)
+				{
+					console('Invalid pps '.$ps.' for '.$hostID);
+					console('Host '.$hostID.' will be excluded.');
+					continue;
+				}
 				if ($socketType != SOCKTYPE_TCP && $socketType != SOCKTYPE_UDP)
 				{
 					console('Invalid socket type set for '.$ip.':'.$port);
-					continue;
-				}
-				
-				// temporary TCP only check
-				if ($socketType != SOCKTYPE_TCP)
-				{
-					console('Sorry, so far only TCP direct host connections are supported. Will add UDP later on');
+					console('Host '.$hostID.' will be excluded.');
 					continue;
 				}
 				
@@ -309,8 +320,26 @@ class PHPInSimMod
 				$ic->id			= $hostID;
 				$ic->ip			= $ip;
 				$ic->port		= $port;
+				$ic->udpPort	= $udpPort;
 				$ic->pps		= $pps;
 				$ic->adminPass	= $adminPass;
+
+				if ($ic->udpPort > 0)
+				{
+					if (in_array($ic->udpPort, $udpPortBuf))
+					{
+						console('Duplicate udpPort value found! Every host must have its own unique udpPort.');
+					}
+					else
+					{
+						$udpPortBuf[] = $ic->udpPort;
+						if (!$ic->createMCISocket())
+						{
+							console('Host '.$hostID.' will be excluded.');
+							continue;
+						}
+					}
+				}
 
 				$this->hosts[$hostID] = $ic;
 			}
@@ -332,27 +361,28 @@ class PHPInSimMod
 			// While at it, check if we need to connect to any of the hosts.
 			foreach ($this->hosts as $hostID => $host)
 			{
-				if ($host->connStatus == CONN_CONNECTED)
+				if ($host->connStatus >= CONN_CONNECTED)
 				{
-					if (is_resource($host->socket))
-					{
 						$sockReads[] = $host->socket;
 						
 						// Is the host is lagged, we must check to see when we can write again
 						if ($host->sendQStatus > 0)
 							$sockWrites[] = $host->socket;
-					}
 				}
 				else if ($host->connStatus == CONN_CONNECTING)
 				{
 					$sockWrites[] = $host->socket;
 				}
-				else if ($host->connStatus == CONN_NOTCONNECTED)
+				else
 				{
 					// Should we try to connect?
 					if ($host->mustConnect > -1 && $host->mustConnect < time())
 						$host->connect();
 				}
+				
+				// Treat secundary socketMCI separately. This socket is always open.
+				if ($host->udpPort > 0 && is_resource($host->socketMCI))
+					$sockReads[] = $host->socketMCI;
 			}
 			unset($host);
 	
@@ -360,7 +390,7 @@ class PHPInSimMod
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
 			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
-			
+				
 			// Keep looping until you've handled all activities on the sockets.
 			while($numReady > 0)
 			{
@@ -378,7 +408,7 @@ class PHPInSimMod
 					}
 
 					// Recover a lagged host?
-					if ($host->connStatus == CONN_CONNECTED && 
+					if ($host->connStatus >= CONN_CONNECTED && 
 						$host->sendQStatus > 0 &&
 						in_array($host->socket, $sockWrites))
 					{
@@ -387,7 +417,7 @@ class PHPInSimMod
 						// Flush the sendQ and handle possible overload again
 						for ($a=0; $a<$host->sendQStatus; $a++)
 						{
-							$bytes = $host->write($host->sendQ[$a], TRUE);
+							$bytes = $host->writeTCP($host->sendQ[$a], TRUE);
 							if ($bytes == strlen($host->sendQ[$a])) {
 								// an entire packet from the queue has been flushed. Remove it from the queue.
 								array_shift($host->sendQ);
@@ -425,7 +455,8 @@ class PHPInSimMod
 						$data = $packet = '';
 						
 						// Incoming traffic from a host
-						$data = $host->read();
+						$peerInfo = '';
+						$data = $host->read($peerInfo);
 						
 						if (!$data)
 						{
@@ -433,20 +464,46 @@ class PHPInSimMod
 						}
 						else
 						{
-							$host->appendToBuffer($data);
-							while (true) {
-								//console('findloop');
-								$packet = $host->findNextPacket();
-								if (!$packet)
-									break;
-								
-								// Handle the packet here
-								$this->handlePacket($packet, $hostID);
+							if ($host->socketType == SOCKTYPE_UDP)
+							{
+								// Check that this insim packet came from the IP we connected to
+								// UDP packet can be sent straight to packet parser
+								if ($host->connectIp.':'.$host->port == $peerInfo)
+									$this->handlePacket($data, $hostID);
+							}
+							else
+							{
+								// TCP Stream requires buffering
+								$host->appendToBuffer($data);
+								while (true) {
+									//console('findloop');
+									$packet = $host->findNextPacket();
+									if (!$packet)
+										break;
+									
+									// Handle the packet here
+									$this->handlePacket($packet, $hostID);
+								}
 							}
 						}
 						
 						if ($numReady == 0)
 							break 2;
+					}
+
+					// Did the host send us something on our separate udp port (if we have that active to begin with)?
+					if ($host->udpPort > 0 && in_array($host->socketMCI, $sockReads))
+					{
+						$numReady--;
+						
+						$peerInfo = '';
+						$data = $host->readMCI($peerInfo);
+						$exp = explode(':', $peerInfo);
+						console('received '.strlen($data).' bytes on second socket');
+
+						// Only process the packet if it came from the host's IP.
+						if ($host->connectIp == $exp[0])
+							$this->handlePacket($data, $hostID);
 					}
 				}
 				unset($host);
@@ -465,7 +522,7 @@ class PHPInSimMod
 						case 'h':
 							foreach ($this->hosts as $hostID => $host)
 							{
-								console($hostID.' => '.$host->ip.':'.$host->port.' -> '.(($host->connStatus == CONN_CONNECTED) ? '' : 'not').' connected');
+								console($hostID.' => '.$host->ip.':'.$host->port.(($host->udpPort > 0) ? '+udp'.$host->udpPort : '').' -> '.(($host->connStatus == CONN_CONNECTED) ? '' : (($host->connStatus == CONN_VERIFIED) ? 'verified &' : 'not')).' connected');
 							}
 							break;
 						
@@ -536,7 +593,7 @@ class PHPInSimMod
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($ISP[$pH['Type']]) || isset($IRP[$pH['Type']]))
 		{
-			console('FROM '.$hostID);
+			console('Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
 			$this->dispatchPacket($packet, $hostID);
@@ -548,15 +605,54 @@ class PHPInSimMod
 	}
 	
 	// inspectPacket is used to act upon certain packets like error messages
+	// We need these packets for proper basic PRISM connection functionality
+	//
 	private function inspectPacket(&$packet, &$hostID)
 	{
 		switch($packet->Type)
 		{
 			case ISP_VER :
-				echo "WHEEEEEEEEEEE!\n";
+				// When receiving ISP_VER we can conclude that we now have a working insim connection.
+				if ($this->hosts[$hostID]->connStatus != CONN_VERIFIED)
+				{
+					// Because we can receive more than one ISP_VER, we only set this the first time
+					$this->hosts[$hostID]->connStatus	= CONN_VERIFIED;
+					$this->hosts[$hostID]->connTime		= time();
+					$this->hosts[$hostID]->connTries	= 0;
+				}
 				break;
 
 			case IRP_ERR :
+				switch($packet->ErrNo)
+				{
+					case IR_ERR_PACKET :
+						console('Invalid packet sent by client (wrong structure / length)');
+						break;
+
+					case IR_ERR_PACKET2 :
+						console('Invalid packet sent by client (packet was not allowed to be forwarded to host)');
+						break;
+
+					case IR_ERR_HOSTNAME :
+						console('Wrong hostname given by client');
+						break;
+
+					case IR_ERR_ADMIN :
+						console('Wrong admin pass given by client');
+						break;
+
+					case IR_ERR_SPEC :
+						console('Wrong spec pass given by client');
+						break;
+
+					case IR_ERR_NOSPEC :
+						console('Spectator pass required, but none given');
+						break;
+
+					default :
+						console('Unknown error received from relay ('.$packet->ErrNo.')');
+						break;
+				}
 				break;
 		}
 	}

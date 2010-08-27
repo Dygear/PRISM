@@ -44,6 +44,9 @@ abstract class struct
 				unset($pkClass["Tyres{$Tyre}"]);
 			}
 		}
+		if (isset($this->Type))
+			echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
+		return;
 		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
@@ -868,7 +871,7 @@ class IS_NCN extends struct // New ConN
 	const PACK = 'CCCCa24a24CCCx';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/a24UName/a24PName/CAdmin/CTotal/CFlags/CSp3';
 
-	public $Size = 65;		// 56
+	public $Size = 56;		// 56
 	public $Type = ISP_NCN;// ISP_NCN
 	public $ReqI;			// 0 unless this is a reply to a TINY_NCN request
 	public $UCID;			// new connection's unique id (0 = host)
