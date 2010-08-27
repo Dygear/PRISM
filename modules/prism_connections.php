@@ -14,9 +14,11 @@ define('HOST_RECONN_TIMEOUT',	3);
 define('HOST_RECONN_TRIES',		5);
 
 define('CONN_TIMEOUT',			10);		# host long may a connection attempt last
-define('CONN_NOTCONNECTED',		0);
-define('CONN_CONNECTING',		1);
-define('CONN_CONNECTED',		2);
+
+define('CONN_NOTCONNECTED',		0);			# not connected to the host
+define('CONN_CONNECTING',		1);			# in the process of connecting to the host
+define('CONN_CONNECTED',		2);			# connected to a host
+define('CONN_VERIFIED',			3);			# it has been verified that we have a working insim connection
 
 define('SOCKTYPE_BEST',			0);
 define('SOCKTYPE_TCP',			1);
@@ -27,9 +29,13 @@ define('STREAM_READ_BYTES',		1024);
 class InsimConnection
 {
 	private $connType;
-	private $socketType;
+	public $socketType;
 	
 	public $socket;
+	public $socketMCI;						# secundary, udp socket to listen on, if udpPort > 0
+											# note that this follows the exact theory of how insim deals with tcp and udp sockets
+											# see InSim.txt in LFS distributions for more info
+	
 	public $connStatus		= CONN_NOTCONNECTED;
 	public $sockErrNo		= 0;
 	public $sockErrStr		= '';
@@ -44,7 +50,7 @@ class InsimConnection
 	// TCP stream buffer
 	private $streamBuf		= '';
 	private $streamBufLen	= 0;
-
+	
 	// send queue used in emergency cases (if host appears lagged or overflown with packets)
 	public $sendQ			= array();
 	public $sendQStatus		= 0;
@@ -53,7 +59,9 @@ class InsimConnection
 	// connection & host info
 	public $id				= '';			# the section id from the ini file
 	public $ip				= '';			# ip or hostname to connect to
+	public $connectIp		= '';			# the actual ip used to connect
 	public $port			= 0;			# the port
+	public $udpPort			= 0;			# the secundary udp port to listen on for NLP/MCI packets, in case the main port is tcp
 	public $hostName		= '';			# the hostname. Can be populated by user in case of relay.
 	public $adminPass		= '';			# adminpass for both relay and direct usage
 	public $specPass		= '';			# specpass for relay usage
@@ -68,16 +76,18 @@ class InsimConnection
 	public function __destruct()
 	{
 		$this->close();
+		if ($this->socketMCI)
+			fclose($this->socketMCI);
 	}
 	
 	public function connect()
 	{
 		// If we're already connected, then we'll assume this is a forced reconnect, so we'll close
 		$this->close(FALSE, TRUE);
-
+		
 		// Figure out the proper IP address. We do this every time we connect in case of dynamic IP addresses.
-		$ip = $this->getIP();
-		if (!$ip)
+		$this->connectIp = $this->getIP();
+		if (!$this->connectIp)
 		{
 			console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port.' : '.$this->sockErrStr);
 			$this->socket		= NULL;
@@ -86,11 +96,45 @@ class InsimConnection
 			return FALSE;
 		}
 		
-		// Here we create the socket and initiate the connection. This is done asynchronously.
-		$this->socket = @stream_socket_client('tcp://'.$ip.':'.$this->port, $this->sockErrNo, $this->sockErrStr, CONN_TIMEOUT, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
-		if ($this->sockErrNo)
+		if ($this->socketType == SOCKTYPE_UDP)
+			$this->connectUDP();
+		else
+			$this->connectTCP();
+	}
+	
+	public function connectUDP()
+	{
+		// Create UDP socket
+		$this->socket = @stream_socket_client('udp://'.$this->connectIp.':'.$this->port, $this->sockErrNo, $this->sockErrStr);
+		if ($this->socket === FALSE || $this->sockErrNo)
 		{
-			console ('Error opening socket for '.$ip.':'.$this->port.' : '.$this->sockErrStr);
+			console ('Error opening UDP socket for '.$this->connectIp.':'.$this->port.' : '.$this->sockErrStr);
+			$this->socket		= NULL;
+			$this->connStatus	= CONN_NOTCONNECTED;
+			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
+			return FALSE;
+		}
+		
+		// We set the connection time here, so we can track how long we're trying to connect
+		$this->connTime = time();
+	
+		console('Connecting to '.$this->ip.':'.$this->port.' ... #'.($this->connTries + 1));
+		$this->connectFinish();
+		$this->lastReadTime = time() - HOST_TIMEOUT + 10;
+		
+		return TRUE;		
+	}
+	
+	public function connectTCP()
+	{
+		// If we're already connected, then we'll assume this is a forced reconnect, so we'll close
+		$this->close(FALSE, TRUE);
+	
+		// Here we create the socket and initiate the connection. This is done asynchronously.
+		$this->socket = @stream_socket_client('tcp://'.$this->connectIp.':'.$this->port, $this->sockErrNo, $this->sockErrStr, CONN_TIMEOUT, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
+		if ($this->socket === FALSE || $this->sockErrNo)
+		{
+			console ('Error opening TCP socket for '.$this->connectIp.':'.$this->port.' : '.$this->sockErrStr);
 			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
@@ -120,7 +164,7 @@ class InsimConnection
 			// Send IS_ISI packet
 			$ISP			= new IS_ISI();
 			$ISP->ReqI		= TRUE;
-			$ISP->UDPPort	= 0;
+			$ISP->UDPPort	= ($this->udpPort > 0) ? $this->udpPort : 0;
 			$ISP->Flags		= ISF_LOCAL | ISF_MSO_COLS | ISF_NLP;
 			$ISP->Prefix	= '!';
 			$ISP->Interval	= round(1000 / $this->pps);
@@ -137,7 +181,7 @@ class InsimConnection
 			$ISP->HName		= $this->hostName;
 			$ISP->Admin		= $this->adminPass;
 			$ISP->Spec		= $this->specPass;
-
+	
 			if ($this->writePacket($ISP) > 0)
 				$result		= TRUE;
 		}
@@ -158,9 +202,23 @@ class InsimConnection
 		else
 		{
 			console('Connected to '.$this->ip.':'.$this->port);
-			$this->connTime = time();
-			$this->connTries = 0;
 		}
+	}
+	
+	public function createMCISocket()
+	{
+		$this->socketMCI = @stream_socket_server('udp://0.0.0.0:'.$this->udpPort, $errNo, $errStr, STREAM_SERVER_BIND);
+		if (!$this->socketMCI || $errNo > 0)
+		{
+			console ('Error opening additional UDP socket to listen on : '.$this->sockErrStr);
+			$this->socketMCI	= NULL;
+			$this->udpPort		= 0;
+			return FALSE;
+		}
+		
+		console('Listening for NLP/MCI on secundary UDP port '.$this->udpPort);
+		
+		return TRUE;
 	}
 	
 	// $permanentClose	- set to TRUE to close this connection once and for all.
@@ -170,14 +228,14 @@ class InsimConnection
 	{
 		if (is_resource($this->socket))
 		{
-			if ($this->connStatus == CONN_CONNECTED && $this->connType == CONNTYPE_HOST)
+			if ($this->connStatus == CONN_VERIFIED && $this->connType == CONNTYPE_HOST)
 			{
 				// Send goodbye packet to host
 				$ISP		= new IS_TINY();
 				$ISP->SubT	= TINY_CLOSE;
 				$this->writePacket($ISP);
 			}
-
+	
 			fclose($this->socket);
 			console('Closed connection to '.$this->ip.':'.$this->port);
 		}
@@ -210,14 +268,23 @@ class InsimConnection
 	
 	public function writePacket(&$packet)
 	{
-		return $this->write($packet->pack());
+		if ($this->socketType	== SOCKTYPE_UDP)
+			return $this->writeUDP($packet->pack());
+		else
+			return $this->writeTCP($packet->pack());
 	}
 	
-	public function write(&$data, $sendQPacket = FALSE)
+	public function writeUDP(&$data)
+	{
+		$this->lastWriteTime = time();
+		return @fwrite ($this->socket, $data);
+	}
+	
+	public function writeTCP(&$data, $sendQPacket = FALSE)
 	{
 		$bytes = 0;
 		
-		if ($this->connStatus != CONN_CONNECTED)
+		if ($this->connStatus < CONN_CONNECTED)
 			return $bytes;
 	
 		if ($sendQPacket == TRUE)
@@ -234,7 +301,8 @@ class InsimConnection
 				$bytes = @fwrite ($this->socket, $data);
 				$this->lastWriteTime = time();
 		
-				if (!$bytes || $bytes != strlen($data)) {
+				if (!$bytes || $bytes != strlen($data))
+				{
 					console('Writing '.strlen($data).' bytes to socket '.$this->ip.':'.$this->port.' failed (wrote '.$bytes.' bytes). Error : '.(($this->connStatus == CONN_CONNECTING) ? 'Socket connection not completed.' : $this->sockErrStr).' (connStatus : '.$this->connStatus.')');
 					$this->addPacketToSendQ (substr($data, $bytes));
 				}
@@ -245,7 +313,7 @@ class InsimConnection
 				$this->addPacketToSendQ ($data);
 			}
 		}
-
+	
 		return $bytes;
 	}
 	
@@ -257,12 +325,16 @@ class InsimConnection
 		$this->sendQStatus++;
 	}
 	
-	public function read()
+	public function read(&$peerInfo)
 	{
-		$buffer = fread($this->socket, STREAM_READ_BYTES);
 		$this->lastReadTime = time();
-		
-		return $buffer;
+		return stream_socket_recvfrom($this->socket, STREAM_READ_BYTES, 0, $peerInfo);
+	}
+	
+	public function readMCI(&$peerInfo)
+	{
+		$this->lastReadTime = time();
+		return stream_socket_recvfrom($this->socketMCI, STREAM_READ_BYTES, 0, $peerInfo);
 	}
 	
 	public function appendToBuffer(&$data)
@@ -283,21 +355,17 @@ class InsimConnection
 		}
 		else if ($this->streamBufLen < $sizebyte)
 		{
-			console('Split packet ...');
+			//console('Split packet ...');
 			return FALSE;
 		}
 		
 		// We should have a whole packet in the buffer now
 		$packet					= substr($this->streamBuf, 0, $sizebyte);
-//		$packetType				= strtolower(ISPackets::$types[ord ($packet[1])]);
 		$packetType				= ord($packet[1]);
-//		$packet_func			= "proc_".strtolower($packet_type);
-
+	
 		// Cleanup streamBuffer
 		$this->streamBuf		= substr($this->streamBuf, $sizebyte);
 		$this->streamBufLen		= strlen($this->streamBuf);
-		
-		console('Bytes left in buffer : '.$this->streamBufLen);
 		
 		return $packet;
 	}

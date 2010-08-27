@@ -1,3 +1,9 @@
+0.1.7
+	+ Added multi-connection capability
+	+ Added UDP support, including secondary UDP port
+	+ Two more ini files, connections.ini and plugins.ini
+	* Several small fixes
+
 0.1.6
 	+ Added Console Options (Now Logs to File)
 	* Fixed some packet parsing problems when there was a race with only AI as reported by dawesdust_12.
