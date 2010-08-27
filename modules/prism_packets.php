@@ -28,14 +28,22 @@ abstract class struct
 		if ($this instanceof IS_MCI)
 		{
 			for ($i = 0; $i <= $this->NumC; ++$i)
-				$this->Info[] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
+				$pkClass['Info'][] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
 		}
 		if ($this instanceof IS_NLP)
 		{
 			for ($i = 0; $i <= $this->NumP; ++$i)
-				$this->Info[] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
+				$pkClass['Info'][] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
 		}
-
+		# This is due to the C4 type that tyres requires.
+		if ($this instanceof IS_PIT || $this instanceof IS_NPL)
+		{
+			for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
+			{
+				$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
+				unset($pkClass["Tyres{$Tyre}"]);
+			}
+		}
 		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
@@ -291,7 +299,7 @@ define('ISP_BTC',	46);// 46 - info			: sent when a user clicks a button
 define('ISP_BTT',	47);// 47 - info			: sent after typing into a button
 define('ISP_RIP',	48);// 48 - both ways		: replay information packet
 define('ISP_SSH',	49);// 49 - both ways		: screenshot
-$ISP = array(/*0 => 'ISP_NONE',*/ ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NPL => 'ISP_NPL', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
+$ISP = array(/*0 => 'ISP_NONE',*/ ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',	0);	//  0 - keep alive		: see "maintaining the connection"
@@ -910,7 +918,7 @@ class IS_NPL extends struct // New PLayer joining race (if PLID already exists, 
 	const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/a8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/lSpare/CSetF/CNumP/CSp2/CSp3';
 
 	public $Size = 76;		// 76
-	public $Type = ISP_NPL;// ISP_NPL
+	public $Type = ISP_NPL;	// ISP_NPL
 	public $ReqI;			// 0 unless this is a reply to an TINY_NPL request
 	public $PLID;			// player's newly assigned unique id
 
@@ -918,12 +926,12 @@ class IS_NPL extends struct // New PLayer joining race (if PLID already exists, 
 	public $PType;			// bit 0 : female / bit 1 : AI / bit 2 : remote
 	public $Flags;			// player flags
 
-	public $PName;		// nickname
-	public $Plate;		// number plate - NO ZERO AT END!
+	public $PName;			// nickname
+	public $Plate;			// number plate - NO ZERO AT END!
 
-	public $CName;		// car name
-	public $SName;		// skin name - MAX_CAR_TEX_NAME
-	public $Tyres;		// compounds
+	public $CName;			// car name
+	public $SName;			// skin name - MAX_CAR_TEX_NAME
+	public $Tyres = array();// compounds
 
 	public $H_Mass;			// added mass (kg)
 	public $H_TRes;			// intake restriction
@@ -1030,8 +1038,8 @@ class IS_PIT extends struct // PIT stop (stop at pit garage)
 	const UNPACK = 'CSize/CType/CReqI/CPLID/vLapsDone/vFlags/CSp0/CPenalty/CNumStops/CSp3/C4Tyres/VWork/VSpare';
 
 	public $Size = 24;		// 24
-	public $Type = ISP_PIT;// ISP_PIT
-	public $ReqI;		// 0
+	public $Type = ISP_PIT;	// ISP_PIT
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id
 
 	public $LapsDone;		// laps completed
@@ -1042,7 +1050,7 @@ class IS_PIT extends struct // PIT stop (stop at pit garage)
 	public $NumStops;		// number of pit stops
 	public $Sp3;
 
-	public $Tyres;		// tyres changed
+	public $Tyres = array();// tyres changed
 
 	public $Work;			// pit work
 	public $Spare;
@@ -1470,7 +1478,7 @@ class IS_AXO extends struct // AutoX Object
 
 // If ISF_NLP flag is set, one IS_NLP packet is sent...
 
-class NodeLap // Car info in 6 bytes - there is an array of these in the NLP (below)
+class NodeLap extends struct // Car info in 6 bytes - there is an array of these in the NLP (below)
 {
 	const PACK = 'vvCC';
 	const UNPACK = 'vNode/vLap/CPLID/CPosition';
@@ -1487,7 +1495,7 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 	const UNPACK = 'CSize/CType/CReqI/CNumP';
 
 	public $Size;			// 4 + NumP * 6 (PLUS 2 if needed to make it a multiple of 4)
-	public $Type = ISP_NLP;// ISP_NLP
+	public $Type = ISP_NLP;	// ISP_NLP
 	public $ReqI;			// 0 unless this is a reply to an TINY_NLP request
 	public $NumP;			// number of players in race
 
@@ -1496,7 +1504,7 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 
 // If ISF_MCI flag is set, a set of IS_MCI packets is sent...
 
-class CompCar // Car info in 28 bytes - there is an array of these in the MCI (below)
+class CompCar extends struct // Car info in 28 bytes - there is an array of these in the MCI (below)
 {
 	const PACK = 'vvCCCxlllvvvs';
 	const UNPACK = 'vNode/vLap/CPLID/CPosition/CInfo/CSp3/lX/lY/lZ/vSpeed/vDirection/vHeading/sAngVel';
