@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHPInSimMod - Packet Module
  * @package PRISM
@@ -17,23 +18,57 @@ abstract class struct
 	}
 	public function __toString()
 	{
-		return $this->pack();
+		return $this->prettyPrint($this);
 	}
-	public function unpack($rawPacket)
+	public function prettyPrint($pre = '')
 	{
 		global $TYPEs;
-		$unPackFormat = $this::parsePackFormat();
+		$packFormat = $this::parsePackFormat();
 		$propertyNumber = -1;
+		$str = $pre . $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
+		foreach ($this as $property => $value)
+		{
+			$pkFnkFormat = @$packFormat[++$propertyNumber];
+			
+			switch (gettype($this->$property))
+			{
+				case "array":
+					$str .= $pre . "\tArray\t{$property}\t= {" . PHP_EOL;
+					foreach ($this->$property as $k => $v)
+					{
+						if ($v instanceof struct)
+						{
+							//$str .= $pre . "\t\t\t\ta" . $k . "\tb" . $v->prettyPrint($pre . "\t\t\t") . PHP_EOL;
+						}
+						else
+						{
+							$str .= $pre . "\t\t\t\ta" . $k . "\tb" . $v . PHP_EOL;
+						}
+					}
+					$str .= $pre . "\t}".PHP_EOL;
+					break;
+				default:
+					$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $this->$property. PHP_EOL;
+			}
+		}
+		$str .= '}' . PHP_EOL;
+		return $str;
+	}
+
+	
+	
+	public function unpack($rawPacket)
+	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $key => $value) {
+			$this->$key = $value;
+		}
+		
 		if ($this instanceof IS_MCI)
 		{
 			for ($i = 0; $i <= $this->NumC; ++$i)
 				$pkClass['Info'][] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
-		}
-		if ($this instanceof IS_NLP)
-		{
-			for ($i = 0; $i <= $this->NumP; ++$i)
-				$pkClass['Info'][] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
 		}
 		# This is due to the C4 type that tyres requires.
 		if ($this instanceof IS_PIT || $this instanceof IS_NPL)
@@ -44,18 +79,9 @@ abstract class struct
 				unset($pkClass["Tyres{$Tyre}"]);
 			}
 		}
-		if (isset($this->Type))
-			echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
-		return;
-		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
-		foreach ($this as $property => $value)
-		{
-			$pkFnkFormat = $unPackFormat[++$propertyNumber];
-			# Assign the value to the unpacked packet.
-			$this->$property = $pkClass[$property];
-			echo "\t{$pkFnkFormat}\t{$property}\t= " . var_export($this->$property, TRUE) . PHP_EOL;
+		if (isset($this->Type)) {
+			console('unpacked' . $this);
 		}
-		echo '}' . PHP_EOL;
 	}
 	public function pack()
 	{
@@ -85,7 +111,7 @@ abstract class struct
 	public function parseUnpackFormat()
 	{
 		$return = array();
-		foreach (split('/', $this::UNPACK) as $element)
+		foreach (preg_split('/\//', $this::UNPACK) as $element)
 		{
 			for ($i = 1; is_numeric($element{$i}); ++$i) {}
 			$dataType = substr($element, 0, $i);
@@ -1503,6 +1529,21 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 	public $NumP;			// number of players in race
 
 	public $Info = array();	// node and lap of each player, 1 to 32 of these (NumP)
+	
+	public function unpack($rawPacket)
+	{
+		echo 'nlp unpack raw:'.$rawPacket;
+		parent::unpack($rawPacket);
+		
+		if ($this instanceof IS_NLP)
+		{
+			for ($i = 0; $i <= $this->NumP; ++$i)
+			{
+				$this->Info[] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
+			}
+		}
+
+	}
 };
 
 // If ISF_MCI flag is set, a set of IS_MCI packets is sent...
