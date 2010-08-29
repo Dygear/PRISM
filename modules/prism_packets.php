@@ -18,40 +18,45 @@ abstract class struct
 	}
 	public function __toString()
 	{
-		return $this->prettyPrint($this);
+		return $this->prettyPrint();
 	}
 	public function prettyPrint($pre = '')
 	{
 		global $TYPEs;
 		$packFormat = $this::parsePackFormat();
 		$propertyNumber = -1;
-		$str = $pre . $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
+		$str = $pre . get_class($this) . ' {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
 			$pkFnkFormat = @$packFormat[++$propertyNumber];
 			
-			switch (gettype($this->$property))
+			if (gettype($this->$property) == 'array')
 			{
-				case "array":
 					$str .= $pre . "\tArray\t{$property}\t= {" . PHP_EOL;
 					foreach ($this->$property as $k => $v)
 					{
 						if ($v instanceof struct)
 						{
-							//$str .= $pre . "\t\t\t\ta" . $k . "\tb" . $v->prettyPrint($pre . "\t\t\t") . PHP_EOL;
+							$str .= $pre . $v->prettyPrint($pre . "\t\t\t") . PHP_EOL;
 						}
 						else
 						{
-							$str .= $pre . "\t\t\t\ta" . $k . "\tb" . $v . PHP_EOL;
+							$str .= $pre . "\t\t\t" . $k . "\t" . $v . PHP_EOL;
 						}
 					}
 					$str .= $pre . "\t}".PHP_EOL;
 					break;
-				default:
-					$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $this->$property. PHP_EOL;
+			}
+			elseif ($property == 'Type')
+			{
+				$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $TYPEs[$this->Type] . ' (' . $this->$property . ')' . PHP_EOL;
+			}	
+			else
+			{
+				$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $this->$property. PHP_EOL;
 			}
 		}
-		$str .= '}' . PHP_EOL;
+		$str .= $pre . '}' . PHP_EOL;
 		return $str;
 	}
 
@@ -65,11 +70,6 @@ abstract class struct
 			$this->$key = $value;
 		}
 		
-		if ($this instanceof IS_MCI)
-		{
-			for ($i = 0; $i <= $this->NumC; ++$i)
-				$pkClass['Info'][] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
-		}
 		# This is due to the C4 type that tyres requires.
 		if ($this instanceof IS_PIT || $this instanceof IS_NPL)
 		{
@@ -78,9 +78,6 @@ abstract class struct
 				$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
 				unset($pkClass["Tyres{$Tyre}"]);
 			}
-		}
-		if (isset($this->Type)) {
-			console('unpacked' . $this);
 		}
 	}
 	public function pack()
@@ -91,11 +88,9 @@ abstract class struct
 		$propertyNumber = -1;
 
 		//
-		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
 			$pkFnkFormat = $packFormat[++$propertyNumber];
-			echo "\t{$pkFnkFormat}\t{$property}\t= " . var_export($this->$property, TRUE) . PHP_EOL;
 			if ($pkFnkFormat == 'x')
 			{
 				$return .= 0; # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
@@ -105,7 +100,6 @@ abstract class struct
 				$return .= pack($pkFnkFormat, $this->$property);
 			}
 		}
-		echo '} Size, ' . strLen($return) . ' Bytes.' . PHP_EOL;
 		return $return;
 	}
 	public function parseUnpackFormat()
@@ -1532,17 +1526,16 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 	
 	public function unpack($rawPacket)
 	{
-		echo 'nlp unpack raw:'.$rawPacket;
-		parent::unpack($rawPacket);
+		$pkClass = unpack($this::UNPACK, $rawPacket);
 		
-		if ($this instanceof IS_NLP)
-		{
-			for ($i = 0; $i <= $this->NumP; ++$i)
-			{
-				$this->Info[] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
-			}
+		foreach ($pkClass as $key => $value) {
+			$this->$key = $value;
 		}
-
+		
+		for ($i = 0; $i < $this->NumP; $i++)
+		{
+			$this->Info[$i] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
+		}
 	}
 };
 
@@ -1591,6 +1584,20 @@ class IS_MCI extends struct // Multi Car Info - if more than 8 in race then more
 	public $NumC;			// number of valid CompCar structs in this packet
 
 	public $Info = array();	// car info for each player, 1 to 8 of these (NumC)
+	
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $key => $value) {
+			$this->$key = $value;
+		}
+		
+		for ($i = 0; $i < $this->NumC; $i++)
+		{
+			$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
+		}
+	}
 };
 
 // You can change the rate of NLP or MCI after initialisation by sending this IS_SMALL :

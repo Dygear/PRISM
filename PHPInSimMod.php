@@ -307,7 +307,7 @@ class PHPInSimMod
 					console('Host '.$hostID.' will be excluded.');
 					continue;
 				}
-				if ($udpPort < 1 || $udpPort > 65535)
+				if ($udpPort < 0 || $udpPort > 65535)
 				{
 					console('Invalid port '.$udpPort.' for '.$hostID);
 					console('Host '.$hostID.' will be excluded.');
@@ -604,7 +604,7 @@ class PHPInSimMod
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($ISP[$pH['Type']]) || isset($IRP[$pH['Type']]))
 		{
-			console('Packet from '.$hostID);
+			console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
 			$this->dispatchPacket($packet, $hostID);
