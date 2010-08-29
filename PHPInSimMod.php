@@ -209,6 +209,17 @@ class PHPInSimMod
 					echo "UNKNOWN: $errstr in $errfile on line $errline".PHP_EOL;
 				break;
 		}
+	
+		$trace = debug_backtrace();
+		foreach ($trace as $index => $call)
+		{
+			if ($call['function'] == 'main') break;
+			if ($index > 1)
+			{
+				console("\t".$index.' :: '.$call['function'].' in '.$call['file'].':'.$call['line']);
+			}
+		}
+
 
 		# Don't execute PHP internal error handler
 		return true;
