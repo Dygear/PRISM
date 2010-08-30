@@ -589,6 +589,22 @@ class PHPInSimMod
 	{
 		global $TYPEs, $ISP, $IRP;
 		
+		// Check packet size
+		if ((strlen($rawPacket) % 4) > 0)
+		{
+			// Packet size is not a multiple of 4
+			console('WARNING : packet with invalid size ('.strlen($rawPacket).') from '.$hostID);
+			
+			// Let's clear the buffer to be sure, because remaining data cannot be trusted at this point.
+			$this->hosts[$hostID]->clearBuffer();
+			
+			// Do we want to do anything else at this point?
+			// Count errors? Disconnect host?
+			// My preference would go towards counting the amount of times this error occurs and hang up after perhaps 3 errors.
+			
+			return;
+		}
+		
 		# Parse Packet Header
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($ISP[$pH['Type']]) || isset($IRP[$pH['Type']]))

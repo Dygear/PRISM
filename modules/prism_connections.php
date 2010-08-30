@@ -343,6 +343,12 @@ class InsimConnection
 		$this->streamBufLen	= strlen ($this->streamBuf);
 	}
 	
+	public function clearBuffer()
+	{
+		$this->streamBuf	= '';
+		$this->streamBufLen	= 0;
+	}
+	
 	public function findNextPacket()
 	{
 		if ($this->streamBufLen == 0)
