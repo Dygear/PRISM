@@ -23,7 +23,6 @@ abstract class struct
 	{
 		global $TYPEs;
 		$unPackFormat = $this::parsePackFormat();
-		$propertyNumber = -1;
 		$pkClass = unpack($this::UNPACK, $rawPacket);
 		if ($this instanceof IS_MCI)
 		{
@@ -44,42 +43,22 @@ abstract class struct
 				unset($pkClass["Tyres{$Tyre}"]);
 			}
 		}
-		if (isset($this->Type))
-			echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
-		return;
-		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
 		foreach ($this as $property => $value)
-		{
-			$pkFnkFormat = $unPackFormat[++$propertyNumber];
-			# Assign the value to the unpacked packet.
 			$this->$property = $pkClass[$property];
-			echo "\t{$pkFnkFormat}\t{$property}\t= " . var_export($this->$property, TRUE) . PHP_EOL;
-		}
-		echo '}' . PHP_EOL;
 	}
 	public function pack()
 	{
-		global $TYPEs;
 		$return = '';
 		$packFormat = $this::parsePackFormat();
 		$propertyNumber = -1;
-
-		//
-		echo $TYPEs[$this->Type] . ' Object {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
 			$pkFnkFormat = $packFormat[++$propertyNumber];
-			echo "\t{$pkFnkFormat}\t{$property}\t= " . var_export($this->$property, TRUE) . PHP_EOL;
 			if ($pkFnkFormat == 'x')
-			{
-				$return .= 0; # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
-			}
+				$return .= pack('C', 0); # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
 			else
-			{
 				$return .= pack($pkFnkFormat, $this->$property);
-			}
 		}
-		echo '} Size, ' . strLen($return) . ' Bytes.' . PHP_EOL;
 		return $return;
 	}
 	public function parseUnpackFormat()
