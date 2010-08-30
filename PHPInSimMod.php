@@ -620,7 +620,7 @@ class PHPInSimMod
 
 	private function handlePacket(&$rawPacket, &$hostID)
 	{
-		global $TYPEs, $ISP, $IRP;
+		global $TYPEs;
 		
 		// Check packet size
 		if ((strlen($rawPacket) % 4) > 0)
@@ -640,7 +640,7 @@ class PHPInSimMod
 		
 		# Parse Packet Header
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
-		if (isset($ISP[$pH['Type']]) || isset($IRP[$pH['Type']]))
+		if (isset($TYPEs[$pH['Type']]))
 		{
 			console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
