@@ -139,9 +139,9 @@ class PHPInSimMod
 		}
 		else
 		{
-			# We could ask the client to input a connection details here.
-			# That would make this an non fatal error.
-			# Then build a connections.ini file based on these details.
+			# We could ask the client to input the connection details here.
+			# As that would allow us to make this a non fatal error.
+			# Then build a connections.ini file based on these details provided.
 			return FALSE;
 		}
 
@@ -161,8 +161,8 @@ class PHPInSimMod
 		}
 		else
 		{
-			# Here would could read the plugins directoy and asked the 
-			# Admin what plugins they wish to run.
+			# We could ask the client what files that want to load as an option.
+			# Here would could read the plugins dir and see what they want.
 			# Then build a plugins.ini file based on these details. 
 			return FALSE;
 		}
