@@ -66,7 +66,7 @@ $PRISM = new PHPInSimMod($argc, $argv);
 */
 class PHPInSimMod
 {
-	const VERSION = '0.1.7';
+	const VERSION = '0.1.8';
 	const ROOTPATH = ROOTPATH;
 
 	private $isWindows		= FALSE;
@@ -209,24 +209,39 @@ class PHPInSimMod
 		{
 			case E_ERROR:
 			case E_USER_ERROR:
-					echo "PHP ERROR: $errstr in $errfile on line $errline".PHP_EOL;
-					exit(1);
+					echo 'PHP ERROR:'.PHP_EOL;
+					$andExit = TRUE;
 				break;
 			case E_WARNING:
 			case E_USER_WARNING:
-					echo "PHP WARNING: $errstr in $errfile on line $errline".PHP_EOL;
+					echo 'PHP WARNING:'.PHP_EOL;
 				break;
 			case E_NOTICE:
 			case E_USER_NOTICE:
-					echo "PHP NOTICE: $errstr in $errfile on line $errline".PHP_EOL;
+					echo 'PHP NOTICE:'.PHP_EOL;
 				break;
 			case E_STRICT:
-					echo "PHP STRICT: $errstr in $errfile on line $errline".PHP_EOL;
+					echo 'PHP STRICT:'.PHP_EOL;
 				break;
 			default:
-					echo "UNKNOWN: $errstr in $errfile on line $errline".PHP_EOL;
+					echo 'UNKNOWN:'.PHP_EOL;
 				break;
 		}
+
+		echo "\t$errstr in $errfile on line $errline".PHP_EOL;
+
+		$trace = debug_backtrace();
+		foreach ($trace as $index => $call)
+		{
+			if ($call['function'] == 'main') break;
+			if ($index > 0)
+			{
+				console("\t".$index.' :: '.$call['function'].' in '.$call['file'].':'.$call['line']);
+			}
+		}
+
+		if (isset($andExit) && $andExit == TRUE)
+			exit(1);
 
 		# Don't execute PHP internal error handler
 		return true;
@@ -627,7 +642,7 @@ class PHPInSimMod
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($ISP[$pH['Type']]) || isset($IRP[$pH['Type']]))
 		{
-			console('Packet from '.$hostID);
+			console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
 			$this->dispatchPacket($packet, $hostID);

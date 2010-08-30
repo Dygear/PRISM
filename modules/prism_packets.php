@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHPInSimMod - Packet Module
  * @package PRISM
@@ -17,23 +18,50 @@ abstract class struct
 	}
 	public function __toString()
 	{
-		return $this->pack();
+		return $this->printPacketDetails();
+	}
+	public function printPacketDetails($pre = '')
+	{
+		$packFormat = $this::parsePackFormat();
+		$propertyNumber = -1;
+		$str = $pre . get_class($this) . ' {' . PHP_EOL;
+		foreach ($this as $property => $value)
+		{
+			$pkFnkFormat = @$packFormat[++$propertyNumber];
+			
+			if (gettype($this->$property) == 'array')
+			{
+					$str .= $pre . "\tArray\t{$property}\t= {" . PHP_EOL;
+					foreach ($this->$property as $k => $v)
+					{
+						if ($v instanceof struct)
+						{
+							$str .= $pre . $v->printPacketDetails($pre . "\t\t\t") . PHP_EOL;
+						}
+						else
+						{
+							$str .= $pre . "\t\t\t" . $k . "\t" . $v . PHP_EOL;
+						}
+					}
+					$str .= $pre . "\t}".PHP_EOL;
+					break;
+			}
+			elseif ($property == 'Type')
+			{
+				$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $TYPEs[$this->Type] . ' (' . $this->$property . ')' . PHP_EOL;
+			}	
+			else
+			{
+				$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $this->$property. PHP_EOL;
+			}
+		}
+		$str .= $pre . '}' . PHP_EOL;
+		return $str;
 	}
 	public function unpack($rawPacket)
 	{
-		global $TYPEs;
-		$unPackFormat = $this::parsePackFormat();
 		$pkClass = unpack($this::UNPACK, $rawPacket);
-		if ($this instanceof IS_MCI)
-		{
-			for ($i = 0; $i <= $this->NumC; ++$i)
-				$pkClass['Info'][] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
-		}
-		if ($this instanceof IS_NLP)
-		{
-			for ($i = 0; $i <= $this->NumP; ++$i)
-				$pkClass['Info'][] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
-		}
+		
 		# This is due to the C4 type that tyres requires.
 		if ($this instanceof IS_PIT || $this instanceof IS_NPL)
 		{
@@ -43,8 +71,30 @@ abstract class struct
 				unset($pkClass["Tyres{$Tyre}"]);
 			}
 		}
-		foreach ($this as $property => $value)
-			$this->$property = $pkClass[$property];
+
+		# For the IS_NLP Packets that have a struct (NodeLap) within their own struct and a varalble number of. 
+		if ($this instanceof IS_NLP)
+		{
+			for ($i = 0; $i < $this->NumP; $i++) {
+				$this->Info[$i] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
+			}
+		}
+
+		# For the IS_MCI Packets that have a struct (CompCar) within their own struct and a varalble number of.
+		if ($this instanceof IS_MCI)
+		{
+			for ($i = 0; $i < $this->NumC; $i++)
+			{
+				$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
+			}
+		}
+
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		return $this;
 	}
 	public function pack()
 	{
@@ -64,7 +114,7 @@ abstract class struct
 	public function parseUnpackFormat()
 	{
 		$return = array();
-		foreach (split('/', $this::UNPACK) as $element)
+		foreach (preg_split('/\//', $this::UNPACK) as $element)
 		{
 			for ($i = 1; is_numeric($element{$i}); ++$i) {}
 			$dataType = substr($element, 0, $i);
@@ -281,7 +331,7 @@ define('ISP_BTC',	46);// 46 - info			: sent when a user clicks a button
 define('ISP_BTT',	47);// 47 - info			: sent after typing into a button
 define('ISP_RIP',	48);// 48 - both ways		: replay information packet
 define('ISP_SSH',	49);// 49 - both ways		: screenshot
-$ISP = array(/*0 => 'ISP_NONE',*/ ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
+$ISP = array(ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',	0);	//  0 - keep alive		: see "maintaining the connection"
