@@ -154,20 +154,38 @@ class PHPInSimMod
 	}
 	
 	// Generic function to load ini files into a passed variable
+	// If a ini file with the name and a prefix local_ already exists it is loaded instead
 	private function loadIniFile(&$target, $iniFile, $parseSections = TRUE)
 	{
-		// Should parse the $PismDir/config/cvars.ini file, and load them into the $this->cvars array.
-		$iniPath = $this::ROOTPATH . '/configs/'.$iniFile;
+		$iniVARs = FALSE;
 		
-		if (!file_exists($iniPath))
+		// Should parse the $PismDir/config/***.ini file, and load them into the $this->cvars array.
+		$iniPath = $this::ROOTPATH . '/configs/'.$iniFile;
+		$localIniPath = $this::ROOTPATH . '/configs/local_'.$iniFile;
+		
+		if (file_exists($localIniPath))
 		{
-			console('Could not find ini file "'.$iniFile.'"');
-			return FALSE;
+			if (($iniVARs = parse_ini_file($localIniPath, $parseSections)) === FALSE)
+			{
+				console('Could not parse ini file "local_'.$iniFile.'". Using global.');
+			}
+			else
+			{
+				console('Using local ini file "local_'.$iniFile.'"');
+			}
 		}
-		if (($iniVARs = parse_ini_file($iniPath, $parseSections)) === FALSE)
+		if ($iniVARs === FALSE)
 		{
-			console('Could not parse ini file "'.$iniFile.'"');
-			return FALSE;
+			if (!file_exists($iniPath))
+			{
+				console('Could not find ini file "'.$iniFile.'"');
+				return FALSE;
+			}
+			if (($iniVARs = parse_ini_file($iniPath, $parseSections)) === FALSE)
+			{
+				console('Could not parse ini file "'.$iniFile.'"');
+				return FALSE;
+			}
 		}
 		$target = $iniVARs;
 
