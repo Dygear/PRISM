@@ -99,17 +99,28 @@ class PHPInSimMod
 		if ($this->loadIniFile($this->cvars, 'cvars.ini', FALSE))
 		{
 			if (!isset($this->cvars['debugMode']))
+			{
 				$this->cvars['debugMode'] = '';
-				
-			// ADD MORE MISSING CONFIG VALUS HERE AS EMERGENCY DEFAULTS?
-			
-			
+			}
 			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+			{
 				console('Loaded cvars.ini');
+			}
 		}
 		else
 		{
-			return FALSE;
+			console('Setting Emergency CVARs!');
+			$this->cvars['prefix'] = '!';
+			$this->cvars['debugMode'] = PRISM_DEBUG_ALL;
+			$this->cvars['logMode'] = 7;
+			$this->cvars['logFormat'] = 'r';
+			$this->cvars['relayIP'] = 'isrelay.lfs.net';
+			$this->cvars['relayPort'] = 47474;
+			$this->cvars['relayPPS'] = 2;
+			$this->cvars['dateFormat'] = 'M jS Y';
+			$this->cvars['timeFormat'] = 'H:i:s';
+			$this->cvars['logFormat'] = 'm-d-y@H:i:s';
+			$this->cvars['logNameFormat'] = 'Ymd';
 		}
 
 		// Load connections.ini
@@ -128,6 +139,9 @@ class PHPInSimMod
 		}
 		else
 		{
+			# We could ask the client to input a connection details here.
+			# That would make this an non fatal error.
+			# Then build a connections.ini file based on these details.
 			return FALSE;
 		}
 
@@ -147,6 +161,9 @@ class PHPInSimMod
 		}
 		else
 		{
+			# Here would could read the plugins directoy and asked the 
+			# Admin what plugins they wish to run.
+			# Then build a plugins.ini file based on these details. 
 			return FALSE;
 		}
 		
