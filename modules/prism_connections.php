@@ -75,7 +75,7 @@ class InsimConnection
 	
 	public function __destruct()
 	{
-		$this->close();
+		$this->close(TRUE);
 		if ($this->socketMCI)
 			fclose($this->socketMCI);
 	}
