@@ -74,8 +74,19 @@ class PHPInSimMod
 	/* Run Time Arrays */
 	// Resources
 	private $sql;
-	// Basicly Read Only
-	private $cvars			= array();
+	
+	// Config variables
+	private $cvars			= array('prefix'		=> '!',
+									'debugMode'		=> PRISM_DEBUG_ALL,
+									'logMode'		=> 7,
+									'logFileMode'	=> 3,
+									'relayIP'		=> 'isrelay.lfs.net',
+									'relayPort'		=> 47474,
+									'relayPPS'		=> 2,
+									'dateFormat'	=> 'M jS Y',
+									'timeFormat'	=> 'H:i:s',
+									'logFormat'		=> 'm-d-y@H:i:s',
+									'logNameFormat'	=> 'Ymd');
 	private $connvars		= array();
 	private $pluginvars		= array();
 
@@ -98,29 +109,11 @@ class PHPInSimMod
 		// Load generic cvars.ini
 		if ($this->loadIniFile($this->cvars, 'cvars.ini', FALSE))
 		{
-			if (!isset($this->cvars['debugMode']))
-			{
-				$this->cvars['debugMode'] = '';
-			}
-			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
-			{
-				console('Loaded cvars.ini');
-			}
+			console('Loaded cvars.ini');
 		}
 		else
 		{
-			console('Setting Emergency CVARs!');
-			$this->cvars['prefix'] = '!';
-			$this->cvars['debugMode'] = PRISM_DEBUG_ALL;
-			$this->cvars['logMode'] = 7;
-			$this->cvars['logFormat'] = 'r';
-			$this->cvars['relayIP'] = 'isrelay.lfs.net';
-			$this->cvars['relayPort'] = 47474;
-			$this->cvars['relayPPS'] = 2;
-			$this->cvars['dateFormat'] = 'M jS Y';
-			$this->cvars['timeFormat'] = 'H:i:s';
-			$this->cvars['logFormat'] = 'm-d-y@H:i:s';
-			$this->cvars['logNameFormat'] = 'Ymd';
+			console('Using defaults.');
 		}
 
 		// Load connections.ini
@@ -176,7 +169,7 @@ class PHPInSimMod
 	{
 		$iniVARs = FALSE;
 		
-		// Should parse the $PismDir/config/***.ini file, and load them into the $this->cvars array.
+		// Should parse the $PrismDir/config/***.ini file, and load them into the passed $target array.
 		$iniPath = $this::ROOTPATH . '/configs/'.$iniFile;
 		$localIniPath = $this::ROOTPATH . '/configs/local_'.$iniFile;
 		
@@ -378,7 +371,8 @@ class PHPInSimMod
 				{
 					if (in_array($ic->udpPort, $udpPortBuf))
 					{
-						console('Duplicate udpPort value found! Every host must have its own unique udpPort.');
+						console('Duplicate udpPort value found! Every host must have its own unique udpPort. Not using additional port for this host.');
+						$ic->udpPort = 0;
 					}
 					else
 					{
