@@ -131,7 +131,11 @@ class InsimConnection
 		$this->close(FALSE, TRUE);
 	
 		// Here we create the socket and initiate the connection. This is done asynchronously.
-		$this->socket = @stream_socket_client('tcp://'.$this->connectIp.':'.$this->port, $this->sockErrNo, $this->sockErrStr, CONN_TIMEOUT, STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
+		$this->socket = @stream_socket_client('tcp://'.$this->connectIp.':'.$this->port, 
+												$this->sockErrNo, 
+												$this->sockErrStr, 
+												CONN_TIMEOUT, 
+												STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
 		if ($this->socket === FALSE || $this->sockErrNo)
 		{
 			console ('Error opening TCP socket for '.$this->connectIp.':'.$this->port.' : '.$this->sockErrStr);
@@ -156,7 +160,6 @@ class InsimConnection
 	public function connectFinish()
 	{
 		// Here we finalise the connection cycle. Send an init packet to start the insim stream and while at it, detect if the socket is real.
-		$result				= FALSE;
 		$this->connStatus	= CONN_CONNECTED;
 		
 		if ($this->connType == CONNTYPE_HOST)
@@ -170,8 +173,7 @@ class InsimConnection
 			$ISP->Interval	= round(1000 / $this->pps);
 			$ISP->Admin		= $this->adminPass;
 			$ISP->IName		= 'PRISM v' . PHPInSimMod::VERSION;
-			if ($this->writePacket($ISP) > 0)
-				$result		= TRUE;
+			$this->writePacket($ISP);
 		}
 		else if ($this->connType == CONNTYPE_RELAY)
 		{
@@ -181,9 +183,7 @@ class InsimConnection
 			$ISP->HName		= $this->hostName;
 			$ISP->Admin		= $this->adminPass;
 			$ISP->Spec		= $this->specPass;
-	
-			if ($this->writePacket($ISP) > 0)
-				$result		= TRUE;
+			$this->writePacket($ISP);
 		}
 		else
 		{
@@ -191,18 +191,7 @@ class InsimConnection
 			$this->close(TRUE);
 		}
 		
-		// Check the final outcome of the finalise
-		if (!$result)
-		{
-			// AHA! the connection failed
-			console ('Could not connect to '.$this->ip.':'.$this->port);
-			$this->connStatus	= CONN_CONNECTING;
-			$this->close();
-		}
-		else
-		{
-			console('Connected to '.$this->ip.':'.$this->port);
-		}
+		console('Connected to '.$this->ip.':'.$this->port);
 	}
 	
 	public function createMCISocket()

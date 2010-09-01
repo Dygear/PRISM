@@ -441,14 +441,26 @@ class PHPInSimMod
 				// Host traffic
 				foreach($this->hosts as $hostID => $host)
 				{
-					// Finalise a connection?
+					// Finalise a tcp connection?
 					if ($host->connStatus == CONN_CONNECTING && 
 						in_array($host->socket, $sockWrites))
 					{
 						$numReady--;
 						
-						// The socket has become available for writing (or not)
-						$host->connectFinish();
+						// Check if remote replied negatively
+						$nr = stream_select($r = array($host->socket), $w = null, $e = null, 0);
+						if ($nr > 0)
+						{
+							// Experimentation showed that if something happened on this socket at this point,
+							// it is always an indication that the connection failed. We close this socket now.
+							$host->close();
+						}
+						else
+						{
+							// The socket has become available for writing
+							$host->connectFinish();
+						}
+						unset($nr, $r, $w, $e);
 					}
 
 					// Recover a lagged host?
