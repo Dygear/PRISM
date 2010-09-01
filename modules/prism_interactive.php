@@ -12,6 +12,8 @@ class Interactive
 		$c = 1;		
 		while (true)
 		{
+			$tmp = array();
+			
 			// Ask if we want to add a direct host or a relay host
 			$tmp['useRelay'] = (self::query('Do you want to connect to a host directly or through the relay?', array('direct', 'relay')) == 'relay') ? 1 : 0;
 	
