@@ -2,38 +2,57 @@
 
 class Interactive
 {
-	public function queryConnections(&$vars)
+	public function queryConnections(array &$vars)
 	{
 		echo '***Interactive startup***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
 		echo 'Afterwards your connection settings will be stored in ./config/connections.ini for future use.'.PHP_EOL;
 		echo ''.PHP_EOL;
-		
-		// Ask if we want to add a direct host or a relay host
-		$input = self::query('Do you want to connect to a host directly or through the relay?', array('direct', 'relay'));
-		$vars['useRelay'] = ($input == 'relay') ? 1 : 0;
 
-		if ($vars['useRelay'])
+		$c = 1;		
+		while (true)
 		{
-			// Relay host connection details
-			$vars['hostname']		= self::query('What is the name of the host (case-sensitive)?');
-			$vars['adminPass']		= self::query('Do you have an administrator password for the host?', array(), TRUE);
-			if (!$vars['adminPass'])
-				$vars['specPass']	= self::query('Does the host require a spectator pass then?', array(), TRUE);
-		}
-		else
-		{
-			// Direct host connection details
-			$vars['ip']				= self::query('What is the IP address or hostname of the host?');
-			$vars['port']			= self::query('What is the InSim port number of the host?');
-			$vars['socketType']		= self::query('Do you want to connect to the host via TCP or UDP?', array('tcp', 'udp'));
-			$vars['password']		= self::query('What is the administrator password of the host?');
-			$vars['pps']			= 4;
-			//$vars['pps']			= self::query('How many position packets per second do you want to receive?');
+			// Ask if we want to add a direct host or a relay host
+			$tmp['useRelay'] = (self::query('Do you want to connect to a host directly or through the relay?', array('direct', 'relay')) == 'relay') ? 1 : 0;
+	
+			if ($tmp['useRelay'])
+			{
+				// Relay host connection details
+				$tmp['hostname']		= self::query('What is the name of the host (case-sensitive)?');
+				$tmp['adminPass']		= self::query('Do you have an administrator password for the host?', array(), TRUE);
+				$tmp['specPass']		= '';
+				if (!$tmp['adminPass'])
+					$tmp['specPass']	= self::query('Does the host require a spectator pass then?', array(), TRUE);
+			}
+			else
+			{
+				// Direct host connection details
+				do {
+					if (isset($tmp['ip']) && $tmp['ip'] != '')
+						echo 'Invalid ip or hostname.'.PHP_EOL;
+					$tmp['ip']			= self::query('What is the IP address or hostname of the host?');
+				} while (!getIP($tmp['ip']));
+	
+				do {
+					if (isset($tmp['port']))
+						echo 'Invalid port number. Must be between 1 and 65535.'.PHP_EOL;
+					$tmp['port']		= (int) self::query('What is the InSim port number of the host?');
+				} while ($tmp['port'] < 1 || $tmp['port'] > 65535);
+	
+				$tmp['socketType']		= (self::query('Do you want to connect to the host via TCP or UDP?', array('tcp', 'udp')) == 'udp') ? 2 : 1;
+				$tmp['password']		= self::query('What is the administrator password of the host?', array(), TRUE);
+				$tmp['pps']			= 4;
+				//$tmp['pps']			= self::query('How many position packets per second do you want to receive?');
+			}
+			
+			$vars['host #'.$c++] = $tmp;
+
+			if (self::query('Would you like to add another host?', array('yes', 'no')) == 'no')
+				break;
 		}
 	}
 
-	public function queryPlugins(&$vars)
+	public function queryPlugins(array &$vars)
 	{
 		
 	}
@@ -42,12 +61,13 @@ class Interactive
 	 *	$options	- optional array of answers of which one must be matched.
 	 *	$allowEmpty	- whether to allow and empty input or not.
 	 */
-	public function query($question, $options = array(), $allowEmpty = FALSE)
+	public function query($question, array $options = array(), $allowEmpty = false)
 	{
 		$input = '';
 		$numOptions = count($options);
 		
-		while(true) {
+		while(true)
+		{
 			echo $question.' [';
 			foreach ($options as $index => $option)
 			{

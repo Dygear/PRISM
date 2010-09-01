@@ -86,7 +86,7 @@ class InsimConnection
 		$this->close(FALSE, TRUE);
 		
 		// Figure out the proper IP address. We do this every time we connect in case of dynamic IP addresses.
-		$this->connectIp = $this->getIP();
+		$this->connectIp = getIP($this->ip);
 		if (!$this->connectIp)
 		{
 			console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port.' : '.$this->sockErrStr);
@@ -255,7 +255,7 @@ class InsimConnection
 			$this->mustConnect = -1;
 	}
 	
-	public function writePacket(&$packet)
+	public function writePacket(struct &$packet)
 	{
 		if ($this->socketType	== SOCKTYPE_UDP)
 			return $this->writeUDP($packet->pack());
@@ -365,24 +365,25 @@ class InsimConnection
 		return $packet;
 	}
 	
-	private function getIP()
+}
+
+function getIP(&$ip)
+{
+	if (verifyIP($ip))
+		return $ip;
+	else
 	{
-		if ($this->verifyIP($this->ip))
-			return $this->ip;
-		else
-		{
-			$tmp_ip = @gethostbyname($this->ip);
-			if ($this->verifyIP($tmp_ip))
-				return $tmp_ip;
-		}
-		
-		return FALSE;
+		$tmp_ip = @gethostbyname($ip);
+		if (verifyIP($tmp_ip))
+			return $tmp_ip;
 	}
 	
-	private function verifyIP($ip)
-	{
-		return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
-	}
+	return FALSE;
+}
+
+function verifyIP(&$ip)
+{
+	return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
 }
 
 ?>

@@ -140,10 +140,12 @@ class PHPInSimMod
 
 			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryConnections($this->connvars);
+			print_r($this->connvars);
+			
 //			if ($this->createIniFile('connections.ini', 'InSim Connection Hosts', $this->connvars))
 //				console('Generated config/connections.ini');
 
-			return FALSE;
+//			return FALSE;
 		}
 
 		// Load plugins.ini
@@ -179,7 +181,7 @@ class PHPInSimMod
 	
 	// Generic function to load ini files into a passed variable
 	// If a ini file with the name and a prefix local_ already exists it is loaded instead
-	private function loadIniFile(&$target, $iniFile, $parseSections = TRUE)
+	private function loadIniFile(array &$target, $iniFile, $parseSections = TRUE)
 	{
 		$iniVARs = FALSE;
 		
@@ -217,7 +219,7 @@ class PHPInSimMod
 		return TRUE;
 	}
 
-	private function createIniFile($iniFile, $desc, $options)
+	private function createIniFile($iniFile, $desc, array $options)
 	{
 		// Check if config folder exists
 		if (!file_exists($this::ROOTPATH . '/configs/') && 
