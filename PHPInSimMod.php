@@ -113,11 +113,13 @@ class PHPInSimMod
 		}
 		else
 		{
-			console('Using defaults.');
+			console('Using cvars defaults.');
+			if ($this->createIniFile('cvars.ini', 'PHPInSimMod Configuration Variables', array('prism' => &$this->cvars)))
+				console('Generated config/cvars.ini');
 		}
 
 		// Load connections.ini
-		if ($this->loadIniFile($this->connvars, 'connections.ini'))
+		if ($this->loadIniFile($this->connvars, 'connections.inii'))
 		{
 			foreach ($this->connvars as $hostID => $v)
 			{
@@ -135,6 +137,12 @@ class PHPInSimMod
 			# We could ask the client to input the connection details here.
 			# As that would allow us to make this a non fatal error.
 			# Then build a connections.ini file based on these details provided.
+
+			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
+			Interactive::queryConnections($this->connvars);
+//			if ($this->createIniFile('connections.ini', 'InSim Connection Hosts', $this->connvars))
+//				console('Generated config/connections.ini');
+
 			return FALSE;
 		}
 
@@ -157,6 +165,12 @@ class PHPInSimMod
 			# We could ask the client what files that want to load as an option.
 			# Here would could read the plugins dir and see what they want.
 			# Then build a plugins.ini file based on these details. 
+
+			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
+			Interactive::queryPlugins($this->pluginvars);
+//			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
+//				console('Generated config/plugins.ini');
+
 			return FALSE;
 		}
 		
@@ -203,6 +217,47 @@ class PHPInSimMod
 		return TRUE;
 	}
 
+	private function createIniFile($iniFile, $desc, $options)
+	{
+		// Check if config folder exists
+		if (!file_exists($this::ROOTPATH . '/configs/') && 
+			!@mkdir($this::ROOTPATH . '/configs/'))
+		{
+			return FALSE;
+		}
+		
+		// Check if file doesn't already exist
+		if (file_exists($this::ROOTPATH . '/configs/'.$iniFile))
+			return FALSE;
+		
+		// Generate file contents
+		$text = '; '.$desc.' (automatically genereated)'.PHP_EOL;
+		$text .= '; File location: ./PHPInSimMod/configs/'.$iniFile.PHP_EOL;
+		$main = '';
+		foreach ($options as $section => $data)
+		{
+			if (is_array($data))
+			{
+				$main .= PHP_EOL.'['.$section.']'.PHP_EOL;
+				foreach ($data as $key => $value)
+				{
+					$main .= $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"').PHP_EOL;
+				}
+			}
+		}
+
+		if ($main == '')
+			return FALSE;
+		
+		$text .= $main.PHP_EOL;
+		
+		// Write contents
+		if (!file_put_contents($this::ROOTPATH . '/configs/'.$iniFile, $text))
+			return FALSE;
+		
+		return TRUE;
+	}
+	
 	// Pseudo Magic Functions
 	private static function _autoload($className)
 	{
