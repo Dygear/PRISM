@@ -7,11 +7,11 @@ class Interactive
 		echo '***Interactive startup***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
 		echo 'Afterwards your connection settings will be stored in ./config/connections.ini for future use.'.PHP_EOL;
-		echo ''.PHP_EOL;
 
 		$c = 1;		
 		while (true)
 		{
+			echo PHP_EOL;
 			$tmp = array();
 			
 			// Ask if we want to add a direct host or a relay host
@@ -43,13 +43,15 @@ class Interactive
 	
 				$tmp['socketType']		= (self::query('Do you want to connect to the host via TCP or UDP?', array('tcp', 'udp')) == 'udp') ? 2 : 1;
 				$tmp['password']		= self::query('What is the administrator password of the host?', array(), TRUE);
-				$tmp['pps']			= 4;
+				$tmp['pps']				= 4;
 				//$tmp['pps']			= self::query('How many position packets per second do you want to receive?');
+				
+				unset($tmp['useRelay']);
 			}
 			
 			$vars['host #'.$c++] = $tmp;
 
-			if (self::query('Would you like to add another host?', array('yes', 'no')) == 'no')
+			if (self::query(PHP_EOL.'Would you like to add another host?', array('yes', 'no')) == 'no')
 				break;
 		}
 	}
@@ -61,7 +63,7 @@ class Interactive
 	
 	/*	$question	- the string that will be presented to the user.
 	 *	$options	- optional array of answers of which one must be matched.
-	 *	$allowEmpty	- whether to allow and empty input or not.
+	 *	$allowEmpty	- whether to allow an empty input or not.
 	 */
 	public function query($question, array $options = array(), $allowEmpty = false)
 	{

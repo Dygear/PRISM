@@ -119,7 +119,7 @@ class PHPInSimMod
 		}
 
 		// Load connections.ini
-		if ($this->loadIniFile($this->connvars, 'connections.inii'))
+		if ($this->loadIniFile($this->connvars, 'connections.ini'))
 		{
 			foreach ($this->connvars as $hostID => $v)
 			{
@@ -134,18 +134,14 @@ class PHPInSimMod
 		}
 		else
 		{
-			# We could ask the client to input the connection details here.
-			# As that would allow us to make this a non fatal error.
-			# Then build a connections.ini file based on these details provided.
-
+			# We ask the client to manually input the connection details here.
 			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryConnections($this->connvars);
-			print_r($this->connvars);
+//			print_r($this->connvars);
 			
-//			if ($this->createIniFile('connections.ini', 'InSim Connection Hosts', $this->connvars))
-//				console('Generated config/connections.ini');
-
-//			return FALSE;
+			# Then build a connections.ini file based on these details provided.
+			if ($this->createIniFile('connections.ini', 'InSim Connection Hosts', $this->connvars))
+				console('Generated config/connections.ini');
 		}
 
 		// Load plugins.ini
