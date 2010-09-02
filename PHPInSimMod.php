@@ -93,6 +93,9 @@ class PHPInSimMod
 	private $hosts			= array();			# Stores references to the hosts we're connected to
 	private $nextMaintenance= 0;
 
+	// InSim
+	private $plugins		= array();
+
 	// InSim Changed Arrays
 	private $clients		= array();
 	private $players		= array();
@@ -203,6 +206,54 @@ class PHPInSimMod
 		return TRUE;
 	}
 
+	private function loadPlugins()
+	{
+		$loadedPluginCount = 0;
+		
+		if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+			console('Loading plugins');
+		
+		$pluginPath = $this::ROOTPATH.'/plugins';
+		
+		if (($pluginFiles = get_dir_structure($pluginPath, FALSE, '.php')) === NULL)
+		{
+			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console('No plugins found in the directory.');
+			# As we can't find any plugin files, we invalidate the the ini settings.
+			$this->pluginvars = NULL;
+		}
+		
+		# Find what plugin files have ini entrys
+		foreach ($this->pluginvars as $pluginSection => $pluginHosts)
+		{
+			$pluginFileHasPluginSection = FALSE;
+			foreach ($pluginFiles as $pluginFile)
+			{
+				if ("$pluginSection.php" == $pluginFile)
+				{
+					$pluginFileHasPluginSection = TRUE;
+				}
+			}
+			# Remove any pluginini value who does not have a file associated with it.
+			if ($pluginFileHasPluginSection === FALSE)
+			{
+				unset($this->pluginvars[$pluginSection]);
+				continue;
+			}
+			# Load the plugin file.
+			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console("Loading plugin: $pluginSection");
+			
+			include_once("$pluginPath/$pluginSection.php");
+			
+			$this->plugins[] = new $pluginSection($this);
+			
+			++$loadedPluginCount;
+		}
+		
+		return $loadedPluginCount;
+	}
+
 	// Pseudo Magic Functions
 	private static function _autoload($className)
 	{
@@ -289,7 +340,18 @@ class PHPInSimMod
 			date_default_timezone_set($timeZoneGuess);
 			unset($timeZoneGuess);
 		}
-
+		
+		if (
+			(($pluginsLoaded = $this->loadPlugins()) == 0) &&
+			($this->cvars['debugMode'] & PRISM_DEBUG_CORE))
+		{
+			console('No Plugins Loaded');
+		} else if ($pluginsLoaded == 1) {
+			console('One Plugin Loaded');
+		} else {
+			console("{$pluginsLoaded} Plugins Loaded.");
+		}
+		
 		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 		$this->main();
 	}
@@ -719,14 +781,19 @@ class PHPInSimMod
 	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
-		if (!isset($this->packetDispatch[$packet->Type]))
-		{	# Optimization, if the packet we are looking for has no listeners don't go though the loop.
-			return PLUGIN_HANDLED;
-		}
-
-		foreach ($this->packetDispatch[$packet->Type] as $listener)
+		foreach ($this->plugins as $plugin)
 		{
-			echo $listener;
+			if (!isset($plugin->callbacks[$packet->Type]))
+			{	# Optimization, if the packet we are looking for has no callbacks don't go though the loop.
+				return PLUGIN_HANDLED;
+			}
+		
+			print_r($plugin->callbacks[$packet->Type]);
+		
+			foreach ($plugin->callbacks[$packet->Type] as $callback)
+			{
+				$plugin->$callback($packet);
+			}
 		}
 	}
 
@@ -737,18 +804,6 @@ class PHPInSimMod
 		
 		$this->sleep = 0;		// default select wait of 1000 microsecond (1 millisecond).
 		$this->uSleep = 1000;
-	}
-
-	private function isSafeToInclude($filePath)
-	{
-		if (!file_exists($filePath))
-			return FALSE;
-
-		system('php -l ' . escapeshellcmd($filePath), $status);
-		if ($status)
-			return FALSE;
-		else
-			return TRUE;
 	}
 
 	public function __destruct()
@@ -762,6 +817,45 @@ function console($line, $EOL = true)
 	// Add log to file
 	// Effected by PRISM_LOG_MODE && PRISM_LOG_FILE_MODE
 	echo $line . (($EOL) ? PHP_EOL : '');
+}
+
+function get_dir_structure($path, $recursive = true, $ext = null)
+{
+	$return = NULL;
+	if (!is_dir($path))
+	{
+		trigger_error('$path is not a directory!', E_USER_WARNING);
+		return FALSE;
+	}
+	if ($handle = opendir($path))
+	{
+		while (FALSE !== ($item = readdir($handle)))
+		{
+			if ($item != '.' && $item != '..')
+			{
+				if (is_dir($path . $item))
+				{
+					if ($recursive)
+					{
+						$return[$item] = get_dir_structure($path . $item . '/', $recursive, $ext);
+					}
+					else
+					{
+						$return[$item] = array();
+					}
+				}
+				else
+				{
+					if ($ext != null && strrpos($item, $ext) !== FALSE)
+					{
+						$return[] = $item;
+					}
+				}
+			}
+		}
+		closedir($handle);
+	}
+	return $return;
 }
 
 ?>

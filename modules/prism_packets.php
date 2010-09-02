@@ -22,6 +22,7 @@ abstract class struct
 	}
 	public function printPacketDetails($pre = '')
 	{
+		global $TYPEs;
 		$packFormat = $this::parsePackFormat();
 		$propertyNumber = -1;
 		$str = $pre . get_class($this) . ' {' . PHP_EOL;
@@ -72,6 +73,11 @@ abstract class struct
 			}
 		}
 
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
 		# For the IS_NLP Packets that have a struct (NodeLap) within their own struct and a varalble number of. 
 		if ($this instanceof IS_NLP)
 		{
@@ -87,11 +93,6 @@ abstract class struct
 			{
 				$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
 			}
-		}
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
 		}
 
 		return $this;
