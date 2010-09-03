@@ -49,8 +49,17 @@ class Interactive
 				unset($tmp['useRelay']);
 			}
 
-			$alias = self::query('What would you like this connection to be known as?', array(), TRUE);
-			++$c;
+			// Ask for the alias (hostID) for this connection
+			while (true)
+			{
+				$alias = self::query('What would you like this connection to be known as?', array(), TRUE);
+				if (!isset($vars[$alias]))
+					break;
+				
+				echo 'There already is a connection by that name. Please enter another one.'.PHP_EOL;
+			}
+			
+			$c++;
 			if ($alias == '')
 				$vars["host #{$c}"] = $tmp;
 			else
@@ -60,9 +69,10 @@ class Interactive
 			if (self::query(PHP_EOL.'Would you like to add another host?', array('yes', 'no')) == 'no')
 				break;
 		}
+		echo PHP_EOL;
 	}
 
-	public function queryPlugins(array &$vars)
+	public function queryPlugins(array &$vars, array &$hostvars)
 	{
 		// Check if plugins dir exists
 		if (!file_exists(ROOTPATH.'/plugins/'))
@@ -73,27 +83,97 @@ class Interactive
 		
 		// read plugins dir
 		$plugins = array();
-		foreach (new DirectoryIterator(ROOTPATH.'/plugins/') as $fileInfo) {
-		    if ($fileInfo->isDot())
+		foreach (new DirectoryIterator(ROOTPATH.'/plugins') as $fileInfo) {
+		    if ($fileInfo->getType() != 'file' || !preg_match('/^.*\.php$/', $fileInfo->getFilename()))
 		    	continue;
-		    echo $fileInfo->getFilename().PHP_EOL;
+		    $plugins[] = preg_replace('/^(.*)\.php$/', '$1', $fileInfo->getFilename());
 		}
-		
-		exit();
+
+		if (count($plugins) == 0)
+		{
+			echo 'Your plugins folder does not appear to contain any plugins. PRISM will not be doing much now...'.PHP_EOL;
+			return;
+		}
+				
 		echo '***Interactive startup***'.PHP_EOL;
 		echo 'You now have the chance to manually select which plugins to load.'.PHP_EOL;
 		echo 'Afterwards your plugin settings will be stored in ./config/plugins.ini for future use.'.PHP_EOL;
 		
 		$hosts = array();
 		
-		
+		// Loop through the plugins now, so we can tie hosts to each plugin
+		foreach ($plugins as $plugin)
 		{
+			echo PHP_EOL;
+
 			// Ask if user wants this plugin
-			
+			if (self::query('Do you want to use the plugin "'.$plugin.'"?', array('yes', 'no')) == 'no')
+				continue;
+
+			// Print a list of available hosts			
+			$c = 1;
+			$hostIDCache = array();
+			echo 'ID | Host details'.PHP_EOL;
+			echo '---+----------------'.PHP_EOL;
+			foreach ($hostvars as $hostID => $values)
+			{
+				$hostIDCache[$c] = $hostID;
+				printf('%-2d | %s (', $c, $hostID);
+				if (isset($values['useRelay']) && $values['useRelay'] == 1)
+					echo '"'.$values['hostname'].'" via relay';
+				else
+					echo '"'.$values['ip'].':'.$values['port'].'"';
+				echo ')'.PHP_EOL;
+				$c++;
+			}
+
 			// Select which hosts to tie to it
+			while (true)
+			{
+				$hostIDs = '';
+				if ($c == 2)
+				{
+					$ids = self::query(PHP_EOL.'Enter the ID number of the host you want to tie to this plugin.', array(), TRUE);
+				}
+				else
+				{
+					echo PHP_EOL.'Enter the ID numbers of the hosts you want to tie to this plugin.'.PHP_EOL;
+					$ids = self::query('Separate each ID number by a space', array(), TRUE);
+				}
+				
+				// Validate user input
+				$exp = explode(' ', $ids);
+				$invalidIDs = '';
+				$IDCache = array();
+				foreach ($exp as $e)
+				{
+					if ($e == '')
+						continue;
+					
+					$id = (int) $e;
+					if ($id < 1 || $id >= $c)
+					{
+						$invalidIDs .= $e.' ';
+					}
+					else if (!in_array($id, $IDCache))
+					{
+						if ($hostIDs != '')
+							$hostIDs .= ',';
+						$hostIDs .= '"'.$hostIDCache[$id].'"';
+						$IDCache[] = $id;
+					}
+				}
+				if ($invalidIDs != '')
+					echo 'You typed one or more invalid host ID ('.trim($invalidIDs).'). Please try again.'.PHP_EOL;
+				else
+					break;
+			}
 			
-			
+			// Store this plugin's settings in target var
+			$vars[$plugin] = array('useHosts' => substr($hostIDs, 1, -1));
 		}
+
+		echo PHP_EOL;
 	}
 	
 	/*	$question	- the string that will be presented to the user.
@@ -107,14 +187,19 @@ class Interactive
 		
 		while(true)
 		{
-			echo $question.' [';
-			foreach ($options as $index => $option)
+			echo $question;
+			if (count($options))
 			{
-				if ($index > 0)
-					echo '/';
-				echo $option;
+				echo ' [';
+				foreach ($options as $index => $option)
+				{
+					if ($index > 0)
+						echo '/';
+					echo $option;
+				}
+				echo ']';
 			}
-			echo '] : ';
+			echo ' : ';
 			$input = trim(fread(STDIN, 1024));
 			
 			if ($input == '')

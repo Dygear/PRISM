@@ -148,7 +148,7 @@ class PHPInSimMod
 		}
 
 		// Load plugins.ini
-		if ($this->loadIniFile($this->pluginvars, 'plugins.inii'))
+		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
 		{
 			foreach ($this->pluginvars as $plguinID => $v)
 			{
@@ -168,13 +168,11 @@ class PHPInSimMod
 			# Then build a plugins.ini file based on these details. 
 
 			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
-			Interactive::queryPlugins($this->pluginvars);
-			print_r($this->pluginvars);
+			Interactive::queryPlugins($this->pluginvars, $this->connvars);
+//			print_r($this->pluginvars);
 
-			if ($this->createIniFile('plugins.ini.test', 'PHPInSimMod Plugins', $this->pluginvars))
-				console('Generated config/plugins.ini.test');
-
-			return FALSE;
+			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
+				console('Generated config/plugins.ini');
 		}
 		
 		return TRUE;
