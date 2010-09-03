@@ -160,6 +160,12 @@ class PHPInSimMod
 			}
 			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
 				console('Loaded plugins.ini');
+
+			// Parse useHosts values of plugins
+			foreach ($this->pluginvars as $pluginID => $details)
+			{
+				$this->pluginvars[$pluginID]['useHosts'] = explode(',', $details['useHosts']);
+			}
 		}
 		else
 		{
@@ -169,13 +175,14 @@ class PHPInSimMod
 
 			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
 				console('Generated config/plugins.ini');
+
+			// Parse useHosts values of plugins
+			foreach ($this->pluginvars as $pluginID => $details)
+			{
+				$this->pluginvars[$pluginID]['useHosts'] = explode('","', $details['useHosts']);
+			}
 		}
 		
-		// Parse useHosts values of plugins
-		foreach ($this->pluginvars as $pluginID => $details)
-		{
-			$this->pluginvars[$pluginID]['useHosts'] = explode('","', $details['useHosts']);
-		}
 //		print_r($this->pluginvars);
 		
 		return TRUE;
