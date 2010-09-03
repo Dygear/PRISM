@@ -20,7 +20,7 @@ abstract class plugins
 
 	protected function sendPacket($packetClass)
 	{
-		print_r($this->parent);
+		return $this->parent->sendPacket($packetClass);
 	}
 
 	/* Plugin Functions */

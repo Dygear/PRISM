@@ -63,38 +63,11 @@ abstract class struct
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
 		
-		# This is due to the C4 type that tyres requires.
-		if ($this instanceof IS_PIT || $this instanceof IS_NPL)
-		{
-			for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
-			{
-				$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
-				unset($pkClass["Tyres{$Tyre}"]);
-			}
-		}
-
 		foreach ($pkClass as $property => $value)
 		{
 			$this->$property = $value;
 		}
-
-		# For the IS_NLP Packets that have a struct (NodeLap) within their own struct and a varalble number of. 
-		if ($this instanceof IS_NLP)
-		{
-			for ($i = 0; $i < $this->NumP; $i++) {
-				$this->Info[$i] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
-			}
-		}
-
-		# For the IS_MCI Packets that have a struct (CompCar) within their own struct and a varalble number of.
-		if ($this instanceof IS_MCI)
-		{
-			for ($i = 0; $i < $this->NumC; $i++)
-			{
-				$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
-			}
-		}
-
+		
 		return $this;
 	}
 	public function pack()
@@ -977,6 +950,24 @@ class IS_NPL extends struct // New PLayer joining race (if PLID already exists, 
 	public $NumP;			// number in race (same when leaving pits, 1 more if new)
 	public $Sp2;
 	public $Sp3;
+
+	function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
+		{
+			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
+			unset($pkClass["Tyres{$Tyre}"]);
+		}
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+				
+		return $this;
+	}
 };
 
 // NOTE : PType bit 0 (female) is not reported on dedicated host as humans are not loaded
@@ -1087,6 +1078,25 @@ class IS_PIT extends struct // PIT stop (stop at pit garage)
 
 	public $Work;			// pit work
 	public $Spare;
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+		
+		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
+		{
+			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
+			unset($pkClass["Tyres{$Tyre}"]);
+		}
+
+		return $this;
+	}
+
 };
 
 class IS_PSF extends struct // Pit Stop Finished
@@ -1533,6 +1543,24 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 	public $NumP;			// number of players in race
 
 	public $Info = array();	// node and lap of each player, 1 to 32 of these (NumP)
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		for ($i = 0; $i < $this->NumP; $i++)
+		{
+			$this->Info[$i] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
+		}
+
+		return $this;
+	}
+
 };
 
 // If ISF_MCI flag is set, a set of IS_MCI packets is sent...
@@ -1580,6 +1608,23 @@ class IS_MCI extends struct // Multi Car Info - if more than 8 in race then more
 	public $NumC;			// number of valid CompCar structs in this packet
 
 	public $Info = array();	// car info for each player, 1 to 8 of these (NumC)
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		for ($i = 0; $i < $this->NumC; $i++)
+		{
+			$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
+		}
+
+		return $this;
+	}
 };
 
 // You can change the rate of NLP or MCI after initialisation by sending this IS_SMALL :
@@ -1930,21 +1975,21 @@ class IS_BTN extends struct // BuTtoN - button header - followed by 0 to 240 cha
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CBStyle/CTypeIn/CL/CT/CW/CH/a240Text';
 
 	public $Size;			// 12 + TEXT_SIZE (a multiple of 4)
-	public $Type = ISP_BTN;// ISP_BTN
-	public $ReqI;		// non-zero (returned in IS_BTC and IS_BTT packets)
-	public $UCID;		// connection to display the button (0 = local / 255 = all)
+	public $Type = ISP_BTN;	// ISP_BTN
+	public $ReqI;			// non-zero (returned in IS_BTC and IS_BTT packets)
+	public $UCID;			// connection to display the button (0 = local / 255 = all)
 
-	public $ClickID;	// button ID (0 to 239)
-	public $Inst;		// some extra flags - see below
-	public $BStyle;		// button style flags - see below
-	public $TypeIn;		// max chars to type in - see below
+	public $ClickID;		// button ID (0 to 239)
+	public $Inst;			// some extra flags - see below
+	public $BStyle;			// button style flags - see below
+	public $TypeIn;			// max chars to type in - see below
 
-	public $L;			// left   : 0 - 200
-	public $T;			// top    : 0 - 200
-	public $W;			// width  : 0 - 200
-	public $H;			// height : 0 - 200
+	public $L;				// left   : 0 - 200
+	public $T;				// top    : 0 - 200
+	public $W;				// width  : 0 - 200
+	public $H;				// height : 0 - 200
 
-	public $Text;		// 0 to 240 characters of text
+	public $Text;			// 0 to 240 characters of text
 
 	function pack()
 	{
@@ -2254,15 +2299,27 @@ class IR_HOS extends struct // Hostlist (hosts connected to the Relay)
 	const UNPACK = 'CSize/CType/CReqI/CNumHosts/a6Info';
 
 	public $Size;			// 4 + NumHosts * 40
-	public $Type = IRP_HOS;// IRP_HOS
+	public $Type = IRP_HOS;	// IRP_HOS
 	public $ReqI;			// As given in IR_HLR
 	public $NumHosts;		// Number of hosts described in this packet
 
-	public $Info;		// Host info for every host in the Relay. 1 to 6 of these in a IR_HOS
+	public $Info;			// Host info for every host in the Relay. 1 to 6 of these in a IR_HOS
 
 	public function unpack()
 	{
-		PRISM::CONSOLE('Needs to be implamented');
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		for ($i = 0; $i < $this->NumHosts; $i++)
+		{
+			$this->Info[$i] = new HInfo(substr($rawPacket, 4 + ($i * 40), 40));
+		}
+
+		return $this;
 	}
 };
 

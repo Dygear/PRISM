@@ -91,6 +91,7 @@ class PHPInSimMod
 	private $pluginvars		= array();
 
 	private $hosts			= array();			# Stores references to the hosts we're connected to
+	private $hostID			= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 	private $nextMaintenance= 0;
 
 	// InSim
@@ -791,6 +792,7 @@ class PHPInSimMod
 	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
+		$this->hostID = $hostID;
 		foreach ($this->plugins as $name => $plugin)
 		{
 			# If this plugin is not assigned to this host, skip this plugin.
@@ -801,16 +803,21 @@ class PHPInSimMod
 				continue;
 
 			if (!isset($plugin->callbacks[$packet->Type]))
-			{	# Optimization, if the packet we are looking for has no callbacks don't go though the loop.
+			{	# If the packet we are looking at has no callbacks for this packet type don't go to the loop.
 				continue;
 			}
 
 			foreach ($plugin->callbacks[$packet->Type] as $callback)
 			{
 				if (($plugin->$callback($packet)) == PLUGIN_HANDLED)
-					continue;
+					continue 2; # Skips all of the rest of the plugins who wanted this packet.
 			}
 		}
+	}
+
+	public function sendPacket($packetClass)
+	{
+		return $this->hosts[$this->hostID]->writePacket($packetClass);
 	}
 
 	private function getSocketTimeOut()
@@ -835,7 +842,7 @@ function console($line, $EOL = true)
 	echo $line . (($EOL) ? PHP_EOL : '');
 }
 
-function get_dir_structure($path, $recursive = true, $ext = null)
+function get_dir_structure($path, $recursive = TRUE, $ext = NULL)
 {
 	$return = NULL;
 	if (!is_dir($path))
