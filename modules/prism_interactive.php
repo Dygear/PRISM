@@ -8,7 +8,7 @@ class Interactive
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
 		echo 'Afterwards your connection settings will be stored in ./config/connections.ini for future use.'.PHP_EOL;
 
-		$c = 1;		
+		$c = 1;
 		while (true)
 		{
 			echo PHP_EOL;
@@ -48,8 +48,14 @@ class Interactive
 				
 				unset($tmp['useRelay']);
 			}
-			
-			$vars['host #'.$c++] = $tmp;
+
+			$alias = self::query('What would you like this connection to be known as?', array(), TRUE);
+			++$c;
+			if ($alias == '')
+				$vars["host #{$c}"] = $tmp;
+			else
+				$vars[$alias] = $tmp;
+			unset($alias);
 
 			if (self::query(PHP_EOL.'Would you like to add another host?', array('yes', 'no')) == 'no')
 				break;
@@ -58,7 +64,36 @@ class Interactive
 
 	public function queryPlugins(array &$vars)
 	{
+		// Check if plugins dir exists
+		if (!file_exists(ROOTPATH.'/plugins/'))
+		{
+			echo 'No plugins folder seems to exist. Cannot load any plugins at this time'.PHP_EOL;
+			return;
+		}
 		
+		// read plugins dir
+		$plugins = array();
+		foreach (new DirectoryIterator(ROOTPATH.'/plugins/') as $fileInfo) {
+		    if ($fileInfo->isDot())
+		    	continue;
+		    echo $fileInfo->getFilename().PHP_EOL;
+		}
+		
+		exit();
+		echo '***Interactive startup***'.PHP_EOL;
+		echo 'You now have the chance to manually select which plugins to load.'.PHP_EOL;
+		echo 'Afterwards your plugin settings will be stored in ./config/plugins.ini for future use.'.PHP_EOL;
+		
+		$hosts = array();
+		
+		
+		{
+			// Ask if user wants this plugin
+			
+			// Select which hosts to tie to it
+			
+			
+		}
 	}
 	
 	/*	$question	- the string that will be presented to the user.

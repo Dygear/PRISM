@@ -112,7 +112,8 @@ class PHPInSimMod
 		// Load generic cvars.ini
 		if ($this->loadIniFile($this->cvars, 'cvars.ini', FALSE))
 		{
-			console('Loaded cvars.ini');
+			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console('Loaded cvars.ini');
 		}
 		else
 		{
@@ -140,7 +141,6 @@ class PHPInSimMod
 			# We ask the client to manually input the connection details here.
 			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryConnections($this->connvars);
-//			print_r($this->connvars);
 			
 			# Then build a connections.ini file based on these details provided.
 			if ($this->createIniFile('connections.ini', 'InSim Connection Hosts', $this->connvars))
@@ -148,7 +148,7 @@ class PHPInSimMod
 		}
 
 		// Load plugins.ini
-		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
+		if ($this->loadIniFile($this->pluginvars, 'plugins.inii'))
 		{
 			foreach ($this->pluginvars as $plguinID => $v)
 			{
@@ -169,8 +169,10 @@ class PHPInSimMod
 
 			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryPlugins($this->pluginvars);
-//			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
-//				console('Generated config/plugins.ini');
+			print_r($this->pluginvars);
+
+			if ($this->createIniFile('plugins.ini.test', 'PHPInSimMod Plugins', $this->pluginvars))
+				console('Generated config/plugins.ini.test');
 
 			return FALSE;
 		}
@@ -563,7 +565,8 @@ class PHPInSimMod
 						$numReady--;
 						
 						// Check if remote replied negatively
-						$nr = stream_select($r = array($host->socket), $w = null, $e = null, 0);
+						# Error suppressed, because of the underlying CRT (C Run Time) producing an error on Windows.
+						$nr = @stream_select($r = array($host->socket), $w = null, $e = null, 0);
 						if ($nr > 0)
 						{
 							// Experimentation showed that if something happened on this socket at this point,
