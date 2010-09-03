@@ -791,7 +791,6 @@ class PHPInSimMod
 	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
-		global $TYPEs;
 		foreach ($this->plugins as $name => $plugin)
 		{
 			# If this plugin is not assigned to this host, skip this plugin.

@@ -5,7 +5,7 @@
  * @subpackage Plugin
 */
 
-abstract class plugins extends PHPInSimMod
+abstract class plugins
 {
 	/* const NAME;			*/
 	/* const DESCRIPTION;	*/
@@ -13,6 +13,15 @@ abstract class plugins extends PHPInSimMod
 	/* const VERSION;		*/
 
 	/* Construct */
+	public function __construct(&$parent)
+	{
+		$this->parent &= $parent;
+		print_r($this);
+	}
+	protected function sendPacket($packetClass)
+	{
+		print_r($this->parent);
+	}
 
 	/* Plugin Functions */
 	protected function registerPacket($callbackMethod, $PacketType)
@@ -22,10 +31,13 @@ abstract class plugins extends PHPInSimMod
 		for ($i = 2, $j = count($args); $i < $j; ++$i)
 			$this->callbacks[$args[$i]][] = $callbackMethod;
 	}
-	public function registerCvar($cvar, $defaultValue, $defaultAdminLevelToChange) {}
-	public function registerCmd($cmd, $callback, $defaultAdminLevelToAccess) {}
+	public function registerCVAR($cvar, $defaultValue, $defaultAdminLevelToChange) {}
+	public function registerCMD($cmd, $callback, $defaultAdminLevelToAccess) {}
 	public function registerTimeOut($length, $callback) {}
-	public function registerSay($say, $callback, $defaultAdminLevelToAccess) {}
+	public function registerSay($say, $callback, $defaultAdminLevelToAccess)
+	{
+		
+	}
 
 	/* Server Functions */
 	public function serverPrint($Msg) {}
