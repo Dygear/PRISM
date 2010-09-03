@@ -806,8 +806,6 @@ class PHPInSimMod
 				continue;
 			}
 
-			console(var_dump($name, $TYPEs[$packet->Type]));
-
 			foreach ($plugin->callbacks[$packet->Type] as $callback)
 			{
 				if (($plugin->$callback($packet)) == PLUGIN_HANDLED)
