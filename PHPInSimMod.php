@@ -150,7 +150,7 @@ class PHPInSimMod
 		// Load plugins.ini
 		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
 		{
-			foreach ($this->pluginvars as $plguinID => $v)
+			foreach ($this->pluginvars as $pluginID => $v)
 			{
 				if (!is_array($v))
 				{
@@ -163,17 +163,20 @@ class PHPInSimMod
 		}
 		else
 		{
-			# We could ask the client what files that want to load as an option.
-			# Here would could read the plugins dir and see what they want.
-			# Then build a plugins.ini file based on these details. 
-
+			# We ask the client to manually input the plugin details here.
 			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryPlugins($this->pluginvars, $this->connvars);
-//			print_r($this->pluginvars);
 
 			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
 				console('Generated config/plugins.ini');
 		}
+		
+		// Parse useHosts values of plugins
+		foreach ($this->pluginvars as $pluginID => $details)
+		{
+			$this->pluginvars[$pluginID]['useHosts'] = explode('","', $details['useHosts']);
+		}
+//		print_r($this->pluginvars);
 		
 		return TRUE;
 	}
