@@ -5,33 +5,24 @@
  * @subpackage Plugin
 */
 
-abstract class plugins
+abstract class plugins extends PHPInSimMod
 {
 	/* const NAME;			*/
 	/* const DESCRIPTION;	*/
 	/* const AUTHOR;		*/
 	/* const VERSION;		*/
 
-	/* Shortcuts to the Parent */
-	public function console($line)
-	{
-		$this->parent->console($line);
-	}
+	/* Construct */
 
 	/* Plugin Functions */
-	public function pluginRegisterCvar($cvar, $defaultValue, $defaultAdminLevelToChange) {}
-	public function pluginRegisterCmd($cmd, $callback, $defaultAdminLevelToAccess) {}
-	public function pluginRegisterTimeOut($length, $callback) {}
-	public function pluginHookSay($say, $callback, $defaultAdminLevelToAccess) {}
-
-	public function clientCanAccessCmd($cmd, $CLID)
+	protected function registerPacket($callbackMethod, $PacketType)
 	{
-		if ($this->cmds[$cmd]->AccessLevel | $this->clientGetAccessLevel($CLID))
-			return TRUE;
-		$this->console("Access denied to $cmd, for client {$this->clientGetUName($CLID)}.");
-		$this->clientPrint($CLID, "Access Denied!"); # You Slime Bag!
-		return FALSE;
+		$this->callbacks[$PacketType][] = $callbackMethod;
 	}
+	public function registerCvar($cvar, $defaultValue, $defaultAdminLevelToChange) {}
+	public function registerCmd($cmd, $callback, $defaultAdminLevelToAccess) {}
+	public function registerTimeOut($length, $callback) {}
+	public function registerSay($say, $callback, $defaultAdminLevelToAccess) {}
 
 	/* Server Functions */
 	public function serverPrint($Msg) {}
@@ -44,31 +35,25 @@ abstract class plugins
 	public function serverGetPacket() {}
 
 	/* Client Functions */
-	public function clientGetUName($CLID)
+	public function clientCanAccessCmd($cmd, $CLID)
 	{
-		if (($UName = $this->parent->clients[$CLID]['UName']))
-		{
-			return $UName;
-		}
-		else
-		{
-			return FALSE;
-		}
+		if ($this->cmds[$cmd]->AccessLevel | $this->clientGetAccessLevel($CLID))
+			return TRUE;
+		$this->console("Access denied to $cmd, for client {$this->clientGetUName($CLID)}.");
+		$this->clientPrint($CLID, "Access Denied!"); # You Slime Bag!
+		return FALSE;
 	}
-	public function clientGetAccessLevel($CLID) {}
-	public function clientPrint($CLID, $Msg, $Where = CLIENT_PRINT_CHAT) {}
 
-	public function clientConnect() {}
-	public function clientConnected() {}
-	public function clientDisconnect() {}
+	/* Client Functions */
+	public function clientPrint($CLID, $Msg, $Where = CLIENT_PRINT_CHAT) {}
 	public function clientCommand() {}
-	public function clientSettingsChanged() {}
 	public function clientAuthorized() {}
 
-	public function clientGetUName() {}
+	public function clientGetUName($CLID) {}
 	public function clientGetPNames() {}
 	public function clientGetId() {}
 	public function clientGetPlayerIds() {}
+	public function clientGetAccessLevel($CLID) {}
 
 	public function clientIsConnected() {}
 	public function clientIsAI() {}
