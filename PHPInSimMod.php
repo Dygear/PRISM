@@ -301,7 +301,7 @@ class PHPInSimMod
 			
 			include_once("$pluginPath/$pluginSection.php");
 			
-			$this->plugins[] = new $pluginSection($this);
+			$this->plugins[$pluginSection] = new $pluginSection($this);
 			
 			++$loadedPluginCount;
 		}
@@ -849,15 +849,20 @@ class PHPInSimMod
 	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
-		foreach ($this->plugins as $plugin)
+		foreach ($this->plugins as $name => $plugin)
 		{
+			# If this plugin is not assigned to this host, skip this plugin.
+			if (
+				$this->pluginvars[$name]['useHosts'] != '*' AND
+				$this->pluginvars[$name]['useHosts'] != $hostID
+			)
+				continue;
+
 			if (!isset($plugin->callbacks[$packet->Type]))
 			{	# Optimization, if the packet we are looking for has no callbacks don't go though the loop.
 				return PLUGIN_HANDLED;
 			}
-		
-			print_r($plugin->callbacks[$packet->Type]);
-		
+
 			foreach ($plugin->callbacks[$packet->Type] as $callback)
 			{
 				$plugin->$callback($packet);

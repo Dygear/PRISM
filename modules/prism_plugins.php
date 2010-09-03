@@ -18,6 +18,9 @@ abstract class plugins extends PHPInSimMod
 	protected function registerPacket($callbackMethod, $PacketType)
 	{
 		$this->callbacks[$PacketType][] = $callbackMethod;
+		$args = func_get_args();
+		for ($i = 2, $j = count($args); $i < $j; ++$i)
+			$this->callbacks[$args[$i]][] = $callbackMethod;
 	}
 	public function registerCvar($cvar, $defaultValue, $defaultAdminLevelToChange) {}
 	public function registerCmd($cmd, $callback, $defaultAdminLevelToAccess) {}
