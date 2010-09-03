@@ -636,7 +636,7 @@ class PHPInSimMod
 							console("#\tName\tVersion\tAuthor\tDescription");
 							foreach ($this->plugins as $pluginID => $plugin)
 							{
-								console("$pluginID\t#{$plugin::NAME}\t{$plugin::VERSION}\t{$plugin::AUTHOR}\t{$plugin::DESCRIPTION}");
+								console($pluginID."\t#".$plugin::NAME."\t".$plugin::VERSION."\t".$plugin::AUTHOR."\t".$plugin::DESCRIPTION);
 							}
 							break;
 						
