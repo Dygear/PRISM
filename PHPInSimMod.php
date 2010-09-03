@@ -295,7 +295,7 @@ class PHPInSimMod
 		foreach ($trace as $index => $call)
 		{
 			if ($call['function'] == 'main') break;
-			if ($index > 0)
+			if ($index > 0 && isset($call['file']) && isset($call['line']))
 			{
 				console("\t".$index.' :: '.$call['function'].' in '.$call['file'].':'.$call['line']);
 			}
@@ -314,7 +314,18 @@ class PHPInSimMod
 		// This reregisters our autoload magic function into the class.
 		spl_autoload_register(__CLASS__ . '::_autoload');
 		set_error_handler(__CLASS__ . '::_errorHandler', E_ALL | E_STRICT);
-
+		
+		// Set the timezone
+		if (isset($this->cvars['defaultTimeZone']))
+			date_default_timezone_set($this->cvars['defaultTimeZone']);
+		else
+		{
+			# I know, I'm using error suppression, but I swear it's appropriate!
+			$timeZoneGuess = @date_default_timezone_get();
+			date_default_timezone_set($timeZoneGuess);
+			unset($timeZoneGuess);
+		}
+		
 		// Windows OS check
 		$shell = getenv('SHELL');
 		if (!$shell || $shell[0] != '/')
@@ -329,17 +340,6 @@ class PHPInSimMod
 		
 		// Populate $this->hosts array from the connections.ini variables we've just read
 		$this->populateHostsFromVars();
-		
-		// Set the timezone
-		if (isset($this->cvars['defaultTimeZone']))
-			date_default_timezone_set($this->cvars['defaultTimeZone']);
-		else
-		{
-			# I know, I'm using error suppression, but I swear it's appropriate!
-			$timeZoneGuess = @date_default_timezone_get();
-			date_default_timezone_set($timeZoneGuess);
-			unset($timeZoneGuess);
-		}
 		
 		if (
 			(($pluginsLoaded = $this->loadPlugins()) == 0) &&
