@@ -15,9 +15,9 @@ abstract class plugins
 	/* Construct */
 	public function __construct(&$parent)
 	{
-		$this->parent &= $parent;
-		print_r($this);
+		$this->parent =& $parent;
 	}
+
 	protected function sendPacket($packetClass)
 	{
 		print_r($this->parent);
