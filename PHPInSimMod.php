@@ -501,7 +501,8 @@ class PHPInSimMod
 						$numReady--;
 						
 						// Check if remote replied negatively
-						$nr = stream_select($r = array($host->socket), $w = null, $e = null, 0);
+						# Error suppressed, because of the underlying CRT (C Run Time) producing an error on Windows.
+						$nr = @stream_select($r = array($host->socket), $w = null, $e = null, 0);
 						if ($nr > 0)
 						{
 							// Experimentation showed that if something happened on this socket at this point,
