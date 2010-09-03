@@ -632,6 +632,14 @@ class PHPInSimMod
 							}
 							break;
 						
+						case 'p':
+							console("#\tName\tVersion\tAuthor\tDescription");
+							foreach ($this->plugins as $pluginID => $plugin)
+							{
+								console("$pluginID\t#{$plugin::NAME}\t{$plugin::VERSION}\t{$plugin::AUTHOR}\t{$plugin::DESCRIPTION}");
+							}
+							break;
+						
 						case 'x':
 							$this->isRunning = FALSE;
 							break;
@@ -639,6 +647,7 @@ class PHPInSimMod
 						default :
 							console('Available keys :');
 							console('h - show host info');
+							console('p - show plugin info');
 							console('x - exit PHPInSimMod');
 					}
 				}
