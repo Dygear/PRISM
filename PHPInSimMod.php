@@ -724,7 +724,8 @@ class PHPInSimMod
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($TYPEs[$pH['Type']]))
 		{
-			console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
+			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
 			$this->dispatchPacket($packet, $hostID);
