@@ -64,7 +64,36 @@ class Interactive
 
 	public function queryPlugins(array &$vars)
 	{
+		// Check if plugins dir exists
+		if (!file_exists(ROOTPATH.'/plugins/'))
+		{
+			echo 'No plugins folder seems to exist. Cannot load any plugins at this time'.PHP_EOL;
+			return;
+		}
 		
+		// read plugins dir
+		$plugins = array();
+		foreach (new DirectoryIterator(ROOTPATH.'/plugins/') as $fileInfo) {
+		    if ($fileInfo->isDot())
+		    	continue;
+		    echo $fileInfo->getFilename().PHP_EOL;
+		}
+		
+		exit();
+		echo '***Interactive startup***'.PHP_EOL;
+		echo 'You now have the chance to manually select which plugins to load.'.PHP_EOL;
+		echo 'Afterwards your plugin settings will be stored in ./config/plugins.ini for future use.'.PHP_EOL;
+		
+		$hosts = array();
+		
+		
+		{
+			// Ask if user wants this plugin
+			
+			// Select which hosts to tie to it
+			
+			
+		}
 	}
 	
 	/*	$question	- the string that will be presented to the user.
