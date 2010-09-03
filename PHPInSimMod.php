@@ -791,6 +791,7 @@ class PHPInSimMod
 	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
+		global $TYPEs;
 		foreach ($this->plugins as $name => $plugin)
 		{
 			# If this plugin is not assigned to this host, skip this plugin.
@@ -802,12 +803,15 @@ class PHPInSimMod
 
 			if (!isset($plugin->callbacks[$packet->Type]))
 			{	# Optimization, if the packet we are looking for has no callbacks don't go though the loop.
-				return PLUGIN_HANDLED;
+				continue;
 			}
+
+			console(var_dump($name, $TYPEs[$packet->Type]));
 
 			foreach ($plugin->callbacks[$packet->Type] as $callback)
 			{
-				$plugin->$callback($packet);
+				if (($plugin->$callback($packet)) == PLUGIN_HANDLED)
+					continue;
 			}
 		}
 	}
