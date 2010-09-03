@@ -8,7 +8,7 @@ class Interactive
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
 		echo 'Afterwards your connection settings will be stored in ./config/connections.ini for future use.'.PHP_EOL;
 
-		$c = 1;		
+		$c = 1;
 		while (true)
 		{
 			echo PHP_EOL;
@@ -48,8 +48,14 @@ class Interactive
 				
 				unset($tmp['useRelay']);
 			}
-			
-			$vars['host #'.$c++] = $tmp;
+
+			$alias = self::query('What would you like this connection to be known as?', array(), TRUE);
+			++$c;
+			if ($alias == '')
+				$vars["host #{$c}"] = $tmp;
+			else
+				$vars[$alias] = $tmp;
+			unset($alias);
 
 			if (self::query(PHP_EOL.'Would you like to add another host?', array('yes', 'no')) == 'no')
 				break;
