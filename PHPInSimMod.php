@@ -91,6 +91,7 @@ class PHPInSimMod
 	private $pluginvars		= array();
 
 	private $hosts			= array();			# Stores references to the hosts we're connected to
+	private $hostID			= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 	private $nextMaintenance= 0;
 
 	// InSim
@@ -112,11 +113,14 @@ class PHPInSimMod
 		// Load generic cvars.ini
 		if ($this->loadIniFile($this->cvars, 'cvars.ini', FALSE))
 		{
-			console('Loaded cvars.ini');
+			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console('Loaded cvars.ini');
 		}
 		else
 		{
-			console('Using defaults.');
+			console('Using cvars defaults.');
+			if ($this->createIniFile('cvars.ini', 'PHPInSimMod Configuration Variables', array('prism' => &$this->cvars)))
+				console('Generated config/cvars.ini');
 		}
 
 		// Load connections.ini
@@ -135,16 +139,19 @@ class PHPInSimMod
 		}
 		else
 		{
-			# We could ask the client to input the connection details here.
-			# As that would allow us to make this a non fatal error.
+			# We ask the client to manually input the connection details here.
+			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
+			Interactive::queryConnections($this->connvars);
+			
 			# Then build a connections.ini file based on these details provided.
-			return FALSE;
+			if ($this->createIniFile('connections.ini', 'InSim Connection Hosts', $this->connvars))
+				console('Generated config/connections.ini');
 		}
 
 		// Load plugins.ini
 		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
 		{
-			foreach ($this->pluginvars as $plguinID => $v)
+			foreach ($this->pluginvars as $pluginID => $v)
 			{
 				if (!is_array($v))
 				{
@@ -154,21 +161,37 @@ class PHPInSimMod
 			}
 			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
 				console('Loaded plugins.ini');
+
+			// Parse useHosts values of plugins
+			foreach ($this->pluginvars as $pluginID => $details)
+			{
+				$this->pluginvars[$pluginID]['useHosts'] = explode(',', $details['useHosts']);
+			}
 		}
 		else
 		{
-			# We could ask the client what files that want to load as an option.
-			# Here would could read the plugins dir and see what they want.
-			# Then build a plugins.ini file based on these details. 
-			return FALSE;
+			# We ask the client to manually input the plugin details here.
+			require_once($this::ROOTPATH . '/modules/prism_interactive.php');
+			Interactive::queryPlugins($this->pluginvars, $this->connvars);
+
+			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
+				console('Generated config/plugins.ini');
+
+			// Parse useHosts values of plugins
+			foreach ($this->pluginvars as $pluginID => $details)
+			{
+				$this->pluginvars[$pluginID]['useHosts'] = explode('","', $details['useHosts']);
+			}
 		}
+		
+//		print_r($this->pluginvars);
 		
 		return TRUE;
 	}
 	
 	// Generic function to load ini files into a passed variable
 	// If a ini file with the name and a prefix local_ already exists it is loaded instead
-	private function loadIniFile(&$target, $iniFile, $parseSections = TRUE)
+	private function loadIniFile(array &$target, $iniFile, $parseSections = TRUE)
 	{
 		$iniVARs = FALSE;
 		
@@ -206,6 +229,47 @@ class PHPInSimMod
 		return TRUE;
 	}
 
+	private function createIniFile($iniFile, $desc, array $options)
+	{
+		// Check if config folder exists
+		if (!file_exists($this::ROOTPATH . '/configs/') && 
+			!@mkdir($this::ROOTPATH . '/configs/'))
+		{
+			return FALSE;
+		}
+		
+		// Check if file doesn't already exist
+		if (file_exists($this::ROOTPATH . '/configs/'.$iniFile))
+			return FALSE;
+		
+		// Generate file contents
+		$text = '; '.$desc.' (automatically genereated)'.PHP_EOL;
+		$text .= '; File location: ./PHPInSimMod/configs/'.$iniFile.PHP_EOL;
+		$main = '';
+		foreach ($options as $section => $data)
+		{
+			if (is_array($data))
+			{
+				$main .= PHP_EOL.'['.$section.']'.PHP_EOL;
+				foreach ($data as $key => $value)
+				{
+					$main .= $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"').PHP_EOL;
+				}
+			}
+		}
+
+		if ($main == '')
+			return FALSE;
+		
+		$text .= $main.PHP_EOL;
+		
+		// Write contents
+		if (!file_put_contents($this::ROOTPATH . '/configs/'.$iniFile, $text))
+			return FALSE;
+		
+		return TRUE;
+	}
+	
 	private function loadPlugins()
 	{
 		$loadedPluginCount = 0;
@@ -246,7 +310,7 @@ class PHPInSimMod
 			
 			include_once("$pluginPath/$pluginSection.php");
 			
-			$this->plugins[] = new $pluginSection($this);
+			$this->plugins[$pluginSection] = new $pluginSection($this);
 			
 			++$loadedPluginCount;
 		}
@@ -503,14 +567,27 @@ class PHPInSimMod
 				// Host traffic
 				foreach($this->hosts as $hostID => $host)
 				{
-					// Finalise a connection?
+					// Finalise a tcp connection?
 					if ($host->connStatus == CONN_CONNECTING && 
 						in_array($host->socket, $sockWrites))
 					{
 						$numReady--;
 						
-						// The socket has become available for writing (or not)
-						$host->connectFinish();
+						// Check if remote replied negatively
+						# Error suppressed, because of the underlying CRT (C Run Time) producing an error on Windows.
+						$nr = @stream_select($r = array($host->socket), $w = null, $e = null, 0);
+						if ($nr > 0)
+						{
+							// Experimentation showed that if something happened on this socket at this point,
+							// it is always an indication that the connection failed. We close this socket now.
+							$host->close();
+						}
+						else
+						{
+							// The socket has become available for writing
+							$host->connectFinish();
+						}
+						unset($nr, $r, $w, $e);
 					}
 
 					// Recover a lagged host?
@@ -632,6 +709,14 @@ class PHPInSimMod
 							}
 							break;
 						
+						case 'p':
+							console("#\tName\tVersion\tAuthor\tDescription");
+							foreach ($this->plugins as $pluginID => $plugin)
+							{
+								console($pluginID."\t#".$plugin::NAME."\t".$plugin::VERSION."\t".$plugin::AUTHOR."\t".$plugin::DESCRIPTION);
+							}
+							break;
+						
 						case 'x':
 							$this->isRunning = FALSE;
 							break;
@@ -639,6 +724,7 @@ class PHPInSimMod
 						default :
 							console('Available keys :');
 							console('h - show host info');
+							console('p - show plugin info');
 							console('x - exit PHPInSimMod');
 					}
 				}
@@ -715,7 +801,8 @@ class PHPInSimMod
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($TYPEs[$pH['Type']]))
 		{
-			console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
+			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
 			$this->dispatchPacket($packet, $hostID);
@@ -781,20 +868,32 @@ class PHPInSimMod
 	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
-		foreach ($this->plugins as $plugin)
+		$this->hostID = $hostID;
+		foreach ($this->plugins as $name => $plugin)
 		{
+			# If this plugin is not assigned to this host, skip this plugin.
+			if (
+				$this->pluginvars[$name]['useHosts'] != '*' AND
+				$this->pluginvars[$name]['useHosts'] != $hostID
+			)
+				continue;
+
 			if (!isset($plugin->callbacks[$packet->Type]))
-			{	# Optimization, if the packet we are looking for has no callbacks don't go though the loop.
-				return PLUGIN_HANDLED;
+			{	# If the packet we are looking at has no callbacks for this packet type don't go to the loop.
+				continue;
 			}
-		
-			print_r($plugin->callbacks[$packet->Type]);
-		
+
 			foreach ($plugin->callbacks[$packet->Type] as $callback)
 			{
-				$plugin->$callback($packet);
+				if (($plugin->$callback($packet)) == PLUGIN_HANDLED)
+					continue 2; # Skips all of the rest of the plugins who wanted this packet.
 			}
 		}
+	}
+
+	public function sendPacket($packetClass)
+	{
+		return $this->hosts[$this->hostID]->writePacket($packetClass);
 	}
 
 	private function getSocketTimeOut()
@@ -819,7 +918,7 @@ function console($line, $EOL = true)
 	echo $line . (($EOL) ? PHP_EOL : '');
 }
 
-function get_dir_structure($path, $recursive = true, $ext = null)
+function get_dir_structure($path, $recursive = TRUE, $ext = NULL)
 {
 	$return = NULL;
 	if (!is_dir($path))
