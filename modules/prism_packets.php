@@ -63,38 +63,11 @@ abstract class struct
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
 		
-		# This is due to the C4 type that tyres requires.
-		if ($this instanceof IS_PIT || $this instanceof IS_NPL)
-		{
-			for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
-			{
-				$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
-				unset($pkClass["Tyres{$Tyre}"]);
-			}
-		}
-
 		foreach ($pkClass as $property => $value)
 		{
 			$this->$property = $value;
 		}
-
-		# For the IS_NLP Packets that have a struct (NodeLap) within their own struct and a varalble number of. 
-		if ($this instanceof IS_NLP)
-		{
-			for ($i = 0; $i < $this->NumP; $i++) {
-				$this->Info[$i] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
-			}
-		}
-
-		# For the IS_MCI Packets that have a struct (CompCar) within their own struct and a varalble number of.
-		if ($this instanceof IS_MCI)
-		{
-			for ($i = 0; $i < $this->NumC; $i++)
-			{
-				$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
-			}
-		}
-
+		
 		return $this;
 	}
 	public function pack()
@@ -615,25 +588,25 @@ class IS_MSO extends struct // MSg Out - system messages and user messages
 	const PACK = 'CCxxCCCCa128';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CUserType/CTextStart/a128Msg';
 
-	public $Size = 136;	// 136
-	public $Type = ISP_MSO;// ISP_MSO
-	public $ReqI;		// 0
-	public $Zero;
+	public $Size = 136;			// 136
+	public $Type = ISP_MSO;		// ISP_MSO
+	public $ReqI = NULL;		// 0
+	public $Zero = NULL;
 
-	public $UCID;			// connection's unique id (0 = host)
-	public $PLID;			// player's unique id (if zero, use UCID)
-	public $UserType;		// set if typed by a user (see User Values below) 
-	public $TextStart;		// first character of the actual text (after player name)
+	public $UCID = 0;			// connection's unique id (0 = host)
+	public $PLID = 0;			// player's unique id (if zero, use UCID)
+	public $UserType = NULL;	// set if typed by a user (see User Values below)
+	public $TextStart = NULL;	// first character of the actual text (after player name)
 
 	public $Msg;
 };
 
 // User Values (for UserType byte)
 
-define('MSO_SYSTEM',	0);	// 0 - system message
-define('MSO_USER',		1);	// 1 - normal visible user message
-define('MSO_PREFIX',	2);	// 2 - hidden message starting with special prefix (see ISI)
-define('MSO_O',			3);	// 3 - hidden message typed on local pc with /o command
+define('MSO_SYSTEM',	0);		// 0 - system message
+define('MSO_USER',		1);		// 1 - normal visible user message
+define('MSO_PREFIX',	2);		// 2 - hidden message starting with special prefix (see ISI)
+define('MSO_O',			3);		// 3 - hidden message typed on local pc with /o command
 define('MSO_NUM',		4);
 $MSO = array(MSO_SYSTEM => 'MSO_SYSTEM', MSO_USER => 'MSO_USER', MSO_PREFIX => 'MSO_PREFIX', MSO_O => 'MSO_O', MSO_NUM => 'MSO_NUM');
 
@@ -644,15 +617,15 @@ class IS_III extends struct // InsIm Info - /i message from user to host's InSim
 	const PACK = 'CCxxCCxxa64';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
 
-	public $Size;		// 72
-	public $Type;		// ISP_III
-	public $ReqI;	// 0
-	public $Zero;
+	public $Size = 72;			// 72
+	public $Type = ISP_III;		// ISP_III
+	public $ReqI = 0;			// 0
+	public $Zero = NULL;
 
-	public $UCID;		// connection's unique id (0 = host)
-	public $PLID;		// player's unique id (if zero, use UCID)
-	public $Sp2;
-	public $Sp3;
+	public $UCID = 0;			// connection's unique id (0 = host)
+	public $PLID = 0;			// player's unique id (if zero, use UCID)
+	public $Sp2 = NULL;
+	public $Sp3 = NULL;
 
 	public $Msg;
 };
@@ -660,33 +633,33 @@ class IS_III extends struct // InsIm Info - /i message from user to host's InSim
 // MESSAGES IN (TO LFS)
 // -----------
 
-class IS_MST extends struct // MSg Type - send to LFS to type message or command
+class IS_MST extends struct		// MSg Type - send to LFS to type message or command
 {
 	const PACK = 'CCxxa64';
 	const UNPACK = 'CSize/CType/CReqI/CZero/a64Msg';
 
-	public $Size = 68;		// 68
-	public $Type = ISP_MST;	// ISP_MST
-	public $ReqI;			// 0
-	public $Zero;
+	public $Size = 68;			// 68
+	public $Type = ISP_MST;		// ISP_MST
+	public $ReqI = 0;			// 0
+	public $Zero = NULL;
 
-	public $Msg;		// last byte must be zero
+	public $Msg;				// last byte must be zero
 };
 
-class IS_MSX extends struct // MSg eXtended - like MST but longer (not for commands)
+class IS_MSX extends struct		// MSg eXtended - like MST but longer (not for commands)
 {
 	const PACK = 'CCxxa96';
 	const UNPACK = 'CSize/CType/CReqI/CZero/a96Msg';
 
-	public $Size = 100;	// 100
-	public $Type = ISP_MSX;// ISP_MSX
-	public $ReqI;		// 0
-	public $Zero;
+	public $Size = 100;			// 100
+	public $Type = ISP_MSX;		// ISP_MSX
+	public $ReqI = 0;			// 0
+	public $Zero = NULL;
 
-	public $Msg;		// last byte must be zero
+	public $Msg;				// last byte must be zero
 };
 
-class IS_MSL extends struct // MSg Local - message to appear on local computer only
+class IS_MSL extends struct		// MSg Local - message to appear on local computer only
 {
 	const PACK = 'CCxCa128';
 	const UNPACK = 'CSize/CType/CReqI/CSound/a128Msg';
@@ -699,22 +672,22 @@ class IS_MSL extends struct // MSg Local - message to appear on local computer o
 	public $Msg;				// last byte must be zero
 };
 
-class IS_MTC extends struct // Msg To Connection - hosts only - send to a connection or a player
+class IS_MTC extends struct		// Msg To Connection - hosts only - send to a connection or a player
 {
 	const PACK = 'CCxxCCxxa64';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
 
-	public $Size = 72;		// 72
-	public $Type = ISP_MTC;	// ISP_MTC
-	public $ReqI;			// 0
-	public $Zero;
+	public $Size = 72;			// 72
+	public $Type = ISP_MTC;		// ISP_MTC
+	public $ReqI = 0;			// 0
+	public $Zero = NULL;
 
-	public $UCID;			// connection's unique id (0 = host)
-	public $PLID;			// player's unique id (if zero, use UCID)
-	public $Sp2;
-	public $Sp3;
+	public $UCID = 0;			// connection's unique id (0 = host)
+	public $PLID = 0;			// player's unique id (if zero, use UCID)
+	public $Sp2 = NULL;
+	public $Sp3 = NULL;
 
-	public $Msg;			// last byte must be zero
+	public $Msg;				// last byte must be zero
 };
 
 // Message Sounds (for Sound byte)
@@ -732,20 +705,20 @@ $SND = array(SND_SILENT => 'SND_SILENT', SND_MESSAGE => 'SND_MESSAGE', SND_SYSME
 // This does not work with some keys like F keys, arrows or CTRL keys.
 // You can also use IS_MST with the /press /shift /ctrl /alt commands.
 
-class IS_SCH extends struct // Single CHaracter
+class IS_SCH extends struct		// Single CHaracter
 {
 	const PACK = 'CCxxCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CCharB/CFlags/CSpare2/CSpare3';
 
-	public $Size = 8;		// 8
-	public $Type = ISP_SCH;// ISP_SCH
-	public $ReqI;		// 0
-	public $Zero;
+	public $Size = 8;			// 8
+	public $Type = ISP_SCH;		// ISP_SCH
+	public $ReqI = 0;			// 0
+	public $Zero = NULL;
 
-	public $CharB;			// key to press
-	public $Flags;			// bit 0 : SHIFT / bit 1 : CTRL
-	public $Spare2;
-	public $Spare3;
+	public $CharB;				// key to press
+	public $Flags;				// bit 0 : SHIFT / bit 1 : CTRL
+	public $Spare2 = NULL;
+	public $Spare3 = NULL;
 };
 
 
@@ -754,22 +727,22 @@ class IS_SCH extends struct // Single CHaracter
 
 // LFS will send this packet when a host is started or joined :
 
-class IS_ISM extends struct // InSim Multi
+class IS_ISM extends struct		// InSim Multi
 {
 	const PACK = 'CCCxCxxxa32';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CHost/CSp1/CSp2/CSp3/a32HName';
 
-	public $Size = 40;		// 40
-	public $Type = ISP_ISM;// ISP_ISM
-	public $ReqI;			// usually 0 / or if a reply : ReqI as received in the TINY_ISM
-	public $Zero;
+	public $Size = 40;			// 40
+	public $Type = ISP_ISM;		// ISP_ISM
+	public $ReqI = 0;			// usually 0 / or if a reply : ReqI as received in the TINY_ISM
+	public $Zero = NULL;
 
-	public $Host;		// 0 = guest / 1 = host
-	public $Sp1;
-	public $Sp2;
-	public $Sp3;
+	public $Host;				// 0 = guest / 1 = host
+	public $Sp1 = NULL;
+	public $Sp2 = NULL;
+	public $Sp3 = NULL;
 
-	public $HName;	// the name of the host joined or started
+	public $HName;				// the name of the host joined or started
 };
 
 // On ending or leaving a host, LFS will send this IS_TINY :
@@ -792,25 +765,25 @@ class IS_ISM extends struct // InSim Multi
 
 // The Vote Actions are defined as :
 
-define('VOTE_NONE',		0);	// 0 - no vote
-define('VOTE_END',		1);	// 1 - end race
-define('VOTE_RESTART',	2);	// 2 - restart
-define('VOTE_QUALIFY',	3);	// 3 - qualify
+define('VOTE_NONE',		0);		// 0 - no vote
+define('VOTE_END',		1);		// 1 - end race
+define('VOTE_RESTART',	2);		// 2 - restart
+define('VOTE_QUALIFY',	3);		// 3 - qualify
 define('VOTE_NUM',		4);
 $VOTE = array(VOTE_NONE => 'VOTE_NONE', VOTE_END => 'VOTE_END', VOTE_RESTART => 'VOTE_RESTART', VOTE_QUALIFY => 'VOTE_QUALIFY', VOTE_NUM => 'VOTE_NUM');
 
-class IS_VTN extends struct // VoTe Notify
+class IS_VTN extends struct		// VoTe Notify
 {
 	const PACK = 'CCxxCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CAction/CSpare2/CSpare3';
 
-	public $Size = 8;		// 8
-	public $Type = ISP_VTN;// ISP_VTN
-	public $ReqI;		// 0
+	public $Size = 8;			// 8
+	public $Type = ISP_VTN;		// ISP_VTN
+	public $ReqI;				// 0
 	public $Zero;
 
-	public $UCID;			// connection's unique id
-	public $Action;			// VOTE_X (Vote Action as defined above)
+	public $UCID;				// connection's unique id
+	public $Action;				// VOTE_X (Vote Action as defined above)
 	public $Spare2;
 	public $Spare3;
 };
@@ -977,6 +950,24 @@ class IS_NPL extends struct // New PLayer joining race (if PLID already exists, 
 	public $NumP;			// number in race (same when leaving pits, 1 more if new)
 	public $Sp2;
 	public $Sp3;
+
+	function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
+		{
+			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
+			unset($pkClass["Tyres{$Tyre}"]);
+		}
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+				
+		return $this;
+	}
 };
 
 // NOTE : PType bit 0 (female) is not reported on dedicated host as humans are not loaded
@@ -1087,6 +1078,25 @@ class IS_PIT extends struct // PIT stop (stop at pit garage)
 
 	public $Work;			// pit work
 	public $Spare;
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+		
+		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
+		{
+			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
+			unset($pkClass["Tyres{$Tyre}"]);
+		}
+
+		return $this;
+	}
+
 };
 
 class IS_PSF extends struct // Pit Stop Finished
@@ -1533,6 +1543,24 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 	public $NumP;			// number of players in race
 
 	public $Info = array();	// node and lap of each player, 1 to 32 of these (NumP)
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		for ($i = 0; $i < $this->NumP; $i++)
+		{
+			$this->Info[$i] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
+		}
+
+		return $this;
+	}
+
 };
 
 // If ISF_MCI flag is set, a set of IS_MCI packets is sent...
@@ -1580,6 +1608,23 @@ class IS_MCI extends struct // Multi Car Info - if more than 8 in race then more
 	public $NumC;			// number of valid CompCar structs in this packet
 
 	public $Info = array();	// car info for each player, 1 to 8 of these (NumC)
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		for ($i = 0; $i < $this->NumC; $i++)
+		{
+			$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
+		}
+
+		return $this;
+	}
 };
 
 // You can change the rate of NLP or MCI after initialisation by sending this IS_SMALL :
@@ -1930,21 +1975,21 @@ class IS_BTN extends struct // BuTtoN - button header - followed by 0 to 240 cha
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CBStyle/CTypeIn/CL/CT/CW/CH/a240Text';
 
 	public $Size;			// 12 + TEXT_SIZE (a multiple of 4)
-	public $Type = ISP_BTN;// ISP_BTN
-	public $ReqI;		// non-zero (returned in IS_BTC and IS_BTT packets)
-	public $UCID;		// connection to display the button (0 = local / 255 = all)
+	public $Type = ISP_BTN;	// ISP_BTN
+	public $ReqI;			// non-zero (returned in IS_BTC and IS_BTT packets)
+	public $UCID;			// connection to display the button (0 = local / 255 = all)
 
-	public $ClickID;	// button ID (0 to 239)
-	public $Inst;		// some extra flags - see below
-	public $BStyle;		// button style flags - see below
-	public $TypeIn;		// max chars to type in - see below
+	public $ClickID;		// button ID (0 to 239)
+	public $Inst;			// some extra flags - see below
+	public $BStyle;			// button style flags - see below
+	public $TypeIn;			// max chars to type in - see below
 
-	public $L;			// left   : 0 - 200
-	public $T;			// top    : 0 - 200
-	public $W;			// width  : 0 - 200
-	public $H;			// height : 0 - 200
+	public $L;				// left   : 0 - 200
+	public $T;				// top    : 0 - 200
+	public $W;				// width  : 0 - 200
+	public $H;				// height : 0 - 200
 
-	public $Text;		// 0 to 240 characters of text
+	public $Text;			// 0 to 240 characters of text
 
 	function pack()
 	{
@@ -2254,15 +2299,27 @@ class IR_HOS extends struct // Hostlist (hosts connected to the Relay)
 	const UNPACK = 'CSize/CType/CReqI/CNumHosts/a6Info';
 
 	public $Size;			// 4 + NumHosts * 40
-	public $Type = IRP_HOS;// IRP_HOS
+	public $Type = IRP_HOS;	// IRP_HOS
 	public $ReqI;			// As given in IR_HLR
 	public $NumHosts;		// Number of hosts described in this packet
 
-	public $Info;		// Host info for every host in the Relay. 1 to 6 of these in a IR_HOS
+	public $Info;			// Host info for every host in the Relay. 1 to 6 of these in a IR_HOS
 
 	public function unpack()
 	{
-		PRISM::CONSOLE('Needs to be implamented');
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+		
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		for ($i = 0; $i < $this->NumHosts; $i++)
+		{
+			$this->Info[$i] = new HInfo(substr($rawPacket, 4 + ($i * 40), 40));
+		}
+
+		return $this;
 	}
 };
 
