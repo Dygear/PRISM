@@ -66,7 +66,7 @@ $PRISM = new PHPInSimMod($argc, $argv);
 */
 class PHPInSimMod
 {
-	const VERSION = '0.1.8';
+	const VERSION = '0.1.9';
 	const ROOTPATH = ROOTPATH;
 
 	private $isWindows		= FALSE;
