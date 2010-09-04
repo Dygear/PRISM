@@ -14,6 +14,7 @@ class theTime extends plugins
 
 	public function onSay($p)
 	{
+		print_r($this);
 		$M = substr($p->Msg, $p->TextStart);
 		if ($M == '!thetime' OR $M == 'thetime' OR $M == '!time' OR $M == 'time')
 		{

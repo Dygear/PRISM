@@ -866,16 +866,22 @@ class PHPInSimMod
 		}
 	}
 	
+	private function isPluginEligibleForPacket(&$name, &$hostID)
+	{
+		foreach ($this->pluginvars[$name]['useHosts'] as $host)
+		{
+			if ($host == $hostID)
+				return TRUE;
+		}
+		return FALSE;
+	}
+	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
 		$this->hostID = $hostID;
 		foreach ($this->plugins as $name => $plugin)
 		{
-			# If this plugin is not assigned to this host, skip this plugin.
-			if (
-				$this->pluginvars[$name]['useHosts'] != '*' AND
-				$this->pluginvars[$name]['useHosts'] != $hostID
-			)
+			if (!$this->isPluginEligibleForPacket($name, $hostID))
 				continue;
 
 			if (!isset($plugin->callbacks[$packet->Type]))
