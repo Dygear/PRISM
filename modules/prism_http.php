@@ -245,7 +245,7 @@ class HttpClient
 			'"'.$this->httpRequest->SERVER['HTTP_USER_AGENT'].'" '.
 			'"-"';
 		console($logLine);
-		file_put_contents(ROOTPATH.'/logs/http.log', $logLine, FILE_APPEND);
+		file_put_contents(ROOTPATH.'/logs/http.log', $logLine."\r\n", FILE_APPEND);
 		
 		// Reset httpRequest
 		if ($this->httpRequest->rawInput != '')
