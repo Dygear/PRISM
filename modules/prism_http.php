@@ -236,15 +236,16 @@ class HttpClient
 		$this->write($r->getBody());
 		
 		// log line
-		console(
+		$logLine =
 			$this->ip.' - - ['.date('d/M/Y:H:i:s O').'] '.
 			'"'.$this->httpRequest->SERVER['REQUEST_METHOD'].' '.$this->httpRequest->SERVER['REQUEST_URI'].' '.$this->httpRequest->SERVER['SERVER_PROTOCOL'].'" '.
 			$r->getResponseCode().' '.
 			$r->getBodyLen().' '.
 			'"'.$this->httpRequest->SERVER['HTTP_REFERER'].'" '.
 			'"'.$this->httpRequest->SERVER['HTTP_USER_AGENT'].'" '.
-			'"-"'
-		);
+			'"-"';
+		console($logLine);
+		file_put_contents(ROOTPATH.'/logs/http.log', $logLine, FILE_APPEND);
 		
 		// Reset httpRequest
 		if ($this->httpRequest->rawInput != '')
