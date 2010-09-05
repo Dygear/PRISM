@@ -25,6 +25,8 @@ class HttpClient
 		$exp = explode(':', $localInfo);
 		$this->localIP		= $exp[0];
 		$this->localPort	= (int) $exp[1];
+		
+		$this->lastActivity	= time();
 	}
 	
 	public function __destruct()
@@ -471,8 +473,11 @@ class HttpResponse
 		$this->headers['Server']			= 'PRISM v' . PHPInSimMod::VERSION;
 		$this->headers['Date']				= date('r');
 		$this->headers['Content-Length']	= strlen($this->body);
-		$this->headers['Connection']		= 'Keep-Alive';
-		$this->headers['Keep-Alive']		= 'timeout='.HTTP_KEEP_ALIVE;
+		if ($this->responseCode == 200)
+		{
+			$this->headers['Connection']	= 'Keep-Alive';
+			$this->headers['Keep-Alive']	= 'timeout='.HTTP_KEEP_ALIVE;
+		}
 	}
 	
 	public function addBody($html)

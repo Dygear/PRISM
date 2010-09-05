@@ -753,10 +753,10 @@ class PHPInSimMod
 					// Did the client hang up?
 					if ($data == '')
 					{
+						console('Closed httpClient (client initiated) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
 						array_splice ($this->httpClients, $k, 1);
 						$k--;
 						$this->httpNumClients--;
-						console('Closed httpClient (client initiated) '.$exp[0].':'.$exp[1]);
 						continue;
 					}
 
@@ -765,10 +765,10 @@ class PHPInSimMod
 					if (!$this->httpClients[$k]->handleInput($data))
 					{
 						// Something went wrong - we can hang up now
+						console('Closed httpClient (bad http request) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
 						array_splice ($this->httpClients, $k, 1);
 						$k--;
 						$this->httpNumClients--;
-						console('Closed httpClient (bad http request) '.$exp[0].':'.$exp[1]);
 						continue;
 					}
 				}
@@ -804,11 +804,20 @@ class PHPInSimMod
 							$this->isRunning = FALSE;
 							break;
 						
+						case 'w':
+							foreach ($this->httpClients as $httpClient)
+							{
+								$lastAct = time() - $httpClient->lastActivity;
+								console($httpClient->ip.':'.$httpClient->port.' - last activity was '.$lastAct.' second'.(($lastAct = 1) ? '' : 's').' ago.');
+							}
+							break;
+						
 						default :
 							console('Available keys :');
 							console('h - show host info');
 							console('p - show plugin info');
 							console('x - exit PHPInSimMod');
+							console('w - show www connections');
 					}
 				}
 				
