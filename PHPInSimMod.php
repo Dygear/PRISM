@@ -554,7 +554,7 @@ class PHPInSimMod
 				{
 						$sockReads[] = $host->socket;
 						
-						// Is the host is lagged, we must check to see when we can write again
+						// If the host is lagged, we must check to see when we can write again
 						if ($host->sendQStatus > 0)
 							$sockWrites[] = $host->socket;
 				}
@@ -582,7 +582,13 @@ class PHPInSimMod
 			for ($k=0; $k<$this->httpNumClients; $k++)
 			{
 				if (is_resource($this->httpClients[$k]->socket))
+				{
 					$sockReads[] = $this->httpClients[$k]->socket;
+					
+					// If write buffer was full, we must check to see when we can write again
+					if ($this->httpClients[$k]->sendQLen > 0)
+							$sockWrites[] = $this->httpClients[$k]->socket;
+				}
 			}
 			
 			$this->getSocketTimeOut();
@@ -743,7 +749,17 @@ class PHPInSimMod
 				
 				// httpClients input
 				for ($k=0; $k<$this->httpNumClients; $k++) {
-					if (!in_array ($this->httpClients[$k]->socket, $sockReads))
+					// Recover from a full write buffer?
+					if ($this->httpClients[$k]->sendQLen > 0 &&
+						in_array($this->httpClients[$k]->socket, $sockWrites))
+					{
+						$numReady--;
+						
+						// Flush the sendQ (bit by bit, not all at once - that could block the whole app)
+						$this->httpClients[$k]->flushSendQ();
+					}
+					
+					if (!in_array($this->httpClients[$k]->socket, $sockReads))
 						continue;
 
 					$numReady--;

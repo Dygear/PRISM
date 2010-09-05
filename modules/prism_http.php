@@ -13,6 +13,11 @@ class HttpClient
 	
 	public $lastActivity	= 0;
 	
+	// send queue used in emergency cases (if send buffer appears full)
+	public $sendQ			= '';
+	public $sendQLen		= 0;
+	public $sendQTime		= 0;
+
 	private $httpRequest	= null;
 	
 	public function __construct($sock, $ip, $port)
@@ -35,12 +40,82 @@ class HttpClient
 			fclose($this->socket);
 	}
 	
-	public function write($data)
+	public function write($data, $sendQPacket = FALSE)
 	{
-		fwrite($this->socket, $data);
-		$this->lastActivity = time();
+		$bytes = 0;
+		
+		if (!is_resource($this->socket))
+			return $bytes;
+	
+		if ($sendQPacket == TRUE)
+		{
+			// This packet came from the sendQ. We just try to send this and don't bother too much about error checking.
+			// That's done from the sendQ flushing code.
+			$bytes = @fwrite($this->socket, $data);
+		}
+		else
+		{
+			if ($this->sendQLen == 0)
+			{
+				// It's Ok to send packet
+				$bytes = @fwrite($this->socket, $data);
+				$this->lastActivity = time();
+		
+				if (!$bytes || $bytes != strlen($data))
+				{
+					//console('Writing '.strlen($data).' bytes to http socket '.$this->ip.':'.$this->port.' failed (wrote '.$bytes.' bytes).');
+					$this->addPacketToSendQ (substr($data, $bytes));
+				}
+			}
+			else
+			{
+				// Remote is lagged
+				$this->addPacketToSendQ($data);
+			}
+		}
+	
+		return $bytes;
 	}
 	
+	public function addPacketToSendQ($data)
+	{
+		if ($this->sendQLen == 0)
+			$this->sendQTime	= time();
+		$this->sendQ			.= $data;
+		$this->sendQLen			+= strlen($data);
+	}
+	
+	public function flushSendQ()
+	{
+		// Send chunk of data
+		$data = substr($this->sendQ, 0, STREAM_READ_BYTES);
+		$dataLen = strlen($data);
+		$bytes = $this->write($data, TRUE);
+		
+		// Check how much was sent
+		if ($bytes == $dataLen) {
+			// an entire chunk from the queue has been flushed. Remove it from the queue.
+			$this->sendQ = substr($this->sendQ, $bytes);
+			$this->sendQLen -= $bytes;
+
+			if ($this->sendQLen == 0)
+			{
+				// All done flushing - reset queue variables
+				$this->sendQ			= '';
+				$this->sendQTime		= 0;
+			} else {
+				// Set when the last packet was flushed
+				$this->sendQTime		= time ();
+			}
+		} 
+		else if ($bytes > 0)
+		{
+			// only partial packet sent
+			$this->sendQ = substr($this->sendQ, $bytes);
+			$this->sendQLen -= $bytes;
+		}
+	}
+
 	public function read()
 	{
 		$this->lastActivity	= time();
@@ -151,9 +226,12 @@ class HttpClient
 		$html .= '<input type="submit" value="Submit the form" />';
 		$html .= '</form>';
 		
-		$html .= '<br /><br />SERVER values :<br />';
-		foreach ($this->httpRequest->SERVER as $k => $v)
-			$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+		for ($x=0; $x<100; $x++)
+		{
+			$html .= '<br /><br />SERVER values :<br />';
+			foreach ($this->httpRequest->SERVER as $k => $v)
+				$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+		}
 		$html .= '</body>';
 		$html .= '</html>';
 		
