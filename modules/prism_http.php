@@ -103,7 +103,6 @@ class HttpClient
 			// Set when the last packet was flushed
 			$this->lastActivity		= time();
 		}
-		console('flushed '.$bytes.' bytes (remaining : '.$this->sendQLen.')');
 	}
 
 	public function read()
