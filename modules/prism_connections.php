@@ -24,7 +24,7 @@ define('SOCKTYPE_BEST',			0);
 define('SOCKTYPE_TCP',			1);
 define('SOCKTYPE_UDP',			2);
 
-define('STREAM_READ_BYTES',		1024);
+define('STREAM_READ_BYTES',		1400);
 
 class InsimConnection
 {

@@ -53,6 +53,7 @@ define('ROOTPATH', dirname(realpath(__FILE__)));
 // the packets and connections module are two of the three REQUIRED modules for PRISM.
 require_once(ROOTPATH . '/modules/prism_packets.php');
 require_once(ROOTPATH . '/modules/prism_connections.php');
+require_once(ROOTPATH . '/modules/prism_http.php');
 
 $PRISM = new PHPInSimMod($argc, $argv);
 
@@ -86,13 +87,18 @@ class PHPInSimMod
 									'dateFormat'	=> 'M jS Y',
 									'timeFormat'	=> 'H:i:s',
 									'logFormat'		=> 'm-d-y@H:i:s',
-									'logNameFormat'	=> 'Ymd');
+									'logNameFormat'	=> 'Ymd',
+									'httpIP'		=> '0.0.0.0',
+									'httpPort'		=> '1800');
 	private $connvars		= array();
 	private $pluginvars		= array();
 
 	private $hosts			= array();			# Stores references to the hosts we're connected to
 	private $hostID			= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
-	private $nextMaintenance= 0;
+	
+	private $httpSock		= NULL;
+	private $httpClients	= array();
+	private $httpNumClients	= 0;
 
 	// InSim
 	private $plugins		= array();
@@ -104,6 +110,8 @@ class PHPInSimMod
 	# Time outs
 	private $sleep			= NULL;
 	private $uSleep			= NULL;
+	
+	private $nextMaintenance= 0;
 
 	// Main while loop will run as long as this is set to TRUE.
 	private $isRunning = TRUE;
@@ -223,8 +231,11 @@ class PHPInSimMod
 				return FALSE;
 			}
 		}
-		$target = $iniVARs;
 
+		// Merge iniVARs into target (array_merge didn't seem to work - maybe because target is passed by reference?)
+		foreach ($iniVARs as $k => $v)
+			$target[$k] = $v;
+		
 		# At this point we're always successful
 		return TRUE;
 	}
@@ -416,6 +427,14 @@ class PHPInSimMod
 			console("{$pluginsLoaded} Plugins Loaded.");
 		}
 		
+		// Setup http socket to listen on
+		$this->httpSock = @stream_socket_server('tcp://'.$this->cvars['httpIP'].':'.$this->cvars['httpPort'], $httpErrNo, $httpErrStr);
+		if (!is_resource($this->httpSock) || $this->httpSock === FALSE || $httpErrNo)
+		{
+			console('Error opening http socket : '.$httpErrStr.' ('.$httpErrNo.')');
+			return;
+		}
+		
 		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 		$this->main();
 	}
@@ -556,6 +575,16 @@ class PHPInSimMod
 			}
 			unset($host);
 	
+			// Add http sockets to sockReads
+			if (is_resource($this->httpSock))
+				$sockReads[] = $this->httpSock;
+
+			for ($k=0; $k<$this->httpNumClients; $k++)
+			{
+				if (is_resource($this->httpClients[$k]->socket))
+					$sockReads[] = $this->httpClients[$k]->socket;
+			}
+			
 			$this->getSocketTimeOut();
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
@@ -690,9 +719,63 @@ class PHPInSimMod
 					}
 				}
 				unset($host);
+
+				// httpSock input (incoming http connection)
+				if (in_array ($this->httpSock, $sockReads))
+				{
+					$numReady--;
+					
+					// Accept the new connection
+					$peerInfo = '';
+					$sock = @stream_socket_accept ($this->httpSock, NULL, $peerInfo);
+					if (is_resource($sock))
+					{
+						stream_set_blocking ($sock, 0);
+						
+						// Add new connection to httpClients array
+						$exp = explode(':', $peerInfo);
+						$this->httpClients[] = new HttpClient($sock, $exp[0], $exp[1]);
+						$this->httpNumClients++;
+						console('HTTP Client '.$exp[0].':'.$exp[1].' connected.');
+					}
+					unset ($sock);
+				}
+				
+				// httpClients input
+				for ($k=0; $k<$this->httpNumClients; $k++) {
+					if (!in_array ($this->httpClients[$k]->socket, $sockReads))
+						continue;
+
+					$numReady--;
+					
+					$data = $this->httpClients[$k]->read();
+					
+					// Did the client hang up?
+					if ($data == '')
+					{
+						array_splice ($this->httpClients, $k, 1);
+						$k--;
+						$this->httpNumClients--;
+						console('Closed httpClient (client initiated) '.$exp[0].':'.$exp[1]);
+						continue;
+					}
+
+					// Ok we recieved some input from the http client.
+					// Pass the data to the client so it can handle it.
+					if (!$this->httpClients[$k]->handleInput($data))
+					{
+						// Something went wrong - we can hang up now
+						array_splice ($this->httpClients, $k, 1);
+						$k--;
+						$this->httpNumClients--;
+						console('Closed httpClient (bad http request) '.$exp[0].':'.$exp[1]);
+						continue;
+					}
+				}
 				
 				// KB input
-				if (in_array (STDIN, $sockReads)) {
+				if (in_array (STDIN, $sockReads))
+				{
 					$numReady--;
 					$kbInput = trim(fread (STDIN, STREAM_READ_BYTES));
 					
@@ -728,10 +811,7 @@ class PHPInSimMod
 							console('x - exit PHPInSimMod');
 					}
 				}
-
-				if ($numReady == 0)
-					break;
-			
+				
 			} // End while(numReady)
 			
 			// No need to do the maintenance check every turn
@@ -739,7 +819,7 @@ class PHPInSimMod
 				continue;
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 	
-			// Connection maintenance
+			// InSim Connection maintenance
 			foreach($this->hosts as $hostID => $host)
 			{
 				if ($host->connStatus == CONN_NOTCONNECTED)
@@ -773,6 +853,18 @@ class PHPInSimMod
 			
 			// unset the temporary var $host to prevent weirdness.
 			unset($host);
+			
+			// httpClients
+			for ($k=0; $k<$this->httpNumClients; $k++)
+			{
+				if ($this->httpClients[$k]->lastActivity < time() - HTTP_KEEP_ALIVE)
+				{
+					console('Closed httpClient (keep alive) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+					array_splice ($this->httpClients, $k, 1);
+					$k--;
+					$this->httpNumClients--;
+				}
+			}
 			
 		} // End while(isRunning)
 	}
