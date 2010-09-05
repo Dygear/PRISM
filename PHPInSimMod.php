@@ -759,6 +759,7 @@ class PHPInSimMod
 						$this->httpClients[$k]->flushSendQ();
 					}
 					
+					// Did we receive something from a httpClient?
 					if (!in_array($this->httpClients[$k]->socket, $sockReads))
 						continue;
 
@@ -777,11 +778,11 @@ class PHPInSimMod
 					}
 
 					// Ok we recieved some input from the http client.
-					// Pass the data to the client so it can handle it.
-					if (!$this->httpClients[$k]->handleInput($data))
+					// Pass the data to the HttpClient so it can handle it.
+					if (!$this->httpClients[$k]->handleInput($data, $errNo, $errStr))
 					{
 						// Something went wrong - we can hang up now
-						console('Closed httpClient (bad http request) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+						console('Closed httpClient ('.$errNo.' - '.$errStr.') '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
 						array_splice ($this->httpClients, $k, 1);
 						$k--;
 						$this->httpNumClients--;

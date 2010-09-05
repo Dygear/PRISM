@@ -1,7 +1,7 @@
 <?php
 
 define('HTTP_KEEP_ALIVE', 10);				// Keep-alive timeout in seconds
-define('HTTP_MAX_POST_SIZE', 2097152);		// Max http request size in bytes (headers + data)
+define('HTTP_MAX_REQUEST_SIZE', 2097152);		// Max http request size in bytes (headers + data)
 
 class HttpClient
 {
@@ -13,12 +13,11 @@ class HttpClient
 	
 	public $lastActivity	= 0;
 	
-	// send queue used in emergency cases (if send buffer appears full)
+	// send queue used for backlog, in case we can't send a reply in one go
 	public $sendQ			= '';
 	public $sendQLen		= 0;
-	public $sendQTime		= 0;
 
-	private $httpRequest	= null;
+	public $httpRequest		= null;
 	
 	public function __construct($sock, $ip, $port)
 	{
@@ -79,8 +78,6 @@ class HttpClient
 	
 	public function addPacketToSendQ($data)
 	{
-		if ($this->sendQLen == 0)
-			$this->sendQTime	= time();
 		$this->sendQ			.= $data;
 		$this->sendQLen			+= strlen($data);
 	}
@@ -88,32 +85,25 @@ class HttpClient
 	public function flushSendQ()
 	{
 		// Send chunk of data
-		$data = substr($this->sendQ, 0, STREAM_READ_BYTES);
-		$dataLen = strlen($data);
-		$bytes = $this->write($data, TRUE);
-		
-		// Check how much was sent
-		if ($bytes == $dataLen) {
-			// an entire chunk from the queue has been flushed. Remove it from the queue.
-			$this->sendQ = substr($this->sendQ, $bytes);
-			$this->sendQLen -= $bytes;
+		$bytes = $this->write(substr($this->sendQ, 0, STREAM_READ_BYTES), TRUE);
 
-			if ($this->sendQLen == 0)
-			{
-				// All done flushing - reset queue variables
-				$this->sendQ			= '';
-				$this->sendQTime		= 0;
-			} else {
-				// Set when the last packet was flushed
-				$this->sendQTime		= time ();
-			}
+		// Update the sendQ
+		$this->sendQ = substr($this->sendQ, $bytes);
+		$this->sendQLen -= $bytes;
+
+		// Cleanup / reset timers
+		if ($this->sendQLen == 0)
+		{
+			// All done flushing - reset queue variables
+			$this->sendQ			= '';
+			$this->lastActivity		= time();
 		} 
 		else if ($bytes > 0)
 		{
-			// only partial packet sent
-			$this->sendQ = substr($this->sendQ, $bytes);
-			$this->sendQLen -= $bytes;
+			// Set when the last packet was flushed
+			$this->lastActivity		= time();
 		}
+		console('flushed '.$bytes.' bytes (remaining : '.$this->sendQLen.')');
 	}
 
 	public function read()
@@ -122,7 +112,7 @@ class HttpClient
 		return fread($this->socket, STREAM_READ_BYTES);
 	}
 	
-	public function handleInput(&$data)
+	public function handleInput(&$data, &$errNo, &$errStr)
 	{
 		if (!$this->httpRequest)
 			$this->httpRequest = new HttpRequest();
@@ -136,6 +126,8 @@ class HttpClient
 			$r->addBody($this->httpRequest->errStr);
 			$this->write($r->getHeaders());
 			$this->write($r->getBody());
+			$errNo = $this->httpRequest->errNo;
+			$errStr = $this->httpRequest->errStr;
 			$this->httpRequest = null;
 			return false;
 		}
@@ -296,10 +288,10 @@ class HttpRequest
 		// be coming in until we have received all the headers.
 		// Normally though all headers should come in unfragmented.
 		$this->rawInput .= $data;
-		if (strlen($this->rawInput) > HTTP_MAX_POST_SIZE)
+		if (strlen($this->rawInput) > HTTP_MAX_REQUEST_SIZE)
 		{
 			$this->errNo = 413;
-			$this->errStr = 'You tried to send more than '.HTTP_MAX_POST_SIZE.' bytes to the server, which it doesn\'t like.';
+			$this->errStr = 'You tried to send more than '.HTTP_MAX_REQUEST_SIZE.' bytes to the server, which it doesn\'t like.';
 			return false;
 		}
 
