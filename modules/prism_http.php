@@ -235,6 +235,17 @@ class HttpClient
 		$this->write($r->getHeaders());
 		$this->write($r->getBody());
 		
+		// log line
+		console(
+			$this->ip.' - - ['.date('d/M/Y:H:i:s O').'] '.
+			'"'.$this->httpRequest->SERVER['REQUEST_METHOD'].' '.$this->httpRequest->SERVER['REQUEST_URI'].' '.$this->httpRequest->SERVER['SERVER_PROTOCOL'].'" '.
+			$r->getResponseCode().' '.
+			$r->getBodyLen().' '.
+			'"'.$this->httpRequest->SERVER['HTTP_REFERER'].'" '.
+			'"'.$this->httpRequest->SERVER['HTTP_USER_AGENT'].'" '.
+			'"-"'
+		);
+		
 		// Reset httpRequest
 		if ($this->httpRequest->rawInput != '')
 		{
@@ -485,7 +496,8 @@ class HttpResponse
 	private $headers		= array('Content-Type' => 'text/plain');
 	private $cookies		= array();
 	private $body			= '';
-	
+	private $bodyLen		= 0;
+		
 	public function __construct($httpVersion = '1.1', $code = 200)
 	{
 		$this->httpVersion = $httpVersion;
@@ -495,6 +507,11 @@ class HttpResponse
 	public function setResponseCode($code)
 	{
 		$this->responseCode = $code;
+	}
+	
+	public function getResponseCode()
+	{
+		return $this->responseCode;
 	}
 	
 	public function addHeader($header)
@@ -541,7 +558,7 @@ class HttpResponse
 		// Set server-side headers
 		$this->headers['Server']			= 'PRISM v' . PHPInSimMod::VERSION;
 		$this->headers['Date']				= date('r');
-		$this->headers['Content-Length']	= strlen($this->body);
+		$this->headers['Content-Length']	= $this->bodyLen;
 		if ($this->responseCode == 200)
 		{
 			$this->headers['Connection']	= 'Keep-Alive';
@@ -552,11 +569,17 @@ class HttpResponse
 	public function addBody($html)
 	{
 		$this->body .= $html;
+		$this->bodyLen += strlen($html);
 	}
 	
 	public function getBody()
 	{
 		return $this->body;
+	}
+	
+	public function getBodyLen()
+	{
+		return $this->bodyLen;
 	}
 	
 	public function setCookie($name, $value, $expire, $path, $domain, $secure = false, $httponly = false)
