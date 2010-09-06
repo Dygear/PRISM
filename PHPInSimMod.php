@@ -558,7 +558,12 @@ class PHPInSimMod
 				{
 					// Should we try to connect?
 					if ($host->mustConnect > -1 && $host->mustConnect < time())
-						$host->connect();
+					{
+						if ($host->connect()) {
+							$sockReads[] = $host->socket;
+							$sockWrites[] = $host->socket;
+						}
+					}
 				}
 				
 				// Treat secundary socketMCI separately. This socket is always open.
@@ -579,11 +584,13 @@ class PHPInSimMod
 					
 					// If write buffer was full, we must check to see when we can write again
 					if ($this->httpClients[$k]->sendQLen > 0)
-							$sockWrites[] = $this->httpClients[$k]->socket;
+						$sockWrites[] = $this->httpClients[$k]->socket;
 				}
 			}
 			
 			$this->getSocketTimeOut();
+			console('gonna listen');
+			var_dump($sockReads);
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
 			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
@@ -960,6 +967,17 @@ class PHPInSimMod
 					$this->hosts[$hostID]->connStatus	= CONN_VERIFIED;
 					$this->hosts[$hostID]->connTime		= time();
 					$this->hosts[$hostID]->connTries	= 0;
+					
+					// Send out some info requests
+					$ISP = new IS_TINY();
+					$ISP->SubT = TINY_NCN;
+					$this->hosts[$hostID]->writePacket($ISP);
+					$ISP = new IS_TINY();
+					$ISP->SubT = TINY_NPL;
+					$this->hosts[$hostID]->writePacket($ISP);
+					$ISP = new IS_TINY();
+					$ISP->SubT = TINY_RES;
+					$this->hosts[$hostID]->writePacket($ISP);
 				}
 				break;
 
@@ -1044,8 +1062,8 @@ class PHPInSimMod
 		# A Cron Jobs distance to now will have to be recalcuated after each socket_select call, well do that here also.
 
 		// Must have a max delay of a second, otherwise there is no connection maintenance done.
-		$this->sleep = 1;
-		$this->uSleep = NULL;
+		$this->sleep = 10;
+		$this->uSleep = 0;
 	}
 
 	public function __destruct()
