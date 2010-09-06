@@ -72,9 +72,6 @@ class PHPInSimMod
 	private $isWindows		= FALSE;
 
 	/* Run Time Arrays */
-	// Resources
-	private $sql;
-	
 	// Config variables
 	private $cvars			= array('prefix'		=> '!',
 									'debugMode'		=> PRISM_DEBUG_ALL,
@@ -91,15 +88,11 @@ class PHPInSimMod
 	private $pluginvars		= array();
 
 	private $hosts			= array();			# Stores references to the hosts we're connected to
-	private $hostID			= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
+	private $HostId			= NULL;				# Contains the current HostID we are talking to. (For this::sendPacket & plugins::sendPacket methods).
 	private $nextMaintenance= 0;
 
 	// InSim
-	private $plugins		= array();
-
-	// InSim Changed Arrays
-	private $clients		= array();
-	private $players		= array();
+	private $plugins		= array();			# Stores references to the plugins we've spawned.
 
 	# Time outs
 	private $sleep			= NULL;
@@ -897,18 +890,22 @@ class PHPInSimMod
 		}
 	}
 
-	public function sendPacket($packetClass)
+	public function sendPacket($packetClass, $HostId = FALSE)
 	{
-		return $this->hosts[$this->hostID]->writePacket($packetClass);
+		if ($HostId === FALSE)
+			return $this->hosts[$this->HostId]->writePacket($packetClass);
+		else
+			return $this->hosts[$HostId]->writePacket($packetClass);
 	}
 
 	private function getSocketTimeOut()
 	{
-		# If timer array is empty, set the Sleep & uSleep to NULL.
-		# Else set the timer to when the next timer is going to go off.
-		
-		$this->sleep = 0;		// default select wait of 1000 microsecond (1 millisecond).
-		$this->uSleep = 1000;
+		# If timer & cron array is empty, set the Sleep & uSleep to NULL.
+		# Else set the timeout to the detla of now as compared to the next timer or cronjob event, what ever is smaller.
+		# A Cron Jobs distance to now will have to be recalcuated after each socket_select call, well do that here also.
+
+		$this->sleep = NULL;
+		$this->uSleep = NULL;
 	}
 
 	public function __destruct()
