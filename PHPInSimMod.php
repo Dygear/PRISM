@@ -791,7 +791,7 @@ class PHPInSimMod
 					
 					// Do we have a http request to process?
 					// Note that these are only actual 'dynamic php file requests'. 
-					// Static files (images) are automatically served by the HttpClient
+					// Static files (images, css/js etc) are automatically served by the HttpClient
 					if ($httpRequest != NULL)
 					{
 						// From here we can pass the request's variables (SERVER, GPC) to some admin-web-processing function
@@ -799,6 +799,10 @@ class PHPInSimMod
 						$r = new HttpResponse($httpRequest->SERVER['httpVersion'], 200);
 						
 						// send it to admin function here
+						// EG. adminPageGenerate($httpRequest, $r);
+						// That function must write the generated page to $r->addBody()
+						// That function must write any special headers to $r->addHeader()
+						// Then when it's finished, it should simply return (void);
 
 						// Send the response
 						$this->httpClients[$k]->write($r->getHeaders());
