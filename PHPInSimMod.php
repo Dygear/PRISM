@@ -484,7 +484,7 @@ class PHPInSimMod
 				}
 				if ($pps < 1 || $pps > 100)
 				{
-					console('Invalid pps '.$ps.' for '.$hostID);
+					console('Invalid pps '.$pps.' for '.$hostID);
 					console('Host '.$hostID.' will be excluded.');
 					continue;
 				}
@@ -560,8 +560,9 @@ class PHPInSimMod
 					if ($host->mustConnect > -1 && $host->mustConnect < time())
 					{
 						if ($host->connect()) {
-							$sockReads[] = $host->socket;
-							$sockWrites[] = $host->socket;
+							$sockReads[] = $this->hosts[$hostID]->socket;
+							if ($host->socketType == SOCKTYPE_TCP)
+								$sockWrites[] = $this->hosts[$hostID]->socket;
 						}
 					}
 				}
@@ -589,8 +590,6 @@ class PHPInSimMod
 			}
 			
 			$this->getSocketTimeOut();
-			console('gonna listen');
-			var_dump($sockReads);
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
 			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
@@ -971,12 +970,15 @@ class PHPInSimMod
 					// Send out some info requests
 					$ISP = new IS_TINY();
 					$ISP->SubT = TINY_NCN;
+					$ISP->ReqI = 1;
 					$this->hosts[$hostID]->writePacket($ISP);
 					$ISP = new IS_TINY();
 					$ISP->SubT = TINY_NPL;
+					$ISP->ReqI = 1;
 					$this->hosts[$hostID]->writePacket($ISP);
 					$ISP = new IS_TINY();
 					$ISP->SubT = TINY_RES;
+					$ISP->ReqI = 1;
 					$this->hosts[$hostID]->writePacket($ISP);
 				}
 				break;
@@ -1062,8 +1064,8 @@ class PHPInSimMod
 		# A Cron Jobs distance to now will have to be recalcuated after each socket_select call, well do that here also.
 
 		// Must have a max delay of a second, otherwise there is no connection maintenance done.
-		$this->sleep = 10;
-		$this->uSleep = 0;
+		$this->sleep = 1;
+		$this->uSleep = null;
 	}
 
 	public function __destruct()

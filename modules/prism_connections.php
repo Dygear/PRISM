@@ -100,6 +100,8 @@ class InsimConnection
 			$this->connectUDP();
 		else
 			$this->connectTCP();
+		
+		return true;
 	}
 	
 	public function connectUDP()
