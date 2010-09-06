@@ -37,6 +37,33 @@ abstract class Plugins
 		return $this->parent->sendPacket($packetClass);
 	}
 
+	/** Parse Methods */
+	public function readFlags($flagsString = '')
+	{
+		# We don't have anything to parse.
+		if ($flagsString == '')
+			return FALSE;
+
+		$flagsBitwise = 0;
+		for ($chrPointer = 0, $strLen = strlen($flagsString); $chrPointer < $strLen; ++$chrPointer)
+		{
+			# Convert this charater to it's ASCII int value.
+			$char = ord($flagsString{$chrPointer});
+
+			# We only want a (ASCII = 97) through z (ASCII 122), nothing else.
+			if ($char < 97 || $char > 122)
+				continue;
+
+			# Check we have already set that flag, if so skip it!
+			if ($flagsBitwise & (1 << ($char - 97)))
+				continue;
+
+			# Add the value to our $flagBitwise intager.
+			$flagsBitwise += (1 << ($char - 97));
+		}
+		return $flagsBitwise;
+	}
+
 	/** Handle Methods */
 	public function handlePacket($packet) {}
 

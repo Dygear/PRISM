@@ -176,9 +176,7 @@ class PHPInSimMod
 				$this->pluginvars[$pluginID]['useHosts'] = explode('","', $details['useHosts']);
 			}
 		}
-		
-//		print_r($this->pluginvars);
-		
+
 		return TRUE;
 	}
 	
