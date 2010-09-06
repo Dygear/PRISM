@@ -160,77 +160,89 @@ class HttpClient
 		// OK, soooo, now what? :) Here we should pass the HttpRequest object to the (www)admin function,
 		// so the html pages can be generated and user submitted values be processed.
 		
+		// NASTY file serving - MUST AND WILL CHANGE
+		switch ($this->httpRequest->SERVER['SCRIPT_NAME'])
+		{
+			case '/favicon.ico' :
+				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+				$r->addBody(file_get_contents(ROOTPATH.'/www-docs/favicon.ico'));
+				$r->addHeader('Content-Type: image/x-icon');
+				break;
+			
+			default :
+				// Build TEST response for now
+				$html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+				$html .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">';
+				$html .= '<head>';
+				$html .= '<title>Prism http server test page</title>';
+				$html .= '</head>';
+				$html .= '<body>';
 		
-		// Build TEST response for now
-		$html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
-		$html .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">';
-		$html .= '<head>';
-		$html .= '<title>Prism http server test page</title>';
-		$html .= '</head>';
-		$html .= '<body>';
+				if (count($this->httpRequest->COOKIE) > 0)
+				{
+					$html .= 'The following COOKIE values have been found :<br />';
+					foreach ($this->httpRequest->COOKIE as $k => $v)
+						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+					$html .= '<br />';
+				}
+				
+				if (count($this->httpRequest->GET) > 0)
+				{
+					$html .= 'You submitted the following GET values :<br />';
+					foreach ($this->httpRequest->GET as $k => $v)
+						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+					$html .= '<br />';
+				}
+				
+				if (count($this->httpRequest->POST) > 0)
+				{
+					$html .= 'You submitted the following POST values :<br />';
+					foreach ($this->httpRequest->POST as $k => $v)
+					{
+						if (is_array($v))
+						{
+							$html .= '<strong>'.$k.'-array</strong><br />';
+							foreach ($v as $k2 => $v2)
+								$html .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$k.'['.htmlspecialchars($k2).'] => '.htmlspecialchars($v2).'<br />';
+						}
+						else
+						{
+							$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+						}
+					}
+					$html .= '<br />';
+				}
+				
+				$html .= 'Here\'s a form to test POST requests<br />';
+				$html .= '<form method="post" action="/?'.$this->httpRequest->SERVER['QUERY_STRING'].'">';
+				$html .= '';
+				for ($c=0; $c<3; $c++)
+					$html .= 'name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
+				for ($c=0; $c<3; $c++)
+					$html .= 'name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
+				for ($c=0; $c<3; $c++)
+					$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
+				$html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
+				$html .= '<input type="submit" value="Submit the form" />';
+				$html .= '</form>';
+				
+				for ($x=0; $x<100; $x++)
+				{
+					$html .= '<br /><br />SERVER values :<br />';
+					foreach ($this->httpRequest->SERVER as $k => $v)
+						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+				}
+				$html .= '</body>';
+				$html .= '</html>';
 
-		if (count($this->httpRequest->COOKIE) > 0)
-		{
-			$html .= 'The following COOKIE values have been found :<br />';
-			foreach ($this->httpRequest->COOKIE as $k => $v)
-				$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-			$html .= '<br />';
+				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+				$r->addBody($html);
+				$r->addHeader('Content-Type: text/html');
+				$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', 'vic.lfs.net');
+				$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', 'vic.lfs.net');
+				
+				break;
 		}
-		
-		if (count($this->httpRequest->GET) > 0)
-		{
-			$html .= 'You submitted the following GET values :<br />';
-			foreach ($this->httpRequest->GET as $k => $v)
-				$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-			$html .= '<br />';
-		}
-		
-		if (count($this->httpRequest->POST) > 0)
-		{
-			$html .= 'You submitted the following POST values :<br />';
-			foreach ($this->httpRequest->POST as $k => $v)
-			{
-				if (is_array($v))
-				{
-					$html .= '<strong>'.$k.'-array</strong><br />';
-					foreach ($v as $k2 => $v2)
-						$html .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$k.'['.htmlspecialchars($k2).'] => '.htmlspecialchars($v2).'<br />';
-				}
-				else
-				{
-					$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-				}
-			}
-			$html .= '<br />';
-		}
-		
-		$html .= 'Here\'s a form to test POST requests<br />';
-		$html .= '<form method="post" action="/?'.$this->httpRequest->SERVER['QUERY_STRING'].'">';
-		$html .= '';
-		for ($c=0; $c<3; $c++)
-			$html .= 'name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-		for ($c=0; $c<3; $c++)
-			$html .= 'name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-		for ($c=0; $c<3; $c++)
-			$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-		$html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
-		$html .= '<input type="submit" value="Submit the form" />';
-		$html .= '</form>';
-		
-		for ($x=0; $x<100; $x++)
-		{
-			$html .= '<br /><br />SERVER values :<br />';
-			foreach ($this->httpRequest->SERVER as $k => $v)
-				$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-		}
-		$html .= '</body>';
-		$html .= '</html>';
-		
-		$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-		$r->addBody($html);
-		$r->addHeader('Content-Type: text/html');
-		$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', 'vic.lfs.net');
-		$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', 'vic.lfs.net');
 		
 		$this->write($r->getHeaders());
 		$this->write($r->getBody());
@@ -567,10 +579,10 @@ class HttpResponse
 		}
 	}
 	
-	public function addBody($html)
+	public function addBody($data)
 	{
-		$this->body .= $html;
-		$this->bodyLen += strlen($html);
+		$this->body .= $data;
+		$this->bodyLen += strlen($data);
 	}
 	
 	public function getBody()
