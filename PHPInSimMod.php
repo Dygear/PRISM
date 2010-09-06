@@ -54,6 +54,7 @@ define('ROOTPATH', dirname(realpath(__FILE__)));
 require_once(ROOTPATH . '/modules/prism_packets.php');
 require_once(ROOTPATH . '/modules/prism_connections.php');
 require_once(ROOTPATH . '/modules/prism_http.php');
+require_once(ROOTPATH . '/modules/prism_plugins.php');
 
 $PRISM = new PHPInSimMod($argc, $argv);
 
@@ -91,7 +92,7 @@ class PHPInSimMod
 	private $pluginvars		= array();
 
 	private $hosts			= array();			# Stores references to the hosts we're connected to
-	private $hostID			= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
+	private $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 	
 	private $httpSock		= NULL;
 	private $httpClients	= array();
@@ -1009,7 +1010,7 @@ class PHPInSimMod
 	
 	private function dispatchPacket(&$packet, &$hostID)
 	{
-		$this->hostID = $hostID;
+		$this->curHostID = $hostID;
 		foreach ($this->plugins as $name => $plugin)
 		{
 			if (!$this->isPluginEligibleForPacket($name, $hostID))
@@ -1031,7 +1032,7 @@ class PHPInSimMod
 	public function sendPacket($packetClass, $HostId = FALSE)
 	{
 		if ($HostId === FALSE)
-			return $this->hosts[$this->HostId]->writePacket($packetClass);
+			return $this->hosts[$this->curHostID]->writePacket($packetClass);
 		else
 			return $this->hosts[$HostId]->writePacket($packetClass);
 	}
@@ -1042,7 +1043,8 @@ class PHPInSimMod
 		# Else set the timeout to the detla of now as compared to the next timer or cronjob event, what ever is smaller.
 		# A Cron Jobs distance to now will have to be recalcuated after each socket_select call, well do that here also.
 
-		$this->sleep = NULL;
+		// Must have a max delay of a second, otherwise there is no connection maintenance done.
+		$this->sleep = 1;
 		$this->uSleep = NULL;
 	}
 
