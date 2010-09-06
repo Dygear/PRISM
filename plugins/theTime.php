@@ -1,5 +1,5 @@
 <?php
-class theTime extends plugins
+class theTime extends Plugins
 {
 	const NAME = 'The Time';
 	const DESCRIPTION = 'Prints the time to the client who asks for it.';

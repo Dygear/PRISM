@@ -201,19 +201,19 @@ class IS_ISI extends struct // InSim Init - packet to initialise the InSim syste
 	const UNPACK = 'CSize/CType/CReqI/CZero/vUDPPort/vFlags/CSp0/CPrefix/vInterval/a16Admin/a16IName';
 
 	public $Size = 44;		// 44
-	public $Type = ISP_ISI;// always ISP_ISI
+	public $Type = ISP_ISI;	// always ISP_ISI
 	public $ReqI;			// If non-zero LFS will send an IS_VER packet
-	public $Zero = 0;	// 0
+	public $Zero = NULL;	// 0
 
 	public $UDPPort;		// Port for UDP replies from LFS (0 to 65535)
 	public $Flags;			// Bit flags for options (see below)
 
-	public $Sp0 = 0;		// 0
+	public $Sp0 = NULL;		// 0
 	public $Prefix;			// Special host message prefix character
 	public $Interval;		// Time in ms between NLP or MCI (0 = none)
 
-	public $Admin;		// Admin password (if set in LFS)
-	public $IName;		// A short name for your program
+	public $Admin;			// Admin password (if set in LFS)
+	public $IName;			// A short name for your program
 };
 
 // NOTE 1) UDPPort field when you connect using UDP :
@@ -595,8 +595,8 @@ class IS_MSO extends struct // MSg Out - system messages and user messages
 
 	public $UCID = 0;			// connection's unique id (0 = host)
 	public $PLID = 0;			// player's unique id (if zero, use UCID)
-	public $UserType = NULL;	// set if typed by a user (see User Values below)
-	public $TextStart = NULL;	// first character of the actual text (after player name)
+	public $UserType;			// set if typed by a user (see User Values below)
+	public $TextStart;			// first character of the actual text (after player name)
 
 	public $Msg;
 };
