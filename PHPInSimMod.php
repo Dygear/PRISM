@@ -779,7 +779,7 @@ class PHPInSimMod
 
 					// Ok we recieved some input from the http client.
 					// Pass the data to the HttpClient so it can handle it.
-					if (!$this->httpClients[$k]->handleInput($data, $errNo, $errStr))
+					if (!$this->httpClients[$k]->handleInput($data, $httpRequest, $errNo, $errStr))
 					{
 						// Something went wrong - we can hang up now
 						console('Closed httpClient ('.$errNo.' - '.$errStr.') '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
@@ -787,6 +787,24 @@ class PHPInSimMod
 						$k--;
 						$this->httpNumClients--;
 						continue;
+					}
+					
+					// Do we have a http request to process?
+					// Note that these are only actual 'dynamic php file requests'. 
+					// Static files (images) are automatically served by the HttpClient
+					if ($httpRequest != NULL)
+					{
+						// From here we can pass the request's variables (SERVER, GPC) to some admin-web-processing function
+						// We also pass it a new instance of HttpResponse (so we can set cookies and other headers to prepare the reponse).
+						$r = new HttpResponse($httpRequest->SERVER['httpVersion'], 200);
+						
+						// send it to admin function here
+
+						// Send the response
+						$this->httpClients[$k]->write($r->getHeaders());
+						$this->httpClients[$k]->write($r->getBody());
+
+						unset($httpRequest, $r);
 					}
 				}
 				

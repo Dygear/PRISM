@@ -1,7 +1,8 @@
 <?php
 
-define('HTTP_KEEP_ALIVE', 10);				// Keep-alive timeout in seconds
+define('HTTP_KEEP_ALIVE', 10);					// Keep-alive timeout in seconds
 define('HTTP_MAX_REQUEST_SIZE', 2097152);		// Max http request size in bytes (headers + data)
+define('HTTP_MAX_URI_LENGTH', 4096);			// Max length of the uri in the first http header
 
 class HttpClient
 {
@@ -16,8 +17,9 @@ class HttpClient
 	// send queue used for backlog, in case we can't send a reply in one go
 	public $sendQ			= '';
 	public $sendQLen		= 0;
+	public $sendQWindow		= STREAM_READ_BYTES;
 
-	public $httpRequest		= null;
+	private $httpRequest	= null;
 	
 	public function __construct($sock, $ip, $port)
 	{
@@ -85,7 +87,17 @@ class HttpClient
 	public function flushSendQ()
 	{
 		// Send chunk of data
-		$bytes = $this->write(substr($this->sendQ, 0, STREAM_READ_BYTES), TRUE);
+		$bytes = $this->write(substr($this->sendQ, 0, $this->sendQWindow), TRUE);
+		
+		// Dynamic window sizing
+		if ($bytes == $this->sendQWindow)
+			$this->sendQWindow += STREAM_READ_BYTES;
+		else
+		{
+			$this->sendQWindow -= STREAM_READ_BYTES;
+			if ($this->sendQWindow < STREAM_READ_BYTES)
+				$this->sendQWindow = STREAM_READ_BYTES;
+		}
 
 		// Update the sendQ
 		$this->sendQ = substr($this->sendQ, $bytes);
@@ -103,6 +115,7 @@ class HttpClient
 			// Set when the last packet was flushed
 			$this->lastActivity		= time();
 		}
+		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen);
 	}
 
 	public function read()
@@ -111,7 +124,7 @@ class HttpClient
 		return fread($this->socket, STREAM_READ_BYTES);
 	}
 	
-	public function handleInput(&$data, &$errNo, &$errStr)
+	public function handleInput(&$data, &$httpRequest, &$errNo, &$errStr)
 	{
 		if (!$this->httpRequest)
 			$this->httpRequest = new HttpRequest();
@@ -160,90 +173,110 @@ class HttpClient
 		// OK, soooo, now what? :) Here we should pass the HttpRequest object to the (www)admin function,
 		// so the html pages can be generated and user submitted values be processed.
 		
-		// NASTY file serving - MUST AND WILL CHANGE
-		switch ($this->httpRequest->SERVER['SCRIPT_NAME'])
+		// First do file path sanitation.
+		//console('FULL PATH : '.ROOTPATH.$this->httpRequest->SERVER['SCRIPT_NAME']);
+		$exp = explode('/', $this->httpRequest->SERVER['SCRIPT_NAME']);
+		foreach ($exp as $v)
 		{
-			case '/favicon.ico' :
-				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-				$r->addBody(file_get_contents(ROOTPATH.'/www-docs/favicon.ico'));
-				$r->addHeader('Content-Type: image/x-icon');
+			if ($v == '..')
+			{
+				// Ooops the user probably tried something nasty (reach a file outside of our www folder)
+				// Let's just rewrite the url for now.
+				$this->httpRequest->SERVER['SCRIPT_NAME'] = '/';
 				break;
-			
-			default :
-				// Build TEST response for now
-				$html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
-				$html .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">';
-				$html .= '<head>';
-				$html .= '<title>Prism http server test page</title>';
-				$html .= '</head>';
-				$html .= '<body>';
-		
-				if (count($this->httpRequest->COOKIE) > 0)
-				{
-					$html .= 'The following COOKIE values have been found :<br />';
-					foreach ($this->httpRequest->COOKIE as $k => $v)
-						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-					$html .= '<br />';
-				}
-				
-				if (count($this->httpRequest->GET) > 0)
-				{
-					$html .= 'You submitted the following GET values :<br />';
-					foreach ($this->httpRequest->GET as $k => $v)
-						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-					$html .= '<br />';
-				}
-				
-				if (count($this->httpRequest->POST) > 0)
-				{
-					$html .= 'You submitted the following POST values :<br />';
-					foreach ($this->httpRequest->POST as $k => $v)
-					{
-						if (is_array($v))
-						{
-							$html .= '<strong>'.$k.'-array</strong><br />';
-							foreach ($v as $k2 => $v2)
-								$html .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$k.'['.htmlspecialchars($k2).'] => '.htmlspecialchars($v2).'<br />';
-						}
-						else
-						{
-							$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-						}
-					}
-					$html .= '<br />';
-				}
-				
-				$html .= 'Here\'s a form to test POST requests<br />';
-				$html .= '<form method="post" action="/?'.$this->httpRequest->SERVER['QUERY_STRING'].'">';
-				$html .= '';
-				for ($c=0; $c<3; $c++)
-					$html .= 'name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-				for ($c=0; $c<3; $c++)
-					$html .= 'name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-				for ($c=0; $c<3; $c++)
-					$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-				$html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
-				$html .= '<input type="submit" value="Submit the form" />';
-				$html .= '</form>';
-				
-				for ($x=0; $x<100; $x++)
-				{
-					$html .= '<br /><br />SERVER values :<br />';
-					foreach ($this->httpRequest->SERVER as $k => $v)
-						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-				}
-				$html .= '</body>';
-				$html .= '</html>';
-
-				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-				$r->addBody($html);
-				$r->addHeader('Content-Type: text/html');
-				$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', 'vic.lfs.net');
-				$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', 'vic.lfs.net');
-				
-				break;
+			}
 		}
 		
+		// Should we serve a file or pass the request to PHPInSimMod for page generation?
+		if ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/')
+		{
+			// Serve internally generated webpage
+			// Build TEST response for now
+			$html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+			$html .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">';
+			$html .= '<head>';
+			$html .= '<title>Prism http server test page</title>';
+			$html .= '</head>';
+			$html .= '<body>';
+	
+			if (count($this->httpRequest->COOKIE) > 0)
+			{
+				$html .= 'The following COOKIE values have been found :<br />';
+				foreach ($this->httpRequest->COOKIE as $k => $v)
+					$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+				$html .= '<br />';
+			}
+			
+			if (count($this->httpRequest->GET) > 0)
+			{
+				$html .= 'You submitted the following GET values :<br />';
+				foreach ($this->httpRequest->GET as $k => $v)
+					$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+				$html .= '<br />';
+			}
+			
+			if (count($this->httpRequest->POST) > 0)
+			{
+				$html .= 'You submitted the following POST values :<br />';
+				foreach ($this->httpRequest->POST as $k => $v)
+				{
+					if (is_array($v))
+					{
+						$html .= '<strong>'.$k.'-array</strong><br />';
+						foreach ($v as $k2 => $v2)
+							$html .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$k.'['.htmlspecialchars($k2).'] => '.htmlspecialchars($v2).'<br />';
+					}
+					else
+					{
+						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+					}
+				}
+				$html .= '<br />';
+			}
+			
+			$html .= 'Here\'s a form to test POST requests<br />';
+			$html .= '<form method="post" action="/?'.$this->httpRequest->SERVER['QUERY_STRING'].'">';
+			$html .= '';
+			for ($c=0; $c<3; $c++)
+				$html .= 'name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
+			for ($c=0; $c<3; $c++)
+				$html .= 'name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
+			for ($c=0; $c<3; $c++)
+				$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
+			$html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
+			$html .= '<input type="submit" value="Submit the form" />';
+			$html .= '</form>';
+			
+			for ($x=0; $x<100; $x++)
+			{
+				$html .= '<br /><br />SERVER values :<br />';
+				foreach ($this->httpRequest->SERVER as $k => $v)
+					$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+			}
+			$html .= '</body>';
+			$html .= '</html>';
+
+			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+			$r->addBody($html);
+			$r->addHeader('Content-Type: text/html');
+			$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', 'vic.lfs.net');
+			$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', 'vic.lfs.net');
+		}
+		else if (file_exists(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
+		{
+			// Serve file
+			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+			$r->addBody(file_get_contents(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
+			$r->addHeader('Content-Type: '.$this->getMimeType());
+		}
+		else
+		{
+			// 404
+			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 404);
+			$r->addBody('File Not Found');
+		}
+
+		// Send response
 		$this->write($r->getHeaders());
 		$this->write($r->getBody());
 		
@@ -274,6 +307,80 @@ class HttpClient
 		return true;
 	}
 	
+	private function getMimeType()
+	{
+		$pathInfo = pathinfo($this->httpRequest->SERVER['SCRIPT_NAME']);
+		
+		$mimeType = 'application/octet-stream';
+		switch(strtolower($pathInfo['extension']))
+		{
+			case 'txt' :
+				$mimeType = 'text/plain';
+				break;
+
+			case 'html' :
+			case 'htm' :
+			case 'shtml' :
+				$mimeType = 'text/html';
+				break;
+
+			case 'css' :
+				$mimeType = 'text/css';
+				break;
+
+			case 'xml' :
+				$mimeType = 'text/xml';
+				break;
+
+			case 'gif' :
+				$mimeType = 'image/gif';
+				break;
+
+			case 'jpeg' :
+			case 'jpg' :
+				$mimeType = 'image/jpeg';
+				break;
+
+			case 'png' :
+				$mimeType = 'image/png';
+				break;
+
+			case 'tif' :
+			case 'tiff' :
+				$mimeType = 'image/tiff';
+				break;
+
+			case 'wbmp' :
+				$mimeType = 'image/vnd.wap.wbmp';
+				break;
+
+			case 'bmp' :
+				$mimeType = 'image/x-ms-bmp';
+				break;
+
+			case 'svg' :
+				$mimeType = 'image/svg+xml';
+				break;
+
+			case 'ico' :
+				$mimeType = 'image/x-icon';
+				break;
+
+			case 'js' :
+				$mimeType = 'application/x-javascript';
+				break;
+
+			case 'atom' :
+				$mimeType = 'application/atom+xml';
+				break;
+
+			case 'rss' :
+				$mimeType = 'application/rss+xml';
+				break;
+		}
+		return $mimeType;
+	}
+	
 	private function createRandomString($len)
 	{
 		$out = '';
@@ -288,6 +395,7 @@ class HttpRequest
 	public $rawInput		= '';
 	
 	public $isReceiving		= false;
+	public $hasRequestUri	= false;
 	public $hasHeaders		= false;
 
 	public $errNo			= 0;
@@ -309,7 +417,7 @@ class HttpRequest
 	{
 		// We need to buffer the input - no idea how much data will 
 		// be coming in until we have received all the headers.
-		// Normally though all headers should come in unfragmented.
+		// Normally though all headers should come in unfragmented, but don't rely on that.
 		$this->rawInput .= $data;
 		if (strlen($this->rawInput) > HTTP_MAX_REQUEST_SIZE)
 		{
@@ -318,19 +426,18 @@ class HttpRequest
 			return false;
 		}
 
-		// Check if we have the http headers in the buffer
-		if (!$this->hasHeaders && strstr($this->rawInput, "\r\n\r\n"))
+		// Check if we have header lines in the buffer, for as long as !$this->hasHeaders
+		if (!$this->hasHeaders)
 		{
 			if (!$this->parseHeaders())
-				return false;
-			$this->hasHeaders = true;
+				return false;				// returns false is something went wrong (bad headers)
 		}
 		
 		// If we have headers then we can now figure out if we have received all there is,
 		// or if there is more to come. If there is, just return true and wait for more.
 		if ($this->hasHeaders)
 		{
-			// With a GET there will no extra data
+			// With a GET there will be no extra data
 			if ($this->SERVER['REQUEST_METHOD'] == 'POST')
 			{
 				// Check if we have enough and proper data to read the POST
@@ -387,29 +494,73 @@ class HttpRequest
 	
 	private function parseHeaders()
 	{
-		$pos = strpos($this->rawInput, "\r\n\r\n");
-		$headers = explode("\r\n", substr($this->rawInput, 0, $pos));
-		
-		// Read the first header (the request line)
-		if (!$this->parseRequestLine(array_shift($headers)))
+		// Loop through each individual header line
+		do
 		{
-			$this->errNo = 400;
-			$this->errStr = 'The server did not understand your request.';
-			return false;
-		}
-		
-		// Parse the rest of the headers
-		foreach ($headers as $h)
-		{
-			$exp = explode(':', $h, 2);
-			if (count($exp) != 2)
-				continue;
-			$this->headers[trim($exp[0])] = trim($exp[1]);
-		}
-		
-		// Strip the headers out of the rawInput.
-		$this->rawInput = substr($this->rawInput, $pos+4);
-		
+			// Do we have a header line?
+			$pos = strpos($this->rawInput, "\r\n");
+			if ($pos === false)
+			{
+				// Extra (garbage) input error checking here
+				if (!$this->hasRequestUri)
+				{
+					$len = strlen($this->rawInput);
+					if ($len > HTTP_MAX_URI_LENGTH)
+					{
+						$this->errNo = 414;
+						$this->errStr = 'Request-URI Too Long.';
+						return false;
+					}
+					else if ($len > 3 && !preg_match('/^(GET|POST).*$/', $this->rawInput))
+					{
+						$this->errNo = 400;
+						$this->errStr = 'The server did not understand your request.';
+						return false;
+					}
+				}
+				
+				// Otherwise just return and wait for more data
+				return true;
+			}
+			else if ($pos === 0)
+			{
+				// This cannot possibly be the end of headers, if we don't even have a request uri
+				if (!$this->hasRequestUri)
+				{
+					$this->errNo = 400;
+					$this->errStr = 'The server did not understand your request.';
+					return false;
+				}
+				
+				// This should be end of headers
+				$this->hasHeaders = true;
+				$this->rawInput = substr($this->rawInput, 2);		// remove second \r\n
+				return true;
+			}
+			
+			$header = substr($this->rawInput, 0, $pos);
+			$this->rawInput = substr($this->rawInput, $pos+2);		// +2 to include \r\n
+
+			// Do we have a request line already? If not, try to parse this header line as a request line
+			if (!$this->hasRequestUri)
+			{
+				// Read the first header (the request line)
+				if (!$this->parseRequestLine($header))
+				{
+					$this->errNo = 400;
+					$this->errStr = 'The server did not understand your request.';
+					return false;
+				}
+				$this->hasRequestUri = true;
+			}
+			else if (!$this->hasHeaders)
+			{
+				// Parse regular header line
+				$exp = explode(':', $header, 2);
+				if (count($exp) == 2)
+					$this->headers[trim($exp[0])] = trim($exp[1]);
+			}
+		} while (true);
 		return true;
 	}
 	
@@ -428,7 +579,7 @@ class HttpRequest
 		$this->SERVER['REQUEST_URI'] = $exp[1];
 		if (($uri = parse_url($this->SERVER['REQUEST_URI'])) === false)
 			return false;
-		$this->SERVER['SCRIPT_NAME'] = $uri['path'];
+		$this->SERVER['SCRIPT_NAME'] = ($uri['path'] != '' && $uri['path'][0] == '/') ? $uri['path'] : '/';
 		$this->SERVER['QUERY_STRING'] = isset($uri['query']) ? $uri['query'] : '';
 		
 		// Check the HTTP protocol version
@@ -503,6 +654,7 @@ class HttpResponse
 			404 => 'Not Found',
 			411 => 'Length Required',
 			413 => 'Request Entity Too Large',
+			414 => 'Request-URI Too Long',
 			415 => 'Unsupported Media Type',
 		);
 	private $httpVersion	= '1.1';
