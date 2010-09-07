@@ -53,7 +53,6 @@ define('ROOTPATH', dirname(realpath(__FILE__)));
 // the packets and connections module are two of the three REQUIRED modules for PRISM.
 require_once(ROOTPATH . '/modules/prism_packets.php');
 require_once(ROOTPATH . '/modules/prism_connections.php');
-require_once(ROOTPATH . '/modules/prism_http.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
 
 $PRISM = new PHPInSimMod($argc, $argv);
