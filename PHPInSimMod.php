@@ -93,10 +93,6 @@ class PHPInSimMod
 
 	private $hosts			= array();			# Stores references to the hosts we're connected to
 	private $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
-	
-	private $httpSock		= NULL;
-	private $httpClients	= array();
-	private $httpNumClients	= 0;
 
 	// InSim
 	private $plugins		= array();			# Stores references to the plugins we've spawned.
@@ -418,15 +414,7 @@ class PHPInSimMod
 		} else {
 			console("{$pluginsLoaded} Plugins Loaded.");
 		}
-		
-		// Setup http socket to listen on
-		$this->httpSock = @stream_socket_server('tcp://'.$this->cvars['httpIP'].':'.$this->cvars['httpPort'], $httpErrNo, $httpErrStr);
-		if (!is_resource($this->httpSock) || $this->httpSock === FALSE || $httpErrNo)
-		{
-			console('Error opening http socket : '.$httpErrStr.' ('.$httpErrNo.')');
-			return;
-		}
-		
+				
 		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 		$this->main();
 	}
@@ -573,22 +561,6 @@ class PHPInSimMod
 			}
 			unset($host);
 	
-			// Add http sockets to sockReads
-			if (is_resource($this->httpSock))
-				$sockReads[] = $this->httpSock;
-
-			for ($k=0; $k<$this->httpNumClients; $k++)
-			{
-				if (is_resource($this->httpClients[$k]->socket))
-				{
-					$sockReads[] = $this->httpClients[$k]->socket;
-					
-					// If write buffer was full, we must check to see when we can write again
-					if ($this->httpClients[$k]->sendQLen > 0 || $this->httpClients[$k]->sendFile != null)
-						$sockWrites[] = $this->httpClients[$k]->socket;
-				}
-			}
-			
 			$this->getSocketTimeOut();
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
@@ -723,107 +695,6 @@ class PHPInSimMod
 					}
 				}
 				unset($host);
-
-				// httpSock input (incoming http connection)
-				if (in_array ($this->httpSock, $sockReads))
-				{
-					$numReady--;
-					
-					// Accept the new connection
-					$peerInfo = '';
-					$sock = stream_socket_accept($this->httpSock, NULL, $peerInfo);
-					if (is_resource($sock))
-					{
-						$exp = explode(':', $peerInfo);
-
-						// Check for overflow, otherwise accept the new connection
-						if ($this->httpNumClients == HTTP_MAX_CONN)
-						{
-							//console('Rejecting HTTP Client '.$exp[0].':'.$exp[1].' (reached HTTP_MAX_CLIENTS)');
-							fclose($sock);
-						}
-						else
-						{
-							stream_set_blocking ($sock, 0);
-							
-							// Add new connection to httpClients array
-							$this->httpClients[] = new HttpClient($sock, $exp[0], (int) $exp[1]);
-							$this->httpNumClients++;
-							console('HTTP Client '.$exp[0].':'.$exp[1].' connected.');
-						}
-					}
-					unset($sock);
-				}
-				
-				// httpClients input
-				for ($k=0; $k<$this->httpNumClients; $k++)
-				{
-					// Recover from a full write buffer?
-					if (($this->httpClients[$k]->sendQLen > 0  || 
-						 $this->httpClients[$k]->sendFile != null) &&
-						in_array($this->httpClients[$k]->socket, $sockWrites))
-					{
-						$numReady--;
-						
-						// Flush the sendQ (bit by bit, not all at once - that could block the whole app)
-						if ($this->httpClients[$k]->sendQLen > 0)
-							$this->httpClients[$k]->flushSendQ();
-						else
-							$this->httpClients[$k]->writeFile();
-					}
-					
-					// Did we receive something from a httpClient?
-					if (!in_array($this->httpClients[$k]->socket, $sockReads))
-						continue;
-
-					$numReady--;
-					
-					$data = $this->httpClients[$k]->read();
-					
-					// Did the client hang up?
-					if ($data == '')
-					{
-						console('Closed httpClient (client initiated) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
-						array_splice ($this->httpClients, $k, 1);
-						$k--;
-						$this->httpNumClients--;
-						continue;
-					}
-
-					// Ok we recieved some input from the http client.
-					// Pass the data to the HttpClient so it can handle it.
-					if (!$this->httpClients[$k]->handleInput($data, $httpRequest, $errNo))
-					{
-						// Something went wrong - we can hang up now
-						console('Closed httpClient ('.$errNo.' - '.HttpResponse::$responseCodes[$errNo].') '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
-						array_splice ($this->httpClients, $k, 1);
-						$k--;
-						$this->httpNumClients--;
-						continue;
-					}
-					
-					// Do we have a http request to process?
-					// Note that these are only actual 'dynamic php file requests'. 
-					// Static files (images, css/js etc) are automatically served by the HttpClient
-					if ($httpRequest != NULL)
-					{
-						// From here we can pass the request's variables (SERVER, GPC) to some admin-web-processing function
-						// We also pass it a new instance of HttpResponse (so we can set cookies and other headers to prepare the reponse).
-						$r = new HttpResponse($httpRequest->SERVER['httpVersion'], 200);
-						
-						// send it to admin function here
-						// EG. adminPageGenerate($httpRequest, $r);
-						// That function must write the generated page to $r->addBody()
-						// That function must write any special headers to $r->addHeader()
-						// Then when it's finished, it should simply return (void);
-
-						// Send the response
-//						$this->httpClients[$k]->write($r->getHeaders());
-//						$this->httpClients[$k]->write($r->getBody());
-
-						unset($httpRequest, $r);
-					}
-				}
 				
 				// KB input
 				if (in_array (STDIN, $sockReads))
@@ -915,19 +786,7 @@ class PHPInSimMod
 			
 			// unset the temporary var $host to prevent weirdness.
 			unset($host);
-			
-			// httpClients
-			for ($k=0; $k<$this->httpNumClients; $k++)
-			{
-				if ($this->httpClients[$k]->lastActivity < time() - HTTP_KEEP_ALIVE)
-				{
-					console('Closed httpClient (keep alive) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
-					array_splice ($this->httpClients, $k, 1);
-					$k--;
-					$this->httpNumClients--;
-				}
-			}
-			
+						
 		} // End while(isRunning)
 	}
 
