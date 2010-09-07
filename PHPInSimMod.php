@@ -731,22 +731,33 @@ class PHPInSimMod
 					
 					// Accept the new connection
 					$peerInfo = '';
-					$sock = @stream_socket_accept ($this->httpSock, NULL, $peerInfo);
+					$sock = stream_socket_accept($this->httpSock, NULL, $peerInfo);
 					if (is_resource($sock))
 					{
-						stream_set_blocking ($sock, 0);
-						
-						// Add new connection to httpClients array
 						$exp = explode(':', $peerInfo);
-						$this->httpClients[] = new HttpClient($sock, $exp[0], $exp[1]);
-						$this->httpNumClients++;
-						console('HTTP Client '.$exp[0].':'.$exp[1].' connected.');
+
+						// Check for overflow, otherwise accept the new connection
+						if ($this->httpNumClients == HTTP_MAX_CONN)
+						{
+							//console('Rejecting HTTP Client '.$exp[0].':'.$exp[1].' (reached HTTP_MAX_CLIENTS)');
+							fclose($sock);
+						}
+						else
+						{
+							stream_set_blocking ($sock, 0);
+							
+							// Add new connection to httpClients array
+							$this->httpClients[] = new HttpClient($sock, $exp[0], (int) $exp[1]);
+							$this->httpNumClients++;
+							console('HTTP Client '.$exp[0].':'.$exp[1].' connected.');
+						}
 					}
-					unset ($sock);
+					unset($sock);
 				}
 				
 				// httpClients input
-				for ($k=0; $k<$this->httpNumClients; $k++) {
+				for ($k=0; $k<$this->httpNumClients; $k++)
+				{
 					// Recover from a full write buffer?
 					if (($this->httpClients[$k]->sendQLen > 0  || 
 						 $this->httpClients[$k]->sendFile != null) &&
@@ -781,10 +792,10 @@ class PHPInSimMod
 
 					// Ok we recieved some input from the http client.
 					// Pass the data to the HttpClient so it can handle it.
-					if (!$this->httpClients[$k]->handleInput($data, $httpRequest, $errNo, $errStr))
+					if (!$this->httpClients[$k]->handleInput($data, $httpRequest, $errNo))
 					{
 						// Something went wrong - we can hang up now
-						console('Closed httpClient ('.$errNo.' - '.$errStr.') '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+						console('Closed httpClient ('.$errNo.' - '.HttpResponse::$responseCodes[$errNo].') '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
 						array_splice ($this->httpClients, $k, 1);
 						$k--;
 						$this->httpNumClients--;
@@ -807,8 +818,8 @@ class PHPInSimMod
 						// Then when it's finished, it should simply return (void);
 
 						// Send the response
-						$this->httpClients[$k]->write($r->getHeaders());
-						$this->httpClients[$k]->write($r->getBody());
+//						$this->httpClients[$k]->write($r->getHeaders());
+//						$this->httpClients[$k]->write($r->getBody());
 
 						unset($httpRequest, $r);
 					}
@@ -846,11 +857,12 @@ class PHPInSimMod
 							break;
 						
 						case 'w':
-							foreach ($this->httpClients as $httpClient)
+							for ($k=0; $k<$this->httpNumClients; $k++)
 							{
-								$lastAct = time() - $httpClient->lastActivity;
-								console($httpClient->ip.':'.$httpClient->port.' - last activity was '.$lastAct.' second'.(($lastAct = 1) ? '' : 's').' ago.');
+								$lastAct = time() - $this->httpClients[$k]->lastActivity;
+								console($this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port.' - last activity was '.$lastAct.' second'.(($lastAct = 1) ? '' : 's').' ago.');
 							}
+							console('Counted '.$this->httpNumClients.' http client'.(($this->httpNumClients == 1) ? '' : 's'));
 							break;
 						
 						default :

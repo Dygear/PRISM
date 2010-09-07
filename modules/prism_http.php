@@ -3,6 +3,9 @@
 define('HTTP_KEEP_ALIVE', 10);					// Keep-alive timeout in seconds
 define('HTTP_MAX_REQUEST_SIZE', 2097152);		// Max http request size in bytes (headers + data)
 define('HTTP_MAX_URI_LENGTH', 4096);			// Max length of the uri in the first http header
+define('HTTP_MAX_CONN', 1024);					// Max number of simultaneous http connections
+												// Experimentation showed it's best to keep this pretty high.
+												// FD_SETSIZE is usually 1024; the max connections allowed on a socket.
 
 class HttpClient
 {
@@ -17,11 +20,12 @@ class HttpClient
 	// send queue used for backlog, in case we can't send a reply in one go
 	public $sendQ			= '';
 	public $sendQLen		= 0;
-	public $sendQWindow		= STREAM_READ_BYTES;
 	
 	public $sendFile		= null;				// contains handle to file we're sending
 	public $sendFilePntr	= 0;				// Points to where we are in the file
 	public $sendFileSize	= 0;				// Points to where we are in the file
+
+	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
 
 	private $httpRequest	= null;
 	
@@ -43,11 +47,19 @@ class HttpClient
 	{
 		if (is_resource($this->socket))
 			fclose($this->socket);
+		
+		if ($this->sendFile)
+			$this->writeFileReset();
+		if ($this->sendQLen > 0)
+			$this->sendQReset();
 	}
 	
 	public function write($data, $sendQPacket = FALSE)
 	{
 		$bytes = 0;
+		$dataLen = strlen($data);
+		if ($dataLen == 0)
+			return 0;
 		
 		if (!is_resource($this->socket))
 			return $bytes;
@@ -66,9 +78,9 @@ class HttpClient
 				$bytes = @fwrite($this->socket, $data);
 				$this->lastActivity = time();
 		
-				if (!$bytes || $bytes != strlen($data))
+				if (!$bytes || $bytes != $dataLen)
 				{
-					//console('Writing '.strlen($data).' bytes to http socket '.$this->ip.':'.$this->port.' failed (wrote '.$bytes.' bytes).');
+					// Could not send everything in one go - send the remainder to sendQ
 					$this->addPacketToSendQ (substr($data, $bytes));
 				}
 			}
@@ -91,16 +103,16 @@ class HttpClient
 	public function flushSendQ()
 	{
 		// Send chunk of data
-		$bytes = $this->write(substr($this->sendQ, 0, $this->sendQWindow), TRUE);
+		$bytes = $this->write(substr($this->sendQ, 0, $this->sendWindow), TRUE);
 		
 		// Dynamic window sizing
-		if ($bytes == $this->sendQWindow)
-			$this->sendQWindow += STREAM_READ_BYTES;
+		if ($bytes == $this->sendWindow)
+			$this->sendWindow += STREAM_READ_BYTES;
 		else
 		{
-			$this->sendQWindow -= STREAM_READ_BYTES;
-			if ($this->sendQWindow < STREAM_READ_BYTES)
-				$this->sendQWindow = STREAM_READ_BYTES;
+			$this->sendWindow -= STREAM_READ_BYTES;
+			if ($this->sendWindow < STREAM_READ_BYTES)
+				$this->sendWindow = STREAM_READ_BYTES;
 		}
 
 		// Update the sendQ
@@ -111,15 +123,21 @@ class HttpClient
 		if ($this->sendQLen == 0)
 		{
 			// All done flushing - reset queue variables
-			$this->sendQ			= '';
-			$this->lastActivity		= time();
+			$this->sendQReset();
 		} 
 		else if ($bytes > 0)
 		{
 			// Set when the last packet was flushed
 			$this->lastActivity		= time();
 		}
-		console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen);
+		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen);
+	}
+	
+	public function sendQReset()
+	{
+		$this->sendQ			= '';
+		$this->sendQLen			= 0;
+		$this->lastActivity		= time();
 	}
 	
 	public function writeFile($fileName = '')
@@ -133,39 +151,68 @@ class HttpClient
 			$this->sendFileSize = filesize($fileName);
 		}
 		
-		$bytes = @fwrite($this->socket, fread($this->sendFile, $this->sendQWindow));
+		$bytes = @fwrite($this->socket, fread($this->sendFile, $this->sendWindow));
 		$this->sendFilePntr += $bytes;
 		fseek($this->sendFile, $this->sendFilePntr);
 		$this->lastActivity = time();
 		
 		// Dynamic window sizing
-		if ($bytes == $this->sendQWindow)
-			$this->sendQWindow += STREAM_READ_BYTES;
+		if ($bytes == $this->sendWindow)
+			$this->sendWindow += STREAM_READ_BYTES;
 		else
 		{
-			$this->sendQWindow -= STREAM_READ_BYTES;
-			if ($this->sendQWindow < STREAM_READ_BYTES)
-				$this->sendQWindow = STREAM_READ_BYTES;
+			$this->sendWindow -= STREAM_READ_BYTES;
+			if ($this->sendWindow < STREAM_READ_BYTES)
+				$this->sendWindow = STREAM_READ_BYTES;
 		}
 		
 		//console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
+		// Done?
 		if ($this->sendFilePntr >= $this->sendFileSize)
-		{
-			fclose($this->sendFile);
-			$this->sendFile = null;
-			$this->sendFileSize = 0;
-			$this->sendFilePntr = 0;
-		}
+			$this->writeFileReset();
+	}
+	
+	private function writeFileReset()
+	{
+		@fclose($this->sendFile);
+		$this->sendFile = null;
+		$this->sendFileSize = 0;
+		$this->sendFilePntr = 0;
 	}
 
+	private function createErrorPage($errNo, $errStr = '')
+	{
+		$eol = "\r\n";
+		$out = '<html>'.$eol;
+		$out .= '<head><title>'.$errNo.' '.HttpResponse::$responseCodes[$errNo].'</title></head>'.$eol;
+		$out .= '<body bgcolor="white">'.$eol;
+		$out .= '<center><h1>'.$errNo.' '.(($errStr != '') ? $errStr : HttpResponse::$responseCodes[$errNo]).'</h1></center>'.$eol;
+		$out .= '<hr><center>PRISM v'.PHPInSimMod::VERSION.'</center>'.$eol;
+		$out .= '</body>'.$eol;
+		$out .= '</html>'.$eol;
+		return $out;
+	}
+	
 	public function read()
 	{
 		$this->lastActivity	= time();
 		return fread($this->socket, STREAM_READ_BYTES);
 	}
 	
-	public function handleInput(&$data, &$httpRequest, &$errNo, &$errStr)
+	public function handleInput(&$data, &$httpRequest, &$errNo)
 	{
+		// What is this? we're getting input while we're sending a reply?
+		if ($this->sendFile)
+		{
+			$this->writeFileReset();
+			$this->httpRequest = null;
+		}
+		else if ($this->sendQLen > 0)
+		{
+			$this->sendQReset();
+			$this->httpRequest = null;
+		}
+
 		if (!$this->httpRequest)
 			$this->httpRequest = new HttpRequest();
 
@@ -175,11 +222,10 @@ class HttpClient
 			// An error was encountered while receiving the requst.
 			// Send reply and return false to close this connection.
 			$r = new HttpResponse('1.1', $this->httpRequest->errNo);
-			$r->addBody($this->httpRequest->errStr);
+			$r->addBody($this->createErrorPage($this->httpRequest->errNo, $this->httpRequest->errStr));
 			$this->write($r->getHeaders());
 			$this->write($r->getBody());
 			$errNo = $this->httpRequest->errNo;
-			$errStr = $this->httpRequest->errStr;
 			$this->httpRequest = null;
 			return false;
 		}
@@ -187,8 +233,7 @@ class HttpClient
 		// If we have no headers, or we are busy with receiving or sending.
 		// Just return and wait for more data.
 		if (!$this->httpRequest->hasHeaders || 			// We're still receiving headers
-			$this->httpRequest->isReceiving || 			// We're still receiving the body of a request
-			$this->sendFile || $this->sendQLen > 0)		// We're already sending something
+			$this->httpRequest->isReceiving) 			// We're still receiving the body of a request
 			return true;								// Return true to just wait and try again later
 		
 		// At this point we have a fully qualified and parsed HttpRequest
@@ -198,7 +243,9 @@ class HttpClient
 		$this->httpRequest->SERVER['REMOTE_PORT']			= $this->port;
 		$this->httpRequest->SERVER['SERVER_ADDR']			= $this->localIP;
 		$this->httpRequest->SERVER['SERVER_PORT']			= $this->localPort;
-		$this->httpRequest->SERVER['HTTP_HOST']				= isset($this->httpRequest->headers['Host']) ? $this->httpRequest->headers['Host'] : '';
+		$exp = explode(':', $this->httpRequest->headers['Host']);
+		$this->httpRequest->SERVER['SERVER_NAME']			= $exp[0];
+		$this->httpRequest->SERVER['HTTP_HOST']				= $this->httpRequest->headers['Host'];
 		$this->httpRequest->SERVER['HTTP_USER_AGENT']		= isset($this->httpRequest->headers['User-Agent']) ? $this->httpRequest->headers['User-Agent'] : '';
 		$this->httpRequest->SERVER['HTTP_ACCEPT']			= isset($this->httpRequest->headers['Accept']) ? $this->httpRequest->headers['Accept'] : '';
 		$this->httpRequest->SERVER['HTTP_ACCEPT_LANGUAGE']	= isset($this->httpRequest->headers['Accept-Language']) ? $this->httpRequest->headers['Accept-Language'] : '';
@@ -212,14 +259,14 @@ class HttpClient
 		//var_dump($this->httpRequest->GET);
 		//var_dump($this->httpRequest->POST);
 		//var_dump($this->httpRequest->COOKIE);
-
-		// OK, soooo, now what? :) Here we should pass the HttpRequest object to the (www)admin function,
-		// so the html pages can be generated and user submitted values be processed.
 		
 		// Should we serve a file or pass the request to PHPInSimMod for page generation?
 		if ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/')
 		{
 			// Serve internally generated webpage
+			// Set httpRequest which will be passed back to the caller.
+			$httpRequest = $this->httpRequest;
+			
 			// Build TEST response for now
 			$html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
 			$html .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">';
@@ -289,7 +336,7 @@ class HttpClient
 			$r->addBody($html);
 			$r->addHeader('Content-Type: text/html');
 			$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', 'vic.lfs.net');
-			$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', 'vic.lfs.net');
+			$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $this->httpRequest->SERVER['SERVER_NAME']);
 
 			$this->write($r->getHeaders());
 			$this->write($r->getBody());
@@ -308,20 +355,18 @@ class HttpClient
 		{
 			// 404
 			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 404);
-			$r->addBody('File Not Found');
+			$r->addBody($this->createErrorPage(404));
 
 			$this->write($r->getHeaders());
 			$this->write($r->getBody());
 		}
-
-		// Send response
 		
 		// log line
 		$logLine =
 			$this->ip.' - - ['.date('d/M/Y:H:i:s O').'] '.
 			'"'.$this->httpRequest->SERVER['REQUEST_METHOD'].' '.$this->httpRequest->SERVER['REQUEST_URI'].' '.$this->httpRequest->SERVER['SERVER_PROTOCOL'].'" '.
 			$r->getResponseCode().' '.
-			$r->getBodyLen().' '.
+			$r->getHeader('Content-Length').' '.
 			'"'.$this->httpRequest->SERVER['HTTP_REFERER'].'" '.
 			'"'.$this->httpRequest->SERVER['HTTP_USER_AGENT'].'" '.
 			'"-"';
@@ -329,16 +374,16 @@ class HttpClient
 		file_put_contents(ROOTPATH.'/logs/http.log', $logLine."\r\n", FILE_APPEND);
 		
 		// Reset httpRequest
-		if ($this->httpRequest->rawInput != '')
-		{
-			$rawInput = $this->httpRequest->rawInput;
+//		if ($this->httpRequest->rawInput != '')
+//		{
+//			$rawInput = $this->httpRequest->rawInput;
+//			$this->httpRequest = null;
+//			return $this->handleInput($rawInput);
+//		}
+//		else
+//		{
 			$this->httpRequest = null;
-			return $this->handleInput($rawInput);
-		}
-		else
-		{
-			$this->httpRequest = null;
-		}
+//		}
 
 		return true;
 	}
@@ -480,7 +525,6 @@ class HttpRequest
 				if (!isset($this->headers['Content-Length']))
 				{
 					$this->errNo = 411;
-					$this->errStr = 'No Content-Length was provided in your POST request.';
 					return false;
 				}
 				if (!isset($this->headers['Content-Type']) || $this->headers['Content-Type'] != 'application/x-www-form-urlencoded')
@@ -544,13 +588,11 @@ class HttpRequest
 					if ($len > HTTP_MAX_URI_LENGTH)
 					{
 						$this->errNo = 414;
-						$this->errStr = 'Request-URI Too Long.';
 						return false;
 					}
 					else if ($len > 3 && !preg_match('/^(GET|POST).*$/', $this->rawInput))
 					{
 						$this->errNo = 400;
-						$this->errStr = 'The server did not understand your request.';
 						return false;
 					}
 				}
@@ -560,11 +602,10 @@ class HttpRequest
 			}
 			else if ($pos === 0)
 			{
-				// This cannot possibly be the end of headers, if we don't even have a request uri
-				if (!$this->hasRequestUri)
+				// This cannot possibly be the end of headers, if we don't even have a request uri (or host header)
+				if (!$this->hasRequestUri || !isset($this->headers['Host']))
 				{
 					$this->errNo = 400;
-					$this->errStr = 'The server did not understand your request.';
 					return false;
 				}
 				
@@ -584,13 +625,18 @@ class HttpRequest
 				if (!$this->parseRequestLine($header))
 				{
 					$this->errNo = 400;
-					$this->errStr = 'Bad Request';
 					return false;
 				}
 				$this->hasRequestUri = true;
 			}
 			else if (!$this->hasHeaders)
 			{
+				if (strpos($header, ':') === false)
+				{
+					$this->errNo = 400;
+					return false;
+				}
+				
 				// Parse regular header line
 				$exp = explode(':', $header, 2);
 				if (count($exp) == 2)
@@ -615,14 +661,21 @@ class HttpRequest
 		$this->SERVER['REQUEST_URI'] = $exp[1];
 		if (($uri = parse_url($this->SERVER['REQUEST_URI'])) === false)
 			return false;
-		$this->SERVER['SCRIPT_NAME'] = ($uri['path'] != '' && $uri['path'][0] == '/') ? $uri['path'] : '/';
+			
+		// Path sanitation
+		$uri['path'] = filter_var(trim($uri['path']), FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW);
+		if (!isset($uri['path'][0]) || $uri['path'][0] != '/')
+			return false;
+		$this->SERVER['SCRIPT_NAME'] = $uri['path'];
+		
+		// Set the query string - all chars allowed in there
 		$this->SERVER['QUERY_STRING'] = isset($uri['query']) ? $uri['query'] : '';
-
+		
 		// Check for user trying to go below webroot
 		$exp2 = explode('/', $this->SERVER['SCRIPT_NAME']);
 		foreach ($exp2 as $v)
 		{
-			if ($v == '..')
+			if (trim($v) == '..')
 			{
 				// Ooops the user probably tried something nasty (reach a file outside of our www folder)
 				return false;
@@ -693,19 +746,20 @@ class HttpRequest
 
 class HttpResponse
 {
-	private $responseCode	= 200;
-	private $responseCodes	= array
+	static $responseCodes	= array
 		(
 			200 => 'OK',
 			400 => 'Bad Request',
-			404 => 'Not Found',
+			404 => 'File Not Found',
 			411 => 'Length Required',
 			413 => 'Request Entity Too Large',
 			414 => 'Request-URI Too Long',
 			415 => 'Unsupported Media Type',
 		);
+
+	private $responseCode	= 200;
 	private $httpVersion	= '1.1';
-	private $headers		= array('Content-Type' => 'text/plain');
+	private $headers		= array('Content-Type' => 'text/html');
 	private $cookies		= array();
 	private $body			= '';
 	private $bodyLen		= 0;
@@ -749,11 +803,16 @@ class HttpResponse
 		$this->headers[$exp[0]] = $exp[1];
 	}
 	
+	public function getHeader($key)
+	{
+		return isset($this->headers[$key]) ? $this->headers[$key] : '';
+	}
+	
 	public function getHeaders()
 	{
 		$this->finaliseHeaders();
 		
-		$headers = 'HTTP/'.$this->httpVersion.' '.$this->responseCode.' '.$this->responseCodes[$this->responseCode]."\r\n";
+		$headers = 'HTTP/'.$this->httpVersion.' '.$this->responseCode.' '.self::$responseCodes[$this->responseCode]."\r\n";
 		foreach ($this->headers as $k => $v)
 		{
 			$headers .= $k.': '.$v."\r\n";
@@ -790,13 +849,13 @@ class HttpResponse
 		return $this->body;
 	}
 	
-	public function getBodyLen()
-	{
-		return $this->bodyLen;
-	}
-	
 	public function setCookie($name, $value, $expire, $path, $domain, $secure = false, $httponly = false)
 	{
+		// Some value sanitation here, because it's user-input.
+		$expire = (int) $expire;
+		if ($path[0] != '/')
+			$path = '/'.$path;
+		
 		$this->cookies[$name] = array($value, $expire, $path, $domain, $secure, $httponly);
 	}
 }
