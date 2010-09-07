@@ -65,7 +65,31 @@ abstract class Plugins
 	}
 
 	/** Handle Methods */
-	public function handlePacket($packet) {}
+	// For people who perfered predefined functions (AMX Mod X style - Will be in 0.5.0)
+	public function handlePacket(Struct $packet)
+	{
+		// In the event that people will want predefined functions for connection and disconnection
+		// this function will allow that to happen. So one could define public function clientConnect()
+		// and without having to make a registerPacket function call, this call will know that you want to know
+		// about ISP_NCN packets, and it will forward the useful information into the clientConnect packet.
+		
+		// This allows for the abstraction level between the people who want to do packet level work, and those who
+		// just want to get their job done, and let us (the PRISM devs) handle all of the nitty gritty of the InSim protocol.
+	}
+	// This is the yang to the registerSayCommand function's Yin.
+	public function handleSay(IS_MSO $packet)
+	{
+		$M = substr($packet->Msg, $packet->TextStart);
+		if ($M{0} == '!') # This will be replaced with what ever the Prefix char is at some point.
+		{
+			$CMD = substr($M, 1);
+			if (isset($this->sayCommands[$CMD]))
+			{
+				$method = $this->sayCommands[$CMD]['method'];
+				$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
+			}
+		}
+	}
 
 	/** Register Methods */
 	// Directly registers a packet to be handled by a callbackMethod within the plugin.
@@ -78,20 +102,35 @@ abstract class Plugins
 	}
 
 	// Setup the callbackMethod trigger to accapt a command that could come from anywhere.
-	protected function registerCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1) {}
+	protected function registerCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	{
+		$this->registerConsoleCommand($cmd, $callbackMethod, $info);
+		$this->registerInteractiveCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
+		$this->registerOptionCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
+		$this->registerSayCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
+	}
 	// Any command that comes from the PRISM console. (STDIN)
 	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "") {}
 	// Any command that comes from the "/i" type. (III)
 	protected function registerInteractiveCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1) {}
 	// Any command that comes from the "/o" type. (III)
 	protected function registerOptionCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1) {}
+
+	private $sayCommands = array();
 	// Any say event with prefix charater (ISI->Prefix) with this command type. (MSO->Flags | MSO_PREFIX)
-	protected function registerSayCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1) {}
+	protected function registerSayCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	{
+		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleSay']))
+		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
+			$this->registerPacket('handleSay', ISP_MSO);
+		}
+		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
+	}
 
 	// Setups a timer to run at a certain interval.
 	protected function registerTimerInterval($interval, $callbackMethod)
 	{
-	
+		
 	}
 	// Schedules a method call to run periodically at certain times or dates.
 	protected function registerTimerCron($cronExpression, $callbackMethod)

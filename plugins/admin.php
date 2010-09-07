@@ -4,41 +4,60 @@ class admin extends Plugins
 	const NAME = 'Admin Base';
 	const AUTHOR = 'PRISM Dev Team';
 	const VERSION = PHPInSimMod::VERSION;
+	const DESCRIPTION = '';
+
+	public $adminsAccess = array();
+	private $adminPasswords = array();
 
 	public function __construct(&$parent)
 	{
 		$this->parent =& $parent;
-		$this->cmdAdmins();
-		$this->registerPacket('onClientConnect', ISP_NPL);
-		$this->registerCommand('prism admins reload', 'cmdAdmins', ADMIN_CFG);
-		$this->registerCommand('prism admins add', 'cmdAddAdmin', ADMIN_RCON, '<playername|auth> <accessflags> [password] - add specified player as an admin to users.ini');
+		$this->cmdLoad();
+		$this->registerPacket('onClientConnect', ISP_NCN);
+		$this->registerPacket('onClientDisconnect', ISP_CNL);
+		$this->registerPacket('onClientRenamed', ISP_CPR);
+		$this->registerCommand('prism admins list', 'cmdList', NULL, '- Displays a list of admins.');
+		$this->registerCommand('prism admins reload', 'cmdLoad', ADMIN_CFG);
 	}
 
-	public function onClientConnect()
+	public function onClientConnect($packet)
 	{
+		
 	}
 
-	public function cmdAdmins()
+	public function onClientDisconnect($packet)
+	{
+		
+	}
+
+	public function onClientRenamed($packet)
+	{
+		echo "Command: $cmd from $plid, $ucid";
+	}
+
+	public function cmdList($cmd, $plid, $ucid)
+	{
+		echo "Command: $cmd from $plid, $ucid";
+	}
+
+	public function cmdLoad($cmd = NULL, $plid = NULL, $ucid = NULL)
 	{
 		if (($loadedAdmins = $this->loadAdmins()) === FALSE)
 		{
-#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_CORE)
+#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
 				console('Could not load any admins, could not find the file.');
 		}
 		else if ($loadedAdmins == 1)
 		{
-#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_CORE)
+#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
 				console('Loaded 1 admin.');
 		}
 		else
 		{
-#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_CORE)
+#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
 				console("Loaded $loadedAdmins admins.");
 		}
 	}
-
-	public $adminsAccess = array();
-	private $adminPasswords = array();
 
 	public function loadAdmins()
 	{
@@ -113,8 +132,6 @@ class admin extends Plugins
 			# We added an admin!
 			++$adminCount;
 		}
-
-		print_r($this->adminsAccess);
 
 		# Updates the passwords to include the hash, and there by secure the file.
 		if (isset($updateFile) && $updateFile == TRUE)
