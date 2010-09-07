@@ -18,6 +18,10 @@ class HttpClient
 	public $sendQ			= '';
 	public $sendQLen		= 0;
 	public $sendQWindow		= STREAM_READ_BYTES;
+	
+	public $sendFile		= null;				// contains handle to file we're sending
+	public $sendFilePntr	= 0;				// Points to where we are in the file
+	public $sendFileSize	= 0;				// Points to where we are in the file
 
 	private $httpRequest	= null;
 	
@@ -115,7 +119,43 @@ class HttpClient
 			// Set when the last packet was flushed
 			$this->lastActivity		= time();
 		}
-		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen);
+		console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen);
+	}
+	
+	public function writeFile($fileName = '')
+	{
+		if ($fileName != '' && $this->sendFile == null)
+		{
+			$this->sendFile = fopen($fileName, 'rb');
+			if (!$this->sendFile)
+				return false;
+			$this->sendFilePntr = 0;
+			$this->sendFileSize = filesize($fileName);
+		}
+		
+		$bytes = @fwrite($this->socket, fread($this->sendFile, $this->sendQWindow));
+		$this->sendFilePntr += $bytes;
+		fseek($this->sendFile, $this->sendFilePntr);
+		$this->lastActivity = time();
+		
+		// Dynamic window sizing
+		if ($bytes == $this->sendQWindow)
+			$this->sendQWindow += STREAM_READ_BYTES;
+		else
+		{
+			$this->sendQWindow -= STREAM_READ_BYTES;
+			if ($this->sendQWindow < STREAM_READ_BYTES)
+				$this->sendQWindow = STREAM_READ_BYTES;
+		}
+		
+		//console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
+		if ($this->sendFilePntr >= $this->sendFileSize)
+		{
+			fclose($this->sendFile);
+			$this->sendFile = null;
+			$this->sendFileSize = 0;
+			$this->sendFilePntr = 0;
+		}
 	}
 
 	public function read()
@@ -144,9 +184,12 @@ class HttpClient
 			return false;
 		}
 		
-		// If we have no headers, just return and wait for more data.
-		if (!$this->httpRequest->hasHeaders || $this->httpRequest->isReceiving)
-			return true;
+		// If we have no headers, or we are busy with receiving or sending.
+		// Just return and wait for more data.
+		if (!$this->httpRequest->hasHeaders || 			// We're still receiving headers
+			$this->httpRequest->isReceiving || 			// We're still receiving the body of a request
+			$this->sendFile || $this->sendQLen > 0)		// We're already sending something
+			return true;								// Return true to just wait and try again later
 		
 		// At this point we have a fully qualified and parsed HttpRequest
 		// The HttpRequest object contains all info about the headers / GET / POST / COOKIE
@@ -172,20 +215,6 @@ class HttpClient
 
 		// OK, soooo, now what? :) Here we should pass the HttpRequest object to the (www)admin function,
 		// so the html pages can be generated and user submitted values be processed.
-		
-		// First do file path sanitation.
-		//console('FULL PATH : '.ROOTPATH.$this->httpRequest->SERVER['SCRIPT_NAME']);
-		$exp = explode('/', $this->httpRequest->SERVER['SCRIPT_NAME']);
-		foreach ($exp as $v)
-		{
-			if ($v == '..')
-			{
-				// Ooops the user probably tried something nasty (reach a file outside of our www folder)
-				// Let's just rewrite the url for now.
-				$this->httpRequest->SERVER['SCRIPT_NAME'] = '/';
-				break;
-			}
-		}
 		
 		// Should we serve a file or pass the request to PHPInSimMod for page generation?
 		if ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/')
@@ -261,24 +290,31 @@ class HttpClient
 			$r->addHeader('Content-Type: text/html');
 			$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', 'vic.lfs.net');
 			$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', 'vic.lfs.net');
+
+			$this->write($r->getHeaders());
+			$this->write($r->getBody());
 		}
 		else if (file_exists(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
 		{
-			// Serve file
+			// Serve file - we can do this using the writeFile() method, which is memory friendly
 			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-			$r->addBody(file_get_contents(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
 			$r->addHeader('Content-Type: '.$this->getMimeType());
+			$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
+
+			$this->write($r->getHeaders());
+			$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
 		}
 		else
 		{
 			// 404
 			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 404);
 			$r->addBody('File Not Found');
+
+			$this->write($r->getHeaders());
+			$this->write($r->getBody());
 		}
 
 		// Send response
-		$this->write($r->getHeaders());
-		$this->write($r->getBody());
 		
 		// log line
 		$logLine =
@@ -548,7 +584,7 @@ class HttpRequest
 				if (!$this->parseRequestLine($header))
 				{
 					$this->errNo = 400;
-					$this->errStr = 'The server did not understand your request.';
+					$this->errStr = 'Bad Request';
 					return false;
 				}
 				$this->hasRequestUri = true;
@@ -581,6 +617,17 @@ class HttpRequest
 			return false;
 		$this->SERVER['SCRIPT_NAME'] = ($uri['path'] != '' && $uri['path'][0] == '/') ? $uri['path'] : '/';
 		$this->SERVER['QUERY_STRING'] = isset($uri['query']) ? $uri['query'] : '';
+
+		// Check for user trying to go below webroot
+		$exp2 = explode('/', $this->SERVER['SCRIPT_NAME']);
+		foreach ($exp2 as $v)
+		{
+			if ($v == '..')
+			{
+				// Ooops the user probably tried something nasty (reach a file outside of our www folder)
+				return false;
+			}
+		}
 		
 		// Check the HTTP protocol version
 		$this->SERVER['SERVER_PROTOCOL'] = $exp[2];
@@ -721,13 +768,14 @@ class HttpResponse
 	private function finaliseHeaders()
 	{
 		// Set server-side headers
-		$this->headers['Server']			= 'PRISM v' . PHPInSimMod::VERSION;
-		$this->headers['Date']				= date('r');
-		$this->headers['Content-Length']	= $this->bodyLen;
-		if ($this->responseCode == 200)
+		$this->headers['Server']				= 'PRISM v' . PHPInSimMod::VERSION;
+		$this->headers['Date']					= date('r');
+		if (!isset($this->headers['Content-Length']))
+			$this->headers['Content-Length']	= $this->bodyLen;
+		if ($this->responseCode == 200 || $this->responseCode == 404)
 		{
-			$this->headers['Connection']	= 'Keep-Alive';
-			$this->headers['Keep-Alive']	= 'timeout='.HTTP_KEEP_ALIVE;
+			$this->headers['Connection']		= 'Keep-Alive';
+			$this->headers['Keep-Alive']		= 'timeout='.HTTP_KEEP_ALIVE;
 		}
 	}
 	

@@ -584,7 +584,7 @@ class PHPInSimMod
 					$sockReads[] = $this->httpClients[$k]->socket;
 					
 					// If write buffer was full, we must check to see when we can write again
-					if ($this->httpClients[$k]->sendQLen > 0)
+					if ($this->httpClients[$k]->sendQLen > 0 || $this->httpClients[$k]->sendFile != null)
 						$sockWrites[] = $this->httpClients[$k]->socket;
 				}
 			}
@@ -748,13 +748,17 @@ class PHPInSimMod
 				// httpClients input
 				for ($k=0; $k<$this->httpNumClients; $k++) {
 					// Recover from a full write buffer?
-					if ($this->httpClients[$k]->sendQLen > 0 &&
+					if (($this->httpClients[$k]->sendQLen > 0  || 
+						 $this->httpClients[$k]->sendFile != null) &&
 						in_array($this->httpClients[$k]->socket, $sockWrites))
 					{
 						$numReady--;
 						
 						// Flush the sendQ (bit by bit, not all at once - that could block the whole app)
-						$this->httpClients[$k]->flushSendQ();
+						if ($this->httpClients[$k]->sendQLen > 0)
+							$this->httpClients[$k]->flushSendQ();
+						else
+							$this->httpClients[$k]->writeFile();
 					}
 					
 					// Did we receive something from a httpClient?
