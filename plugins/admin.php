@@ -12,7 +12,7 @@ class admin extends Plugins
 	public function __construct(&$parent)
 	{
 		$this->parent =& $parent;
-		$this->cmdLoad();
+		$this->loadAdmins();
 		$this->registerPacket('onClientConnect', ISP_NCN);
 		$this->registerPacket('onClientDisconnect', ISP_CNL);
 		$this->registerPacket('onClientRenamed', ISP_CPR);
@@ -32,30 +32,56 @@ class admin extends Plugins
 
 	public function onClientRenamed($packet)
 	{
-		echo "Command: $cmd from $plid, $ucid";
+		
 	}
 
 	public function cmdList($cmd, $plid, $ucid)
 	{
-		echo "Command: $cmd from $plid, $ucid";
+		$MTC = new IS_MTC();
+		$MTC->PLID = $plid;
+		# Print Global Admins.
+		foreach ($this->adminsAccess as $adminsOrHost => $accessLevel)
+		{
+			if (is_array($this->adminsAccess[$adminsOrHost]))
+				continue;
+
+			$MTC->Msg = $adminsOrHost;
+			$this->sendPacket($MTC);
+		}
+		foreach ($this->adminsAccess[$this->serverGetName()] as $admin => $accessLevel)
+		{
+			$MTC->Msg = $admin;
+			$this->sendPacket($MTC);
+		}
 	}
 
-	public function cmdLoad($cmd = NULL, $plid = NULL, $ucid = NULL)
+	public function cmdLoad($cmd, $plid, $ucid)
 	{
+		$MTC = new IS_MTC();
+		$MTC->PLID = $plid;
 		if (($loadedAdmins = $this->loadAdmins()) === FALSE)
 		{
 #			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
-				console('Could not load any admins, could not find the file.');
+#			{
+				$MTC->Msg = 'Could not load any admins, could not find the file.';
+				$this->sendPacket($MTC);
+#			}
 		}
 		else if ($loadedAdmins == 1)
 		{
 #			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
-				console('Loaded 1 admin.');
+#			{
+			$MTC->Msg = 'Loaded 1 admin.';
+			$this->sendPacket($MTC);
+#			}
 		}
 		else
 		{
 #			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
-				console("Loaded $loadedAdmins admins.");
+#			{
+			$MTC->Msg = "Loaded $loadedAdmins admins.";
+			$this->sendPacket($MTC);
+#			}
 		}
 	}
 

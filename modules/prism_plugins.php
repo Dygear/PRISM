@@ -110,9 +110,15 @@ abstract class Plugins
 		$this->registerSayCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the PRISM console. (STDIN)
-	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "") {}
+	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "")
+	{
+		
+	}
 	// Any command that comes from the "/i" type. (III)
-	protected function registerInteractiveCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1) {}
+	protected function registerInteractiveCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	{
+		
+	}
 	// Any command that comes from the "/o" type. (III)
 	protected function registerOptionCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1) {}
 
@@ -145,7 +151,10 @@ abstract class Plugins
 	public function serverPrint($Msg) {}
 	public function serverSay($Msg) {}
 	public function serverGetTrack() {}
-	public function serverGetName() {}
+	public function serverGetName()
+	{
+		return $this->parent->curHostID;
+	}
 	public function serverGetSectors() {}
 	public function serverGetClients() {}
 	public function serverGetPlayers() {}

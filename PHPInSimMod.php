@@ -91,7 +91,7 @@ class PHPInSimMod
 	private $pluginvars		= array();
 
 	private $hosts			= array();			# Stores references to the hosts we're connected to
-	private $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
+	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 
 	// InSim
 	private $plugins		= array();			# Stores references to the plugins we've spawned.
