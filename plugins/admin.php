@@ -4,7 +4,7 @@ class admin extends Plugins
 	const NAME = 'Admin Base';
 	const AUTHOR = 'PRISM Dev Team';
 	const VERSION = PHPInSimMod::VERSION;
-	const DESCRIPTION = '';
+	const DESCRIPTION = 'Basic admin functions for PRISM.';
 
 	public $adminsAccess = array();
 	private $adminPasswords = array();

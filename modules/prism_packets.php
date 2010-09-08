@@ -28,11 +28,11 @@ abstract class struct
 		$str = $pre . get_class($this) . ' {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
-			$pkFnkFormat = @$packFormat[++$propertyNumber];
+			$pkFnkFormat = $packFormat[++$propertyNumber];
 			
 			if (gettype($this->$property) == 'array')
 			{
-					$str .= $pre . "\tArray\t{$property}\t= {" . PHP_EOL;
+					$str .= "{$pre}\tArray\t{$property}\t= {" . PHP_EOL;
 					foreach ($this->$property as $k => $v)
 					{
 						if ($v instanceof struct)
@@ -41,23 +41,22 @@ abstract class struct
 						}
 						else
 						{
-							$str .= $pre . "\t\t\t" . $k . "\t" . $v . PHP_EOL;
+							$str .= "{$pre}\t\t\t{$k}\t{$v}" . PHP_EOL;
 						}
 					}
-					$str .= $pre . "\t}".PHP_EOL;
+					$str .= "{$pre}\t}" . PHP_EOL;
 					break;
 			}
 			elseif ($property == 'Type')
 			{
-				$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $TYPEs[$this->Type] . ' (' . $this->$property . ')' . PHP_EOL;
+				$str .= "{$pre}\t{$pkFnkFormat}\t{$property}\t= {$TYPEs[$this->Type]} ({$this->$property})" . PHP_EOL;
 			}	
 			else
 			{
-				$str .= $pre . "\t{$pkFnkFormat}\t{$property}\t= " . $this->$property. PHP_EOL;
+				$str .= "{$pre}\t{$pkFnkFormat}\t{$property}\t= {$this->$property}" . PHP_EOL;
 			}
 		}
-		$str .= $pre . '}' . PHP_EOL;
-		return $str;
+		return "{$str}{$pre}}" . PHP_EOL;
 	}
 	public function unpack($rawPacket)
 	{
@@ -255,7 +254,7 @@ $ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'I
 // =============================
 
 // the second byte of any packet is one of these
-#define('ISP_NONE',	0);	//  0					: not used
+define('ISP_NONE',	0);	//  0					: not used
 define('ISP_ISI',	1);	//  1 - instruction		: insim initialise
 define('ISP_VER',	2);	//  2 - info			: version info
 define('ISP_TINY',	3);	//  3 - both ways		: multi purpose
@@ -305,7 +304,7 @@ define('ISP_BTC',	46);// 46 - info			: sent when a user clicks a button
 define('ISP_BTT',	47);// 47 - info			: sent after typing into a button
 define('ISP_RIP',	48);// 48 - both ways		: replay information packet
 define('ISP_SSH',	49);// 49 - both ways		: screenshot
-$ISP = array(ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',	0);	//  0 - keep alive		: see "maintaining the connection"

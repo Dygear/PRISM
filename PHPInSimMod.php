@@ -15,32 +15,6 @@ define('PRISM_DEBUG_ALL',		15);		# Shows Debug Messages From All
 
 define('MAINTENANCE_INTERVAL', 	2);			# The frequency in seconds to do connection maintenance checks.
 
-// Admin
-define('ADMIN_ALL',				0);			# Everyone
-define('ADMIN_IMMUNITY',		1);			# Flag "a", immunity
-define('ADMIN_RESERVATION',		2);			# Flag "b", reservation
-define('ADMIN_KICK',			4);			# Flag "c", kick
-define('ADMIN_BAN',				8);			# Flag "d", ban
-define('ADMIN_SLAY',			16);		# Flag "e", slay
-define('ADMIN_MAP',				32);		# Flag "f", map change
-define('ADMIN_CVAR',			64);		# Flag "g", cvar change
-define('ADMIN_CFG',				128);		# Flag "h", config execution
-define('ADMIN_CHAT',			256);		# Flag "i", chat
-define('ADMIN_VOTE',			512);		# Flag "j", vote
-define('ADMIN_PASSWORD',		1024);		# Flag "k", sv_password
-define('ADMIN_RCON',			2048);		# Flag "l", rcon access
-define('ADMIN_LEVEL_A',			4096);		# Flag "m", custom
-define('ADMIN_LEVEL_B',			8192);		# Flag "n", custom
-define('ADMIN_LEVEL_C',			16384);		# Flag "o", custom
-define('ADMIN_LEVEL_D',			32768);		# Flag "p", custom
-define('ADMIN_LEVEL_E',			65536);		# Flag "q", custom
-define('ADMIN_LEVEL_F',			131072);	# Flag "r", custom
-define('ADMIN_LEVEL_G',			262144);	# Flag "s", custom
-define('ADMIN_LEVEL_H',			524288);	# Flag "t", custom
-define('ADMIN_MENU',			1048576);	# Flag "u", menus
-define('ADMIN_ADMIN',			16777216);	# Flag "y", default admin
-define('ADMIN_USER',			33554432);	# Flag "z", default user
-
 // Return Codes: 
 define('PLUGIN_CONTINUE',		0);			# Plugin passes through operation. Whatever called it continues.
 define('PLUGIN_HANDLED',		1);			# Plugin halts continued operation. Plugins following in the plugins.ini won't be called.
@@ -736,7 +710,7 @@ class PHPInSimMod
 							break;
 						
 						default :
-							console('Available keys :');
+							console('Available Commands:');
 							console('h - show host info');
 							console('p - show plugin info');
 							console('x - exit PHPInSimMod');

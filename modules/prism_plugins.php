@@ -7,9 +7,37 @@
 
 define('CLIENT_PRINT_CHAT', 1);
 
+// Admin
+define('ADMIN_ACCESS',				1);			# Flag "a", access to remote console (RCON) and rcon password cvar (by `!prism cvar` command)
+define('ADMIN_BAN',					2);			# Flag "b", /ban and /unban commands (`prism ban` and `prism unban` commands)
+define('ADMIN_CVAR',				4);			# Flag "c", access to `prism cvar` command (not all cvars will be available)
+define('ADMIN_CFG',					8);			# Flag "d", access to `prism cfg` command (allows you to change lfs configuration settings)
+define('ADMIN_LEVEL_E',				16);		# Flag "e", 
+define('ADMIN_LEVEL_F',				32);		# Flag "f", 
+define('ADMIN_GAME',				64);		# Flag "g", game commands (/laps, 
+define('ADMIN_HOST',				128);		# Flag "h", host commands (/ip, /port, /maxguests, /insim)
+define('ADMIN_IMMUNITY',			256);		# Flag "i", immunity (can't be kicked/baned/speced/pited and affected by other commmands)
+define('ADMIN_LEVEL_J',				512);		# Flag "j", 
+define('ADMIN_KICK',				1024);		# Flag "k", /kick command (`prism kick` command)
+define('ADMIN_LEVEL_L',				2048);		# Flag "l", 
+define('ADMIN_TRACK',				4096);		# Flag "m", access to /track `prism track` & `prism map` command
+define('ADMIN_LEVEL_N',				8192);		# Flag "n", 
+define('ADMIN_LEVEL_O',				16384);		# Flag "o", 
+define('ADMIN_PASSWORD',			32768);		# Flag "p", access to /pass cvar (by `!prism cvar` command)
+define('ADMIN_LEVEL_Q',				65536);		# Flag "q", 
+define('ADMIN_RESERVATION',			131072);	# Flag "r", reservation (can join on reserved slots)
+define('ADMIN_SPEC',				262144);	# Flag "s", /spec and /pit commands
+define('ADMIN_CHAT',				524288);	# Flag "t", chat commands (`prism chat` and other chat commands)
+define('ADMIN_UNIMMUNIZE',			1048576);	# Flag "u", Unimmunized (given the ability to run commands on immunized admins)
+define('ADMIN_VOTE',				2097152);	# Flag "v", vote commands
+define('ADMIN_WIND',				4194304);	# Flag "w", access to /wind cfg & `prism wind` command. 
+define('ADMIN_LEVEL_X',				8388608);	# Flag "x", 
+define('ADMIN_LEVEL_Y',				16777216);	# Flag "y", 
+define('ADMIN_LEVEL_Z',				33554432);	# Flag "z", 
+
 abstract class Plugins
 {
-	/** These consts should ALWAYS be defined in your classes. */
+	/** These consts should _ALWAYS_ be defined in your classes. */
 	/* const NAME;			*/
 	/* const DESCRIPTION;	*/
 	/* const AUTHOR;		*/
@@ -21,11 +49,10 @@ abstract class Plugins
 	public $timers = array();
 	public $callbacks = array();
 	// Callbacks
-	private $callbackConsole = array(); # registerConsoleCommand & registerCommand
-	private $callbackInteractive = array(); # registerInteractiveCommand & registerCommand
-	private $callbackOptions = array(); # registerOptionCommand & registerCommand
 	private $callbackPackets = array(); # registerPacket
-	private $callbackSay = array(); # registerSayCommand & registerCommand
+	public $insimCommands = array();
+	public $localCommands = array();
+	public $sayCommands = array();
 
 	/** Construct */
 	public function __construct(&$parent)
@@ -76,18 +103,34 @@ abstract class Plugins
 		// This allows for the abstraction level between the people who want to do packet level work, and those who
 		// just want to get their job done, and let us (the PRISM devs) handle all of the nitty gritty of the InSim protocol.
 	}
-	// This is the yang to the registerSayCommand function's Yin.
-	public function handleSay(IS_MSO $packet)
+	// This is the yang to the registerSayCommand & registerLocalCommand function's Yin.
+	public function handleCmd(IS_MSO $packet)
 	{
-		$M = substr($packet->Msg, $packet->TextStart);
-		if ($M{0} == '!') # This will be replaced with what ever the Prefix char is at some point.
+		if ($packet->UserType == MSO_PREFIX)
+			$CMD = substr($packet->Msg, $packet->TextStart + 1);
+		else if ($packet->UserType == MSO_O)
+			$CMD = $packet->Msg;
+		else
+			return;
+		
+		if ($packet->UserType & MSO_PREFIX AND isset($this->sayCommands[$CMD]))
 		{
-			$CMD = substr($M, 1);
-			if (isset($this->sayCommands[$CMD]))
-			{
-				$method = $this->sayCommands[$CMD]['method'];
-				$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
-			}
+			$method = $this->sayCommands[$CMD]['method'];
+			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
+		}
+		else if ($packet->UserType == MSO_O AND isset($this->localCommands[$CMD]))
+		{
+			$method = $this->localCommands[$CMD]['method'];
+			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
+		}
+	}
+	// This is the yang to the registerInsimCommand function's Yin.
+	public function handleInsimCmd(IS_III $packet)
+	{
+		if (isset($this->insimCommands[$packet->Msg]))
+		{
+			$method = $this->insimCommands[$packet->Msg]['method'];
+			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
 		}
 	}
 
@@ -105,30 +148,36 @@ abstract class Plugins
 	protected function registerCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
 	{
 		$this->registerConsoleCommand($cmd, $callbackMethod, $info);
-		$this->registerInteractiveCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
-		$this->registerOptionCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
+		$this->registerInsimCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
+		$this->registerLocalCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 		$this->registerSayCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the PRISM console. (STDIN)
-	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "")
-	{
-		
-	}
+	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "") {}
 	// Any command that comes from the "/i" type. (III)
-	protected function registerInteractiveCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerInsimCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
 	{
-		
+		if (!isset($this->callbacks[ISP_III]) && !isset($this->callbacks[ISP_III]['handleInsimCmd']))
+		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
+			$this->registerPacket('handleInsimCmd', ISP_III);
+		}
+		$this->insimCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
 	}
-	// Any command that comes from the "/o" type. (III)
-	protected function registerOptionCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1) {}
-
-	private $sayCommands = array();
-	// Any say event with prefix charater (ISI->Prefix) with this command type. (MSO->Flags | MSO_PREFIX)
+	// Any command that comes from the "/o" type. (MSO->Flags = MSO_O)
+	protected function registerLocalCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	{
+		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd']))
+		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
+			$this->registerPacket('handleCmd', ISP_III);
+		}
+		$this->localCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
+	}
+	// Any say event with prefix charater (ISI->Prefix) with this command type. (MSO->Flags = MSO_PREFIX)
 	protected function registerSayCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
 	{
-		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleSay']))
+		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd']))
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
-			$this->registerPacket('handleSay', ISP_MSO);
+			$this->registerPacket('handleCmd', ISP_MSO);
 		}
 		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
 	}
