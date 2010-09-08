@@ -14,7 +14,10 @@ class theTime extends Plugins
 
 	public function onSay($p)
 	{
-		$M = substr($p->Msg, $p->TextStart);
+		if ($p instanceof ISP_MSO)
+			$M = substr($p->Msg, $p->TextStart);
+		else
+			$M = $p->Msg;
 		if ($M == '!thetime' OR $M == 'thetime' OR $M == '!time' OR $M == 'time')
 		{
 			$MTC = new IS_MTC();

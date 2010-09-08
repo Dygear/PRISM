@@ -171,7 +171,7 @@ class InsimConnection
 			$ISP->ReqI		= TRUE;
 			$ISP->UDPPort	= ($this->udpPort > 0) ? $this->udpPort : 0;
 			$ISP->Flags		= ISF_LOCAL | ISF_MSO_COLS | ISF_NLP;
-			$ISP->Prefix	= '!';
+			$ISP->Prefix	= ord('!');
 			$ISP->Interval	= round(1000 / $this->pps);
 			$ISP->Admin		= $this->adminPass;
 			$ISP->IName		= 'PRISM v' . PHPInSimMod::VERSION;

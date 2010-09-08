@@ -130,7 +130,7 @@ abstract class Plugins
 		if (isset($this->insimCommands[$packet->Msg]))
 		{
 			$method = $this->insimCommands[$packet->Msg]['method'];
-			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
+			$this->$method($packet->Msg, $packet->PLID, $packet->UCID, $packet);
 		}
 	}
 
@@ -168,7 +168,7 @@ abstract class Plugins
 	{
 		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd']))
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
-			$this->registerPacket('handleCmd', ISP_III);
+			$this->registerPacket('handleCmd', ISP_MSO);
 		}
 		$this->localCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
 	}
