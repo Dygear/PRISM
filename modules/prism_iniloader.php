@@ -1,0 +1,89 @@
+<?php
+
+class IniLoader
+{
+	protected function loadIniFile(array &$target, $iniFile, $parseSections = TRUE)
+	{
+		$iniVARs = FALSE;
+		
+		// Should parse the $PrismDir/config/***.ini file, and load them into the passed $target array.
+		$iniPath = ROOTPATH . '/configs/'.$iniFile;
+		$localIniPath = ROOTPATH . '/configs/local_'.$iniFile;
+		
+		if (file_exists($localIniPath))
+		{
+			if (($iniVARs = parse_ini_file($localIniPath, $parseSections)) === FALSE)
+			{
+				console('Could not parse ini file "local_'.$iniFile.'". Using global.');
+			}
+			else
+			{
+				console('Using local ini file "local_'.$iniFile.'"');
+			}
+		}
+		if ($iniVARs === FALSE)
+		{
+			if (!file_exists($iniPath))
+			{
+				console('Could not find ini file "'.$iniFile.'"');
+				return FALSE;
+			}
+			if (($iniVARs = parse_ini_file($iniPath, $parseSections)) === FALSE)
+			{
+				console('Could not parse ini file "'.$iniFile.'"');
+				return FALSE;
+			}
+		}
+
+		// Merge iniVARs into target (array_merge didn't seem to work - maybe because target is passed by reference?)
+		foreach ($iniVARs as $k => $v)
+			$target[$k] = $v;
+		
+		# At this point we're always successful
+		return TRUE;
+	}
+	
+
+	protected function createIniFile($iniFile, $desc, array $options)
+	{
+		// Check if config folder exists
+		if (!file_exists(ROOTPATH . '/configs/') && 
+			!@mkdir(ROOTPATH . '/configs/'))
+		{
+			return FALSE;
+		}
+		
+		// Check if file doesn't already exist
+		if (file_exists(ROOTPATH . '/configs/'.$iniFile))
+			return FALSE;
+		
+		// Generate file contents
+		$text = '; '.$desc.' (automatically genereated)'.PHP_EOL;
+		$text .= '; File location: ./PHPInSimMod/configs/'.$iniFile.PHP_EOL;
+		$main = '';
+		foreach ($options as $section => $data)
+		{
+			if (is_array($data))
+			{
+				$main .= PHP_EOL.'['.$section.']'.PHP_EOL;
+				foreach ($data as $key => $value)
+				{
+					$main .= $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"').PHP_EOL;
+				}
+			}
+		}
+
+		if ($main == '')
+			return FALSE;
+		
+		$text .= $main.PHP_EOL;
+		
+		// Write contents
+		if (!file_put_contents(ROOTPATH . '/configs/'.$iniFile, $text))
+			return FALSE;
+		
+		return TRUE;
+	}
+}
+
+?>

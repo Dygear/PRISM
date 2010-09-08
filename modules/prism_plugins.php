@@ -35,6 +35,137 @@ define('ADMIN_LEVEL_X',				8388608);	# Flag "x",
 define('ADMIN_LEVEL_Y',				16777216);	# Flag "y", 
 define('ADMIN_LEVEL_Z',				33554432);	# Flag "z", 
 
+class PluginHandler extends SectionHandler
+{
+	private $plugins			= array();			# Stores references to the plugins we've spawned.
+	private $pluginvars			= array();
+
+	public function initialise()
+	{
+		global $PRISM;
+		
+		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
+		{
+			foreach ($this->pluginvars as $pluginID => $v)
+			{
+				if (!is_array($v))
+				{
+					console('Section error in plugins.ini file!');
+					return FALSE;
+				}
+			}
+			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console('Loaded plugins.ini');
+
+			// Parse useHosts values of plugins
+			foreach ($this->pluginvars as $pluginID => $details)
+			{
+				$this->pluginvars[$pluginID]['useHosts'] = explode(',', $details['useHosts']);
+			}
+		}
+		else
+		{
+			# We ask the client to manually input the plugin details here.
+			require_once(ROOTPATH . '/modules/prism_interactive.php');
+			Interactive::queryPlugins($this->pluginvars, $this->connvars);
+
+			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
+				console('Generated config/plugins.ini');
+
+			// Parse useHosts values of plugins
+			foreach ($this->pluginvars as $pluginID => $details)
+			{
+				$this->pluginvars[$pluginID]['useHosts'] = explode('","', $details['useHosts']);
+			}
+		}
+		
+		return true;
+	}
+
+	public function loadPlugins()
+	{
+		global $PRISM;
+		
+		$loadedPluginCount = 0;
+		
+		if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+			console('Loading plugins');
+		
+		$pluginPath = ROOTPATH.'/plugins';
+		
+		if (($pluginFiles = get_dir_structure($pluginPath, FALSE, '.php')) === NULL)
+		{
+			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console('No plugins found in the directory.');
+			# As we can't find any plugin files, we invalidate the the ini settings.
+			$this->pluginvars = NULL;
+		}
+		
+		# Find what plugin files have ini entrys
+		foreach ($this->pluginvars as $pluginSection => $pluginHosts)
+		{
+			$pluginFileHasPluginSection = FALSE;
+			foreach ($pluginFiles as $pluginFile)
+			{
+				if ("$pluginSection.php" == $pluginFile)
+				{
+					$pluginFileHasPluginSection = TRUE;
+				}
+			}
+			# Remove any pluginini value who does not have a file associated with it.
+			if ($pluginFileHasPluginSection === FALSE)
+			{
+				unset($this->pluginvars[$pluginSection]);
+				continue;
+			}
+			# Load the plugin file.
+			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console("Loading plugin: $pluginSection");
+			
+			include_once("$pluginPath/$pluginSection.php");
+			
+			$this->plugins[$pluginSection] = new $pluginSection($this);
+			
+			++$loadedPluginCount;
+		}
+		
+		return $loadedPluginCount;
+	}
+	
+	private function isPluginEligibleForPacket(&$name, &$hostID)
+	{
+		foreach ($this->pluginvars[$name]['useHosts'] as $host)
+		{
+			if ($host == $hostID)
+				return TRUE;
+		}
+		return FALSE;
+	}
+	
+	public function dispatchPacket(&$packet, &$hostID)
+	{
+		global $PRISM;
+		
+		$PRISM->curHostID = $hostID;
+		foreach ($this->plugins as $name => $plugin)
+		{
+			if (!$this->isPluginEligibleForPacket($name, $hostID))
+				continue;
+
+			if (!isset($plugin->callbacks[$packet->Type]))
+			{	# If the packet we are looking at has no callbacks for this packet type don't go to the loop.
+				continue;
+			}
+
+			foreach ($plugin->callbacks[$packet->Type] as $callback)
+			{
+				if (($plugin->$callback($packet)) == PLUGIN_HANDLED)
+					continue 2; # Skips all of the rest of the plugins who wanted this packet.
+			}
+		}
+	}
+}
+
 abstract class Plugins
 {
 	/** These consts should _ALWAYS_ be defined in your classes. */
