@@ -28,7 +28,9 @@ define('ROOTPATH', dirname(realpath(__FILE__)));
 require_once(ROOTPATH . '/modules/prism_functions.php');
 require_once(ROOTPATH . '/modules/prism_config.php');
 require_once(ROOTPATH . '/modules/prism_packets.php');
-require_once(ROOTPATH . '/modules/prism_connections.php');
+require_once(ROOTPATH . '/modules/prism_hosts.php');
+require_once(ROOTPATH . '/modules/prism_http.php');
+require_once(ROOTPATH . '/modules/prism_users.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
 
 $PRISM = new PHPInSimMod();
@@ -51,12 +53,10 @@ class PHPInSimMod
 	/* Run Time Arrays */
 	public $config				= null;
 	public $hosts				= null;
-//	public $http				= new HttpHandler();
+	public $http				= null;
 	public $plugins				= null;
-//	public $users				= new UserHandler();
+	public $users				= null;
 	
-	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
-
 	# Time outs
 	private $sleep				= NULL;
 	private $uSleep				= NULL;
@@ -82,6 +82,8 @@ class PHPInSimMod
 		$this->config	= new ConfigHandler();
 		$this->hosts	= new HostHandler();
 		$this->plugins	= new PluginHandler();
+		$this->http		= new HttpHandler();
+		$this->users	= new UserHandler();
 	}
 
 	// Pseudo Magic Functions
@@ -151,13 +153,16 @@ class PHPInSimMod
 			unset($timeZoneGuess);
 		}
 		
-		// Load ini files
-		if (!$this->loadIniFiles())
+		// Initialise handlers (load config files)
+		if (!$this->config->initialise() ||
+			!$this->hosts->initialise() || 
+			!$this->http->initialise() || 
+			!$this->plugins->initialise())
 		{
 			console('Fatal error encountered. Exiting...');
 			exit(1);
 		}
-		
+
 		if (
 			(($pluginsLoaded = $this->plugins->loadPlugins()) == 0) &&
 			($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE))
@@ -172,23 +177,6 @@ class PHPInSimMod
 		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 	}
 		
-	private function loadIniFiles()
-	{
-		// Load generic cvars.ini
-		if (!$this->config->initialise())
-			return false;
-		
-		// Load connections.ini
-		if (!$this->hosts->initialise())
-			return false;
-
-		// Load plugins.ini
-		if (!$this->plugins->initialise())
-			return false;
-
-		return TRUE;
-	}
-	
 	public function start()
 	{
 		$this->main();
@@ -199,8 +187,7 @@ class PHPInSimMod
 		while ($this->isRunning === TRUE)
 		{
 			// Setup our listen arrays
-			$sockReads = array();
-			$sockWrites = array();
+			$sockReads = $sockWrites = array();
 			
 			if (!$this->isWindows)
 				$sockReads[] = STDIN;
@@ -277,14 +264,6 @@ class PHPInSimMod
 			$this->hosts->maintenance();
 						
 		} // End while(isRunning)
-	}
-
-	public function sendPacket($packetClass, $HostId = FALSE)
-	{
-		if ($HostId === FALSE)
-			return $this->hosts->hosts[$this->curHostID]->writePacket($packetClass);
-		else
-			return $this->hosts->hosts[$HostId]->writePacket($packetClass);
 	}
 
 	private function getSelectTimeOut()

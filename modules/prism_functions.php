@@ -54,4 +54,23 @@ function createRandomString($len)
 	return $out;
 }
 
+function getIP(&$ip)
+{
+	if (verifyIP($ip))
+		return $ip;
+	else
+	{
+		$tmp_ip = @gethostbyname($ip);
+		if (verifyIP($tmp_ip))
+			return $tmp_ip;
+	}
+	
+	return FALSE;
+}
+
+function verifyIP(&$ip)
+{
+	return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
+}
+
 ?>

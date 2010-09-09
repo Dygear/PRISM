@@ -5,6 +5,8 @@
  * @subpackage Connections
 */
 
+require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
+
 define('CONNTYPE_HOST',			0);			# object is connected directly to a host
 define('CONNTYPE_RELAY',		1);			# object is connected to host via relay
 
@@ -31,22 +33,24 @@ class HostHandler extends SectionHandler
 	private $connvars		= array();
 	public $hosts			= array();			# Stores references to the hosts we're connected to
 
+	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
+
 	public function initialise()
 	{
 		global $PRISM;
 		
-		if ($this->loadIniFile($this->connvars, 'connections.ini'))
+		if ($this->loadIniFile($this->connvars, 'hosts.ini'))
 		{
 			foreach ($this->connvars as $hostID => $v)
 			{
 				if (!is_array($v))
 				{
-					console('Section error in connections.ini file!');
+					console('Section error in hosts.ini file!');
 					return FALSE;
 				}
 			}
 			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded connections.ini');
+				console('Loaded hosts.ini');
 		}
 		else
 		{
@@ -55,8 +59,8 @@ class HostHandler extends SectionHandler
 			Interactive::queryConnections($this->connvars);
 			
 			# Then build a connections.ini file based on these details provided.
-			if ($this->createIniFile('connections.ini', 'InSim Connection Hosts', $this->connvars))
-				console('Generated config/connections.ini');
+			if ($this->createIniFile('hosts.ini', 'InSim Connection Hosts', $this->connvars))
+				console('Generated config/hosts.ini');
 		}
 
 		// Populate $this->hosts array from the connections.ini variables we've just read
@@ -172,7 +176,7 @@ class HostHandler extends SectionHandler
 					$sockReads[] = $host->socket;
 					
 					// If the host is lagged, we must check to see when we can write again
-					if ($host->sendQStatus > 0)
+					if ($host->sendQLen > 0)
 						$sockWrites[] = $host->socket;
 			}
 			else if ($host->connStatus == CONN_CONNECTING)
@@ -232,43 +236,13 @@ class HostHandler extends SectionHandler
 
 			// Recover a lagged host?
 			if ($host->connStatus >= CONN_CONNECTED && 
-				$host->sendQStatus > 0 &&
+				$host->sendQLen > 0 &&
 				in_array($host->socket, $sockWrites))
 			{
 				$activity++;
 				
 				// Flush the sendQ and handle possible overload again
-				for ($a=0; $a<$host->sendQStatus; $a++)
-				{
-					$bytes = $host->writeTCP($host->sendQ[$a], TRUE);
-					if ($bytes == strlen($host->sendQ[$a])) {
-						// an entire packet from the queue has been flushed. Remove it from the queue.
-						array_shift($host->sendQ);
-						$a--;
-
-						if (--$host->sendQStatus == 0) {
-							// All done flushing - reset queue variables
-							$host->sendQ			= array ();
-							$host->sendQTime		= 0;
-							break;
-
-						} else {
-							// Set when the last packet was flushed
-							$host->sendQTime		= time ();
-						}
-					} 
-					else if ($bytes > 0)
-					{
-						// only partial packet sent
-						$host->sendQ[$a] = substr($host->sendQ[$a], $bytes);
-						break;
-					}
-					else
-					{
-						// sending queued data completely failed. We stop trying and will see if we can send more later on.
-						break;
-					}
-				}
+				$host->flushSendQ();
 			}
 
 			// Did the host send us something?
@@ -467,6 +441,14 @@ class HostHandler extends SectionHandler
 				break;
 		}
 	}
+
+	public function sendPacket($packetClass, $HostId = FALSE)
+	{
+		if ($HostId === FALSE)
+			return $this->hosts[$this->curHostID]->writePacket($packetClass);
+		else
+			return $this->hosts[$HostId]->writePacket($packetClass);
+	}
 }
 
 class InsimConnection
@@ -495,10 +477,10 @@ class InsimConnection
 	private $streamBufLen	= 0;
 	
 	// send queue used in emergency cases (if host appears lagged or overflown with packets)
-	public $sendQ			= array();
-	public $sendQStatus		= 0;
-	public $sendQTime		= 0;
-	
+	public $sendQ			= '';
+	public $sendQLen		= 0;
+	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
+
 	// connection & host info
 	public $id				= '';			# the section id from the ini file
 	public $ip				= '';			# ip or hostname to connect to
@@ -677,11 +659,9 @@ class InsimConnection
 		// (re)set some variables.
 		$this->socket			= NULL;
 		$this->connStatus		= CONN_NOTCONNECTED;
-		$this->sendQ			= array();
-		$this->sendQStatus		= 0;
-		$this->sendQTime		= 0;
 		$this->lastReadTime		= 0;
 		$this->lastWriteTime	= 0;
+		$this->sendQReset();
 		
 		if ($quick)
 			return;
@@ -729,7 +709,7 @@ class InsimConnection
 		}
 		else
 		{
-			if ($this->sendQStatus == 0)
+			if ($this->sendQLen == 0)
 			{
 				// It's Ok to send packet
 				$bytes = @fwrite ($this->socket, $data);
@@ -751,14 +731,50 @@ class InsimConnection
 		return $bytes;
 	}
 	
-	public function addPacketToSendQ($data)
+	private function addPacketToSendQ($data)
 	{
-		if ($this->sendQStatus == 0)
-			$this->sendQTime	= time();
-		$this->sendQ[]			= $data;
-		$this->sendQStatus++;
+		$this->sendQ .= $data;
+		$this->sendQLen += strlen($data);
+	}
+
+	public function flushSendQ()
+	{
+		// Send chunk of data
+		$bytes = $this->writeTCP(substr($this->sendQ, 0, $this->sendWindow), TRUE);
+		
+		// Dynamic window sizing
+		if ($bytes == $this->sendWindow)
+			$this->sendWindow += STREAM_READ_BYTES;
+		else
+		{
+			$this->sendWindow -= STREAM_READ_BYTES;
+			if ($this->sendWindow < STREAM_READ_BYTES)
+				$this->sendWindow = STREAM_READ_BYTES;
+		}
+
+		// Update the sendQ
+		$this->sendQ = substr($this->sendQ, $bytes);
+		$this->sendQLen -= $bytes;
+
+		// Cleanup / reset timers
+		if ($this->sendQLen == 0)
+		{
+			// All done flushing - reset queue variables
+			$this->sendQReset();
+		}
+
+		if ($bytes > 0)
+			$this->lastWriteTime	= time();
+		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen.' - '.$this->ip);
 	}
 	
+	public function sendQReset()
+	{
+		$this->sendQ			= '';
+		$this->sendQLen			= 0;
+		$this->lastActivity		= time();
+	}
+			
 	public function read(&$peerInfo)
 	{
 		$this->lastReadTime = time();
@@ -810,25 +826,6 @@ class InsimConnection
 		return $packet;
 	}
 	
-}
-
-function getIP(&$ip)
-{
-	if (verifyIP($ip))
-		return $ip;
-	else
-	{
-		$tmp_ip = @gethostbyname($ip);
-		if (verifyIP($tmp_ip))
-			return $tmp_ip;
-	}
-	
-	return FALSE;
-}
-
-function verifyIP(&$ip)
-{
-	return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
 }
 
 ?>

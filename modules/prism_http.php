@@ -1,11 +1,150 @@
 <?php
 
+require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
+
 define('HTTP_KEEP_ALIVE', 10);					// Keep-alive timeout in seconds
 define('HTTP_MAX_REQUEST_SIZE', 2097152);		// Max http request size in bytes (headers + data)
 define('HTTP_MAX_URI_LENGTH', 4096);			// Max length of the uri in the first http header
 define('HTTP_MAX_CONN', 1024);					// Max number of simultaneous http connections
 												// Experimentation showed it's best to keep this pretty high.
 												// FD_SETSIZE is usually 1024; the max connections allowed on a socket.
+
+class HttpHandler extends SectionHandler
+{
+	private $httpSock		= NULL;
+	private $httpClients	= array();
+	private $httpNumClients	= 0;
+
+	public $httpVars		= array();
+
+	public function initialise()
+	{
+		global $PRISM;
+		
+		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
+		{
+			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+				console('Loaded http.ini');
+		}
+		else
+		{
+			# We ask the client to manually input the connection details here.
+			require_once(ROOTPATH . '/modules/prism_interactive.php');
+			Interactive::queryHttp($this->httpVars);
+			
+			# Then build a http.ini file based on these details provided.
+			if ($this->createIniFile('http.ini', 'HTTP Configuration (web admin)', $this->httpVars))
+				console('Generated config/http.ini');
+		}
+
+		// Setup http socket to listen on
+		if ($this->httpVars['ip'] != '' && $this->httpVars['port'] > 0)
+		{
+			$this->httpSock = @stream_socket_server('tcp://'.$this->httpVars['ip'].':'.$this->httpVars['port'], $httpErrNo, $httpErrStr);
+			if (!is_resource($this->httpSock) || $this->httpSock === FALSE || $httpErrNo)
+			{
+				console('Error opening http socket : '.$httpErrStr.' ('.$httpErrNo.')');
+			}
+			else
+			{
+				console('Listening for http requests on '.$this->httpVars['ip'].':'.$this->httpVars['port']);
+			}
+		}
+		return true;
+	}
+	
+	public function getSelectableSockets(&$sockReads, &$sockWrites)
+	{
+		// Add http sockets to sockReads
+		if (is_resource($this->httpSock))
+			$sockReads[] = $this->httpSock;
+
+		for ($k=0; $k<$this->httpNumClients; $k++)
+		{
+			if (is_resource($this->httpClients[$k]->socket))
+			{
+				$sockReads[] = $this->httpClients[$k]->socket;
+				
+				// If write buffer was full, we must check to see when we can write again
+				if ($this->httpClients[$k]->sendQLen > 0)
+					$sockWrites[] = $this->httpClients[$k]->socket;
+			}
+		}
+	}
+
+	public function checkTraffic(&$sockReads, &$sockWrites)
+	{
+		global $PRISM;
+		
+		$activity = 0;
+
+		// httpSock input (incoming http connection)
+		if (in_array ($this->httpSock, $sockReads))
+		{
+			$activity++;
+			
+			// Accept the new connection
+			$peerInfo = '';
+			$sock = @stream_socket_accept ($this->httpSock, NULL, $peerInfo);
+			if (is_resource($sock))
+			{
+				stream_set_blocking ($sock, 0);
+				
+				// Add new connection to httpClients array
+				$exp = explode(':', $peerInfo);
+				$this->httpClients[] = new HttpClient($sock, $exp[0], $exp[1]);
+				$this->httpNumClients++;
+				console('HTTP Client '.$exp[0].':'.$exp[1].' connected.');
+			}
+			unset ($sock);
+		}
+		
+		// httpClients input
+		for ($k=0; $k<$this->httpNumClients; $k++) {
+			// Recover from a full write buffer?
+			if ($this->httpClients[$k]->sendQLen > 0 &&
+				in_array($this->httpClients[$k]->socket, $sockWrites))
+			{
+				$activity++;
+				
+				// Flush the sendQ (bit by bit, not all at once - that could block the whole app)
+				$this->httpClients[$k]->flushSendQ();
+			}
+			
+			// Did we receive something from a httpClient?
+			if (!in_array($this->httpClients[$k]->socket, $sockReads))
+				continue;
+
+			$activity++;
+			
+			$data = $this->httpClients[$k]->read();
+			
+			// Did the client hang up?
+			if ($data == '')
+			{
+				console('Closed httpClient (client initiated) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+				array_splice ($this->httpClients, $k, 1);
+				$k--;
+				$this->httpNumClients--;
+				continue;
+			}
+
+			// Ok we recieved some input from the http client.
+			// Pass the data to the HttpClient so it can handle it.
+			if (!$this->httpClients[$k]->handleInput($data, $errNo))
+			{
+				// Something went wrong - we can hang up now
+				console('Closed httpClient ('.$errNo.' - '.$errStr.') '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+				array_splice ($this->httpClients, $k, 1);
+				$k--;
+				$this->httpNumClients--;
+				continue;
+			}
+		}
+		
+		return $activity;
+	}
+}
 
 class HttpClient
 {
@@ -94,7 +233,7 @@ class HttpClient
 		return $bytes;
 	}
 	
-	public function addPacketToSendQ($data)
+	private function addPacketToSendQ($data)
 	{
 		$this->sendQ			.= $data;
 		$this->sendQLen			+= strlen($data);
@@ -125,11 +264,9 @@ class HttpClient
 			// All done flushing - reset queue variables
 			$this->sendQReset();
 		} 
-		else if ($bytes > 0)
-		{
-			// Set when the last packet was flushed
+
+		if ($bytes > 0)
 			$this->lastActivity		= time();
-		}
 		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen);
 	}
 	
@@ -199,7 +336,7 @@ class HttpClient
 		return fread($this->socket, STREAM_READ_BYTES);
 	}
 	
-	public function handleInput(&$data, &$httpRequest, &$errNo)
+	public function handleInput(&$data, &$errNo)
 	{
 		// What is this? we're getting input while we're sending a reply?
 		if ($this->sendFile)

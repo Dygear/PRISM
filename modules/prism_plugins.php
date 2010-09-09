@@ -192,7 +192,7 @@ abstract class Plugins
 	}
 	protected function sendPacket($packetClass)
 	{
-		return $this->parent->sendPacket($packetClass);
+		return $this->parent->hosts->sendPacket($packetClass);
 	}
 
 	/** Parse Methods */
@@ -333,7 +333,7 @@ abstract class Plugins
 	public function serverGetTrack() {}
 	public function serverGetName()
 	{
-		return $this->parent->curHostID;
+		return $this->parent->hosts->curHostID;
 	}
 	public function serverGetSectors() {}
 	public function serverGetClients() {}

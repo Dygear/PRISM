@@ -4,19 +4,6 @@ require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
 
 class ConfigHandler extends SectionHandler
 {
-//	public $prefix				= '!';
-//	public $debugMode			= PRISM_DEBUG_ALL;
-//	public $logMode				= 7;
-//	public $logFileMode			= 3;
-//	public $relayIP				= 'isrelay.lfs.net';
-//	public $relayPort			= 47474;
-//	public $relayPPS			= 2
-//	public $dateFormat			= 'M jS Y';
-//	public $timeFormat			= 'H:i:s';
-//	public $logFormat			= 'm-d-y@H:i:s';
-//	public $logNameFormat		= 'Ymd';
-//	public $httpIP				= '0.0.0.0';
-//	public $httpPort			= 1800;
 	public $cvars				= array('prefix'		=> '!',
 									'debugMode'		=> PRISM_DEBUG_ALL,
 									'logMode'		=> 7,
@@ -27,9 +14,7 @@ class ConfigHandler extends SectionHandler
 									'dateFormat'	=> 'M jS Y',
 									'timeFormat'	=> 'H:i:s',
 									'logFormat'		=> 'm-d-y@H:i:s',
-									'logNameFormat'	=> 'Ymd',
-									'httpIP'		=> '0.0.0.0',
-									'httpPort'		=> '1800');
+									'logNameFormat'	=> 'Ymd');
 	
 	public function initialise()
 	{

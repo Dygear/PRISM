@@ -1,4 +1,6 @@
-configs/connections.ini
+configs/hosts.ini
+configs/users.ini
 configs/cvars.ini
 configs/plugins.ini
+configs/http.ini
 logs/*
