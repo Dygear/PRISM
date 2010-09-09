@@ -47,7 +47,7 @@ $PRISM->start();
 */
 class PHPInSimMod
 {
-	const VERSION = '0.1.9';
+	const VERSION = '0.2.0';
 	const ROOTPATH = ROOTPATH;
 
 	/* Run Time Arrays */
@@ -56,7 +56,7 @@ class PHPInSimMod
 	public $http				= null;
 	public $plugins				= null;
 	public $users				= null;
-	
+
 	# Time outs
 	private $sleep				= NULL;
 	private $uSleep				= NULL;
