@@ -141,8 +141,8 @@ class PHPInSimMod
 	public function initialise($argc, $argv)
 	{
 		// Set the timezone
-		if (isset($this->cvars['defaultTimeZone']))
-			date_default_timezone_set($this->cvars['defaultTimeZone']);
+		if (isset($this->config->cvars['defaultTimeZone']))
+			date_default_timezone_set($this->config->cvars['defaultTimeZone']);
 		else
 		{
 			# I know, I'm using error suppression, but I swear it's appropriate!
@@ -160,7 +160,7 @@ class PHPInSimMod
 		
 		if (
 			(($pluginsLoaded = $this->plugins->loadPlugins()) == 0) &&
-			($this->cvars['debugMode'] & PRISM_DEBUG_CORE))
+			($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE))
 		{
 			console('No Plugins Loaded');
 		} else if ($pluginsLoaded == 1) {
