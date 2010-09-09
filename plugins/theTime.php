@@ -9,23 +9,16 @@ class theTime extends Plugins
 	public function __construct(&$parent)
 	{
 		$this->parent =& $parent;
-		$this->registerPacket('onSay', ISP_MSO, ISP_III);
+		$this->registerSayCommand('!thetime', 'cmdTime', '- Displays the time.');
+		$this->registerSayCommand('!time', 'cmdTime', '- Displays the time.');
 	}
 
-	public function onSay($p)
+	public function cmdTime($cmd, $plid, $ucid)
 	{
-		if ($p instanceof ISP_MSO)
-			$M = substr($p->Msg, $p->TextStart);
-		else
-			$M = $p->Msg;
-		if ($M == '!thetime' OR $M == 'thetime' OR $M == '!time' OR $M == 'time')
-		{
-			$MTC = new IS_MTC();
-			$MTC->PLID = ($p->PLID) ? $p->PLID : NULL;
-			$MTC->UCID = ($p->UCID) ? $p->UCID : NULL;
-			$MTC->Msg = 'The time is: ' . date('H:i:s') . ' server local time';
-			$this->sendPacket($MTC);
-		}
+		$MTC = new IS_MTC();
+		$MTC->PLID = $plid;
+		$MTC->Msg = 'The time is: ' . date('H:i:s') . ' server local time';
+		$this->sendPacket($MTC);
 		return PLUGIN_CONTINUE;
 	}
 }

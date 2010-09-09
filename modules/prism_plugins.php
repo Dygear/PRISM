@@ -5,13 +5,11 @@
  * @subpackage Plugin
 */
 
-define('CLIENT_PRINT_CHAT', 1);
-
-// Admin
+// Admin Flags
 define('ADMIN_ACCESS',				1);			# Flag "a", Allows you to issue commands from the remote console or web admin area.
 define('ADMIN_BAN',					2);			# Flag "b", Allows you to ban and unban clients.
-define('ADMIN_CVAR',				4);			# Flag "c", Allows you to change the configuration of LFS.
-define('ADMIN_LEVEL_D',				8);			# Flag "d", 
+define('ADMIN_CFG',					4);			# Flag "c", Allows you to change the, runtime, configuration of LFS.
+define('ADMIN_CVAR',				8);			# Flag "d", Allows you to change the, runtime, configuration of PRISM.
 define('ADMIN_LEVEL_E',				16);		# Flag "e", 
 define('ADMIN_LEVEL_F',				32);		# Flag "f", 
 define('ADMIN_GAME',				64);		# Flag "g", Allows you to change the way the game is played.
@@ -25,7 +23,7 @@ define('ADMIN_LEVEL_N',				8192);		# Flag "n",
 define('ADMIN_LEVEL_O',				16384);		# Flag "o", 
 define('ADMIN_PENALTIES',			32768);		# Flag "p", Allows you to set a penalty on any client.
 define('ADMIN_RESERVATION',			65536);		# Flag "q", Allows you to join in a reserved slot.
-define('ADMIN_RESERVATION',			131072);	# Flag "r", Allows you to send race control messages.
+define('ADMIN_RCM',					131072);	# Flag "r", Allows you to send race control messages.
 define('ADMIN_SPECTATE',			262144);	# Flag "s", Allows you to spectate and pit a client or all clients.
 define('ADMIN_CHAT',				524288);	# Flag "t", Allows you to send messages to clients in their chat area.
 define('ADMIN_UNIMMUNIZE',			1048576);	# Flag "u", Allows you to run commands on immune admins also.
@@ -44,12 +42,8 @@ abstract class Plugins
 	/* const VERSION;		*/
 
 	/** Properties */
-	// Timers
-	public $crons = array();
-	public $timers = array();
 	public $callbacks = array();
 	// Callbacks
-	private $callbackPackets = array(); # registerPacket
 	public $insimCommands = array();
 	public $localCommands = array();
 	public $sayCommands = array();
@@ -92,17 +86,6 @@ abstract class Plugins
 	}
 
 	/** Handle Methods */
-	// For people who perfered predefined functions (AMX Mod X style - Will be in 0.5.0)
-	public function handlePacket(Struct $packet)
-	{
-		// In the event that people will want predefined functions for connection and disconnection
-		// this function will allow that to happen. So one could define public function clientConnect()
-		// and without having to make a registerPacket function call, this call will know that you want to know
-		// about ISP_NCN packets, and it will forward the useful information into the clientConnect packet.
-		
-		// This allows for the abstraction level between the people who want to do packet level work, and those who
-		// just want to get their job done, and let us (the PRISM devs) handle all of the nitty gritty of the InSim protocol.
-	}
 	// This is the yang to the registerSayCommand & registerLocalCommand function's Yin.
 	public function handleCmd(IS_MSO $packet)
 	{
@@ -147,7 +130,6 @@ abstract class Plugins
 	// Setup the callbackMethod trigger to accapt a command that could come from anywhere.
 	protected function registerCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
 	{
-		$this->registerConsoleCommand($cmd, $callbackMethod, $info);
 		$this->registerInsimCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 		$this->registerLocalCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 		$this->registerSayCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
@@ -182,46 +164,17 @@ abstract class Plugins
 		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
 	}
 
-	// Setups a timer to run at a certain interval.
-	protected function registerTimerInterval($interval, $callbackMethod)
-	{
-		
-	}
-	// Schedules a method call to run periodically at certain times or dates.
-	protected function registerTimerCron($cronExpression, $callbackMethod)
-	{	# The name cron comes from the word "chronos", Greek for "time".
-		
-	}
-
-	// Sets up a Console Varable (CVAR) to be utlizied by this plugin.
-	public function registerCvar($cvar, $defaultValue, $defaultAdminLevelToChange) {}
-
 	/** Server Methods */
-	public function serverPrint($Msg) {}
-	public function serverSay($Msg) {}
-	public function serverGetTrack() {}
-	public function serverGetName()
+	protected function serverGetName()
 	{
 		return $this->parent->curHostID;
 	}
-	public function serverGetSectors() {}
-	public function serverGetClients() {}
-	public function serverGetPlayers() {}
-	public function serverGetPacket() {}
-
-	/** Client Methods */
-	public function clientCanAccessCmd($CLID, $cmd) {}
-	public function clientPrint($CLID, $Msg, $Where = CLIENT_PRINT_CHAT) {}
-	public function clientIsSpectator($CLID)
+	
+	/** PRISM Methods */
+	protected function prismGetPlugins()
 	{
-		# Returns true when the client is connected.
-		# AND all PLIDs spawned by this client are AIs.
+		return $this->parent->plugins;
 	}
-
-	/** Player Methods */
-	public function playerIsAI($PLID) {}
-	public function playerPrint($PLID, $Msg, $Where = CLIENT_PRINT_CHAT) {}
-
 }
 
 ?>

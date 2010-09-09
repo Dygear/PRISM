@@ -41,7 +41,7 @@ $PRISM = new PHPInSimMod($argc, $argv);
 */
 class PHPInSimMod
 {
-	const VERSION = '0.1.9';
+	const VERSION = '0.2.0';
 	const ROOTPATH = ROOTPATH;
 
 	private $isWindows		= FALSE;
@@ -68,7 +68,7 @@ class PHPInSimMod
 	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 
 	// InSim
-	private $plugins		= array();			# Stores references to the plugins we've spawned.
+	public $plugins		= array();			# Stores references to the plugins we've spawned.
 
 	# Time outs
 	private $sleep			= NULL;

@@ -4,7 +4,7 @@ class admin extends Plugins
 	const NAME = 'Admin Base';
 	const AUTHOR = 'PRISM Dev Team';
 	const VERSION = PHPInSimMod::VERSION;
-	const DESCRIPTION = 'Basic admin functions for PRISM.';
+	const DESCRIPTION = 'REALLY BASIC Admin functions for PRISM.';
 
 	public $adminsAccess = array();
 	private $adminPasswords = array();
@@ -13,26 +13,23 @@ class admin extends Plugins
 	{
 		$this->parent =& $parent;
 		$this->loadAdmins();
-		$this->registerPacket('onClientConnect', ISP_NCN);
-		$this->registerPacket('onClientDisconnect', ISP_CNL);
-		$this->registerPacket('onClientRenamed', ISP_CPR);
-		$this->registerCommand('prism admins list', 'cmdList', NULL, '- Displays a list of admins.');
-		$this->registerCommand('prism admins reload', 'cmdLoad', ADMIN_CFG);
+		$this->registerCommand('prism help', 'cmdHelp', '- Displays this command list.');
+		$this->registerCommand('prism admins list', 'cmdList', '- Displays a list of admins.');
+		$this->registerCommand('prism admins reload', 'cmdLoad', '- Reloads the admins.', ADMIN_CFG);
 	}
 
-	public function onClientConnect($packet)
+	public function cmdHelp($cmd, $plid, $ucid)
 	{
-		
-	}
-
-	public function onClientDisconnect($packet)
-	{
-		
-	}
-
-	public function onClientRenamed($packet)
-	{
-		
+		$MTC = new IS_MTC();
+		$MTC->PLID = $plid;
+		foreach ($this->prismGetPlugins() as $plugin => $pluginInfo)
+		{
+			foreach ($pluginInfo->sayCommands as $command => $details)
+			{
+				$MTC->Msg = "$command {$details['info']}";
+				$this->sendPacket($MTC);
+			}
+		}
 	}
 
 	public function cmdList($cmd, $plid, $ucid)
@@ -53,6 +50,8 @@ class admin extends Plugins
 			$MTC->Msg = $admin;
 			$this->sendPacket($MTC);
 		}
+
+		return PLUGIN_CONTINUE;
 	}
 
 	public function cmdLoad($cmd, $plid, $ucid)
@@ -66,6 +65,8 @@ class admin extends Plugins
 		else
 			$MTC->Msg = "Loaded $loadedAdmins admins.";
 		$this->sendPacket($MTC);
+
+		return PLUGIN_CONTINUE;
 	}
 
 	public function loadAdmins()
