@@ -60,29 +60,12 @@ class admin extends Plugins
 		$MTC = new IS_MTC();
 		$MTC->PLID = $plid;
 		if (($loadedAdmins = $this->loadAdmins()) === FALSE)
-		{
-#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
-#			{
-				$MTC->Msg = 'Could not load any admins, could not find the file.';
-				$this->sendPacket($MTC);
-#			}
-		}
+			$MTC->Msg = 'Could not load any admins, could not find the file.';
 		else if ($loadedAdmins == 1)
-		{
-#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
-#			{
 			$MTC->Msg = 'Loaded 1 admin.';
-			$this->sendPacket($MTC);
-#			}
-		}
 		else
-		{
-#			if ($this->parent->cvars['debugMode'] & PRISM_DEBUG_PLUGINS)
-#			{
 			$MTC->Msg = "Loaded $loadedAdmins admins.";
-			$this->sendPacket($MTC);
-#			}
-		}
+		$this->sendPacket($MTC);
 	}
 
 	public function loadAdmins()
