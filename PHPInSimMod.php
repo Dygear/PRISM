@@ -195,6 +195,9 @@ class PHPInSimMod
 			// Add host sockets to the arrays as needed
 			// While at it, check if we need to connect to any of the hosts.
 			$this->hosts->getSelectableSockets($sockReads, $sockWrites);
+
+			// Add http sockets to the arrays as needed
+			$this->http->getSelectableSockets($sockReads, $sockWrites);
 			
 			$this->getSelectTimeOut();
 
@@ -205,6 +208,8 @@ class PHPInSimMod
 			while($numReady > 0)
 			{
 				$numReady -= $this->hosts->checkTraffic($sockReads, $sockWrites);
+
+				$numReady -= $this->http->checkTraffic($sockReads, $sockWrites);
 				
 				// KB input
 				if (in_array (STDIN, $sockReads))
@@ -262,6 +267,7 @@ class PHPInSimMod
 				continue;
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 			$this->hosts->maintenance();
+			$this->http->maintenance();
 						
 		} // End while(isRunning)
 	}

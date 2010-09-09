@@ -1,6 +1,7 @@
 <?php
 
 require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
+require_once(ROOTPATH . '/modules/prism_phpparser.php');
 
 define('HTTP_KEEP_ALIVE', 10);					// Keep-alive timeout in seconds
 define('HTTP_MAX_REQUEST_SIZE', 2097152);		// Max http request size in bytes (headers + data)
@@ -74,8 +75,6 @@ class HttpHandler extends SectionHandler
 
 	public function checkTraffic(&$sockReads, &$sockWrites)
 	{
-		global $PRISM;
-		
 		$activity = 0;
 
 		// httpSock input (incoming http connection)
@@ -143,6 +142,20 @@ class HttpHandler extends SectionHandler
 		}
 		
 		return $activity;
+	}
+
+	public function maintenance()
+	{
+		for ($k=0; $k<$this->httpNumClients; $k++)
+		{
+			if ($this->httpClients[$k]->lastActivity < time() - HTTP_KEEP_ALIVE)
+			{
+				console('Closed httpClient (keep alive) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+				array_splice ($this->httpClients, $k, 1);
+				$k--;
+				$this->httpNumClients--;
+			}
+		}
 	}
 }
 
@@ -233,7 +246,7 @@ class HttpClient
 		return $bytes;
 	}
 	
-	private function addPacketToSendQ($data)
+	public function addPacketToSendQ($data)
 	{
 		$this->sendQ			.= $data;
 		$this->sendQLen			+= strlen($data);
@@ -264,9 +277,11 @@ class HttpClient
 			// All done flushing - reset queue variables
 			$this->sendQReset();
 		} 
-
-		if ($bytes > 0)
+		else if ($bytes > 0)
+		{
+			// Set when the last packet was flushed
 			$this->lastActivity		= time();
+		}
 		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen);
 	}
 	
@@ -303,7 +318,7 @@ class HttpClient
 				$this->sendWindow = STREAM_READ_BYTES;
 		}
 		
-		//console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
+		console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
 		// Done?
 		if ($this->sendFilePntr >= $this->sendFileSize)
 			$this->writeFileReset();
@@ -397,96 +412,38 @@ class HttpClient
 		//var_dump($this->httpRequest->POST);
 		//var_dump($this->httpRequest->COOKIE);
 		
-		// Should we serve a file or pass the request to PHPInSimMod for page generation?
-		if ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/')
+		if (file_exists(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
 		{
-			// Serve internally generated webpage
-			// Set httpRequest which will be passed back to the caller.
-			$httpRequest = $this->httpRequest;
-			
-			// Build TEST response for now
-			$html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
-			$html .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">';
-			$html .= '<head>';
-			$html .= '<title>Prism http server test page</title>';
-			$html .= '</head>';
-			$html .= '<body>';
+			// Should we serve a file or pass the request to PHPInSimMod for page generation?
+			if ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/' || 
+				preg_match('/^.*\.php$/', $this->httpRequest->SERVER['SCRIPT_NAME']))
+			{
+				// 'Parse' the php file
+				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+				$html = PHPParser::parseFile(
+					$r,
+					ROOTPATH.'/www-docs/index.php',
+					$this->httpRequest->SERVER,
+					$this->httpRequest->GET,
+					$this->httpRequest->POST,
+					$this->httpRequest->COOKIE
+				);
 	
-			if (count($this->httpRequest->COOKIE) > 0)
-			{
-				$html .= 'The following COOKIE values have been found :<br />';
-				foreach ($this->httpRequest->COOKIE as $k => $v)
-					$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-				$html .= '<br />';
+				$r->addBody($html);
+				
+				$this->write($r->getHeaders());
+				$this->write($r->getBody());
 			}
-			
-			if (count($this->httpRequest->GET) > 0)
+			else
 			{
-				$html .= 'You submitted the following GET values :<br />';
-				foreach ($this->httpRequest->GET as $k => $v)
-					$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-				$html .= '<br />';
+				// Serve file - we can do this using the writeFile() method, which is memory friendly
+				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+				$r->addHeader('Content-Type: '.$this->getMimeType());
+				$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
+	
+				$this->write($r->getHeaders());
+				$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
 			}
-			
-			if (count($this->httpRequest->POST) > 0)
-			{
-				$html .= 'You submitted the following POST values :<br />';
-				foreach ($this->httpRequest->POST as $k => $v)
-				{
-					if (is_array($v))
-					{
-						$html .= '<strong>'.$k.'-array</strong><br />';
-						foreach ($v as $k2 => $v2)
-							$html .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$k.'['.htmlspecialchars($k2).'] => '.htmlspecialchars($v2).'<br />';
-					}
-					else
-					{
-						$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-					}
-				}
-				$html .= '<br />';
-			}
-			
-			$html .= 'Here\'s a form to test POST requests<br />';
-			$html .= '<form method="post" action="/?'.$this->httpRequest->SERVER['QUERY_STRING'].'">';
-			$html .= '';
-			for ($c=0; $c<3; $c++)
-				$html .= 'name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-			for ($c=0; $c<3; $c++)
-				$html .= 'name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-			for ($c=0; $c<3; $c++)
-				$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars($this->createRandomString(24)).'" maxlength="48" size="32" /><br />';
-			$html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
-			$html .= '<input type="submit" value="Submit the form" />';
-			$html .= '</form>';
-			
-			for ($x=0; $x<100; $x++)
-			{
-				$html .= '<br /><br />SERVER values :<br />';
-				foreach ($this->httpRequest->SERVER as $k => $v)
-					$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
-			}
-			$html .= '</body>';
-			$html .= '</html>';
-
-			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-			$r->addBody($html);
-			$r->addHeader('Content-Type: text/html');
-			$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', 'vic.lfs.net');
-			$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $this->httpRequest->SERVER['SERVER_NAME']);
-
-			$this->write($r->getHeaders());
-			$this->write($r->getBody());
-		}
-		else if (file_exists(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
-		{
-			// Serve file - we can do this using the writeFile() method, which is memory friendly
-			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-			$r->addHeader('Content-Type: '.$this->getMimeType());
-			$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
-
-			$this->write($r->getHeaders());
-			$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
 		}
 		else
 		{
@@ -511,16 +468,7 @@ class HttpClient
 		file_put_contents(ROOTPATH.'/logs/http.log', $logLine."\r\n", FILE_APPEND);
 		
 		// Reset httpRequest
-//		if ($this->httpRequest->rawInput != '')
-//		{
-//			$rawInput = $this->httpRequest->rawInput;
-//			$this->httpRequest = null;
-//			return $this->handleInput($rawInput);
-//		}
-//		else
-//		{
-			$this->httpRequest = null;
-//		}
+		$this->httpRequest = null;
 
 		return true;
 	}
@@ -597,14 +545,6 @@ class HttpClient
 				break;
 		}
 		return $mimeType;
-	}
-	
-	private function createRandomString($len)
-	{
-		$out = '';
-		for ($a=0; $a<$len; $a++)
-			$out .= chr(rand(32, 127));
-		return $out;
 	}
 }
 
