@@ -186,7 +186,8 @@ abstract class Plugins
 	}
 	protected function sendPacket($packetClass)
 	{
-		return $this->parent->hosts->sendPacket($packetClass);
+		global $PRISM;
+		return $PRISM->hosts->sendPacket($packetClass);
 	}
 
 	/** Parse Methods */
@@ -221,7 +222,7 @@ abstract class Plugins
 	public function handleCmd(IS_MSO $packet)
 	{
 		if ($packet->UserType == MSO_PREFIX)
-			$CMD = substr($packet->Msg, $packet->TextStart + 1);
+			$CMD = substr($packet->Msg, $packet->TextStart);
 		else if ($packet->UserType == MSO_O)
 			$CMD = $packet->Msg;
 		else
@@ -234,6 +235,7 @@ abstract class Plugins
 		}
 		else if ($packet->UserType == MSO_O AND isset($this->localCommands[$CMD]))
 		{
+			var_dump($CMD);
 			$method = $this->localCommands[$CMD]['method'];
 			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
 		}
