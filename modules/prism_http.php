@@ -18,6 +18,27 @@ class HttpHandler extends SectionHandler
 
 	public $httpVars		= array();
 
+	public function __destruct()
+	{
+		$this->close(true);
+	}
+	
+	private function close($all)
+	{
+		if (is_resource($this->httpSock))
+			fclose($this->httpSock);
+		
+		if (!$all)
+			return;
+		
+		for ($k=0; $k<$this->httpNumClients; $k++)
+		{
+			array_splice($this->httpClients, $k, 1);
+			$k--;
+			$this->httpNumClients--;
+		}
+	}
+	
 	public function initialise()
 	{
 		global $PRISM;
@@ -39,6 +60,8 @@ class HttpHandler extends SectionHandler
 		}
 
 		// Setup http socket to listen on
+		$this->close(false);
+		
 		if ($this->httpVars['ip'] != '' && $this->httpVars['port'] > 0)
 		{
 			$this->httpSock = @stream_socket_server('tcp://'.$this->httpVars['ip'].':'.$this->httpVars['port'], $httpErrNo, $httpErrStr);
@@ -184,6 +207,7 @@ class HttpClient
 	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
 
 	private $httpRequest	= null;
+	private $cache			= null;
 	
 	public function __construct(&$sock, $ip, $port)
 	{
@@ -472,15 +496,73 @@ class HttpClient
 				$this->write($r->getHeaders());
 				$this->write($r->getBody());
 			}
+			else if (is_dir(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
+			{
+				// 403 - not allowed to view folder contents
+				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 403);
+				$r->addBody($this->createErrorPage(403));
+	
+				$this->write($r->getHeaders());
+				$this->write($r->getBody());
+			}
 			else
 			{
 				// Serve file - we can do this using the writeFile() method, which is memory friendly
 				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-				$r->addHeader('Content-Type: '.$this->getMimeType());
-				$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
-	
-				$this->write($r->getHeaders());
-				$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+				
+				// Cache?
+				$useCache = false;
+				$scriptnameHash = md5($this->httpRequest->SERVER['SCRIPT_NAME']);
+				if (isset($this->httpRequest->headers['Cache-Control']) || isset($this->httpRequest->headers['Pragma']))
+				{
+					if (isset($this->httpRequest->headers['Cache-Control']))
+						$cacheControl = $this->httpRequest->parseHeaderValue($this->httpRequest->headers['Cache-Control']);
+					if (isset($this->httpRequest->headers['Pragma']))
+						$pragma = $this->httpRequest->parseHeaderValue($this->httpRequest->headers['Pragma']);
+					
+					if ((isset($cacheControl['max-age']) && $cacheControl['max-age'] == 0) &&
+						!isset($cacheControl['no-cache']) &&
+						!isset($pragma['no-cache']) &&
+						isset($this->cache[$scriptnameHash]))
+					{
+						$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+						if ($this->cache[$scriptnameHash] == $scriptMTime)
+						{
+							// File has not been changed - send a 304
+							$useCache = true;
+						}
+						else
+						{
+							// File has been updated - store new mtime in cache
+							$this->cache[$scriptnameHash] = $scriptMTime;
+						}
+						clearstatcache();
+					}
+				}
+
+				if ($useCache)
+				{				
+					$r->setResponseCode(304);
+					$r->addHeader('Expires: '.date('r', time()+60));
+					$this->write($r->getHeaders());
+				}
+				else
+				{
+					$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+
+					$r->addHeader('Content-Type: '.$this->getMimeType());
+					$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
+					$r->addHeader('Last-Modified: '.date('r', $scriptMTime));
+					$this->write($r->getHeaders());
+					$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+					
+					// Store the filemtime in $cache
+					if (!isset($this->cache[$scriptnameHash]))
+					{
+						$this->cache[$scriptnameHash] = $scriptMTime;
+						clearstatcache();
+					}
+				}
 			}
 		}
 		else
@@ -498,7 +580,7 @@ class HttpClient
 			$this->ip.' - - ['.date('d/M/Y:H:i:s O').'] '.
 			'"'.$this->httpRequest->SERVER['REQUEST_METHOD'].' '.$this->httpRequest->SERVER['REQUEST_URI'].' '.$this->httpRequest->SERVER['SERVER_PROTOCOL'].'" '.
 			$r->getResponseCode().' '.
-			$r->getHeader('Content-Length').' '.
+			(($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0).' '.
 			'"'.$this->httpRequest->SERVER['HTTP_REFERER'].'" '.
 			'"'.$this->httpRequest->SERVER['HTTP_USER_AGENT'].'" '.
 			'"-"';
@@ -761,6 +843,42 @@ class HttpRequest
 		return true;
 	}
 	
+	public function parseHeaderValue(&$header)
+	{
+//		image/png,
+//		image/*;
+//			q=
+//				0.8,
+//		*/*;q=0.5
+		
+		$parsed = array();
+		
+		// Split by ,
+		$items = explode(',', $header);
+		foreach ($items as $k => $item)
+		{
+			if (strpos($item, ';') !== false)
+			{
+				// Split by ;
+				$exp2 = explode(';', $v);
+				$parsed[$exp2[0]] = $exp2[1];
+			}
+			else if (strpos($item, '=') !== false)
+			{
+				// Split by =
+				$exp2 = explode('=', $item);
+				$parsed[$exp2[0]] = $exp2[1];
+			}
+			else
+			{
+				// Nothing to splut further
+				$parsed[$item] = '';
+			}
+		}
+		
+		return $parsed;
+	}
+	
 	private function parseRequestLine($line)
 	{
 		$exp = explode(' ', $line);
@@ -864,7 +982,9 @@ class HttpResponse
 	static $responseCodes	= array
 		(
 			200 => 'OK',
+			304 => 'Not Modified',
 			400 => 'Bad Request',
+			403 => 'Forbidden',
 			404 => 'File Not Found',
 			411 => 'Length Required',
 			413 => 'Request Entity Too Large',
@@ -945,8 +1065,13 @@ class HttpResponse
 		// Set server-side headers
 		$this->headers['Server']				= 'PRISM v' . PHPInSimMod::VERSION;
 		$this->headers['Date']					= date('r');
-		if (!isset($this->headers['Content-Length']))
+		
+		if (!isset($this->headers['Content-Length']) && 
+			$this->responseCode != 304)
+		{
 			$this->headers['Content-Length']	= $this->bodyLen;
+		}
+		
 		if ($this->responseCode == 200 || $this->responseCode == 404)
 		{
 			$this->headers['Connection']		= 'Keep-Alive';

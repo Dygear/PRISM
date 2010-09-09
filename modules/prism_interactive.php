@@ -224,6 +224,12 @@ class Interactive
 		echo 'You now have the chance to create PRISM user accounts.'.PHP_EOL;
 		echo 'Afterwards your user settings will be stored in ./config/users.ini for future use.'.PHP_EOL;
 
+		// LOCAL ROOT accounts
+		
+		// GLOBAL ROOT accounts
+		
+		// GLOBAL ADMIN accounts
+		
 	}
 
 	/*	$question	- the string that will be presented to the user.

@@ -65,7 +65,7 @@ class PHPInSimMod
 	public $isWindows			= FALSE;
 
 	// Main while loop will run as long as this is set to TRUE.
-	private $isRunning			= TRUE;
+	private $isRunning			= FALSE;
 
 	// Real Magic Functions
 	public function __construct()
@@ -157,6 +157,7 @@ class PHPInSimMod
 		if (!$this->config->initialise() ||
 			!$this->hosts->initialise() || 
 			!$this->http->initialise() || 
+			!$this->users->initialise() || 
 			!$this->plugins->initialise())
 		{
 			console('Fatal error encountered. Exiting...');
@@ -173,12 +174,16 @@ class PHPInSimMod
 		} else {
 			console("{$pluginsLoaded} Plugins Loaded.");
 		}
-				
-		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 	}
 		
 	public function start()
 	{
+		if ($this->isRunning)
+			return;
+
+		$this->isRunning = TRUE;
+		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
+
 		$this->main();
 	}
 
@@ -208,7 +213,6 @@ class PHPInSimMod
 			while($numReady > 0)
 			{
 				$numReady -= $this->hosts->checkTraffic($sockReads, $sockWrites);
-
 				$numReady -= $this->http->checkTraffic($sockReads, $sockWrites);
 				
 				// KB input
@@ -228,6 +232,11 @@ class PHPInSimMod
 							{
 								console($hostID.' => '.$host->ip.':'.$host->port.(($host->udpPort > 0) ? '+udp'.$host->udpPort : '').' -> '.(($host->connStatus == CONN_CONNECTED) ? '' : (($host->connStatus == CONN_VERIFIED) ? 'verified &' : 'not')).' connected');
 							}
+							break;
+						
+						case 'I':
+							console('RE-INITIALISING PRISM...');
+							$this->initialise(null, null);
 							break;
 						
 						case 'p':
@@ -254,6 +263,7 @@ class PHPInSimMod
 						default :
 							console('Available Commands:');
 							console('h - show host info');
+							console('I - re-initialise PRISM (reload ini files / reconnect to hosts / reset http socket');
 							console('p - show plugin info');
 							console('x - exit PHPInSimMod');
 							console('w - show www connections');

@@ -1,5 +1,6 @@
 configs/hosts.ini
 configs/users.ini
+configs/usersv3.ini
 configs/cvars.ini
 configs/plugins.ini
 configs/http.ini

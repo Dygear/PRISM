@@ -31,7 +31,7 @@ define('STREAM_READ_BYTES',		1400);
 class HostHandler extends SectionHandler
 {
 	private $connvars		= array();
-	public $hosts			= array();			# Stores references to the hosts we're connected to
+	private $hosts			= array();			# Stores references to the hosts we're connected to
 
 	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 
@@ -62,6 +62,9 @@ class HostHandler extends SectionHandler
 			if ($this->createIniFile('hosts.ini', 'InSim Connection Hosts', $this->connvars))
 				console('Generated config/hosts.ini');
 		}
+
+		// Cleanup any existing connections (in case of re-initialise)
+		$this->hosts = array();
 
 		// Populate $this->hosts array from the connections.ini variables we've just read
 		$this->populateHostsFromVars();
@@ -273,7 +276,7 @@ class HostHandler extends SectionHandler
 					{
 						// Check that this insim packet came from the IP we connected to
 						// UDP packet can be sent straight to packet parser
-						if ($host->connectIp.':'.$host->port == $peerInfo)
+						if ($host->getConnectIP().':'.$host->getPort() == $peerInfo)
 							$this->handlePacket($data, $hostID);
 					}
 					else
@@ -304,7 +307,7 @@ class HostHandler extends SectionHandler
 				console('received '.strlen($data).' bytes on second socket');
 
 				// Only process the packet if it came from the host's IP.
-				if ($host->connectIp == $exp[0])
+				if ($host->getConnectIP() == $exp[0])
 					$this->handlePacket($data, $hostID);
 			}
 		}
@@ -324,7 +327,7 @@ class HostHandler extends SectionHandler
 				// Check to see if a connection attempt is going to time out.
 				if ($host->connTime < time() - CONN_TIMEOUT)
 				{
-					console('Connection attempt to '.$host->ip.':'.$host->port.' timed out');
+					console('Connection attempt to '.$host->getIP().':'.$host->getPort().' timed out');
 					$host->close();
 				}
 				continue;
@@ -333,7 +336,7 @@ class HostHandler extends SectionHandler
 			// Does the connection appear to be dead? (LFS host not sending anything for more than HOST_TIMEOUT seconds
 			if ($host->getLastReadTime() < time () - HOST_TIMEOUT)
 			{
-				console('Host '.$host->ip.':'.$host->port.' timed out');
+				console('Host '.$host->getIP().':'.$host->getPort().' timed out');
 				$host->close();
 			}
 			
@@ -490,7 +493,7 @@ class InsimConnection
 	// connection & host info
 	private $id				= '';			# the section id from the ini file
 	private $ip				= '';			# ip or hostname to connect to
-	private $connectIp		= '';			# the actual ip used to connect
+	private $connectIP		= '';			# the actual ip used to connect
 	private $port			= 0;			# the port
 	private $udpPort		= 0;			# the secundary udp port to listen on for NLP/MCI packets, in case the main port is tcp
 	private $adminPass		= '';			# adminpass for both relay and direct usage
@@ -570,6 +573,21 @@ class InsimConnection
 		return $this->lastWriteTime;
 	}
 	
+	public function &getConnectIP()
+	{
+		return $this->connectIP;
+	}
+	
+	public function &getIP()
+	{
+		return $this->ip;
+	}
+	
+	public function &getPort()
+	{
+		return $this->port;
+	}
+	
 	public function &getUdpPort()
 	{
 		return $this->udpPort;
@@ -596,8 +614,8 @@ class InsimConnection
 		$this->close(FALSE, TRUE);
 		
 		// Figure out the proper IP address. We do this every time we connect in case of dynamic IP addresses.
-		$this->connectIp = getIP($this->ip);
-		if (!$this->connectIp)
+		$this->connectIP = getIP($this->ip);
+		if (!$this->connectIP)
 		{
 			console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port);
 			$this->socket		= NULL;
@@ -617,10 +635,10 @@ class InsimConnection
 	public function connectUDP()
 	{
 		// Create UDP socket
-		$this->socket = @stream_socket_client('udp://'.$this->connectIp.':'.$this->port, $sockErrNo, $sockErrStr);
+		$this->socket = @stream_socket_client('udp://'.$this->connectIP.':'.$this->port, $sockErrNo, $sockErrStr);
 		if ($this->socket === FALSE || $sockErrNo)
 		{
-			console ('Error opening UDP socket for '.$this->connectIp.':'.$this->port.' : '.$sockErrStr);
+			console ('Error opening UDP socket for '.$this->connectIP.':'.$this->port.' : '.$sockErrStr);
 			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
@@ -643,14 +661,14 @@ class InsimConnection
 		$this->close(FALSE, TRUE);
 	
 		// Here we create the socket and initiate the connection. This is done asynchronously.
-		$this->socket = @stream_socket_client('tcp://'.$this->connectIp.':'.$this->port, 
+		$this->socket = @stream_socket_client('tcp://'.$this->connectIP.':'.$this->port, 
 												$sockErrNo, 
 												$sockErrStr, 
 												CONN_TIMEOUT, 
 												STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
 		if ($this->socket === FALSE || $sockErrNo)
 		{
-			console ('Error opening TCP socket for '.$this->connectIp.':'.$this->port.' : '.$sockErrStr);
+			console ('Error opening TCP socket for '.$this->connectIP.':'.$this->port.' : '.$sockErrStr);
 			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
