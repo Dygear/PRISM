@@ -87,15 +87,19 @@ class HostHandler extends SectionHandler
 				// Some value checking - guess we should output some user notices here too if things go wrong.
 				if ($hostName == '')
 					continue;
-				
-				$ic				= new InsimConnection(CONNTYPE_RELAY, SOCKTYPE_TCP);
-				$ic->id			= $hostID;
-				$ic->ip			= $PRISM->config->cvars['relayIP'];
-				$ic->port		= $PRISM->config->cvars['relayPort'];
-				$ic->hostName	= $hostName;
-				$ic->adminPass	= $adminPass;
-				$ic->specPass	= $specPass;
-				$ic->pps		= $PRISM->config->cvars['relayPPS'];
+
+				$icVars = array (
+					'connType'		=> CONNTYPE_RELAY, 
+					'socketType'	=> SOCKTYPE_TCP,
+					'id' 			=> $hostID,
+					'ip'			=> $PRISM->config->cvars['relayIP'],
+					'port'			=> $PRISM->config->cvars['relayPort'],
+					'hostName'		=> $hostName,
+					'adminPass'		=> $adminPass,
+					'specPass'		=> $specPass,
+					'pps'			=> $PRISM->config->cvars['relayPPS'],
+				);				
+				$ic = new InsimConnection($icVars);
 				
 				$this->hosts[$hostID] = $ic;
 			}
@@ -136,24 +140,28 @@ class HostHandler extends SectionHandler
 				}
 				
 				// Create new ic object
-				$ic				= new InsimConnection(CONNTYPE_HOST, $socketType);
-				$ic->id			= $hostID;
-				$ic->ip			= $ip;
-				$ic->port		= $port;
-				$ic->udpPort	= $udpPort;
-				$ic->pps		= $pps;
-				$ic->adminPass	= $adminPass;
+				$icVars = array (
+					'connType'		=> CONNTYPE_HOST, 
+					'socketType'	=> $socketType,
+					'id'			=> $hostID,
+					'ip'			=> $ip,
+					'port'			=> $port,
+					'udpPort'		=> $udpPort,
+					'pps'			=> $pps,
+					'adminPass'		=> $adminPass,
+				);
+				$ic = new InsimConnection($icVars);
 
-				if ($ic->udpPort > 0)
+				if ($ic->getUdpPort() > 0)
 				{
-					if (in_array($ic->udpPort, $udpPortBuf))
+					if (in_array($ic->getUdpPort(), $udpPortBuf))
 					{
 						console('Duplicate udpPort value found! Every host must have its own unique udpPort. Not using additional port for this host.');
-						$ic->udpPort = 0;
+						$ic->setUdpPort(0);
 					}
 					else
 					{
-						$udpPortBuf[] = $ic->udpPort;
+						$udpPortBuf[] = $ic->getUdpPort();
 						if (!$ic->createMCISocket())
 						{
 							console('Host '.$hostID.' will be excluded.');
@@ -171,34 +179,34 @@ class HostHandler extends SectionHandler
 	{
 		foreach ($this->hosts as $hostID => $host)
 		{
-			if ($host->connStatus >= CONN_CONNECTED)
+			if ($host->getConnStatus() >= CONN_CONNECTED)
 			{
-					$sockReads[] = $host->socket;
+					$sockReads[] = $host->getSocket();
 					
 					// If the host is lagged, we must check to see when we can write again
-					if ($host->sendQLen > 0)
-						$sockWrites[] = $host->socket;
+					if ($host->getSendQLen() > 0)
+						$sockWrites[] = $host->getSocket();
 			}
-			else if ($host->connStatus == CONN_CONNECTING)
+			else if ($host->getConnStatus() == CONN_CONNECTING)
 			{
-				$sockWrites[] = $host->socket;
+				$sockWrites[] = $host->getSocket();
 			}
 			else
 			{
 				// Should we try to connect?
-				if ($host->mustConnect > -1 && $host->mustConnect < time())
+				if ($host->getMustConnect() > -1 && $host->getMustConnect() < time())
 				{
 					if ($host->connect()) {
-						$sockReads[] = $this->hosts[$hostID]->socket;
-						if ($host->socketType == SOCKTYPE_TCP)
-							$sockWrites[] = $this->hosts[$hostID]->socket;
+						$sockReads[] = $this->hosts[$hostID]->getSocket();
+						if ($host->getSocketType() == SOCKTYPE_TCP)
+							$sockWrites[] = $this->hosts[$hostID]->getSocket();
 					}
 				}
 			}
 			
 			// Treat secundary socketMCI separately. This socket is always open.
-			if ($host->udpPort > 0 && is_resource($host->socketMCI))
-				$sockReads[] = $host->socketMCI;
+			if ($host->getUdpPort() > 0 && is_resource($host->getSocketMCI()))
+				$sockReads[] = $host->getSocketMCI();
 		}
 	}
 	
@@ -212,14 +220,14 @@ class HostHandler extends SectionHandler
 		foreach($this->hosts as $hostID => $host)
 		{
 			// Finalise a tcp connection?
-			if ($host->connStatus == CONN_CONNECTING && 
-				in_array($host->socket, $sockWrites))
+			if ($host->getConnStatus() == CONN_CONNECTING && 
+				in_array($host->getSocket(), $sockWrites))
 			{
 				$activity++;
 				
 				// Check if remote replied negatively
 				# Error suppressed, because of the underlying CRT (C Run Time) producing an error on Windows.
-				$nr = @stream_select($r = array($host->socket), $w = null, $e = null, 0);
+				$nr = @stream_select($r = array($host->getSocket()), $w = null, $e = null, 0);
 				if ($nr > 0)
 				{
 					// Experimentation showed that if something happened on this socket at this point,
@@ -235,9 +243,9 @@ class HostHandler extends SectionHandler
 			}
 
 			// Recover a lagged host?
-			if ($host->connStatus >= CONN_CONNECTED && 
-				$host->sendQLen > 0 &&
-				in_array($host->socket, $sockWrites))
+			if ($host->getConnStatus() >= CONN_CONNECTED && 
+				$host->getSendQLen() > 0 &&
+				in_array($host->getSocket(), $sockWrites))
 			{
 				$activity++;
 				
@@ -246,7 +254,7 @@ class HostHandler extends SectionHandler
 			}
 
 			// Did the host send us something?
-			if (in_array($host->socket, $sockReads))
+			if (in_array($host->getSocket(), $sockReads))
 			{
 				$activity++;
 				$data = $packet = '';
@@ -261,7 +269,7 @@ class HostHandler extends SectionHandler
 				}
 				else
 				{
-					if ($host->socketType == SOCKTYPE_UDP)
+					if ($host->getSocketType() == SOCKTYPE_UDP)
 					{
 						// Check that this insim packet came from the IP we connected to
 						// UDP packet can be sent straight to packet parser
@@ -286,7 +294,7 @@ class HostHandler extends SectionHandler
 			}
 
 			// Did the host send us something on our separate udp port (if we have that active to begin with)?
-			if ($host->udpPort > 0 && in_array($host->socketMCI, $sockReads))
+			if ($host->getUdpPort() > 0 && in_array($host->getSocketMCI(), $sockReads))
 			{
 				$activity++;
 				
@@ -309,9 +317,9 @@ class HostHandler extends SectionHandler
 		// InSim Connection maintenance
 		foreach($this->hosts as $hostID => $host)
 		{
-			if ($host->connStatus == CONN_NOTCONNECTED)
+			if ($host->getConnStatus() == CONN_NOTCONNECTED)
 				continue;
-			else if ($host->connStatus == CONN_CONNECTING)
+			else if ($host->getConnStatus() == CONN_CONNECTING)
 			{
 				// Check to see if a connection attempt is going to time out.
 				if ($host->connTime < time() - CONN_TIMEOUT)
@@ -323,14 +331,14 @@ class HostHandler extends SectionHandler
 			}
 			
 			// Does the connection appear to be dead? (LFS host not sending anything for more than HOST_TIMEOUT seconds
-			if ($host->lastReadTime < time () - HOST_TIMEOUT)
+			if ($host->getLastReadTime() < time () - HOST_TIMEOUT)
 			{
 				console('Host '.$host->ip.':'.$host->port.' timed out');
 				$host->close();
 			}
 			
 			// Do we need to keep the connection alive with a ping?
-			if ($host->lastWriteTime < time () - KEEPALIVE_TIME)
+			if ($host->getLastWriteTime() < time () - KEEPALIVE_TIME)
 			{
 				$ISP = new IS_TINY();
 				$ISP->SubT = TINY_NONE;
@@ -384,12 +392,12 @@ class HostHandler extends SectionHandler
 		{
 			case ISP_VER :
 				// When receiving ISP_VER we can conclude that we now have a working insim connection.
-				if ($this->hosts[$hostID]->connStatus != CONN_VERIFIED)
+				if ($this->hosts[$hostID]->getConnStatus() != CONN_VERIFIED)
 				{
 					// Because we can receive more than one ISP_VER, we only set this the first time
-					$this->hosts[$hostID]->connStatus	= CONN_VERIFIED;
-					$this->hosts[$hostID]->connTime		= time();
-					$this->hosts[$hostID]->connTries	= 0;
+					$this->hosts[$hostID]->setConnStatus(CONN_VERIFIED);
+					$this->hosts[$hostID]->setConnTime(time());
+					$this->hosts[$hostID]->setConnTries(0);
 					
 					// Send out some info requests
 					$ISP = new IS_TINY();
@@ -454,48 +462,55 @@ class HostHandler extends SectionHandler
 class InsimConnection
 {
 	private $connType;
-	public $socketType;
+	private $socketType;
 	
-	public $socket;
-	public $socketMCI;						# secundary, udp socket to listen on, if udpPort > 0
+	private $socket;
+	private $socketMCI;						# secundary, udp socket to listen on, if udpPort > 0
 											# note that this follows the exact theory of how insim deals with tcp and udp sockets
 											# see InSim.txt in LFS distributions for more info
 	
-	public $connStatus		= CONN_NOTCONNECTED;
-	public $sockErrNo		= 0;
-	public $sockErrStr		= '';
+	private $connStatus		= CONN_NOTCONNECTED;
 	
 	// Counters and timers
-	public $mustConnect		= 0;
-	public $connTries		= 0;
-	public $connTime		= 0;
-	public $lastReadTime	= 0;
-	public $lastWriteTime	= 0;
+	private $mustConnect	= 0;
+	private $connTries		= 0;
+	private $connTime		= 0;
+	private $lastReadTime	= 0;
+	private $lastWriteTime	= 0;
 	
 	// TCP stream buffer
 	private $streamBuf		= '';
 	private $streamBufLen	= 0;
 	
 	// send queue used in emergency cases (if host appears lagged or overflown with packets)
-	public $sendQ			= '';
-	public $sendQLen		= 0;
+	private $sendQ			= '';
+	private $sendQLen		= 0;
 	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
 
 	// connection & host info
-	public $id				= '';			# the section id from the ini file
-	public $ip				= '';			# ip or hostname to connect to
-	public $connectIp		= '';			# the actual ip used to connect
-	public $port			= 0;			# the port
-	public $udpPort			= 0;			# the secundary udp port to listen on for NLP/MCI packets, in case the main port is tcp
-	public $hostName		= '';			# the hostname. Can be populated by user in case of relay.
-	public $adminPass		= '';			# adminpass for both relay and direct usage
-	public $specPass		= '';			# specpass for relay usage
-	public $pps				= 3;		
+	private $id				= '';			# the section id from the ini file
+	private $ip				= '';			# ip or hostname to connect to
+	private $connectIp		= '';			# the actual ip used to connect
+	private $port			= 0;			# the port
+	private $udpPort		= 0;			# the secundary udp port to listen on for NLP/MCI packets, in case the main port is tcp
+	private $adminPass		= '';			# adminpass for both relay and direct usage
+	private $specPass		= '';			# specpass for relay usage
+	private $pps			= 3;		
+	private $hostName		= '';			# the hostname. Can be populated by user in case of relay.
 	
-	public function __construct($connType = CONNTYPE_HOST, $socketType = SOCKTYPE_TCP)
+	public function __construct(array &$icVars)
 	{
-		$this->connType		= ($connType == CONNTYPE_RELAY) ? $connType : CONNTYPE_HOST;
-		$this->socketType	= ($socketType == SOCKTYPE_UDP) ? $socketType : SOCKTYPE_TCP;
+		$this->connType		= ($icVars['connType'] == CONNTYPE_RELAY) ? CONNTYPE_RELAY : CONNTYPE_HOST;
+		$this->socketType	= ($icVars['socketType'] == SOCKTYPE_UDP) ? SOCKTYPE_UDP : SOCKTYPE_TCP;
+		$this->id			= $icVars['id'];
+		$this->ip			= $icVars['ip'];
+		$this->port			= $icVars['port'];
+		$this->pps			= $icVars['pps'];
+		$this->adminPass	= $icVars['adminPass'];
+
+		$this->udpPort		= isset($icVars['udpPort']) ? $icVars['udpPort'] : 0;
+		$this->hostName		= isset($icVars['hostName']) ? $icVars['hostName'] : '';
+		$this->specPass		= isset($icVars['specPass']) ? $icVars['specPass'] : '';
 	}
 	
 	public function __destruct()
@@ -503,6 +518,76 @@ class InsimConnection
 		$this->close(TRUE);
 		if ($this->socketMCI)
 			fclose($this->socketMCI);
+	}
+	
+	public function &getSocket()
+	{
+		return $this->socket;
+	}
+	
+	public function &getSocketMCI()
+	{
+		return $this->socketMCI;
+	}
+	
+	public function &getSocketType()
+	{
+		return $this->socketType;
+	}
+	
+	public function &getConnStatus()
+	{
+		return $this->connStatus;
+	}
+	
+	public function setConnStatus($connStatus)
+	{
+		$this->connStatus = $connStatus;
+	}
+	
+	public function &getMustConnect()
+	{
+		return $this->mustConnect;
+	}
+	
+	public function setConnTries($connTries)
+	{
+		$this->connTries = $connTries;
+	}
+	
+	public function setConnTime($connTime)
+	{
+		$this->connTime = $connTime;
+	}
+	
+	public function &getLastReadTime()
+	{
+		return $this->lastReadTime;
+	}
+	
+	public function &getLastWriteTime()
+	{
+		return $this->lastWriteTime;
+	}
+	
+	public function &getUdpPort()
+	{
+		return $this->udpPort;
+	}
+	
+	public function setUdpPort($udpPort)
+	{
+		// Set the new value
+		$this->udpPort = $udpPort;
+
+		// Should we reinit the udp listening socket?
+		$this->closeMCISocket();
+		$this->createMCISocket();
+	}
+	
+	public function &getSendQLen()
+	{
+		return $this->sendQLen;
 	}
 	
 	public function connect()
@@ -514,7 +599,7 @@ class InsimConnection
 		$this->connectIp = getIP($this->ip);
 		if (!$this->connectIp)
 		{
-			console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port.' : '.$this->sockErrStr);
+			console('Cannot connect to host, Invalid IP : '.$this->ip.':'.$this->port);
 			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
@@ -532,10 +617,10 @@ class InsimConnection
 	public function connectUDP()
 	{
 		// Create UDP socket
-		$this->socket = @stream_socket_client('udp://'.$this->connectIp.':'.$this->port, $this->sockErrNo, $this->sockErrStr);
-		if ($this->socket === FALSE || $this->sockErrNo)
+		$this->socket = @stream_socket_client('udp://'.$this->connectIp.':'.$this->port, $sockErrNo, $sockErrStr);
+		if ($this->socket === FALSE || $sockErrNo)
 		{
-			console ('Error opening UDP socket for '.$this->connectIp.':'.$this->port.' : '.$this->sockErrStr);
+			console ('Error opening UDP socket for '.$this->connectIp.':'.$this->port.' : '.$sockErrStr);
 			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
@@ -559,13 +644,13 @@ class InsimConnection
 	
 		// Here we create the socket and initiate the connection. This is done asynchronously.
 		$this->socket = @stream_socket_client('tcp://'.$this->connectIp.':'.$this->port, 
-												$this->sockErrNo, 
-												$this->sockErrStr, 
+												$sockErrNo, 
+												$sockErrStr, 
 												CONN_TIMEOUT, 
 												STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
-		if ($this->socket === FALSE || $this->sockErrNo)
+		if ($this->socket === FALSE || $sockErrNo)
 		{
-			console ('Error opening TCP socket for '.$this->connectIp.':'.$this->port.' : '.$this->sockErrStr);
+			console ('Error opening TCP socket for '.$this->connectIp.':'.$this->port.' : '.$sockErrStr);
 			$this->socket		= NULL;
 			$this->connStatus	= CONN_NOTCONNECTED;
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
@@ -623,10 +708,12 @@ class InsimConnection
 	
 	public function createMCISocket()
 	{
+		$this->closeMCISocket();
+		
 		$this->socketMCI = @stream_socket_server('udp://0.0.0.0:'.$this->udpPort, $errNo, $errStr, STREAM_SERVER_BIND);
 		if (!$this->socketMCI || $errNo > 0)
 		{
-			console ('Error opening additional UDP socket to listen on : '.$this->sockErrStr);
+			console ('Error opening additional UDP socket to listen on : '.$errStr);
 			$this->socketMCI	= NULL;
 			$this->udpPort		= 0;
 			return FALSE;
@@ -635,6 +722,13 @@ class InsimConnection
 		console('Listening for NLP/MCI on secundary UDP port '.$this->udpPort);
 		
 		return TRUE;
+	}
+	
+	private function closeMCISocket()
+	{
+		if (is_resource($this->socketMCI))
+			fclose($this->socketMCI);
+		$this->socketMCI = NULL;
 	}
 	
 	// $permanentClose	- set to TRUE to close this connection once and for all.
@@ -717,7 +811,6 @@ class InsimConnection
 		
 				if (!$bytes || $bytes != strlen($data))
 				{
-					console('Writing '.strlen($data).' bytes to socket '.$this->ip.':'.$this->port.' failed (wrote '.$bytes.' bytes). Error : '.(($this->connStatus == CONN_CONNECTING) ? 'Socket connection not completed.' : $this->sockErrStr).' (connStatus : '.$this->connStatus.')');
 					$this->addPacketToSendQ (substr($data, $bytes));
 				}
 			}
@@ -825,7 +918,6 @@ class InsimConnection
 		
 		return $packet;
 	}
-	
 }
 
 ?>

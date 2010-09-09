@@ -62,13 +62,13 @@ class HttpHandler extends SectionHandler
 
 		for ($k=0; $k<$this->httpNumClients; $k++)
 		{
-			if (is_resource($this->httpClients[$k]->socket))
+			if (is_resource($this->httpClients[$k]->getSocket()))
 			{
-				$sockReads[] = $this->httpClients[$k]->socket;
+				$sockReads[] = $this->httpClients[$k]->getSocket();
 				
 				// If write buffer was full, we must check to see when we can write again
-				if ($this->httpClients[$k]->sendQLen > 0)
-					$sockWrites[] = $this->httpClients[$k]->socket;
+				if ($this->httpClients[$k]->getSendQLen() > 0 || $this->httpClients[$k]->getSendFilePntr() > -1)
+					$sockWrites[] = $this->httpClients[$k]->getSocket();
 			}
 		}
 	}
@@ -101,17 +101,21 @@ class HttpHandler extends SectionHandler
 		// httpClients input
 		for ($k=0; $k<$this->httpNumClients; $k++) {
 			// Recover from a full write buffer?
-			if ($this->httpClients[$k]->sendQLen > 0 &&
-				in_array($this->httpClients[$k]->socket, $sockWrites))
+			if (($this->httpClients[$k]->getSendQLen() > 0  || 
+				 $this->httpClients[$k]->getSendFilePntr() > -1) &&
+				in_array($this->httpClients[$k]->getSocket(), $sockWrites))
 			{
 				$activity++;
 				
 				// Flush the sendQ (bit by bit, not all at once - that could block the whole app)
-				$this->httpClients[$k]->flushSendQ();
+				if ($this->httpClients[$k]->getSendQLen() > 0)
+					$this->httpClients[$k]->flushSendQ();
+				else
+					$this->httpClients[$k]->writeFile();
 			}
 			
 			// Did we receive something from a httpClient?
-			if (!in_array($this->httpClients[$k]->socket, $sockReads))
+			if (!in_array($this->httpClients[$k]->getSocket(), $sockReads))
 				continue;
 
 			$activity++;
@@ -121,7 +125,7 @@ class HttpHandler extends SectionHandler
 			// Did the client hang up?
 			if ($data == '')
 			{
-				console('Closed httpClient (client initiated) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+				console('Closed httpClient (client initiated) '.$this->httpClients[$k]->getRemoteIP().':'.$this->httpClients[$k]->getRemotePort());
 				array_splice ($this->httpClients, $k, 1);
 				$k--;
 				$this->httpNumClients--;
@@ -133,7 +137,7 @@ class HttpHandler extends SectionHandler
 			if (!$this->httpClients[$k]->handleInput($data, $errNo))
 			{
 				// Something went wrong - we can hang up now
-				console('Closed httpClient ('.$errNo.' - '.$errStr.') '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+				console('Closed httpClient ('.$errNo.' - '.HttpResponse::$responseCodes[$errNo].') '.$this->httpClients[$k]->getRemoteIP().':'.$this->httpClients[$k]->getRemotePort());
 				array_splice ($this->httpClients, $k, 1);
 				$k--;
 				$this->httpNumClients--;
@@ -148,9 +152,9 @@ class HttpHandler extends SectionHandler
 	{
 		for ($k=0; $k<$this->httpNumClients; $k++)
 		{
-			if ($this->httpClients[$k]->lastActivity < time() - HTTP_KEEP_ALIVE)
+			if ($this->httpClients[$k]->getLastActivity() < time() - HTTP_KEEP_ALIVE)
 			{
-				console('Closed httpClient (keep alive) '.$this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port);
+				console('Closed httpClient (keep alive) '.$this->httpClients[$k]->getRemoteIP().':'.$this->httpClients[$k]->getRemotePort());
 				array_splice ($this->httpClients, $k, 1);
 				$k--;
 				$this->httpNumClients--;
@@ -161,27 +165,27 @@ class HttpHandler extends SectionHandler
 
 class HttpClient
 {
-	public $socket			= null;
-	public $ip				= '';
-	public $port			= 0;
-	public $localIP			= '';
-	public $localPort		= 0;
+	private $socket			= null;
+	private $ip				= '';
+	private $port			= 0;
+	private $localIP		= '';
+	private $localPort		= 0;
 	
-	public $lastActivity	= 0;
+	private $lastActivity	= 0;
 	
 	// send queue used for backlog, in case we can't send a reply in one go
-	public $sendQ			= '';
-	public $sendQLen		= 0;
+	private $sendQ			= '';
+	private $sendQLen		= 0;
 	
-	public $sendFile		= null;				// contains handle to file we're sending
-	public $sendFilePntr	= 0;				// Points to where we are in the file
-	public $sendFileSize	= 0;				// Points to where we are in the file
+	private $sendFile		= null;				// contains handle to file we're sending
+	private $sendFilePntr	= -1;				// Points to where we are in the file
+	private $sendFileSize	= 0;				// Points to where we are in the file
 
 	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
 
 	private $httpRequest	= null;
 	
-	public function __construct($sock, $ip, $port)
+	public function __construct(&$sock, $ip, $port)
 	{
 		$this->socket		= $sock;
 		$this->ip			= $ip;
@@ -204,6 +208,26 @@ class HttpClient
 			$this->writeFileReset();
 		if ($this->sendQLen > 0)
 			$this->sendQReset();
+	}
+	
+	public function &getSocket()
+	{
+		return $this->socket;
+	}
+	
+	public function &getRemoteIP()
+	{
+		return $this->ip;
+	}
+	
+	public function &getRemotePort()
+	{
+		return $this->port;
+	}
+	
+	public function &getLastActivity()
+	{
+		return $this->lastActivity;
 	}
 	
 	public function write($data, $sendQPacket = FALSE)
@@ -244,6 +268,11 @@ class HttpClient
 		}
 	
 		return $bytes;
+	}
+	
+	public function &getSendQLen()
+	{
+		return $this->sendQLen;
 	}
 	
 	public function addPacketToSendQ($data)
@@ -292,6 +321,11 @@ class HttpClient
 		$this->lastActivity		= time();
 	}
 	
+	public function &getSendFilePntr()
+	{
+		return $this->sendFilePntr;
+	}
+	
 	public function writeFile($fileName = '')
 	{
 		if ($fileName != '' && $this->sendFile == null)
@@ -301,6 +335,7 @@ class HttpClient
 				return false;
 			$this->sendFilePntr = 0;
 			$this->sendFileSize = filesize($fileName);
+			$this->sendWindow	+= STREAM_READ_BYTES;
 		}
 		
 		$bytes = @fwrite($this->socket, fread($this->sendFile, $this->sendWindow));
@@ -318,7 +353,7 @@ class HttpClient
 				$this->sendWindow = STREAM_READ_BYTES;
 		}
 		
-		console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
+		//console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
 		// Done?
 		if ($this->sendFilePntr >= $this->sendFileSize)
 			$this->writeFileReset();
@@ -329,7 +364,7 @@ class HttpClient
 		@fclose($this->sendFile);
 		$this->sendFile = null;
 		$this->sendFileSize = 0;
-		$this->sendFilePntr = 0;
+		$this->sendFilePntr = -1;
 	}
 
 	private function createErrorPage($errNo, $errStr = '')
@@ -372,17 +407,20 @@ class HttpClient
 		if (!$this->httpRequest->handleInput($data))
 		{
 			// An error was encountered while receiving the requst.
-			// Send reply and return false to close this connection.
-			$r = new HttpResponse('1.1', $this->httpRequest->errNo);
-			$r->addBody($this->createErrorPage($this->httpRequest->errNo, $this->httpRequest->errStr));
-			$this->write($r->getHeaders());
-			$this->write($r->getBody());
+			// Send reply and return false to close this connection (unless 444, a special 'direct reject' code).
+			if ($this->httpRequest->errNo != 444)
+			{
+				$r = new HttpResponse('1.1', $this->httpRequest->errNo);
+				$r->addBody($this->createErrorPage($this->httpRequest->errNo, $this->httpRequest->errStr));
+				$this->write($r->getHeaders());
+				$this->write($r->getBody());
+			}
 			$errNo = $this->httpRequest->errNo;
 			$this->httpRequest = null;
 			return false;
 		}
 		
-		// If we have no headers, or we are busy with receiving or sending.
+		// If we have no headers, or we are busy with receiving.
 		// Just return and wait for more data.
 		if (!$this->httpRequest->hasHeaders || 			// We're still receiving headers
 			$this->httpRequest->isReceiving) 			// We're still receiving the body of a request
@@ -414,7 +452,7 @@ class HttpClient
 		
 		if (file_exists(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
 		{
-			// Should we serve a file or pass the request to PHPInSimMod for page generation?
+			// Should we serve a file or pass the request to PHPParser for page generation?
 			if ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/' || 
 				preg_match('/^.*\.php$/', $this->httpRequest->SERVER['SCRIPT_NAME']))
 			{
@@ -550,7 +588,7 @@ class HttpClient
 
 class HttpRequest
 {
-	public $rawInput		= '';
+	private $rawInput		= '';
 	
 	public $isReceiving		= false;
 	public $hasRequestUri	= false;
@@ -832,6 +870,7 @@ class HttpResponse
 			413 => 'Request Entity Too Large',
 			414 => 'Request-URI Too Long',
 			415 => 'Unsupported Media Type',
+			444 => 'Request Rejected',
 		);
 
 	private $responseCode	= 200;
@@ -921,7 +960,7 @@ class HttpResponse
 		$this->bodyLen += strlen($data);
 	}
 	
-	public function getBody()
+	public function &getBody()
 	{
 		return $this->body;
 	}
