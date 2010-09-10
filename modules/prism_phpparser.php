@@ -6,7 +6,15 @@ class PHPParser
 	{
 		$html = '';
 		@include($file);
-		return $html;
+
+		// Use compression?		
+		if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) $encoding = 'x-gzip';
+		else if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) $encoding = 'gzip';
+		
+		if ($encoding) {
+		    $r->addHeader('Content-Encoding: '.$encoding);
+		    return gzencode ($html, 1);
+		} else return $html;
 	}
 }
 
