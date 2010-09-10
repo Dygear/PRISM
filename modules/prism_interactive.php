@@ -220,11 +220,46 @@ class Interactive
 	
 	public function queryUsers(array &$vars)
 	{
+		global $PRISM;
+		
 		echo '***Interactive startup***'.PHP_EOL;
 		echo 'You now have the chance to create PRISM user accounts.'.PHP_EOL;
 		echo 'Afterwards your user settings will be stored in ./config/users.ini for future use.'.PHP_EOL;
 
+		do
+		{
+			echo PHP_EOL;
+			$tmp = array();
+			
+			$tmp['username']			= self::query('Give the (LFS) username for the account');
+			do
+			{
+				$tmp['password']		= self::query('Give a password for the account');
+				$tmp['passwordVeri']	= self::query('Repeat the same password to verify');
+				if ($tmp['password'] != $tmp['passwordVeri'])
+					echo 'Passwords did not match. Please try again.'.PHP_EOL;
+				else if (strlen($tmp['password']) < 4)
+					echo 'The password is too short. Please enter a longer one.'.PHP_EOL;
+				else if (strlen($tmp['password']) >= 40)
+					echo 'The password is too long. Please enter a shorter one.'.PHP_EOL;
+				else
+					break;
+			} while(true);
+			$tmp['connection']			= self::query('Give the connection name on which the user may be active. Leave blank for all connections.', array(), true);
+			$tmp['accessFlags']			= 'abcdefghijklmnopqrstuvwxyz';
+			
+			$vars[$tmp['username']] 	= array(
+				'password'		=> sha1($tmp['password'].$PRISM->config->cvars['secToken']),
+				'connection'	=> $tmp['connection'],
+				'accessFlags'	=> $tmp['accessFlags'],
+			);
+			
+			if (self::query(PHP_EOL.'Would you like to add another user?', array('yes', 'no')) == 'no')
+				break;
+		} while(true);
+		
 		// LOCAL ROOT accounts
+		
 		
 		// GLOBAL ROOT accounts
 		

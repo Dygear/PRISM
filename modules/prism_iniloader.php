@@ -44,7 +44,7 @@ class IniLoader
 	}
 	
 
-	protected function createIniFile($iniFile, $desc, array $options)
+	protected function createIniFile($iniFile, $desc, array $options, $extraInfo = '')
 	{
 		// Check if config folder exists
 		if (!file_exists(ROOTPATH . '/configs/') && 
@@ -60,6 +60,9 @@ class IniLoader
 		// Generate file contents
 		$text = '; '.$desc.' (automatically genereated)'.PHP_EOL;
 		$text .= '; File location: ./PHPInSimMod/configs/'.$iniFile.PHP_EOL;
+		if ($extraInfo)
+			$text .= $extraInfo;
+		
 		$main = '';
 		foreach ($options as $section => $data)
 		{
@@ -79,10 +82,39 @@ class IniLoader
 		$text .= $main.PHP_EOL;
 		
 		// Write contents
-		if (!file_put_contents(ROOTPATH . '/configs/'.$iniFile, $text))
+		if (!file_put_contents(ROOTPATH.'/configs/'.$iniFile, $text))
 			return FALSE;
 		
 		return TRUE;
+	}
+	
+	protected function rewriteLine($iniFile, $section, $key, $value)
+	{
+		// Check if file doesn't already exist
+		if (!file_exists(ROOTPATH.'/configs/'.$iniFile))
+			return FALSE;
+		
+		// Read the contents of the file into an array of lines
+		$lines = file(ROOTPATH.'/configs/'.$iniFile, FILE_IGNORE_NEW_LINES);
+		
+		// Loop through the lines to detect Section and then Key
+		$foundSection = false;
+		foreach ($lines as $num => &$line)
+		{
+			if ($line == '['.$section.']')
+			{
+				$foundSection = true;
+				continue;
+			}
+			
+			if ($foundSection && preg_match('/^'.$key.' =.*$/', $line))
+			{
+				$line = $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"');
+				break;
+			}
+		}
+		
+		file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $lines));
 	}
 }
 

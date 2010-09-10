@@ -71,6 +71,14 @@ class admin extends Plugins
 
 	public function loadAdmins()
 	{
+		// Returning here, while working on userhandler and users.ini generation
+		// otherwise this overwrites the users.ini contents in a wrong way.
+		return 0;
+		
+		//
+		// I HAVE MOVED THIS TO UserHandler
+		//
+
 		$usersFilePath = PHPInSimMod::ROOTPATH.'/configs/users.ini';
 
 		# If theres no file, we have a problem.
@@ -152,6 +160,10 @@ class admin extends Plugins
 
 	public function isPasswordCorrect($username, $password)
 	{
+		//
+		// I HAVE MOVED THIS TO UserHandler
+		//
+		
 		# Let's make sure that the admin is set in the first place.
 		if (!isset($this->adminPasswords[$username]))
 			return FALSE;

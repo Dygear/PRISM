@@ -46,6 +46,41 @@ function get_dir_structure($path, $recursive = TRUE, $ext = NULL)
 	return $return;
 }
 
+function flagsToInteger($flagsString = '')
+{
+	# We don't have anything to parse.
+	if ($flagsString == '')
+		return FALSE;
+
+	$flagsBitwise = 0;
+	for ($chrPointer = 0, $strLen = strlen($flagsString); $chrPointer < $strLen; ++$chrPointer)
+	{
+		# Convert this charater to it's ASCII int value.
+		$char = ord($flagsString{$chrPointer});
+
+		# We only want a (ASCII = 97) through z (ASCII 122), nothing else.
+		if ($char < 97 || $char > 122)
+			continue;
+
+		# Check we have already set that flag, if so skip it!
+		if ($flagsBitwise & (1 << ($char - 97)))
+			continue;
+
+		# Add the value to our $flagBitwise intager.
+		$flagsBitwise += (1 << ($char - 97));
+	}
+	return $flagsBitwise;
+}
+
+function flagsToString($flagsString = 0)
+{
+	$string = '';
+	if ($flagsString == 0)
+		return $string;
+	
+	return $string;
+}
+
 function createRandomString($len)
 {
 	$out = '';

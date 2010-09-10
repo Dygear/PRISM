@@ -16,7 +16,7 @@ class HttpHandler extends SectionHandler
 	private $httpClients	= array();
 	private $httpNumClients	= 0;
 
-	public $httpVars		= array();
+	private $httpVars		= array();
 	public $cache			= null;
 
 	public function __destruct()
@@ -43,6 +43,8 @@ class HttpHandler extends SectionHandler
 	public function initialise()
 	{
 		global $PRISM;
+		
+		$this->httpVars = array();
 		
 		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
 		{
@@ -210,7 +212,7 @@ class HttpClient
 
 	private $httpRequest	= null;
 	
-	public function __construct(HttpHandler $http, &$sock, $ip, $port)
+	public function __construct(HttpHandler &$http, &$sock, $ip, $port)
 	{
 		$this->http			= $http;
 		$this->socket		= $sock;

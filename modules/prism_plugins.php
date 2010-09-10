@@ -42,6 +42,8 @@ class PluginHandler extends SectionHandler
 	{
 		global $PRISM;
 		
+		$this->pluginvars = array();
+		
 		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
 		{
 			foreach ($this->pluginvars as $pluginID => $v)
@@ -193,6 +195,11 @@ abstract class Plugins
 	/** Parse Methods */
 	public function readFlags($flagsString = '')
 	{
+		//
+		// I HAVE MOVED THIS TO prism_functions.php
+		// where it is named flagsToInteger() (and there is a prototype for its counterpart, flagsToString()).
+		//
+
 		# We don't have anything to parse.
 		if ($flagsString == '')
 			return FALSE;
