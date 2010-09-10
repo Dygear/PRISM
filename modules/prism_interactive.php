@@ -257,14 +257,6 @@ class Interactive
 			if (self::query(PHP_EOL.'Would you like to add another user?', array('yes', 'no')) == 'no')
 				break;
 		} while(true);
-		
-		// LOCAL ROOT accounts
-		
-		
-		// GLOBAL ROOT accounts
-		
-		// GLOBAL ADMIN accounts
-		
 	}
 
 	/*	$question	- the string that will be presented to the user.

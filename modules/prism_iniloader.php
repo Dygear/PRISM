@@ -60,8 +60,7 @@ class IniLoader
 		// Generate file contents
 		$text = '; '.$desc.' (automatically genereated)'.PHP_EOL;
 		$text .= '; File location: ./PHPInSimMod/configs/'.$iniFile.PHP_EOL;
-		if ($extraInfo)
-			$text .= $extraInfo;
+		$text .= $extraInfo;
 		
 		$main = '';
 		foreach ($options as $section => $data)
