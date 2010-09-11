@@ -230,7 +230,9 @@ class HostHandler extends SectionHandler
 				
 				// Check if remote replied negatively
 				# Error suppressed, because of the underlying CRT (C Run Time) producing an error on Windows.
-				$nr = @stream_select($r = array($host->getSocket()), $w = null, $e = null, 0);
+				$r = array($host->getSocket());
+				$w = $e = array();
+				$nr = @stream_select($r, $w, $e, 0);
 				if ($nr > 0)
 				{
 					// Experimentation showed that if something happened on this socket at this point,
@@ -389,7 +391,7 @@ class HostHandler extends SectionHandler
 	// inspectPacket is used to act upon certain packets like error messages
 	// We need these packets for proper basic PRISM connection functionality
 	//
-	private function inspectPacket(&$packet, &$hostID)
+	private function inspectPacket(struct &$packet, &$hostID)
 	{
 		switch($packet->Type)
 		{
@@ -806,7 +808,7 @@ class InsimConnection
 		return @fwrite ($this->socket, $data);
 	}
 	
-	public function writeTCP(&$data, $sendQPacket = FALSE)
+	public function writeTCP($data, $sendQPacket = FALSE)
 	{
 		$bytes = 0;
 		

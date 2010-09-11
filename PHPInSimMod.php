@@ -192,7 +192,7 @@ class PHPInSimMod
 		while ($this->isRunning === TRUE)
 		{
 			// Setup our listen arrays
-			$sockReads = $sockWrites = array();
+			$sockReads = $sockWrites = $socketExcept = array();
 			
 			if (!$this->isWindows)
 				$sockReads[] = STDIN;
@@ -207,8 +207,8 @@ class PHPInSimMod
 			$this->getSelectTimeOut();
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
-			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
-				
+			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept, $this->sleep, $this->uSleep);
+			
 			// Keep looping until you've handled all activities on the sockets.
 			while($numReady > 0)
 			{

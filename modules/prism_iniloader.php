@@ -106,9 +106,14 @@ class IniLoader
 				continue;
 			}
 			
-			if ($foundSection && preg_match('/^'.$key.' =.*$/', $line))
+			if ($foundSection && preg_match('/^'.$key.'\s*=\s*.*$/', $line))
 			{
-				$line = $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"');
+				// Check if there's a comment on this line (after the key = value)
+				$comment = array();
+				preg_match('/^[a-zA-Z0-9]+\s*=\s*"?.+"?\s(;.*)$/', $line, $comment);
+				
+				// Rewrite this line
+				$line = $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"').((isset($comment[1])) ? "\t".$comment[1] : '');
 				break;
 			}
 		}

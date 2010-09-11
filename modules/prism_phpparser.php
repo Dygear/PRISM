@@ -9,8 +9,13 @@ class PHPParser
 		
 		// 'run' the php script
 		$html = '';
-		@include(ROOTPATH.'/www-docs'.$file);
-
+		$phpFile = preg_replace(array('/<\?(php)?/', '/\?>/'), '', file_get_contents(ROOTPATH.'/www-docs'.$file));
+		if (eval('return true;'.$phpFile))
+			eval($phpFile);
+		else
+			$html .= 'Parse error in '.$file;
+		//@include(ROOTPATH.'/www-docs'.$file);
+		
 		// Restore the working dir
 		chdir(ROOTPATH);
 
