@@ -78,12 +78,18 @@ class PHPInSimMod
 		$shell = getenv('SHELL');
 		if (!$shell || $shell[0] != '/')
 			$this->isWindows = TRUE;
-
+		
 		$this->config	= new ConfigHandler();
 		$this->hosts	= new HostHandler();
 		$this->plugins	= new PluginHandler();
 		$this->http		= new HttpHandler();
 		$this->users	= new UserHandler();
+
+		if ($this->config->cvars['phpLocation'] != '')
+			define('PHP_LOCATION', $this->config->cvars['phpLocation']);
+		else
+			define('PHP_LOCATION', findPHPLocation($this->isWindows));
+		console('THE LOCATION OF PHP : '.PHP_LOCATION);
 	}
 
 	// Pseudo Magic Functions

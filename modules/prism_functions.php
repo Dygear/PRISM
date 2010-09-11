@@ -46,6 +46,63 @@ function get_dir_structure($path, $recursive = TRUE, $ext = NULL)
 	return $return;
 }
 
+function findPHPLocation($windows = false)
+{
+	$phpLocation = '';
+	
+	if ($windows)
+	{
+		console('Trying to find the location of php.exe');
+
+		// Search in current dir first.
+		$exp = explode("\r\n", shell_exec('dir /s /b php.exe'));
+		if (preg_match('/^.*\\\php\.exe$/', $exp[0]))
+		{
+			$phpLocation = $exp[0];
+		}
+		else
+		{
+			// Do a recursive search on this whole drive.
+			chdir('/');
+			$exp = explode("\r\n", shell_exec('dir /s /b php.exe'));
+			if (preg_match('/^.*\\\php\.exe$/', $exp[0]))
+				$phpLocation = $exp[0];
+			chdir(ROOTPATH);
+		}
+	}
+	else
+	{
+		$exp = explode(' ', shell_exec('whereis php'));
+		$count = count($exp);
+		if ($count == 1)				// Some *nix's output is only the path
+			$phpLocation = $exp[0];
+		else if ($count > 1)			// FreeBSD for example has more info on the line, like :
+			$phpLocation = $exp[1];		// php: /user/local/bin/php /usr/local/man/man1/php.1.gz
+	}
+	
+	return $phpLocation;
+}
+
+function validatePHPFile($file)
+{
+	if (PHP_LOCATION)
+	{
+		// Check with php -l. Bullet proof.
+		$status = 0;
+		$output = array();
+		exec(PHP_LOCATION.' -l '.$file, $output, $status);
+		return ($status > 0) ? array(false, $output) : array(true, array());
+	}
+	else
+	{
+		// Check via eval() - not totally cool, but it's better than nothing. At least it won't bork Prism.
+		if (@eval('return true;'.preg_replace(array('/<\?(php)?/', '/\?>/'), '', file_get_contents($file))))
+			return array(true, array());
+		else
+			return array(false, array('Errors parsing '.$file));
+	}
+}
+
 function flagsToInteger($flagsString = '')
 {
 	# We don't have anything to parse.

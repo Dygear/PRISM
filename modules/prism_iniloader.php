@@ -89,7 +89,7 @@ class IniLoader
 	
 	protected function rewriteLine($iniFile, $section, $key, $value)
 	{
-		// Check if file doesn't already exist
+		// Check if file exists
 		if (!file_exists(ROOTPATH.'/configs/'.$iniFile))
 			return FALSE;
 		
@@ -110,15 +110,15 @@ class IniLoader
 			{
 				// Check if there's a comment on this line (after the key = value)
 				$comment = array();
-				preg_match('/^[a-zA-Z0-9]+\s*=\s*"?.+"?\s(;.*)$/', $line, $comment);
+				preg_match('/^[a-zA-Z0-9]+\s*=\s*"?.+"?\s*(;.*)$/U', $line, $comment);
 				
 				// Rewrite this line
 				$line = $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"').((isset($comment[1])) ? "\t".$comment[1] : '');
+
+				file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $lines));
 				break;
 			}
 		}
-		
-		file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $lines));
 	}
 }
 
