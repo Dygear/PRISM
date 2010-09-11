@@ -71,4 +71,6 @@ for ($x=0; $x<100; $x++)
 $html .= '</body>';
 $html .= '</html>';
 
+echo $html;
+
 ?>

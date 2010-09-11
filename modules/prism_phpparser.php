@@ -13,14 +13,14 @@ class PHPParser
 		$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$file);
 		clearstatcache();
 
-		// 'run' the php script
-		$html = '';
-
-		// From cache?
+		// Run script from cache?
 		if (isset(self::$scriptCache[$scriptnameHash]) &&
 			self::$scriptCache[$scriptnameHash][0] == $scriptMTime)
 		{
+			ob_start();
 			eval(self::$scriptCache[$scriptnameHash][1]);
+			$html = ob_get_contents();
+			ob_end_clean();
 		}
 		else
 		{
@@ -28,8 +28,12 @@ class PHPParser
 			$parseResult = validatePHPFile(ROOTPATH.'/www-docs'.$file);
 			if ($parseResult[0])
 			{
+				// Run the script from disk
 				$phpScript = preg_replace(array('/<\?(php)?/', '/\?>/'), '', file_get_contents(ROOTPATH.'/www-docs'.$file));
+				ob_start();
 				eval($phpScript);
+				$html = ob_get_contents();
+				ob_end_clean();
 
 				// Cache the php file
 				self::$scriptCache[$scriptnameHash] = array($scriptMTime, $phpScript);
@@ -40,16 +44,13 @@ class PHPParser
 				$html = '<html>'.$eol;
 				$html .= '<head><title>Error parsing page</title></head>'.$eol;
 				$html .= '<body bgcolor="white">'.$eol;
-				$html .= '<center><h3>'.implode('<br />\r\n', $parseResult[1]).'</h3></center>'.$eol;
+				$html .= '<center><h4>'.implode("<br />\r\n", $parseResult[1]).'</h4></center>'.$eol;
 				$html .= '<hr><center>PRISM v'.PHPInSimMod::VERSION.'</center>'.$eol;
 				$html .= '</body>'.$eol;
 				$html .= '</html>'.$eol;
 				unset(self::$scriptCache[$scriptnameHash]);
 			}
 		}
-//		@include(ROOTPATH.'/www-docs'.$file);
-
-//var_dump(self::$scriptCache[$scriptnameHash]);
 
 		// Restore the working dir
 		chdir(ROOTPATH);

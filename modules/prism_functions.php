@@ -87,20 +87,22 @@ function validatePHPFile($file)
 {
 	if (PHP_LOCATION)
 	{
-		// Check with php -l. Bullet proof.
+		// Check with php -l.
 		$status = 0;
 		$output = array();
+//		exec(PHP_LOCATION.' -l -d display_errors=true '.$file, $output, $status);
 		exec(PHP_LOCATION.' -l '.$file, $output, $status);
-		return ($status > 0) ? array(false, $output) : array(true, array());
+		if ($status > 0)
+			return array(false, $output);
 	}
 	else
 	{
-		// Check via eval() - not totally cool, but it's better than nothing. At least it won't bork Prism.
-		if (@eval('return true;'.preg_replace(array('/<\?(php)?/', '/\?>/'), '', file_get_contents($file))))
-			return array(true, array());
-		else
+		// Check with eval().
+		if (!@eval('return true;'.preg_replace(array('/<\?(php)?/', '/\?>/'), '', file_get_contents($file))))
 			return array(false, array('Errors parsing '.$file));
 	}
+
+	return array(true, array());
 }
 
 function flagsToInteger($flagsString = '')
