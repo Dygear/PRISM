@@ -4,10 +4,17 @@ class PHPParser
 {
 	static function parseFile(HttpResponse &$r, $file, array $_SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
 	{
+		// Change working dir to www-docs
+		chdir(ROOTPATH.'/www-docs');
+		
+		// 'run' the php script
 		$html = '';
-		@include($file);
+		@include(ROOTPATH.'/www-docs'.$file);
 
-		// Use compression?		
+		// Restore the working dir
+		chdir(ROOTPATH);
+
+		// Use compression?
 		if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) $encoding = 'x-gzip';
 		else if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) $encoding = 'gzip';
 		

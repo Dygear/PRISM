@@ -3,20 +3,22 @@
 $r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $_SERVER['SERVER_NAME']);
 $r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $_SERVER['SERVER_NAME']);
 
-$html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
-$html .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">';
-$html .= '<head>';
-$html .= '<title>Prism http server test page</title>';
-$html .= '</head>';
-$html .= '<body>';
+$html = <<<HTMLBLOCK
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+<title>Prism http server test page</title>
+</head>
+<body>
+HTMLBLOCK;
 
-$html .= '<img src="images/test.gif" border="0" alt="" style="float: right;" />';
+$html .= '<a href="/"><img src="images/test.gif" border="0" alt="" style="float: right;" /></a>';
 
 if (count($_COOKIE) > 0)
 {
 	$html .= 'The following COOKIE values have been found :<br />';
 	foreach ($_COOKIE as $k => $v)
-		$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+		$html .= htmlspecialchars($k.' => '.$v).'<br />';
 	$html .= '<br />';
 }
 
@@ -24,7 +26,7 @@ if (count($_GET) > 0)
 {
 	$html .= 'You submitted the following GET values :<br />';
 	foreach ($_GET as $k => $v)
-		$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+		$html .= htmlspecialchars($k.' => '.$v).'<br />';
 	$html .= '<br />';
 }
 
@@ -41,7 +43,7 @@ if (count($_POST) > 0)
 		}
 		else
 		{
-			$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+			$html .= htmlspecialchars($k.' => '.$v).'<br />';
 		}
 	}
 	$html .= '<br />';
@@ -64,7 +66,7 @@ for ($x=0; $x<100; $x++)
 {
 	$html .= '<br /><br />SERVER values :<br />';
 	foreach ($_SERVER as $k => $v)
-		$html .= htmlspecialchars($k).' => '.htmlspecialchars($v).'<br />';
+		$html .= htmlspecialchars($k.' => '.$v).'<br />';
 }
 $html .= '</body>';
 $html .= '</html>';

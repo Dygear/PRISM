@@ -178,7 +178,7 @@ class HostHandler extends SectionHandler
 		}
 	}
 	
-	public function getSelectableSockets(&$sockReads, &$sockWrites)
+	public function getSelectableSockets(array &$sockReads, array &$sockWrites)
 	{
 		foreach ($this->hosts as $hostID => $host)
 		{
@@ -213,7 +213,7 @@ class HostHandler extends SectionHandler
 		}
 	}
 	
-	public function checkTraffic(&$sockReads, &$sockWrites)
+	public function checkTraffic(array &$sockReads, array &$sockWrites)
 	{
 		global $PRISM;
 		
@@ -879,7 +879,7 @@ class InsimConnection
 		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen.' - '.$this->ip);
 	}
 	
-	public function sendQReset()
+	private function sendQReset()
 	{
 		$this->sendQ			= '';
 		$this->sendQLen			= 0;

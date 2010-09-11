@@ -80,7 +80,7 @@ class HttpHandler extends SectionHandler
 		return true;
 	}
 	
-	public function getSelectableSockets(&$sockReads, &$sockWrites)
+	public function getSelectableSockets(array &$sockReads, array &$sockWrites)
 	{
 		// Add http sockets to sockReads
 		if (is_resource($this->httpSock))
@@ -99,7 +99,7 @@ class HttpHandler extends SectionHandler
 		}
 	}
 
-	public function checkTraffic(&$sockReads, &$sockWrites)
+	public function checkTraffic(array &$sockReads, array &$sockWrites)
 	{
 		$activity = 0;
 
@@ -490,7 +490,7 @@ class HttpClient
 				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
 				$html = PHPParser::parseFile(
 					$r,
-					ROOTPATH.'/www-docs/index.php',
+					$scriptName,
 					$this->httpRequest->SERVER,
 					$this->httpRequest->GET,
 					$this->httpRequest->POST,
