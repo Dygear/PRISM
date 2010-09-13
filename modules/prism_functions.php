@@ -157,13 +157,13 @@ function createRandomString($len, $type = RAND_ASCII)
 		{
 			$out .= chr(rand(48, 57));
 		}
-		else if ($type & RAND_ASCII)
+		else if ($type & RAND_BINARY)
 		{
-			$out .= chr(rand(32, 127));
+			$out .= chr(rand(0, 255));
 		}
 		else
 		{
-			$out .= chr(rand(0, 255));
+			$out .= chr(rand(32, 127));
 		}
 	}
 	return $out;

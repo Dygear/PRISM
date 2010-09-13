@@ -2,8 +2,8 @@
 
 require_once('testinclude.php');
 
-$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
-$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
+$_RESPONSE->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
+$_RESPONSE->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -100,7 +100,7 @@ else
 	$_SESSION = array
 	(
 		'random' => createRandomString(32, RAND_ALPHA), 
-		'staticvar' => 'mooh'.$SERVER['REMOTE_ADDR'], 
+		'staticvar' => 'mooh', 
 		'lasttime' => time()
 	);
 }

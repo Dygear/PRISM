@@ -5,7 +5,7 @@ class PHPParser
 	private static $scriptCache = array();
 	private static $sessions = array();
 	
-	public static function parseFile(HttpResponse &$r, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
+	public static function parseFile(HttpResponse &$_RESPONSE, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
 	{
 		// Restore session?
 		if (isset($_COOKIE['PrismSession']) && 
@@ -42,14 +42,14 @@ class PHPParser
 			if ($parseResult[0])
 			{
 				// Run the script from disk
-				$phpScript = preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', file_get_contents(ROOTPATH.'/www-docs'.$file));
+				$prismPhpScript = preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', file_get_contents(ROOTPATH.'/www-docs'.$file));
 				ob_start();
-				eval($phpScript);
+				eval($prismPhpScript);
 				$html = ob_get_contents();
 				ob_end_clean();
 
 				// Cache the php file
-				self::$scriptCache[$prismScriptNameHash] = array($prismScriptMTime, $phpScript);
+				self::$scriptCache[$prismScriptNameHash] = array($prismScriptMTime, $prismPhpScript);
 			}
 			else
 			{
@@ -70,11 +70,11 @@ class PHPParser
 		{
 			$sessionID = sha1(createRandomString(128, RAND_BINARY).time());
 			self::$sessions[$sessionID] = array(time() + 900, $SERVER['REMOTE_ADDR'], $_SESSION);
-			$r->setCookie('PrismSession', $sessionID, time() + 9000, '/', $SERVER['SERVER_NAME']);
+			$_RESPONSE->setCookie('PrismSession', $sessionID, time() + 900, '/', $SERVER['SERVER_NAME']);
 		}
 		else if (isset($_COOKIE['PrismSession']))
 		{
-			$r->setCookie('PrismSession', '', 0, '/', $SERVER['SERVER_NAME']);
+			$_RESPONSE->setCookie('PrismSession', '', 0, '/', $SERVER['SERVER_NAME']);
 		}
 		unset($_SESSION);
 		
@@ -88,7 +88,7 @@ class PHPParser
 			else if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) $encoding = 'gzip';
 			
 			if ($encoding) {
-			    $r->addHeader('Content-Encoding: '.$encoding);
+			    $_RESPONSE->addHeader('Content-Encoding: '.$encoding);
 			    return gzencode ($html, 1);
 			} else return $html;
 		}
