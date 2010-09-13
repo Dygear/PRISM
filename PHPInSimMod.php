@@ -278,6 +278,7 @@ class PHPInSimMod
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 			$this->hosts->maintenance();
 			$this->http->maintenance();
+			PHPParser::cleanSessions();
 						
 		} // End while(isRunning)
 	}

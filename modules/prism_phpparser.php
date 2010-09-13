@@ -8,12 +8,15 @@ class PHPParser
 	public static function parseFile(HttpResponse &$r, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
 	{
 		// Restore session?
-		if (isset($_COOKIE['prsession']) && 
-			isset(self::$sessions[$_COOKIE['prsession']]) &&
-			self::$sessions[$_COOKIE['prsession']][0] > time())
+		if (isset($_COOKIE['PrismSession']) && 
+			isset(self::$sessions[$_COOKIE['PrismSession']]) &&
+			self::$sessions[$_COOKIE['PrismSession']][0] > time() &&
+			self::$sessions[$_COOKIE['PrismSession']][1] == $SERVER['REMOTE_ADDR'])
 		{
-			$_SESSION = self::$sessions[$_COOKIE['prsession']][1];
-			unset(self::$sessions[$_COOKIE['prsession']]);
+			$_SESSION = self::$sessions[$_COOKIE['PrismSession']][2];
+			
+			// Sessions only last for one request. We rewrite it later on if needed.
+			unset(self::$sessions[$_COOKIE['PrismSession']]);
 		}
 		
 		// Change working dir to www-docs
@@ -63,12 +66,17 @@ class PHPParser
 		}
 
 		// Should we store the session?
-		if (isset($_SESSION))
+		if (isset($_SESSION) && $_SESSION != '')
 		{
 			$sessionID = sha1(createRandomString(128, RAND_BINARY).time());
-			self::$sessions[$sessionID] = array(time() + 900, $_SESSION);
-			$r->setCookie('prsession', $sessionID, time() + 900, '/', $SERVER['SERVER_NAME']);
+			self::$sessions[$sessionID] = array(time() + 900, $SERVER['REMOTE_ADDR'], $_SESSION);
+			$r->setCookie('PrismSession', $sessionID, time() + 9000, '/', $SERVER['SERVER_NAME']);
 		}
+		else if (isset($_COOKIE['PrismSession']))
+		{
+			$r->setCookie('PrismSession', '', 0, '/', $SERVER['SERVER_NAME']);
+		}
+		unset($_SESSION);
 		
 		// Restore the working dir
 		chdir(ROOTPATH);
@@ -86,6 +94,15 @@ class PHPParser
 		}
 		else
 			return $html;
+	}
+	
+	public static function cleanSessions()
+	{
+		foreach (self::$sessions as $k => $v)
+		{
+			if ($v[0] < time())
+				unset(self::$sessions[$k]);
+		}
 	}
 }
 

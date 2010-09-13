@@ -89,7 +89,7 @@ $html .= '</html>';
 
 echo $html;
 
-//$_SESSION = time();
+//unset($_SESSION);
 if (isset($_SESSION))
 {
 	$_SESSION['random'] = createRandomString(32, RAND_ALPHA);
@@ -100,7 +100,7 @@ else
 	$_SESSION = array
 	(
 		'random' => createRandomString(32, RAND_ALPHA), 
-		'staticvar' => 'mooh', 
+		'staticvar' => 'mooh'.$SERVER['REMOTE_ADDR'], 
 		'lasttime' => time()
 	);
 }
