@@ -9,8 +9,8 @@ class theTime extends Plugins
 	public function __construct(&$parent)
 	{
 		$this->parent =& $parent;
-		$this->registerSayCommand('!thetime', 'cmdTime', '- Displays the time.');
-		$this->registerSayCommand('!time', 'cmdTime', '- Displays the time.');
+		$this->registerSayCommand('thetime', 'cmdTime', '- Displays the time.');
+		$this->registerSayCommand('time', 'cmdTime', '- Displays the time.');
 	}
 
 	public function cmdTime($cmd, $plid, $ucid)
@@ -19,6 +19,7 @@ class theTime extends Plugins
 		$MTC->PLID = $plid;
 		$MTC->Msg = 'The time is: ' . date('H:i:s') . ' server local time';
 		$this->sendPacket($MTC);
+
 		return PLUGIN_CONTINUE;
 	}
 }

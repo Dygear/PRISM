@@ -63,9 +63,9 @@ class UserHandler extends SectionHandler
 ; c - access to `prism cvar` command (not all cvars will be available)
 ; d - access to `prism cfg` command (allows you to change lfs configuration settings)
 ; e - Env commands (/wind, /weather)
-; f - Functions (/restart, /qualify, /end, /names & /reinit)
+; f - Functions (/restart, /qualify, /end & /names)
 ; g - game commands (/qual, /laps & /hours)
-; h - host commands (/ip, /port, /maxguests & /insim)
+; h - host commands (/ip, /port, /maxguests, /insim & /reinit)
 ; i - immunity (cannot be kicked/baned/speced/pited and affected by other commmands)
 ; j - 
 ; k - /kick command (`prism kick` command)
@@ -117,8 +117,8 @@ ININOTES;
 				$details['accessFlags'] = flagsToInteger($details['accessFlags']);
 			}
 		}
-		
-		return true;
+
+		return TRUE;
 	}
 	
 	public function isPasswordCorrect(&$username, &$password)
@@ -126,7 +126,7 @@ ININOTES;
 		global $PRISM;
 		
 		return (
-			isset($this->users[$username]) && 
+			isset($this->users[$username]) &&
 			$this->users[$username]['password'] == sha1($password.$PRISM->config->cvars['secToken'])
 		);
 	}

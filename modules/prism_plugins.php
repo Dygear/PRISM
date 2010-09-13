@@ -164,57 +164,24 @@ abstract class Plugins
 		return $PRISM->hosts->sendPacket($packetClass);
 	}
 
-	/** Parse Methods */
-	public function readFlags($flagsString = '')
-	{
-		//
-		// I HAVE MOVED THIS TO prism_functions.php
-		// where it is named flagsToInteger() (and there is a prototype for its counterpart, flagsToString()).
-		//
-
-		# We don't have anything to parse.
-		if ($flagsString == '')
-			return FALSE;
-
-		$flagsBitwise = 0;
-		for ($chrPointer = 0, $strLen = strlen($flagsString); $chrPointer < $strLen; ++$chrPointer)
-		{
-			# Convert this charater to it's ASCII int value.
-			$char = ord($flagsString{$chrPointer});
-
-			# We only want a (ASCII = 97) through z (ASCII 122), nothing else.
-			if ($char < 97 || $char > 122)
-				continue;
-
-			# Check we have already set that flag, if so skip it!
-			if ($flagsBitwise & (1 << ($char - 97)))
-				continue;
-
-			# Add the value to our $flagBitwise intager.
-			$flagsBitwise += (1 << ($char - 97));
-		}
-		return $flagsBitwise;
-	}
-
 	/** Handle Methods */
 	// This is the yang to the registerSayCommand & registerLocalCommand function's Yin.
 	public function handleCmd(IS_MSO $packet)
 	{
 		if ($packet->UserType == MSO_PREFIX)
-			$CMD = substr($packet->Msg, $packet->TextStart);
+			$CMD = substr($packet->Msg, $packet->TextStart + 1);
 		else if ($packet->UserType == MSO_O)
 			$CMD = $packet->Msg;
 		else
 			return;
-		
-		if ($packet->UserType & MSO_PREFIX AND isset($this->sayCommands[$CMD]))
+
+		if ($packet->UserType == MSO_PREFIX AND isset($this->sayCommands[$CMD]))
 		{
 			$method = $this->sayCommands[$CMD]['method'];
 			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
 		}
 		else if ($packet->UserType == MSO_O AND isset($this->localCommands[$CMD]))
 		{
-			var_dump($CMD);
 			$method = $this->localCommands[$CMD]['method'];
 			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
 		}
@@ -234,9 +201,9 @@ abstract class Plugins
 	protected function registerPacket($callbackMethod, $PacketType)
 	{
 		$this->callbacks[$PacketType][] = $callbackMethod;
-		$args = func_get_args();
-		for ($i = 2, $j = count($args); $i < $j; ++$i)
-			$this->callbacks[$args[$i]][] = $callbackMethod;
+		$PacketTypes = func_get_args();
+		for ($i = 2, $j = count($PacketTypes); $i < $j; ++$i)
+			$this->callbacks[$PacketTypes[$i]][] = $callbackMethod;
 	}
 
 	// Setup the callbackMethod trigger to accapt a command that could come from anywhere.
@@ -280,12 +247,6 @@ abstract class Plugins
 	protected function serverGetName()
 	{
 		return $this->parent->hosts->curHostID;
-	}
-	
-	/** PRISM Methods */
-	protected function prismGetPlugins()
-	{
-		return $this->parent->plugins;
 	}
 }
 
