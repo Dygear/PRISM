@@ -18,7 +18,6 @@ class ConfigHandler extends SectionHandler
 			'logFormat'		=> 'm-d-y@H:i:s',
 			'logNameFormat'	=> 'Ymd',
 			'secToken'		=> 'X-0ZbIY)TN>.@sr}',
-			'phpLocation'	=> '',
 		);
 	
 	public function initialise()
@@ -33,7 +32,6 @@ class ConfigHandler extends SectionHandler
 		else
 		{
 			$this->cvars['secToken'] = str_replace(array('"', '\'', ' '), '.', createRandomString(16));
-			$this->cvars['phpLocation'] = findPHPLocation($PRISM->isWindows);
 			
 			console('Using cvars defaults.');
 			if ($this->createIniFile('cvars.ini', 'PHPInSimMod Configuration Variables', array('prism' => &$this->cvars)))

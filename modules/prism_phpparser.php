@@ -2,23 +2,33 @@
 
 class PHPParser
 {
-	static $scriptCache = array();
+	private static $scriptCache = array();
+	private static $sessions = array();
 	
-	static function parseFile(HttpResponse &$r, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
+	public static function parseFile(HttpResponse &$r, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
 	{
+		// Restore session?
+		if (isset($_COOKIE['prsession']) && 
+			isset(self::$sessions[$_COOKIE['prsession']]) &&
+			self::$sessions[$_COOKIE['prsession']][0] > time())
+		{
+			$_SESSION = self::$sessions[$_COOKIE['prsession']][1];
+			unset(self::$sessions[$_COOKIE['prsession']]);
+		}
+		
 		// Change working dir to www-docs
 		chdir(ROOTPATH.'/www-docs');
 		
-		$scriptnameHash = md5(ROOTPATH.'/www-docs'.$file);
-		$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$file);
+		$prismScriptNameHash = md5(ROOTPATH.'/www-docs'.$file);
+		$prismScriptMTime = filemtime(ROOTPATH.'/www-docs'.$file);
 		clearstatcache();
 
 		// Run script from cache?
-		if (isset(self::$scriptCache[$scriptnameHash]) &&
-			self::$scriptCache[$scriptnameHash][0] == $scriptMTime)
+		if (isset(self::$scriptCache[$prismScriptNameHash]) &&
+			self::$scriptCache[$prismScriptNameHash][0] == $prismScriptMTime)
 		{
 			ob_start();
-			eval(self::$scriptCache[$scriptnameHash][1]);
+			eval(self::$scriptCache[$prismScriptNameHash][1]);
 			$html = ob_get_contents();
 			ob_end_clean();
 		}
@@ -29,14 +39,14 @@ class PHPParser
 			if ($parseResult[0])
 			{
 				// Run the script from disk
-				$phpScript = preg_replace(array('/<\?(php)?/', '/\?>/'), '', file_get_contents(ROOTPATH.'/www-docs'.$file));
+				$phpScript = preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', file_get_contents(ROOTPATH.'/www-docs'.$file));
 				ob_start();
 				eval($phpScript);
 				$html = ob_get_contents();
 				ob_end_clean();
 
 				// Cache the php file
-				self::$scriptCache[$scriptnameHash] = array($scriptMTime, $phpScript);
+				self::$scriptCache[$prismScriptNameHash] = array($prismScriptMTime, $phpScript);
 			}
 			else
 			{
@@ -48,10 +58,18 @@ class PHPParser
 				$html .= '<hr><center>PRISM v'.PHPInSimMod::VERSION.'</center>'.$eol;
 				$html .= '</body>'.$eol;
 				$html .= '</html>'.$eol;
-				unset(self::$scriptCache[$scriptnameHash]);
+				unset(self::$scriptCache[$prismScriptNameHash]);
 			}
 		}
 
+		// Should we store the session?
+		if (isset($_SESSION))
+		{
+			$sessionID = sha1(createRandomString(128, RAND_BINARY).time());
+			self::$sessions[$sessionID] = array(time() + 900, $_SESSION);
+			$r->setCookie('prsession', $sessionID, time() + 900, '/', $SERVER['SERVER_NAME']);
+		}
+		
 		// Restore the working dir
 		chdir(ROOTPATH);
 

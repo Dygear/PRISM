@@ -1,18 +1,34 @@
 <?php
 
+require_once('testinclude.php');
+
 $r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
 $r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
 
-$html = <<<HTMLBLOCK
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
 <head>
 <title>Prism http server test page</title>
 </head>
 <body>
-HTMLBLOCK;
+<?php
 
+$html = someTestFunction().'<br />';
 $html .= '<a href="/"><img src="images/test.gif" border="0" alt="" style="float: right;" /></a>';
+
+if (isset($_SESSION))
+{
+	$html .= 'The following SESSION values have been found :<br />';
+	if (is_array($_SESSION))
+	{
+		foreach ($_SESSION as $k => $v)
+			$html .= htmlspecialchars($k.' => '.$v).'<br />';
+	}
+	else
+		$html .= htmlspecialchars($_SESSION).'<br />';
+	$html .= '<br />';
+}
 
 if (count($_COOKIE) > 0)
 {
@@ -72,5 +88,21 @@ $html .= '</body>';
 $html .= '</html>';
 
 echo $html;
+
+//$_SESSION = time();
+if (isset($_SESSION))
+{
+	$_SESSION['random'] = createRandomString(32, RAND_ALPHA);
+	$_SESSION['lasttime'] = time();
+}
+else
+{
+	$_SESSION = array
+	(
+		'random' => createRandomString(32, RAND_ALPHA), 
+		'staticvar' => 'mooh', 
+		'lasttime' => time()
+	);
+}
 
 ?>

@@ -182,25 +182,22 @@ class Interactive
 		echo 'You now have the chance to manually enter the details of the http server.'.PHP_EOL;
 		echo 'Afterwards your http settings will be stored in ./config/http.ini for future use.'.PHP_EOL;
 
-		if (!isset($vars['http']))
-			$vars['http'] = array();
-
 		// Ask if we want to use a http socket at all
 		if (self::query(PHP_EOL.'Would you like to setup the web-admin socket?', array('yes', 'no')) == 'no')
 		{
-			$vars['http']['ip'] = '';
-			$vars['http']['port'] = '0';
+			$vars['ip'] = '';
+			$vars['port'] = '0';
 			return;
 		}
 
 		// Ask which IP address to bind the listen socket to
 		while (true)
 		{
-			$vars['http']['ip']		= self::query('On which IP address should HTTP listen? (blank means all)', array(), true);
-			if ($vars['http']['ip'] == '')
-				$vars['http']['ip'] = '0.0.0.0';
+			$vars['ip']		= self::query('On which IP address should HTTP listen? (blank means all)', array(), true);
+			if ($vars['ip'] == '')
+				$vars['ip'] = '0.0.0.0';
 			
-			if (!verifyIP($vars['http']['ip']))
+			if (!verifyIP($vars['ip']))
 				echo 'Invalid IPv4 address entered. Please try again.'.PHP_EOL;
 			else
 				break;
@@ -209,13 +206,14 @@ class Interactive
 		// Ask which Port to listen on
 		while (true)
 		{
-			$vars['http']['port']	= (int) self::query('On which Port should HTTP listen?');
+			$vars['port']	= (int) self::query('On which Port should HTTP listen?');
 			
-			if ($vars['http']['port'] < 1 || $vars['http']['port'] > 65535)
+			if ($vars['port'] < 1 || $vars['port'] > 65535)
 				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
 			else
 				break;
 		}
+		echo PHP_EOL;
 	}
 	
 	public function queryUsers(array &$vars)

@@ -47,7 +47,7 @@ $PRISM->start();
 */
 class PHPInSimMod
 {
-	const VERSION = '0.2.0';
+	const VERSION = '0.3.0';
 	const ROOTPATH = ROOTPATH;
 
 	/* Run Time Arrays */
@@ -84,12 +84,6 @@ class PHPInSimMod
 		$this->plugins	= new PluginHandler();
 		$this->http		= new HttpHandler();
 		$this->users	= new UserHandler();
-
-		if ($this->config->cvars['phpLocation'] != '')
-			define('PHP_LOCATION', $this->config->cvars['phpLocation']);
-		else
-			define('PHP_LOCATION', findPHPLocation($this->isWindows));
-		console('THE LOCATION OF PHP : '.PHP_LOCATION);
 	}
 
 	// Pseudo Magic Functions

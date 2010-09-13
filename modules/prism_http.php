@@ -16,7 +16,7 @@ class HttpHandler extends SectionHandler
 	private $httpClients	= array();
 	private $httpNumClients	= 0;
 
-	private $httpVars		= array();
+	private $httpVars		= array('ip' => '', 'port' => 0);
 	public $cache			= null;
 
 	public function __destruct()
@@ -44,7 +44,7 @@ class HttpHandler extends SectionHandler
 	{
 		global $PRISM;
 		
-		$this->httpVars = array();
+		$this->httpVars = array('ip' => '', 'port' => 0);
 		
 		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
 		{
@@ -58,7 +58,17 @@ class HttpHandler extends SectionHandler
 			Interactive::queryHttp($this->httpVars);
 			
 			# Then build a http.ini file based on these details provided.
-			if ($this->createIniFile('http.ini', 'HTTP Configuration (web admin)', $this->httpVars))
+			$extraInfo = <<<ININOTES
+;
+; Http listen details (for administration web pages).
+; 0.0.0.0 will bind the listen socket to all available network interfaces.
+; To limit the bind to one interface only, you can enter its IP address here.
+; If you do not want to use the http feature, you can comment or remove the lines,
+; or enter "" and 0 for the ip and port.
+;
+
+ININOTES;
+			if ($this->createIniFile('http.ini', 'HTTP Configuration (web admin)', array('http' => &$this->httpVars), $extraInfo))
 				console('Generated config/http.ini');
 		}
 

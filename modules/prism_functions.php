@@ -85,22 +85,22 @@ function findPHPLocation($windows = false)
 
 function validatePHPFile($file)
 {
-	if (PHP_LOCATION)
-	{
-		// Check with php -l.
-		$status = 0;
-		$output = array();
-//		exec(PHP_LOCATION.' -l -d display_errors=true '.$file, $output, $status);
-		exec(PHP_LOCATION.' -l '.$file, $output, $status);
-		if ($status > 0)
-			return array(false, $output);
-	}
-	else
-	{
-		// Check with eval().
-		if (!@eval('return true;'.preg_replace(array('/<\?(php)?/', '/\?>/'), '', file_get_contents($file))))
-			return array(false, array('Errors parsing '.$file));
-	}
+	// Validate script
+	$fileContents = file_get_contents($file);
+	if (!eval('return true;'.preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', $fileContents)))
+		return array(false, array('Errors parsing '.$file));
+		
+	// Validate any require_once or include_once files.
+//	$matches = array();
+//	preg_match_all('/(include_once|require_once)\s*\(["\']+(.*)["\']+\)/', $fileContents, $matches);
+//
+//	foreach ($matches[2] as $include)
+//	{
+//		console($include);
+//		$result = validatePHPFile($include);
+//		if ($result[0] == false)
+//			return $result;
+//	}
 
 	return array(true, array());
 }
@@ -140,11 +140,32 @@ function flagsToString($flagsString = 0)
 	return $string;
 }
 
-function createRandomString($len)
+define('RAND_ASCII', 1);
+define('RAND_ALPHA', 2);
+define('RAND_NUMERIC', 4);
+define('RAND_BINARY', 8);
+function createRandomString($len, $type = RAND_ASCII)
 {
 	$out = '';
 	for ($a=0; $a<$len; $a++)
-		$out .= chr(rand(32, 127));
+	{
+		if ($type & RAND_ALPHA)
+		{
+			$out .= rand(0,1) ? chr(rand(65, 90)) : chr(rand(97, 122));
+		}
+		else if ($type & RAND_NUMERIC)
+		{
+			$out .= chr(rand(48, 57));
+		}
+		else if ($type & RAND_ASCII)
+		{
+			$out .= chr(rand(32, 127));
+		}
+		else
+		{
+			$out .= chr(rand(0, 255));
+		}
+	}
 	return $out;
 }
 
