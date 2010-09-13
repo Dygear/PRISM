@@ -6,11 +6,10 @@ class theTime extends Plugins
 	const AUTHOR = 'PRISM Dev Team';
 	const VERSION = PHPInSimMod::VERSION;
 
-	public function __construct(&$parent)
+	public function __construct()
 	{
-		$this->parent =& $parent;
-		$this->registerSayCommand('thetime', 'cmdTime', '- Displays the time.');
-		$this->registerSayCommand('time', 'cmdTime', '- Displays the time.');
+		$this->registerSayCommand('thetime', 'cmdTime', 'Displays the time.');
+		$this->registerSayCommand('time', 'cmdTime', 'Displays the time.');
 	}
 
 	public function cmdTime($cmd, $plid, $ucid)

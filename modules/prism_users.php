@@ -35,7 +35,12 @@ define('ADMIN_ALL',					134217727);	# All flags, a - z.
 class UserHandler extends SectionHandler
 {
 	private $users		= array();
-	
+
+	public function getUsers()
+	{
+		return $this->users;
+	}
+
 	public function initialise()
 	{
 		global $PRISM;

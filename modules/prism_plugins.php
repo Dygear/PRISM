@@ -104,6 +104,11 @@ class PluginHandler extends SectionHandler
 		return $loadedPluginCount;
 	}
 	
+	public function getPlugins()
+	{
+		return $this->plugins;
+	}
+	
 	private function isPluginEligibleForPacket(&$name, &$hostID)
 	{
 		foreach ($this->pluginvars[$name]['useHosts'] as $host)
@@ -153,11 +158,7 @@ abstract class Plugins
 	public $localCommands = array();
 	public $sayCommands = array();
 
-	/** Construct */
-	public function __construct(&$parent)
-	{
-		$this->parent =& $parent;
-	}
+	/** Send Methods */
 	protected function sendPacket($packetClass)
 	{
 		global $PRISM;
