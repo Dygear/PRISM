@@ -72,13 +72,20 @@ function flagsToInteger($flagsString = '')
 	return $flagsBitwise;
 }
 
-function flagsToString($flagsString = 0)
+function flagsToString($flagsBitwise = 0)
 {
-	$string = '';
-	if ($flagsString == 0)
-		return $string;
-	
-	return $string;
+	$flagsString = '';
+	if ($flagsBitwise == 0)
+		return $flagsString;
+
+	# This makes sure we only handle the flags we know by unsetting any unknown bits.
+	$flagsBitwise = $flagsBitwise & ADMIN_ALL;
+
+	# Converts bits to the char forms.
+	for ($i = 0; $i < 26; ++$i)
+		$flagsString .= ($flagsBitwise & (1 << $i)) ? chr($i + 97) : NULL;
+
+	return $flagsString;
 }
 
 function createRandomString($len)

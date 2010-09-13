@@ -1992,6 +1992,7 @@ class IS_BTN extends struct // BuTtoN - button header - followed by 0 to 240 cha
 
 	public function pack()
 	{
+		echo 'Do I even get called?';
 		$return = '';
 		$packFormat = $this::parsePackFormat();
 		$propertyNumber = -1;

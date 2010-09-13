@@ -5,34 +5,6 @@
  * @subpackage Plugin
 */
 
-// Admin Flags
-define('ADMIN_ACCESS',				1);			# Flag "a", Allows you to issue commands from the remote console or web admin area.
-define('ADMIN_BAN',					2);			# Flag "b", Allows you to ban and unban clients.
-define('ADMIN_CFG',					4);			# Flag "c", Allows you to change the, runtime, configuration of LFS.
-define('ADMIN_CVAR',				8);			# Flag "d", Allows you to change the, runtime, configuration of PRISM.
-define('ADMIN_LEVEL_E',				16);		# Flag "e", 
-define('ADMIN_LEVEL_F',				32);		# Flag "f", 
-define('ADMIN_GAME',				64);		# Flag "g", Allows you to change the way the game is played.
-define('ADMIN_HOST',				128);		# Flag "h", Allows you to change the way the host runs.
-define('ADMIN_IMMUNITY',			256);		# Flag "i", Allows you to be immune to admin commands.
-define('ADMIN_LEVEL_J',				512);		# Flag "j", 
-define('ADMIN_KICK',				1024);		# Flag "k", Allows you to kick clients from server.
-define('ADMIN_LEVEL_L',				2048);		# Flag "l", 
-define('ADMIN_TRACK',				4096);		# Flag "m", Allows you to change the track on the server.
-define('ADMIN_LEVEL_N',				8192);		# Flag "n", 
-define('ADMIN_LEVEL_O',				16384);		# Flag "o", 
-define('ADMIN_PENALTIES',			32768);		# Flag "p", Allows you to set a penalty on any client.
-define('ADMIN_RESERVATION',			65536);		# Flag "q", Allows you to join in a reserved slot.
-define('ADMIN_RCM',					131072);	# Flag "r", Allows you to send race control messages.
-define('ADMIN_SPECTATE',			262144);	# Flag "s", Allows you to spectate and pit a client or all clients.
-define('ADMIN_CHAT',				524288);	# Flag "t", Allows you to send messages to clients in their chat area.
-define('ADMIN_UNIMMUNIZE',			1048576);	# Flag "u", Allows you to run commands on immune admins also.
-define('ADMIN_VOTE',				2097152);	# Flag "v", Allows you to start or stop votes for anything.
-define('ADMIN_LEVEL_W',				4194304);	# Flag "w", 
-define('ADMIN_LEVEL_X',				8388608);	# Flag "x", 
-define('ADMIN_LEVEL_Y',				16777216);	# Flag "y", 
-define('ADMIN_LEVEL_Z',				33554432);	# Flag "z", 
-
 class PluginHandler extends SectionHandler
 {
 	private $plugins			= array();			# Stores references to the plugins we've spawned.

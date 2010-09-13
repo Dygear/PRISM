@@ -16,18 +16,38 @@ class admin extends Plugins
 		$this->registerCommand('prism help', 'cmdHelp', '- Displays this command list.');
 		$this->registerCommand('prism admins list', 'cmdList', '- Displays a list of admins.');
 		$this->registerCommand('prism admins reload', 'cmdLoad', '- Reloads the admins.', ADMIN_CFG);
+		print_r($this);
 	}
 
 	public function cmdHelp($cmd, $plid, $ucid)
 	{
-		$MTC = new IS_MTC();
-		$MTC->PLID = $plid;
+		$MTC = new IS_MTC();	$MTC->PLID = $plid;
+		$BTN = new IS_BTN();	$BTN->UCID = $ucid;
+		$ClickID = 0;
+		$BTN->BStyle = ISB_DARK;
+		$BTN->L = $BTN->T = 20;
+		$BTN->W = 16;
+		$BTN->H = 9;
 		foreach ($this->prismGetPlugins() as $plugin => $pluginInfo)
 		{
 			foreach ($pluginInfo->sayCommands as $command => $details)
 			{
+				# Text in chat.
 				$MTC->Msg = "$command {$details['info']}";
 				$this->sendPacket($MTC);
+
+				// Buttons
+				# Command (Things you must type in order for event to happen)
+				$BTN->ClickID = ++$ClickID;
+				$BTN->T += $BTN->H;
+				$BTN->Text = $command;
+				$this->sendPacket($BTN);
+				# Info on command (What does the command do?)
+				$BTN->ClickID = 0;
+				$BTN->L += $BTN->W;
+				$BTN->Text = $details['info'];
+				$this->sendPacket($BTN);
+				$BTN->L -= $BTN->W;
 			}
 		}
 	}
