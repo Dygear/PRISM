@@ -240,11 +240,12 @@ class PHPInSimMod
 							break;
 						
 						case 'p':
-							console("#\tName\tVersion\tAuthor\tDescription");
-							foreach ($this->plugins as $pluginID => $plugin)
+							echo sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION') . PHP_EOL;
+							foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 							{
-								console($pluginID."\t#".$plugin::NAME."\t".$plugin::VERSION."\t".$plugin::AUTHOR."\t".$plugin::DESCRIPTION);
+								echo sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION) . PHP_EOL;
 							}
+							echo PHP_EOL;
 							break;
 						
 						case 'x':
