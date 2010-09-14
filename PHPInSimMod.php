@@ -227,10 +227,23 @@ class PHPInSimMod
 					// Process the command (the first char or word of the line)
 					switch ($exp[0])
 					{
+						case 'c':
+							console(sprintf('%32s %64s', 'COMMAND', 'DESCRIPTOIN'));
+							foreach ($this->plugins->getPlugins() as $plugin => $details)
+							{
+								foreach ($details->sayCommands as $command => $detail)
+								{
+									console(sprintf('%32s - %64s', $command, $detail['info']));
+								}
+							}
+
+							break;
 						case 'h':
+							console(sprintf('%7s %15s:%5s', 'Host ID', 'IP', 'PORT', 'UDP PORT' 'STATUS'));
 							foreach ($this->hosts->hosts as $hostID => $host)
 							{
-								console($hostID.' => '.$host->ip.':'.$host->port.(($host->udpPort > 0) ? '+udp'.$host->udpPort : '').' -> '.(($host->connStatus == CONN_CONNECTED) ? '' : (($host->connStatus == CONN_VERIFIED) ? 'verified &' : 'not')).' connected');
+								$status = (($host->connStatus == CONN_CONNECTED) ? '' : (($host->connStatus == CONN_VERIFIED) ? 'VERIFIED &' : ' NOT')).' CONNECTED';
+								console(sprintf('%7s %15s:%5s %8s %24s', $hostID, $host->ip, $host->port, $host->udpPort, $status))
 							}
 							break;
 						
@@ -240,12 +253,11 @@ class PHPInSimMod
 							break;
 						
 						case 'p':
-							echo sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION') . PHP_EOL;
-							foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
+							console(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'));
+							foreach ($this->plugins->getPlugins() as $plugin => $details)
 							{
-								echo sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION) . PHP_EOL;
+								console(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION));
 							}
-							echo PHP_EOL;
 							break;
 						
 						case 'x':
@@ -253,21 +265,23 @@ class PHPInSimMod
 							break;
 						
 						case 'w':
+							console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY');
 							for ($k=0; $k<$this->httpNumClients; $k++)
 							{
 								$lastAct = time() - $this->httpClients[$k]->lastActivity;
-								console($this->httpClients[$k]->ip.':'.$this->httpClients[$k]->port.' - last activity was '.$lastAct.' second'.(($lastAct = 1) ? '' : 's').' ago.');
+								console(sprintf('%15s:%5s %5d %13d', $this->httpClients[$k]->ip, $this->httpClients[$k]->port, $lastAct));
 							}
 							console('Counted '.$this->httpNumClients.' http client'.(($this->httpNumClients == 1) ? '' : 's'));
 							break;
 						
 						default :
 							console('Available Commands:');
-							console('h - show host info');
-							console('I - re-initialise PRISM (reload ini files / reconnect to hosts / reset http socket');
-							console('p - show plugin info');
-							console('x - exit PHPInSimMod');
-							console('w - show www connections');
+							console('	h - show host info');
+							console('	I - re-initialise PRISM (reload ini files / reconnect to hosts / reset http socket');
+							console('	p - show plugin info');
+							console('	x - exit PHPInSimMod');
+							console('	w - show www connections');
+							console('	c - show command list');
 					}
 				}
 				

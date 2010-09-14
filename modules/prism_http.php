@@ -687,7 +687,6 @@ class HttpClient
 		return $r;
 	}
 
->>>>>>> origin/v3mergetest
 	private function getMimeType()
 	{
 		$pathInfo = pathinfo($this->httpRequest->SERVER['SCRIPT_NAME']);

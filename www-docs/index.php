@@ -1,11 +1,5 @@
 <?php
-<<<<<<< HEAD
-	$r->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $_SERVER['SERVER_NAME']);
-	$r->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $_SERVER['SERVER_NAME']);
-=======
-
 require_once('testinclude.php');
->>>>>>> 6342fce10929076641fd1afa7d93ad79c11b59ca
 
 // Cookie examples
 $_RESPONSE->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);

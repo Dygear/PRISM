@@ -58,7 +58,13 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
-		print_r($PRISM->users->getUsers());
+		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
+		echo sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION') . PHP_EOL;
+		foreach ($PRISM->users->getUsers() as $user => $details)
+		{
+			echo $user;
+			print_r($details);
+		}
 
 		return PLUGIN_CONTINUE;
 	}
