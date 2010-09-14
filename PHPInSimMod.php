@@ -78,7 +78,7 @@ class PHPInSimMod
 		$shell = getenv('SHELL');
 		if (!$shell || $shell[0] != '/')
 			$this->isWindows = TRUE;
-
+		
 		$this->config	= new ConfigHandler();
 		$this->hosts	= new HostHandler();
 		$this->plugins	= new PluginHandler();
@@ -279,6 +279,7 @@ class PHPInSimMod
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 			$this->hosts->maintenance();
 			$this->http->maintenance();
+			PHPParser::cleanSessions();
 						
 		} // End while(isRunning)
 	}

@@ -60,8 +60,9 @@ class UserHandler extends SectionHandler
 			
 			# Then build a users.ini file based on these details provided.
 			$extraInfo = <<<ININOTES
+;
 ; Line starting with ; is a comment
-
+;
 ; Access flags:
 ; a - access to remote console (RCON) and rcon password cvar (by `!prism cvar` command)
 ; b - /ban and /unban commands (`prism ban` and `prism unban` commands)
@@ -89,7 +90,7 @@ class UserHandler extends SectionHandler
 ; x - 
 ; y - 
 ; z - 
-
+;
 ; Format of admin account:
 ; [LFS Username]
 ; password = "<password>"
