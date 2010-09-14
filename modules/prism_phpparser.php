@@ -7,6 +7,8 @@ class PHPParser
 	
 	public static function parseFile(HttpResponse &$_RESPONSE, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
 	{
+		global $PRISM;
+		
 		// Restore session?
 		if (isset($_COOKIE['PrismSession']) && 
 			isset(self::$sessions[$_COOKIE['PrismSession']]) &&
@@ -82,8 +84,9 @@ class PHPParser
 		chdir(ROOTPATH);
 
 		// Use compression?
-		if (isset($SERVER['HTTP_ACCEPT_ENCODING']))
+		if ($html != '' && isset($SERVER['HTTP_ACCEPT_ENCODING']))
 		{
+			$encoding = '';
 			if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) $encoding = 'x-gzip';
 			else if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) $encoding = 'gzip';
 			

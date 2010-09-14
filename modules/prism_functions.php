@@ -169,6 +169,18 @@ function createRandomString($len, $type = RAND_ASCII)
 	return $out;
 }
 
+function ucwordsByChar($string, $delimiter)
+{
+	$out = '';
+	foreach (explode($delimiter, $string) as $k => $v)
+	{
+		if ($k > 0)
+			$out .= $delimiter;
+		$out .= ucfirst($v);
+	}
+	return $out;
+}
+
 function getIP(&$ip)
 {
 	if (verifyIP($ip))

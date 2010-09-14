@@ -48,7 +48,9 @@ must restart PRISM in order for them to be loaded again.
 NAMING CONVENTIONS - take special care when naming your functions and classes. 
 Don't give them overly simple names, or names that _might_ be used by others. 
 Remember, your functions and classes must live in the same space as the rest 
-of PRISM, including plugin functions and classes made by other people.
+of PRISM, including plugin functions and classes made by other people. You can
+try to make use of namespaces though; I haven't tried this yet so I don't know
+if it will work.
 
 
 Restrictions(2) - not all standard php functionalities can be used.

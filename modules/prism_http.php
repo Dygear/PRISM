@@ -34,6 +34,15 @@ class HttpHandler extends SectionHandler
 		
 		for ($k=0; $k<$this->httpNumClients; $k++)
 		{
+			// Request timed out?
+			if ($this->httpClients[$k]->hasHttpRequest())
+			{
+				$r = new HttpResponse('1.1', 408);
+				$r->addBody($this->httpClients[$k]->createErrorPage(408));
+				$this->httpClients[$k]->write($r->getHeaders());
+				$this->httpClients[$k]->write($r->getBody());
+			}
+
 			array_splice($this->httpClients, $k, 1);
 			$k--;
 			$this->httpNumClients--;
@@ -268,6 +277,11 @@ class HttpClient
 		return $this->lastActivity;
 	}
 	
+	public function hasHttpRequest()
+	{
+		return ($this->httpRequest) ? true : false;
+	}
+	
 	public function write($data, $sendQPacket = FALSE)
 	{
 		$bytes = 0;
@@ -364,14 +378,15 @@ class HttpClient
 		return $this->sendFilePntr;
 	}
 	
-	public function writeFile($fileName = '')
+	public function writeFile($fileName = '', $startOffset = 0)
 	{
 		if ($fileName != '' && $this->sendFile == null)
 		{
 			$this->sendFile = fopen($fileName, 'rb');
 			if (!$this->sendFile)
 				return false;
-			$this->sendFilePntr = 0;
+			$this->sendFilePntr = (int) $startOffset;
+			fseek($this->sendFile, $this->sendFilePntr);
 			$this->sendFileSize = filesize($fileName);
 			$this->sendWindow	+= STREAM_READ_BYTES;
 		}
@@ -450,6 +465,13 @@ class HttpClient
 			{
 				$r = new HttpResponse('1.1', $this->httpRequest->errNo);
 				$r->addBody($this->createErrorPage($this->httpRequest->errNo, $this->httpRequest->errStr));
+				
+				if ($this->httpRequest->errNo == 405)
+				{
+					$r->addHeader('Allow: GET, POST, HEAD');
+					$r->addHeader('Access-Control-Allow-Methods: GET, POST, HEAD');
+				}
+					
 				$this->write($r->getHeaders());
 				$this->write($r->getBody());
 			}
@@ -480,7 +502,10 @@ class HttpClient
 		$this->httpRequest->SERVER['HTTP_ACCEPT_ENCODING']	= isset($this->httpRequest->headers['Accept-Encoding']) ? $this->httpRequest->headers['Accept-Encoding'] : '';
 		$this->httpRequest->SERVER['HTTP_ACCEPT_CHARSET']	= isset($this->httpRequest->headers['Accept-Charset']) ? $this->httpRequest->headers['Accept-Charset'] : '';
 		$this->httpRequest->SERVER['HTTP_KEEP_ALIVE']		= isset($this->httpRequest->headers['Keep-Alive']) ? $this->httpRequest->headers['Keep-Alive'] : '';
-		$this->httpRequest->SERVER['HTTP_REFERER']			= isset($this->httpRequest->headers['Referer']) ? $this->httpRequest->headers['Referer'] : '';
+		if (isset($this->httpRequest->headers['Referer']))
+			$this->httpRequest->SERVER['HTTP_REFERER']		= $this->httpRequest->headers['Referer'];
+		if (isset($this->httpRequest->headers['Range']))
+			$this->httpRequest->SERVER['HTTP_RANGE']		= $this->httpRequest->headers['Range'];
 		
 		//var_dump($this->httpRequest->headers);
 		//var_dump($this->httpRequest->SERVER);
@@ -496,21 +521,29 @@ class HttpClient
 			// Should we serve a file or pass the request to PHPParser for page generation?
 			if (preg_match('/^.*\.php$/', $scriptName))
 			{
-				// 'Parse' the php file
-				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-				$html = PHPParser::parseFile(
-					$r,
-					$scriptName,
-					$this->httpRequest->SERVER,
-					$this->httpRequest->GET,
-					$this->httpRequest->POST,
-					$this->httpRequest->COOKIE
-				);
-	
-				$r->addBody($html);
-				
-				$this->write($r->getHeaders());
-				$this->write($r->getBody());
+				if ($this->httpRequest->SERVER['REQUEST_METHOD'] == 'HEAD')
+				{
+					$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+					$this->write($r->getHeaders());
+				}
+				else
+				{
+					// 'Parse' the php file
+					$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+					$html = PHPParser::parseFile(
+						$r,
+						$scriptName,
+						$this->httpRequest->SERVER,
+						$this->httpRequest->GET,
+						$this->httpRequest->POST,
+						$this->httpRequest->COOKIE
+					);
+		
+					$r->addBody($html);
+					
+					$this->write($r->getHeaders());
+					$this->write($r->getBody());
+				}
 			}
 			else if (is_dir(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
 			{
@@ -523,92 +556,15 @@ class HttpClient
 			}
 			else
 			{
-				// Serve file - we can do this using the writeFile() method, which is memory friendly
-				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
-				
-				// Cache?
-				$useCache = false;
-				$scriptnameHash = md5(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
-				if (isset($this->httpRequest->headers['Cache-Control']) || isset($this->httpRequest->headers['Pragma']))
+				// Send a file
+				if ($this->httpRequest->SERVER['REQUEST_METHOD'] == 'HEAD')
 				{
-					$ifModifiedSince =
-						isset($this->httpRequest->headers['If-Modified-Since']) ?
-						strtotime($this->httpRequest->headers['If-Modified-Since']) :
-						0;
-					$cacheControl = 
-						isset($this->httpRequest->headers['Cache-Control']) ?
-						$this->httpRequest->parseHeaderValue($this->httpRequest->headers['Cache-Control']) :
-						array();
-					$pragma = 
-						isset($this->httpRequest->headers['Pragma']) ?
-						$this->httpRequest->parseHeaderValue($this->httpRequest->headers['Pragma']) :
-						array();
-					
-					// Detect 'If-Modified-Since' (weak) cache validator (http1.1)
-					if ($ifModifiedSince > 0)
-					{
-						if (isset($this->http->cache[$scriptnameHash]))
-						{
-							if ($this->http->cache[$scriptnameHash] == $ifModifiedSince)
-							{
-								// File has not been changed - tell the browser to use the cache (send a 304)
-								$useCache = true;
-							}
-						}
-						else
-						{
-							$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
-							$this->http->cache[$scriptnameHash] = $scriptMTime;
-							if ($scriptMTime == $ifModifiedSince)
-							{
-								// File has not been changed - tell the browser to use the cache (send a 304)
-								$useCache = true;
-							}
-						}
-					}
-					// Otherwise detect 'Cache-Control' or 'Pragma' (strong) validators (http1.0/http1.1)
-					else if ((isset($cacheControl['max-age']) && $cacheControl['max-age'] == 0) &&
-								!isset($cacheControl['no-cache']) &&
-								!isset($pragma['no-cache']) &&
-								isset($this->http->cache[$scriptnameHash]))
-					{
-						$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
-						if ($this->http->cache[$scriptnameHash] == $scriptMTime)
-						{
-							// File has not been changed - tell the browser to use the cache (send a 304)
-							$useCache = true;
-						}
-						else
-						{
-							// File has been updated - store new mtime in cache
-							$this->http->cache[$scriptnameHash] = $scriptMTime;
-						}
-						clearstatcache();
-					}
-				}
-
-				if ($useCache)
-				{				
-					$r->setResponseCode(304);
-//					$r->addHeader('Last-Modified: '.date('r', $scriptMTime));
+					$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
 					$this->write($r->getHeaders());
 				}
 				else
 				{
-					$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
-
-					$r->addHeader('Content-Type: '.$this->getMimeType());
-					$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
-					$r->addHeader('Last-Modified: '.date('r', $scriptMTime));
-					$this->write($r->getHeaders());
-					$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
-					
-					// Store the filemtime in $cache
-					if (!isset($this->http->cache[$scriptnameHash]))
-					{
-						$this->http->cache[$scriptnameHash] = $scriptMTime;
-					}
-					clearstatcache();
+					$r = $this->serveFile();
 				}
 			}
 		}
@@ -628,7 +584,7 @@ class HttpClient
 			'"'.$this->httpRequest->SERVER['REQUEST_METHOD'].' '.$this->httpRequest->SERVER['REQUEST_URI'].' '.$this->httpRequest->SERVER['SERVER_PROTOCOL'].'" '.
 			$r->getResponseCode().' '.
 			(($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0).' '.
-			'"'.$this->httpRequest->SERVER['HTTP_REFERER'].'" '.
+			'"'.((isset($this->httpRequest->SERVER['HTTP_REFERER'])) ? $this->httpRequest->SERVER['HTTP_REFERER'] : '').'" '.
 			'"'.$this->httpRequest->SERVER['HTTP_USER_AGENT'].'" '.
 			'"-"';
 		console($logLine);
@@ -638,6 +594,112 @@ class HttpClient
 		$this->httpRequest = null;
 
 		return true;
+	}
+	
+	private function &serveFile()
+	{
+		// Serve file - we can do this using the writeFile() method, which is memory friendly
+		$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
+		
+		// Cache?
+		$useCache = false;
+		$scriptnameHash = md5(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+		if (isset($this->httpRequest->headers['Cache-Control']) || isset($this->httpRequest->headers['Pragma']))
+		{
+			$ifModifiedSince =
+				isset($this->httpRequest->headers['If-Modified-Since']) ?
+				(int) strtotime($this->httpRequest->headers['If-Modified-Since']) :
+				0;
+			$cacheControl = 
+				isset($this->httpRequest->headers['Cache-Control']) ?
+				$this->httpRequest->parseHeaderValue($this->httpRequest->headers['Cache-Control']) :
+				array();
+			$pragma = 
+				isset($this->httpRequest->headers['Pragma']) ?
+				$this->httpRequest->parseHeaderValue($this->httpRequest->headers['Pragma']) :
+				array();
+			
+			// Detect 'If-Modified-Since' (weak) cache validator (http1.1)
+			if ($ifModifiedSince > 0)
+			{
+				if (isset($this->http->cache[$scriptnameHash]))
+				{
+					if ($this->http->cache[$scriptnameHash] == $ifModifiedSince)
+					{
+						// File has not been changed - tell the browser to use the cache (send a 304)
+						$useCache = true;
+					}
+				}
+				else
+				{
+					$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+					$this->http->cache[$scriptnameHash] = $scriptMTime;
+					if ($scriptMTime == $ifModifiedSince)
+					{
+						// File has not been changed - tell the browser to use the cache (send a 304)
+						$useCache = true;
+					}
+				}
+			}
+			// Otherwise detect 'Cache-Control' or 'Pragma' (strong) validators (http1.0/http1.1)
+			else if ((isset($cacheControl['max-age']) && $cacheControl['max-age'] == 0) &&
+						!isset($cacheControl['no-cache']) &&
+						!isset($pragma['no-cache']) &&
+						isset($this->http->cache[$scriptnameHash]))
+			{
+				$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+				if ($this->http->cache[$scriptnameHash] == $scriptMTime)
+				{
+					// File has not been changed - tell the browser to use the cache (send a 304)
+					$useCache = true;
+				}
+				else
+				{
+					// File has been updated - store new mtime in cache
+					$this->http->cache[$scriptnameHash] = $scriptMTime;
+				}
+				clearstatcache();
+			}
+		}
+
+		if ($useCache)
+		{				
+			$r->setResponseCode(304);
+			$this->write($r->getHeaders());
+		}
+		else
+		{
+			$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+
+			$r->addHeader('Content-Type: '.$this->getMimeType());
+			$r->addHeader('Last-Modified: '.date('r', $scriptMTime));
+			
+			if (isset($this->httpRequest->SERVER['HTTP_RANGE']))
+			{
+				console('HTTP_RANGE HEADER : '.$this->httpRequest->SERVER['HTTP_RANGE']);
+			    $exp = explode('=', $this->httpRequest->SERVER['HTTP_RANGE']);
+			    $startByte = (int) substr($exp[1], 0, -1);
+
+				$r->addHeader('Content-Length: '.(filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']) - $startByte));
+				$this->write($r->getHeaders());
+				$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME'], $startByte);
+			}
+			else
+			{
+				$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
+				$this->write($r->getHeaders());
+				$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+			}
+			
+			// Store the filemtime in $cache
+			if (!isset($this->http->cache[$scriptnameHash]))
+			{
+				$this->http->cache[$scriptnameHash] = $scriptMTime;
+			}
+			clearstatcache();
+		}
+		
+		return $r;
 	}
 	
 	private function getMimeType()
@@ -834,7 +896,7 @@ class HttpRequest
 						$this->errNo = 414;
 						return false;
 					}
-					else if ($len > 3 && !preg_match('/^(GET|POST).*$/', $this->rawInput))
+					else if ($len > 3 && !preg_match('/^(GET|POST|HEAD).*$/', $this->rawInput))
 					{
 						$this->errNo = 400;
 						return false;
@@ -933,7 +995,7 @@ class HttpRequest
 			return false;
 		
 		// check the request command
-		if ($exp[0] != 'GET' && $exp[0] != 'POST')
+		if ($exp[0] != 'GET' && $exp[0] != 'POST' && $exp[0] != 'HEAD')
 			return false;
 		$this->SERVER['REQUEST_METHOD'] = $exp[0];
 		
@@ -1029,14 +1091,23 @@ class HttpResponse
 	static $responseCodes	= array
 		(
 			200 => 'OK',
+			204 => 'No Content',
+			206 => 'Partial Content',
+			301 => 'Moved Permanently',
+			302 => 'Found',
 			304 => 'Not Modified',
+			307 => 'Temporary Redirect',
 			400 => 'Bad Request',
+			401 => 'Unauthorised',
 			403 => 'Forbidden',
 			404 => 'File Not Found',
+			405 => 'Method Not Allowed',
+			408 => 'Request Timeout',
 			411 => 'Length Required',
 			413 => 'Request Entity Too Large',
 			414 => 'Request-URI Too Long',
 			415 => 'Unsupported Media Type',
+			416 => 'Requested Range Not Satisfiable',
 			444 => 'Request Rejected',
 		);
 
@@ -1088,13 +1159,13 @@ class HttpResponse
 			}
 		}
 		
-		// Store the header
-		$this->headers[$exp[0]] = $exp[1];
+		// Store the header and reformat cases (cONtenT-TypE -> Content-Type)
+		$this->headers[ucwordsByChar(strtolower($exp[0]), '-')] = $exp[1];
 	}
 	
 	public function getHeader($key)
 	{
-		return isset($this->headers[$key]) ? $this->headers[$key] : '';
+		return isset($this->headers[$key]) ? $this->headers[$key] : false;
 	}
 	
 	public function getHeaders()
@@ -1115,8 +1186,13 @@ class HttpResponse
 	
 	private function finaliseHeaders()
 	{
+		// Adjust the response code for a redirect?
+		if (isset($this->headers['Location']))
+			$this->responseCode = 302;
+
 		// Set server-side headers
 		$this->headers['Date']					= date('r');
+		$this->headers['Accept-Ranges']			= 'bytes';
 		
 		if (!isset($this->headers['Content-Length']) && 
 			$this->responseCode != 304)
@@ -1124,7 +1200,9 @@ class HttpResponse
 			$this->headers['Content-Length']	= $this->bodyLen;
 		}
 		
-		if ($this->responseCode == 200 || $this->responseCode == 404)
+		if ($this->responseCode == 200 || 
+			$this->responseCode == 302 || 
+			$this->responseCode == 404)
 		{
 			$this->headers['Connection']		= 'Keep-Alive';
 			$this->headers['Keep-Alive']		= 'timeout='.HTTP_KEEP_ALIVE;

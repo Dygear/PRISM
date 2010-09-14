@@ -2,6 +2,7 @@
 
 require_once('testinclude.php');
 
+// Cookie examples
 $_RESPONSE->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
 $_RESPONSE->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
 
@@ -10,12 +11,36 @@ $_RESPONSE->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, 
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
 <head>
 <title>Prism http server test page</title>
+<style type="text/css">
+div.loginArea {
+	float: right;
+	clear: both;
+}
+</style>
 </head>
 <body>
 <?php
 
-$html = someTestFunction().'<br />';
-$html .= '<a href="/"><img src="images/test.gif" border="0" alt="" style="float: right;" /></a>';
+$html = '';
+if (isset($_SESSION['user']))
+{
+	$html .= '<div class="loginArea">';
+	$html .= 'Welcome '.htmlspecialchars($_SESSION['user']).'.';
+	$html .= ' -<a href="/login.php?logout">Logout</a>';
+	$html .= '</div>';
+}
+else
+{
+	$html .= '<div class="loginArea">';
+	$html .= '<form method="post" action="/login.php">';
+	$html .= '<input type="text" name="loginUser" value="" size="16" maxlength="24" />';
+	$html .= '<input type="password" name="loginPass" value="" size="16" maxlength="24" />';
+	$html .= '<input type="submit" value="Login" />';
+	$html .= '</form>';
+	$html .= '</div>';
+}
+$html .= '<a href="/"><img src="images/test.gif" border="0" alt="" style="float: right; clear: both;" /></a>';
+$html .= someTestFunction().'<br />';
 
 if (isset($_SESSION))
 {
@@ -92,14 +117,14 @@ echo $html;
 //unset($_SESSION);
 if (isset($_SESSION))
 {
-	$_SESSION['random'] = createRandomString(32, RAND_ALPHA);
+	$_SESSION['counter']++;
 	$_SESSION['lasttime'] = time();
 }
 else
 {
 	$_SESSION = array
 	(
-		'random' => createRandomString(32, RAND_ALPHA), 
+		'counter' => 1, 
 		'staticvar' => 'mooh', 
 		'lasttime' => time()
 	);
