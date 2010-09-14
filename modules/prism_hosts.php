@@ -35,6 +35,11 @@ class HostHandler extends SectionHandler
 
 	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 
+	public function &getHosts()
+	{
+		return $this->hosts;
+	}
+
 	public function initialise()
 	{
 		global $PRISM;
@@ -327,7 +332,7 @@ class HostHandler extends SectionHandler
 			else if ($host->getConnStatus() == CONN_CONNECTING)
 			{
 				// Check to see if a connection attempt is going to time out.
-				if ($host->connTime < time() - CONN_TIMEOUT)
+				if ($host->getConnTime() < time() - CONN_TIMEOUT)
 				{
 					console('Connection attempt to '.$host->getIP().':'.$host->getPort().' timed out');
 					$host->close();
@@ -563,6 +568,11 @@ class InsimConnection
 	public function setConnTime($connTime)
 	{
 		$this->connTime = $connTime;
+	}
+
+	public function &getConnTime()
+	{
+		return $this->connTime;
 	}
 	
 	public function &getLastReadTime()

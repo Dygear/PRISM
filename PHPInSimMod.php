@@ -239,11 +239,11 @@ class PHPInSimMod
 
 							break;
 						case 'h':
-							console(sprintf('%7s %15s:%5s', 'Host ID', 'IP', 'PORT', 'UDP PORT' 'STATUS'));
+							console(sprintf('%7s %15s:%5s', 'Host ID', 'IP', 'PORT', 'UDP PORT', 'STATUS'));
 							foreach ($this->hosts->hosts as $hostID => $host)
 							{
 								$status = (($host->connStatus == CONN_CONNECTED) ? '' : (($host->connStatus == CONN_VERIFIED) ? 'VERIFIED &' : ' NOT')).' CONNECTED';
-								console(sprintf('%7s %15s:%5s %8s %24s', $hostID, $host->ip, $host->port, $host->udpPort, $status))
+								console(sprintf('%7s %15s:%5s %8s %24s', $hostID, $host->ip, $host->port, $host->udpPort, $status));
 							}
 							break;
 						
@@ -265,7 +265,7 @@ class PHPInSimMod
 							break;
 						
 						case 'w':
-							console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY');
+							console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY'));
 							for ($k=0; $k<$this->httpNumClients; $k++)
 							{
 								$lastAct = time() - $this->httpClients[$k]->lastActivity;

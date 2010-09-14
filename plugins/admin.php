@@ -8,6 +8,9 @@ class admin extends Plugins
 
 	public function __construct()
 	{
+		# Debug
+		$this->registerSayCommand('!', 'cmdDebug', 'Debug Console.');
+
 		# Help
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism help', 'cmdHelp', 'Displays this command list.');
@@ -20,6 +23,73 @@ class admin extends Plugins
 		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins reload', 'cmdAdminReload', 'Reloads the admins.', ADMIN_CFG);
+	}
+
+	// Debug
+	public function cmdDebug($cmd, $plid, $ucid)
+	{	// These will all be registed console commands soon.
+		global $PRISM;
+
+		# default
+		console(NULL); # Print a blank line.
+		console('Available Commands:');
+		console('	h - show host info');
+		console('	I - re-initialise PRISM (reload ini files / reconnect to hosts / reset http socket');
+		console('	p - show plugin info');
+		console('	x - exit PHPInSimMod');
+		console('	w - show www connections');
+		console('	c - show command list');
+
+		# c
+		console(NULL); # Print a blank line.
+		console(sprintf('%32s %64s', 'COMMAND', 'DESCRIPTOIN'));
+		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
+		{
+			foreach ($details->sayCommands as $command => $detail)
+			{
+				console(sprintf('%32s - %64s', $command, $detail['info']));
+			}
+		}
+
+		# h
+		console(NULL); # Print a blank line.
+		console(sprintf('%16s %32s:%5s %8s %24s', 'Host ID', 'IP', 'PORT', 'UDP PORT', 'STATUS'));
+		foreach ($PRISM->hosts->getHosts() as $hostID => $host)
+		{
+			$status = (($host->getConnStatus() == CONN_CONNECTED) ? '' : (($host->getConnStatus() == CONN_VERIFIED) ? 'VERIFIED &' : ' NOT')).' CONNECTED';
+			console(sprintf('%16s %32s:%5s %8s %24s', $hostID, $host->getIP(), $host->getPort(), $host->getUdpPort(), $status));
+		}
+
+		# I
+		console(NULL); # Print a blank line.
+#		console('RE-INITIALISING PRISM...');
+#		$PRISM->initialise(null, null);
+
+		# p
+		console(NULL); # Print a blank line.
+		console(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'));
+		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
+		{
+			console(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION));
+		}
+
+		# x
+		console(NULL); # Print a blank line.
+#		$PRISM->isRunning = FALSE;
+
+		# w
+		console(NULL); # Print a blank line.
+		$httpNumClients = $PRISM->http->getHttpNumClients();
+		console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY'));
+		for ($k = 0; $k < $httpNumClients; ++$k)
+		{
+			$httpClient = $PRISM->http->getHttpClient($k);
+			$lastAct = time() - $httpClient->lastActivity;
+			console(sprintf('%15s:%5s %5d %13d', $httpClient->ip, $httpClient->port, $lastAct));
+		}
+		console('Counted '.$httpNumClients.' http client'.(($httpNumClients == 1) ? '' : 's'));
+
+		return PLUGIN_CONTINUE;
 	}
 
 	// Help

@@ -16,6 +16,16 @@ class HttpHandler extends SectionHandler
 	private $httpClients	= array();
 	private $httpNumClients	= 0;
 
+	public function &getHttpNumClients()
+	{
+		return $this->httpNumClients;
+	}
+
+	public function &getHttpClient($k)
+	{
+		return $this->httpClients[$k];
+	}
+
 	private $httpVars		= array('ip' => '', 'port' => 0);
 	public $cache			= null;
 
