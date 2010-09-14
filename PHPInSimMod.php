@@ -75,8 +75,7 @@ class PHPInSimMod
 		set_error_handler(__CLASS__ . '::_errorHandler', E_ALL | E_STRICT);
 		
 		// Windows OS check
-		$shell = getenv('SHELL');
-		if (!$shell || $shell[0] != '/')
+		if (preg_match('/^win/i', PHP_OS))
 			$this->isWindows = TRUE;
 		
 		$this->config	= new ConfigHandler();

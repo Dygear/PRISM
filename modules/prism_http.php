@@ -531,13 +531,17 @@ class HttpClient
 						$this->httpRequest->SERVER,
 						$this->httpRequest->GET,
 						$this->httpRequest->POST,
-						$this->httpRequest->COOKIE
+						$this->httpRequest->COOKIE,
+						$this->httpRequest->FILES
 					);
 		
 					$r->addBody($html);
 					
 					$this->write($r->getHeaders());
 					$this->write($r->getBody());
+					
+					// Clean any temp files created by eg. a file upload
+					$this->cleanTempFiles();
 				}
 			}
 			else if (is_dir(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
@@ -638,8 +642,8 @@ class HttpClient
 			}
 			// Otherwise detect 'Cache-Control' or 'Pragma' (strong) validators (http1.0/http1.1)
 			else if ((isset($cacheControl['max-age']) && $cacheControl['max-age'] == 0) &&
-						!isset($cacheControl['no-cache']) &&
-						!isset($pragma['no-cache']) &&
+						$cacheControl != 'no-cache' &&
+						$pragma != 'no-cache' &&
 						isset($this->http->cache[$scriptnameHash]))
 			{
 				$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
@@ -695,6 +699,27 @@ class HttpClient
 		}
 		
 		return $r;
+	}
+
+	private function cleanTempFiles()
+	{
+		// $FILES cleanup
+		foreach ($this->httpRequest->FILES as $k => $v)
+		{
+			if (is_array($v['tmp_name']))
+			{
+				foreach ($v['tmp_name'] as $c => $d)
+				{
+					if ($v['tmp_name'][$c])
+						unlink($v['tmp_name'][$c]);
+				}
+			}
+			else
+			{
+				if ($v['tmp_name'])
+					unlink($v['tmp_name']);
+			}
+		}
 	}
 
 	private function getMimeType()
@@ -788,6 +813,7 @@ class HttpRequest
 	public $SERVER			= array();
 	public $GET				= array();		// With these arrays we try to recreate php's global vars a bit.
 	public $POST			= array();
+	public $FILES			= array();
 	public $COOKIE			= array();
 	
 	public function __construct()
@@ -828,7 +854,10 @@ class HttpRequest
 					$this->errNo = 411;
 					return false;
 				}
-				if (!isset($this->headers['Content-Type']) || $this->headers['Content-Type'] != 'application/x-www-form-urlencoded')
+				$contentType = isset($this->headers['Content-Type']) ? $this->parseContentType($this->headers['Content-Type']) : '';
+				if (!$contentType || 
+					($contentType['mediaType'] != 'application/x-www-form-urlencoded' &&
+					 $contentType['mediaType'] != 'multipart/form-data'))
 				{
 					$this->errNo = 415;
 					$this->errStr = 'No Content-Type was provided that I can handle. At the moment I only like application/x-www-form-urlencoded.';
@@ -847,7 +876,10 @@ class HttpRequest
 				$this->isReceiving = false;
 				
 				// Parse POST variables
-				$this->parsePOST(substr($this->rawInput, 0, $this->headers['Content-Length']));
+				if ($contentType['mediaType'] == 'application/x-www-form-urlencoded')
+					$this->parsePOSTurlenc(substr($this->rawInput, 0, $this->headers['Content-Length']));
+				else if ($contentType['mediaType'] == 'multipart/form-data')
+					$this->parsePOSTformdata($this->rawInput, $contentType['boundary'][1]);
 				
 				// Cleanup rawInput
 				$this->rawInput = substr($this->rawInput, $this->headers['Content-Length']);
@@ -947,38 +979,76 @@ class HttpRequest
 		return true;
 	}
 	
-	public function parseHeaderValue(&$header)
+	private function parseSubHeaders(&$headers)
 	{
-//		image/png,
-//		image/*;
-//			q=
-//				0.8,
-//		*/*;q=0.5
-		
 		$parsed = array();
 		
-		// Split by ,
-		$items = explode(',', $header);
-		foreach ($items as $k => $item)
+		// Split header lines
+		$lines = explode("\r\n", $headers);
+		
+		foreach ($lines as $header)
 		{
-			if (strpos($item, ';') !== false)
-			{
-				// Split by ;
-				$exp2 = explode(';', $v);
-				$parsed[$exp2[0]] = $exp2[1];
-			}
-			else if (strpos($item, '=') !== false)
-			{
-				// Split by =
-				$exp2 = explode('=', $item);
-				$parsed[$exp2[0]] = $exp2[1];
-			}
-			else
-			{
-				// Nothing to splut further
-				$parsed[$item] = '';
-			}
+			$exp = explode(':', $header, 2);
+			if (count($exp) == 2)
+				$parsed[trim($exp[0])] = $this->parseHeaderValue(trim($exp[1]));
 		}
+		
+		return $parsed;
+	}
+	
+	public function parseHeaderValue($header, $level = 0)
+	{
+//		image/png,image/*;q=0.8,*/*;q=0.5
+//		image/png,
+//		          image/*;q=0.8,
+//		                        */*;q=0.5
+		
+		// Split by ...
+		switch($level)
+		{
+			case 0 :			// ,
+				$items = explode(',', $header);
+				break;
+			
+			case 1 :			// ;
+				$items = explode(';', $header);
+				break;
+			
+			case 2 :			// =
+				$items = explode('=', $header);
+				break;
+		}
+		
+		if ($level == 2)
+		{
+			if (count($items) == 1)
+				return $header;
+			else
+				return array(trim($items[0]) => $items[1]);
+		}
+		if (count($items) == 1)
+			return $this->parseHeaderValue($header, $level + 1);
+
+		$parsed = array();
+		
+		foreach ($items as $k => $v)
+		{
+			$parsed[$k] = $this->parseHeaderValue($v, $level + 1);
+		}
+		
+		return $parsed;
+	}
+
+	public function parseContentType(&$header)
+	{
+		if ($header == '')
+			return false;
+		
+		// Split?
+		$parsed = array();
+		$exp = explode(';', $header);
+		$parsed['mediaType']	= $exp[0];
+		$parsed['boundary']		= isset($exp[1]) ? explode('=', $exp[1]) : false;
 		
 		return $parsed;
 	}
@@ -1041,7 +1111,7 @@ class HttpRequest
 		}
 	}
 	
-	private function parsePOST($raw)
+	private function parsePOSTurlenc($raw)
 	{
 		$exp = explode('&', $raw);
 		foreach ($exp as $v)
@@ -1065,6 +1135,105 @@ class HttpRequest
 				$this->POST[$key] = $value;
 			}
 		}
+	}
+	
+	private function parsePOSTformdata($raw, $boundary)
+	{
+		// Split into separate parts
+		$parts = explode('--'.$boundary, $raw);
+		
+		// Always remove the first and last entries, as they are bogus
+		array_shift($parts);
+		array_pop($parts);
+		
+		foreach ($parts as $part)
+		{
+			// Split part headers & data
+			$exp = explode("\r\n\r\n", substr($part, 2, -2), 2);
+			$headers = $this->parseSubHeaders($exp[0]);
+
+			$key = preg_replace('/^"(.*)"$/', '\\1', $headers['Content-Disposition'][1]['name']);
+			$value = $exp[1];
+
+			$contentType = '';
+			if (isset($headers['Content-Disposition'][2]['filename']))
+				$fileName = preg_replace('/^"(.*)"$/', '\\1', $headers['Content-Disposition'][2]['filename']);
+			if (isset($fileName) && isset($headers['Content-Type']))
+				$contentType = $headers['Content-Type'];
+			
+			if (isset($fileName))
+			{
+				if (!$fileName)
+					continue;
+				
+				// Store the uploaded file in a temp place
+				$tmpFileName = tempnam(sys_get_temp_dir(), 'Prism');
+				file_put_contents($tmpFileName, $value);
+				
+				// Fill $FILES with details on the file
+				if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches))
+				{
+					// Create entry array if not yet exists
+					if (!isset($this->FILES[$matches[1]]))
+					{
+						$this->FILES[$matches[1]] = array(
+							'name'		=> array(),
+							'tmp_name'	=> array(),
+							'type'		=> array(),
+							'size'		=> array(),
+							'error'		=> array(),
+						);
+					}
+					
+					// Fill in the values
+					if ($matches[2] == '')
+					{
+						$this->FILES[$matches[1]]['name'][]		= $fileName;
+						$this->FILES[$matches[1]]['tmp_name'][]	= $tmpFileName;
+						$this->FILES[$matches[1]]['type'][]		= $contentType;
+						$this->FILES[$matches[1]]['size'][]		= strlen($value);
+						$this->FILES[$matches[1]]['error'][]	= 0;
+					}
+					else
+					{
+						$this->FILES[$matches[1]]['name'][$matches[2]]		= $fileName;
+						$this->FILES[$matches[1]]['tmp_name'][$matches[2]]	= $tmpFileName;
+						$this->FILES[$matches[1]]['type'][$matches[2]]		= $contentType;
+						$this->FILES[$matches[1]]['size'][$matches[2]]		= strlen($value);
+						$this->FILES[$matches[1]]['error'][$matches[2]]		= 0;
+					}
+				}
+				else
+				{
+					$this->FILES[$key] = array(
+						'name'		=> $fileName,
+						'tmp_name'	=> $tmpFileName,
+						'type'		=> $contentType,
+						'size'		=> strlen($value),
+						'error'		=> 0,
+					);
+				}
+			}
+			else
+			{
+				if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches))
+				{
+					if (!isset($this->POST[$matches[1]]))
+						$this->POST[$matches[1]] = array();
+	
+					if ($matches[2] == '')
+						$this->POST[$matches[1]][] = $value;
+					else
+						$this->POST[$matches[1]][$matches[2]] = $value;
+				}
+				else
+				{
+					$this->POST[$key] = $value;
+				}
+			}
+		}
+		
+		//var_dump($this->POST);
 	}
 	
 	private function parseCOOKIE()

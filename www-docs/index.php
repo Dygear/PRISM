@@ -89,18 +89,50 @@ if (count($_POST) > 0)
 	$html .= '<br />';
 }
 
-$html .= 'Here\'s a form to test POST requests<br />';
-$html .= '<form method="post" action="/?'.$SERVER['QUERY_STRING'].'">';
+if (count($_FILES) > 0)
+{
+	$html .= 'You submitted the following FILES values :<br />';
+	foreach ($_FILES as $k => $v)
+	{
+		if (is_array($v['name']))
+		{
+			foreach ($v['name'] as $c => $d)
+			{
+				$html .= htmlspecialchars('Key : '.$k).'<br />';
+				$html .= htmlspecialchars('name : '.$v['name'][$c]).'<br />';
+				$html .= htmlspecialchars('tmp_name : '.$v['tmp_name'][$c]).'<br />';
+				$html .= htmlspecialchars('type : '.$v['type'][$c]).'<br />';
+				$html .= htmlspecialchars('size : '.$v['size'][$c]).'<br />';
+				$html .= htmlspecialchars('error : '.$v['error'][$c]).'<br />';
+			}
+		}
+		else
+		{
+			$html .= htmlspecialchars('Key : '.$k).'<br />';
+			$html .= htmlspecialchars('name : '.$v['name']).'<br />';
+			$html .= htmlspecialchars('tmp_name : '.$v['tmp_name']).'<br />';
+			$html .= htmlspecialchars('type : '.$v['type']).'<br />';
+			$html .= htmlspecialchars('size : '.$v['size']).'<br />';
+			$html .= htmlspecialchars('error : '.$v['error']).'<br />';
+		}
+	}
+	$html .= '<br />';
+}
+
+$html .= 'Here\'s a form to test POST requests and file uploads<br />';
+$html .= '<form method="post" enctype="multipart/form-data" action="/?'.$SERVER['QUERY_STRING'].'">';
 $html .= '';
 for ($c=0; $c<3; $c++)
-	$html .= '			name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
+	$html .= 'name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
 for ($c=0; $c<3; $c++)
-	$html .= '			name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
+	$html .= 'name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
 for ($c=0; $c<3; $c++)
-	$html .= '			name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
-$html .= '			name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
-$html .= '			<input type="submit" value="Submit the form" />';
-$html .= '		</form>';
+	$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
+$html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
+$html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
+$html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
+$html .= '<input type="submit" value="Submit the form" />';
+$html .= '</form>';
 
 for ($x = 0; $x < 100; $x++)
 {

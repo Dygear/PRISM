@@ -22,6 +22,6 @@ else if ($adminUser && $adminPass)
 		unset($_SESSION['user']);
 }
 
-$_RESPONSE->addHeader('Location: http://vic.lfs.net:1800/');
+$_RESPONSE->addHeader('Location: /');
 
 ?>

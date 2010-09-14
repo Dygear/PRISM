@@ -5,7 +5,7 @@ class PHPParser
 	private static $scriptCache = array();
 	private static $sessions = array();
 	
-	public static function parseFile(HttpResponse &$_RESPONSE, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE)
+	public static function parseFile(HttpResponse &$_RESPONSE, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE, array &$_FILES)
 	{
 		global $PRISM;
 		
