@@ -56,7 +56,7 @@ class PHPInSimMod
 	public $http				= null;
 	public $plugins				= null;
 	public $users				= null;
-	
+
 	# Time outs
 	private $sleep				= NULL;
 	private $uSleep				= NULL;
@@ -78,7 +78,7 @@ class PHPInSimMod
 		$shell = getenv('SHELL');
 		if (!$shell || $shell[0] != '/')
 			$this->isWindows = TRUE;
-
+		
 		$this->config	= new ConfigHandler();
 		$this->hosts	= new HostHandler();
 		$this->plugins	= new PluginHandler();
@@ -192,7 +192,7 @@ class PHPInSimMod
 		while ($this->isRunning === TRUE)
 		{
 			// Setup our listen arrays
-			$sockReads = $sockWrites = array();
+			$sockReads = $sockWrites = $socketExcept = array();
 			
 			if (!$this->isWindows)
 				$sockReads[] = STDIN;
@@ -207,8 +207,8 @@ class PHPInSimMod
 			$this->getSelectTimeOut();
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
-			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept = null, $this->sleep, $this->uSleep);
-				
+			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept, $this->sleep, $this->uSleep);
+			
 			// Keep looping until you've handled all activities on the sockets.
 			while($numReady > 0)
 			{
@@ -240,11 +240,12 @@ class PHPInSimMod
 							break;
 						
 						case 'p':
-							console("#\tName\tVersion\tAuthor\tDescription");
-							foreach ($this->plugins as $pluginID => $plugin)
+							echo sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION') . PHP_EOL;
+							foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 							{
-								console($pluginID."\t#".$plugin::NAME."\t".$plugin::VERSION."\t".$plugin::AUTHOR."\t".$plugin::DESCRIPTION);
+								echo sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION) . PHP_EOL;
 							}
+							echo PHP_EOL;
 							break;
 						
 						case 'x':
@@ -278,6 +279,7 @@ class PHPInSimMod
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 			$this->hosts->maintenance();
 			$this->http->maintenance();
+			PHPParser::cleanSessions();
 						
 		} // End while(isRunning)
 	}

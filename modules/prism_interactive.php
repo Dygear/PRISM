@@ -182,25 +182,22 @@ class Interactive
 		echo 'You now have the chance to manually enter the details of the http server.'.PHP_EOL;
 		echo 'Afterwards your http settings will be stored in ./config/http.ini for future use.'.PHP_EOL;
 
-		if (!isset($vars['http']))
-			$vars['http'] = array();
-
 		// Ask if we want to use a http socket at all
 		if (self::query(PHP_EOL.'Would you like to setup the web-admin socket?', array('yes', 'no')) == 'no')
 		{
-			$vars['http']['ip'] = '';
-			$vars['http']['port'] = '0';
+			$vars['ip'] = '';
+			$vars['port'] = '0';
 			return;
 		}
 
 		// Ask which IP address to bind the listen socket to
 		while (true)
 		{
-			$vars['http']['ip']		= self::query('On which IP address should HTTP listen? (blank means all)', array(), true);
-			if ($vars['http']['ip'] == '')
-				$vars['http']['ip'] = '0.0.0.0';
+			$vars['ip']		= self::query('On which IP address should HTTP listen? (blank means all)', array(), true);
+			if ($vars['ip'] == '')
+				$vars['ip'] = '0.0.0.0';
 			
-			if (!verifyIP($vars['http']['ip']))
+			if (!verifyIP($vars['ip']))
 				echo 'Invalid IPv4 address entered. Please try again.'.PHP_EOL;
 			else
 				break;
@@ -209,27 +206,55 @@ class Interactive
 		// Ask which Port to listen on
 		while (true)
 		{
-			$vars['http']['port']	= (int) self::query('On which Port should HTTP listen?');
+			$vars['port']	= (int) self::query('On which Port should HTTP listen?');
 			
-			if ($vars['http']['port'] < 1 || $vars['http']['port'] > 65535)
+			if ($vars['port'] < 1 || $vars['port'] > 65535)
 				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
 			else
 				break;
 		}
+		echo PHP_EOL;
 	}
 	
 	public function queryUsers(array &$vars)
 	{
+		global $PRISM;
+		
 		echo '***Interactive startup***'.PHP_EOL;
 		echo 'You now have the chance to create PRISM user accounts.'.PHP_EOL;
 		echo 'Afterwards your user settings will be stored in ./config/users.ini for future use.'.PHP_EOL;
 
-		// LOCAL ROOT accounts
-		
-		// GLOBAL ROOT accounts
-		
-		// GLOBAL ADMIN accounts
-		
+		do
+		{
+			echo PHP_EOL;
+			$tmp = array();
+			
+			$tmp['username']			= self::query('Give the (LFS) username for the account');
+			do
+			{
+				$tmp['password']		= self::query('Give a password for the account');
+				$tmp['passwordVeri']	= self::query('Repeat the same password to verify');
+				if ($tmp['password'] != $tmp['passwordVeri'])
+					echo 'Passwords did not match. Please try again.'.PHP_EOL;
+				else if (strlen($tmp['password']) < 4)
+					echo 'The password is too short. Please enter a longer one.'.PHP_EOL;
+				else if (strlen($tmp['password']) >= 40)
+					echo 'The password is too long. Please enter a shorter one.'.PHP_EOL;
+				else
+					break;
+			} while(true);
+			$tmp['connection']			= self::query('Give the connection name on which the user may be active. Leave blank for all connections.', array(), true);
+			$tmp['accessFlags']			= 'abcdefghijklmnopqrstuvwxyz';
+			
+			$vars[$tmp['username']] 	= array(
+				'password'		=> sha1($tmp['password'].$PRISM->config->cvars['secToken']),
+				'connection'	=> $tmp['connection'],
+				'accessFlags'	=> $tmp['accessFlags'],
+			);
+			
+			if (self::query(PHP_EOL.'Would you like to add another user?', array('yes', 'no')) == 'no')
+				break;
+		} while(true);
 	}
 
 	/*	$question	- the string that will be presented to the user.

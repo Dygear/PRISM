@@ -1990,11 +1990,30 @@ class IS_BTN extends struct // BuTtoN - button header - followed by 0 to 240 cha
 
 	public $Text;			// 0 to 240 characters of text
 
-	function pack()
+	public function pack()
 	{
-		PRISM::CONSOLE('Needs to be implamented');
-	}
+		echo 'Do I even get called?';
+		$return = '';
+		$packFormat = $this::parsePackFormat();
+		$propertyNumber = -1;
 
+		$strLen = strlen($this->Text);
+		$strLen = ($strLen + ($strLen % 4));
+		$this->Size = $strLen + 12;
+
+		foreach ($this as $property => $value)
+		{
+			$pkFnkFormat = $packFormat[++$propertyNumber];
+			if ($property == 'Text')
+				$return .= pack('a' . $strLen, $this->Text);
+			else if ($pkFnkFormat == 'x')
+				$return .= pack('C', 0); # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
+			else
+				$return .= pack($pkFnkFormat, $this->$property);
+		}
+		
+		return $return;
+	}
 };
 
 // ClickID byte : this value is returned in IS_BTC and IS_BTT packets.
@@ -2089,8 +2108,8 @@ class IS_BTT extends struct // BuTton Type - sent back when user types into a te
 	const PACK = 'CCCCCCCxa96';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CTypeIn/CSp3/a96Text';
 
-	public $Size = 104;	// 104
-	public $Type = ISP_BIT;// ISP_BTT
+	public $Size = 104;		// 104
+	public $Type = ISP_BIT;	// ISP_BTT
 	public $ReqI;			// ReqI as received in the IS_BTN
 	public $UCID;			// connection that typed into the button (zero if local)
 
@@ -2100,6 +2119,30 @@ class IS_BTT extends struct // BuTton Type - sent back when user types into a te
 	public $Sp3;
 
 	public $Text;		// typed text, zero to TypeIn specified in IS_BTN
+
+	public function pack()
+	{
+		$return = '';
+		$packFormat = $this::parsePackFormat();
+		$propertyNumber = -1;
+
+		$strLen = strlen($this->Text);
+		$strLen = ($strLen + ($strLen % 4));
+		$this->Size = $strLen + 8;
+
+		foreach ($this as $property => $value)
+		{
+			$pkFnkFormat = $packFormat[++$propertyNumber];
+			if ($property == 'Text')
+				$return .= pack('a' . $strLen, $this->Text);
+			else if ($pkFnkFormat == 'x')
+				$return .= pack('C', 0); # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
+			else
+				$return .= pack($pkFnkFormat, $this->$property);
+		}
+		
+		return $return;
+	}
 };
 
 
