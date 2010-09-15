@@ -879,7 +879,14 @@ class HttpRequest
 				if ($contentType['mediaType'] == 'application/x-www-form-urlencoded')
 					$this->parsePOSTurlenc(substr($this->rawInput, 0, $this->headers['Content-Length']));
 				else if ($contentType['mediaType'] == 'multipart/form-data')
-					$this->parsePOSTformdata($this->rawInput, $contentType['boundary'][1]);
+				{
+					if (!$this->parsePOSTformdata($this->rawInput, $contentType['boundary'][1]))
+					{
+						$this->errNo = 400;
+						$this->errStr = 'Bad Request - Problems parsing body data';
+						return false;
+					}
+				}
 				
 				// Cleanup rawInput
 				$this->rawInput = substr($this->rawInput, $this->headers['Content-Length']);
@@ -1139,6 +1146,12 @@ class HttpRequest
 	
 	private function parsePOSTformdata($raw, $boundary)
 	{
+		// Check if the raw data at least begins and ends with the boundary
+		$bLen = strlen($boundary);
+		if (substr($raw, 0, ($bLen + 2)) != '--'.$boundary ||
+			trim(substr($raw, -($bLen + 2))) != substr($boundary, 2).'--')
+			return false;
+
 		// Split into separate parts
 		$parts = explode('--'.$boundary, $raw);
 		
@@ -1234,6 +1247,7 @@ class HttpRequest
 		}
 		
 		//var_dump($this->POST);
+		return true;
 	}
 	
 	private function parseCOOKIE()

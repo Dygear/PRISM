@@ -216,13 +216,13 @@ class Interactive
 		echo PHP_EOL;
 	}
 	
-	public function queryUsers(array &$vars)
+	public function queryAdmins(array &$vars)
 	{
 		global $PRISM;
 		
 		echo '***Interactive startup***'.PHP_EOL;
-		echo 'You now have the chance to create PRISM user accounts.'.PHP_EOL;
-		echo 'Afterwards your user settings will be stored in ./config/users.ini for future use.'.PHP_EOL;
+		echo 'You now have the chance to create PRISM admin accounts.'.PHP_EOL;
+		echo 'Afterwards your admins settings will be stored in ./config/admins.ini for future use.'.PHP_EOL;
 
 		do
 		{
@@ -243,7 +243,7 @@ class Interactive
 				else
 					break;
 			} while(true);
-			$tmp['connection']			= self::query('Give the connection name on which the user may be active. Leave blank for all connections.', array(), true);
+			$tmp['connection']			= self::query('Give the connection name on which the admin may be active. Leave blank for all connections.', array(), true);
 			$tmp['accessFlags']			= 'abcdefghijklmnopqrstuvwxyz';
 			
 			$vars[$tmp['username']] 	= array(
@@ -252,7 +252,7 @@ class Interactive
 				'accessFlags'	=> $tmp['accessFlags'],
 			);
 			
-			if (self::query(PHP_EOL.'Would you like to add another user?', array('yes', 'no')) == 'no')
+			if (self::query(PHP_EOL.'Add another admin account?', array('yes', 'no')) == 'no')
 				break;
 		} while(true);
 	}

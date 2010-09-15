@@ -12,7 +12,7 @@ if (isset($_GET['logout']) || isset($_POST['logout']))
 }
 else if ($adminUser && $adminPass)
 {
-	if ($PRISM->users->isPasswordCorrect($adminUser, $adminPass))
+	if ($PRISM->admins->isPasswordCorrect($adminUser, $adminPass))
 	{
 		if (!isset($_SESSION))
 			$_SESSION = array();

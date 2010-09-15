@@ -131,7 +131,7 @@ class admin extends Plugins
 
 		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
 		echo sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION') . PHP_EOL;
-		foreach ($PRISM->users->getUsers() as $user => $details)
+		foreach ($PRISM->admins->getAdmins() as $user => $details)
 		{
 			echo $user;
 			print_r($details);
@@ -144,7 +144,7 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
-		print_r($PRISM->users->getUsers());
+		print_r($PRISM->admins->getAdmins());
 
 		return PLUGIN_CONTINUE;
 	}

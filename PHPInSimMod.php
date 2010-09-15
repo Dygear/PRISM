@@ -30,7 +30,7 @@ require_once(ROOTPATH . '/modules/prism_config.php');
 require_once(ROOTPATH . '/modules/prism_packets.php');
 require_once(ROOTPATH . '/modules/prism_hosts.php');
 require_once(ROOTPATH . '/modules/prism_http.php');
-require_once(ROOTPATH . '/modules/prism_users.php');
+require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
 
 $PRISM = new PHPInSimMod();
@@ -55,7 +55,7 @@ class PHPInSimMod
 	public $hosts				= null;
 	public $http				= null;
 	public $plugins				= null;
-	public $users				= null;
+	public $admins				= null;
 
 	# Time outs
 	private $sleep				= NULL;
@@ -82,7 +82,7 @@ class PHPInSimMod
 		$this->hosts	= new HostHandler();
 		$this->plugins	= new PluginHandler();
 		$this->http		= new HttpHandler();
-		$this->users	= new UserHandler();
+		$this->admins	= new AdminHandler();
 	}
 
 	// Pseudo Magic Functions
@@ -156,7 +156,7 @@ class PHPInSimMod
 		if (!$this->config->initialise() ||
 			!$this->hosts->initialise() || 
 			!$this->http->initialise() || 
-			!$this->users->initialise() || 
+			!$this->admins->initialise() || 
 			!$this->plugins->initialise())
 		{
 			console('Fatal error encountered. Exiting...');

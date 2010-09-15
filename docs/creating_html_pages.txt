@@ -135,7 +135,7 @@ $PRISM
 	- $PRISM->hosts		(handler for the host connections)
 	- $PRISM->http		(handler for the web server)
 	- $PRISM->plugins	(handler for plugins)
-	- $PRISM->users		(handler for users)
+	- $PRISM->admins	(handler for admin accounts)
 
 
 **************

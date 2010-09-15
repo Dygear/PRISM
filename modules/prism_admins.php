@@ -32,33 +32,33 @@ define('ADMIN_LEVEL_Y',				16777216);	# Flag "y",
 define('ADMIN_LEVEL_Z',				33554432);	# Flag "z", 
 define('ADMIN_ALL',					134217727);	# All flags, a - z.
 
-class UserHandler extends SectionHandler
+class AdminHandler extends SectionHandler
 {
-	private $users		= array();
+	private $admins		= array();
 
-	public function getUsers()
+	public function getAdmins()
 	{
-		return $this->users;
+		return $this->admins;
 	}
 
 	public function initialise()
 	{
 		global $PRISM;
 		
-		$this->users = array();
+		$this->admins = array();
 		
-		if ($this->loadIniFile($this->users, 'users.ini'))
+		if ($this->loadIniFile($this->admins, 'admins.ini'))
 		{
 			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded users.ini');
+				console('Loaded admins.ini');
 		}
 		else
 		{
 			# We ask the client to manually input the user details here.
 			require_once(ROOTPATH . '/modules/prism_interactive.php');
-			Interactive::queryUsers($this->users);
+			Interactive::queryAdmins($this->admins);
 			
-			# Then build a users.ini file based on these details provided.
+			# Then build a admins.ini file based on these details provided.
 			$extraInfo = <<<ININOTES
 ;
 ; Line starting with ; is a comment
@@ -101,20 +101,20 @@ class UserHandler extends SectionHandler
 ;
 
 ININOTES;
-			if ($this->createIniFile('users.ini', 'User Configuration File', $this->users, $extraInfo))
-				console('Generated config/users.ini');
+			if ($this->createIniFile('admins.ini', 'Admins Configuration File', $this->admins, $extraInfo))
+				console('Generated config/admins.ini');
 		}
 		
 		// Read account vars to verify / maybe generate password hashes
-		foreach ($this->users as $username => &$details)
+		foreach ($this->admins as $username => &$details)
 		{
 			// Convert password?
 			if (strlen($details['password']) != 40)
 			{
 				$details['password'] = sha1($details['password'].$PRISM->config->cvars['secToken']);
 				
-				// Rewrite this particular config line in users.ini
-				$this->rewriteLine('users.ini', $username, 'password', $details['password']);
+				// Rewrite this particular config line in admins.ini
+				$this->rewriteLine('admins.ini', $username, 'password', $details['password']);
 			}
 			
 			// Convert flags?
@@ -132,8 +132,8 @@ ININOTES;
 		global $PRISM;
 		
 		return (
-			isset($this->users[$username]) &&
-			$this->users[$username]['password'] == sha1($password.$PRISM->config->cvars['secToken'])
+			isset($this->admins[$username]) &&
+			$this->admins[$username]['password'] == sha1($password.$PRISM->config->cvars['secToken'])
 		);
 	}
 }
