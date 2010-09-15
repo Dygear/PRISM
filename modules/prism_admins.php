@@ -45,9 +45,15 @@ class AdminHandler extends SectionHandler
 {
 	private $admins		= array();
 
-	public function getAdmins()
+	public function &getAdminsInfo()
 	{
-		return $this->admins;
+		$details = array();
+		foreach ($this->admins as $user => $details)
+			$details[$user] = array(
+				'accessFlags' => $details['accessFlags'],
+				'connection' => $details['connection'],
+			);
+		return $details;
 	}
 
 	public function initialise()
