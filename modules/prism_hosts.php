@@ -28,6 +28,14 @@ define('SOCKTYPE_UDP',			2);
 
 define('STREAM_READ_BYTES',		1400);
 
+/**
+ * HostHandler public functions :
+ * ->initialise()									# (re)loads the config files and (re)connects to the host(s)
+ * ->sendPacket($packetClass, $hostId = FALSE)		# send a packet to either the last incoming host, or to $hostID
+ * ->getHostsInfo()									# retreive an array of information about all the hosts
+ * ->getHostById(string $id)						# get a host object by its hostID
+ * ->getHostsByIp(string $ip)						# get all hosts with a certain IP
+**/
 class HostHandler extends SectionHandler
 {
 	private $connvars		= array();
@@ -455,12 +463,12 @@ class HostHandler extends SectionHandler
 		}
 	}
 
-	public function sendPacket($packetClass, $HostId = FALSE)
+	public function sendPacket(struct $packetClass, $hostId = FALSE)
 	{
-		if ($HostId === FALSE)
+		if ($hostId === FALSE)
 			return $this->hosts[$this->curHostID]->writePacket($packetClass);
 		else
-			return $this->hosts[$HostId]->writePacket($packetClass);
+			return $this->hosts[$hostId]->writePacket($packetClass);
 	}
 	
 	public function &getHostsInfo()
@@ -478,6 +486,27 @@ class HostHandler extends SectionHandler
 			);
 		}
 		return $info;
+	}
+	
+	public function getHostById($id)
+	{
+		foreach ($this->hosts as $hostID => $host)
+		{
+			if ($id == $hostID)
+				return $host;
+		}
+		return false;
+	}
+	
+	public function getHostsByIp($ip)
+	{
+		$hosts = array();
+		foreach ($this->hosts as $hostID => $host)
+		{
+			if ($ip == $host->getIP())
+				$hosts[$hostID] = $host;
+		}
+		return $hosts;
 	}
 }
 
