@@ -35,11 +35,6 @@ class HostHandler extends SectionHandler
 
 	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 
-	public function &getHosts()
-	{
-		return $this->hosts;
-	}
-
 	public function initialise()
 	{
 		global $PRISM;
@@ -466,6 +461,23 @@ class HostHandler extends SectionHandler
 			return $this->hosts[$this->curHostID]->writePacket($packetClass);
 		else
 			return $this->hosts[$HostId]->writePacket($packetClass);
+	}
+	
+	public function &getHostsInfo()
+	{
+		$info = array();
+		foreach ($this->hosts as $hostID => $host)
+		{
+			$info[] = array(
+				'id'			=> $hostID,
+				'ip'			=> $host->getIP(),
+				'port'			=> $host->getPort(),
+				'udpPort'		=> $host->getUdpPort(),
+				'connStatus'	=> $host->getConnStatus(),
+				'socketType'	=> $host->getSocketType(),
+			);
+		}
+		return $info;
 	}
 }
 

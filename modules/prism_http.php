@@ -860,7 +860,7 @@ class HttpRequest
 					 $contentType['mediaType'] != 'multipart/form-data'))
 				{
 					$this->errNo = 415;
-					$this->errStr = 'No Content-Type was provided that I can handle. At the moment I only like application/x-www-form-urlencoded.';
+					$this->errStr = 'No Content-Type was provided that I can handle. At the moment I only like application/x-www-form-urlencoded and multipart/form-data.';
 					return false;
 				}
 				

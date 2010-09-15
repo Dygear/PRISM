@@ -129,6 +129,14 @@ $_RESPONSE
 $SERVER
 	- contains (almost) all the http headers you'd expect in a web environment
 
+$PRISM
+	- this can be globalled in your functions, for easy access to PRISM content
+	- $PRISM->config	(handler for global PRISM config variables)
+	- $PRISM->hosts		(handler for the host connections)
+	- $PRISM->http		(handler for the web server)
+	- $PRISM->plugins	(handler for plugins)
+	- $PRISM->users		(handler for users)
+
 
 **************
 * Good luck! *

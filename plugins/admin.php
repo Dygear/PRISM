@@ -53,11 +53,12 @@ class admin extends Plugins
 
 		# h
 		console(NULL); # Print a blank line.
-		console(sprintf('%16s %32s:%5s %8s %24s', 'Host ID', 'IP', 'PORT', 'UDP PORT', 'STATUS'));
-		foreach ($PRISM->hosts->getHosts() as $hostID => $host)
+		console(sprintf('%14s %28s:%-5s %8s %22s', 'Host ID', 'IP', 'PORT', 'UDPPORT', 'STATUS'));
+		foreach ($PRISM->hosts->getHostsInfo() as $host)
 		{
-			$status = (($host->getConnStatus() == CONN_CONNECTED) ? '' : (($host->getConnStatus() == CONN_VERIFIED) ? 'VERIFIED &' : ' NOT')).' CONNECTED';
-			console(sprintf('%16s %32s:%5s %8s %24s', $hostID, $host->getIP(), $host->getPort(), $host->getUdpPort(), $status));
+			$status = (($host['connStatus'] == CONN_CONNECTED) ? '' : (($host['connStatus'] == CONN_VERIFIED) ? 'VERIFIED &' : ' NOT')).' CONNECTED';
+			$socketType = (($host['socketType'] == SOCKTYPE_TCP) ? 'tcp://' : 'udp://');
+			console(sprintf('%14s %28s:%-5s %8s %22s', $host['id'], $socketType.$host['ip'], $host['port'], $host['udpPort'], $status));
 		}
 
 		# I
