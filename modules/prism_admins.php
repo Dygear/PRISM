@@ -32,6 +32,15 @@ define('ADMIN_LEVEL_Y',				16777216);	# Flag "y",
 define('ADMIN_LEVEL_Z',				33554432);	# Flag "z", 
 define('ADMIN_ALL',					134217727);	# All flags, a - z.
 
+/**
+ * AdminHandler public functions :
+ * ->initialise()										# (re)loads the config files and (re)connects to the host(s)
+ * ->isPasswordCorrect(&$username, &$password)			# verify username + password
+ * ->addAccount($username, $password, $accessFlags = 0, $connection = '', $store = true)	# Create a new admin account
+ * ->deleteAccount($username, $password = '', $store = true)	# Remove an account
+ * ->addAccessFlags($username, $flags, $store = true)			# Add extra accessFlags permissions
+ * ->revokeAccessFlags($username, $flags, $store = true)		# Revoke certain accessFlags permissions
+*/
 class AdminHandler extends SectionHandler
 {
 	private $admins		= array();
@@ -135,6 +144,99 @@ ININOTES;
 			isset($this->admins[$username]) &&
 			$this->admins[$username]['password'] == sha1($password.$PRISM->config->cvars['secToken'])
 		);
+	}
+	
+	public function addAccount($username, $password, $accessFlags = 0, $connection = '', $store = true)
+	{
+		global $PRISM;
+		
+		if (isset($this->admins[$username]))
+			return false;
+		
+		// Add new user to $this->admins
+		$this->admins[$username] = array(
+			'password'		=> sha1($password.$PRISM->config->cvars['secToken']),
+			'connection'	=> $connection,
+			'accessFlags'	=> $accessFlags,
+		);
+		
+		// Add new user section to admin.ini
+		if ($store)
+		{
+			$this->appendSection('admins.ini', $username, $this->admins[$username]);
+		}
+
+		return true;
+	}
+	
+	public function deleteAccount($username, $password = '', $store = true)
+	{
+		if (!isset($this->admins[$username]))
+			return false;
+		
+		// Remove the account from $this->admins
+		unset($this->admins[$username]);
+
+		// Remove user's section from admin.ini
+		if ($store)
+		{
+			$this->removeSection('admins.ini', $username);
+		}
+
+		return true;
+	}
+	
+	public function changePassword($username, $password, $store = true)
+	{
+		global $PRISM;
+		
+		if (!isset($this->admins[$username]))
+			return false;
+
+		// Update the password in $this->admins
+		$this->admins[$username]['password'] = sha1($password.$PRISM->config->cvars['secToken']);
+
+		// Rewrite password line for user in admins.ini
+		if ($store)
+		{
+			$this->rewriteLine('admins.ini', $username, 'password', $this->admins[$username]['password']);
+		}
+
+		return true;
+	}
+	
+	public function addAccessFlags($username, $flags, $store = true)
+	{
+		if (!isset($this->admins[$username]))
+			return false;
+
+		// Add the permissions
+		$this->admins[$username]['accessFlags'] |= $flags;
+
+		// Rewrite accessFlags line for user in admins.ini
+		if ($store)
+		{
+			$this->rewriteLine('admins.ini', $username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
+		}
+
+		return true;
+	}
+	
+	public function revokeAccessFlags($username, $flags, $store = true)
+	{
+		if (!isset($this->admins[$username]))
+			return false;
+
+		// Revoke the permissions
+		$this->admins[$username]['accessFlags'] &= ~$flags;
+
+		// Rewrite accessFlags line for user in admins.ini
+		if ($store)
+		{
+			$this->rewriteLine('admins.ini', $username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
+		}
+		
+		return true;
 	}
 }
 

@@ -162,7 +162,7 @@ class PHPInSimMod
 			console('Fatal error encountered. Exiting...');
 			exit(1);
 		}
-
+		
 		if (
 			(($pluginsLoaded = $this->plugins->loadPlugins()) == 0) &&
 			($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE))

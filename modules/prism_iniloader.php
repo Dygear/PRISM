@@ -1,6 +1,14 @@
 <?php
 
-class IniLoader
+/**
+ * protected IniLoader methods (to be extended by other classes, like the section handlers)
+ * ->loadIniFile(array &$target, $iniFile, $parseSections = TRUE)
+ * ->createIniFile($iniFile, $desc, array $options, $extraInfo = '')
+ * ->rewriteLine($iniFile, $section, $key, $value)
+ * ->appendSection($iniFile, $section, array &$values)
+ * ->removeSection($iniFile, $section)
+*/
+abstract class IniLoader
 {
 	protected function loadIniFile(array &$target, $iniFile, $parseSections = TRUE)
 	{
@@ -91,7 +99,7 @@ class IniLoader
 	{
 		// Check if file exists
 		if (!file_exists(ROOTPATH.'/configs/'.$iniFile))
-			return FALSE;
+			return false;
 		
 		// Read the contents of the file into an array of lines
 		$lines = file(ROOTPATH.'/configs/'.$iniFile, FILE_IGNORE_NEW_LINES);
@@ -100,9 +108,13 @@ class IniLoader
 		$foundSection = false;
 		foreach ($lines as $num => &$line)
 		{
-			if ($line == '['.$section.']')
+			$matches = array();
+			if (preg_match('/^\s*\[(.+)\]\s*$/', $line, $matches))
 			{
-				$foundSection = true;
+				if ($matches[1] == $section)
+					$foundSection = true;
+				else
+					$foundSection = false;
 				continue;
 			}
 			
@@ -116,7 +128,65 @@ class IniLoader
 			}
 		}
 		
-		return TRUE;
+		return true;
+	}
+	
+	protected function appendSection($iniFile, $section, array &$values)
+	{
+		// Check if file exists
+		if (!file_exists(ROOTPATH.'/configs/'.$iniFile))
+		{
+			// Just create a new file for the new section then...
+			$desc = '; Configuration File (automatically genereated)'.PHP_EOL;
+			$desc .= '; File location: ./PHPInSimMod/configs/'.$iniFile.PHP_EOL;
+			$this->createIniFile($iniFile, $desc, array($section => $values));
+			return true;
+		}
+		
+		// Loop through the new values
+		$append = PHP_EOL.'['.$section.']'.PHP_EOL;
+		foreach ($values as $key => $value)
+		{
+			$append .= $key.' = '.((is_numeric($value)) ? $value : '"'.$value.'"').PHP_EOL;
+		}
+		
+		file_put_contents(ROOTPATH.'/configs/'.$iniFile, $append, FILE_APPEND);
+		
+		return true;
+	}
+	
+	protected function removeSection($iniFile, $section)
+	{
+		// Check if file exists
+		if (!file_exists(ROOTPATH.'/configs/'.$iniFile))
+			return false;
+		
+		// Read the contents of the file into an array of lines
+		$lines = file(ROOTPATH.'/configs/'.$iniFile, FILE_IGNORE_NEW_LINES);
+		
+		// Loop through the lines to detect Section and then Key
+		$newLines = array();
+		$foundSection = false;
+		foreach ($lines as $num => &$line)
+		{
+			$matches = array();
+			if (preg_match('/^\s*\[(.+)\]\s*$/', $line, $matches))
+			{
+				if ($matches[1] == $section)
+					$foundSection = true;
+				else
+					$foundSection = false;
+			}
+			
+			if ($foundSection == true)
+				continue;
+			
+			$newLines[] = $line;
+		}
+		
+		file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $newLines));
+		
+		return true;
 	}
 }
 
