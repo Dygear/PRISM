@@ -860,7 +860,7 @@ class HttpClient
 	private function validateAuthorization()
 	{
 		global $PRISM;
-console('MUST AUTH');
+
 		$matches = array();
 		if (!preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
 			return false;
