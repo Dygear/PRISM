@@ -395,13 +395,13 @@ class IS_VER extends struct // VERsion
 	const UNPACK = 'CSize/CType/CReqI/CZero/a8Version/a6Product/vInSimVer';
 
 	public $Size = 20;					// 20
-	public $Type = ISP_VER;			// ISP_VERSION
+	public $Type = ISP_VER;				// ISP_VERSION
 	public $ReqI;						// ReqI as received in the request packet
 	public $Zero;
 
 	public $Version;					// LFS version, e.g. 0.3G
 	public $Product;					// Product : DEMO or S1
-	public $InSimVer = INSIM_VERSION;// InSim Version : increased when InSim packets change
+	public $InSimVer = INSIM_VERSION;	// InSim Version : increased when InSim packets change
 };
 
 // To request an InSimVersion packet at any time, send this IS_TINY :
@@ -463,7 +463,7 @@ class IS_STA extends struct // STAte
 	const UNPACK = 'CSize/CType/CReqI/CZero/fReplaySpeed/vFlags/CInGameCam/CViewPLID/CNumP/CNumConns/CNumFinished/CRaceInProg/CQualMins/CRaceLaps/CSpare2/CSpare3/a6Track/CWeather/CWind';
 
 	public $Size = 28;		// 28
-	public $Type = ISP_STA;// ISP_STA
+	public $Type = ISP_STA;	// ISP_STA
 	public $ReqI;			// ReqI if replying to a request packet
 	public $Zero;
 
@@ -483,7 +483,7 @@ class IS_STA extends struct // STAte
 	public $Spare2;
 	public $Spare3;
 
-	public $Track;		// short name for track e.g. FE2R
+	public $Track;			// short name for track e.g. FE2R
 	public $Weather;		// 0,1,2...
 	public $Wind;			// 0=off 1=weak 2=strong
 };
@@ -532,7 +532,7 @@ class IS_SFP extends struct // State Flags Pack
 	const UNPACK = 'CSize/CType/CReqI/CZero/vFlag/COffOn/CSp3';
 
 	public $Size = 8;		// 8
-	public $Type = ISP_SFP;// ISP_SFP
+	public $Type = ISP_SFP;	// ISP_SFP
 	public $ReqI;			// 0
 	public $Zero;
 
@@ -1283,11 +1283,11 @@ class IS_REO extends struct // REOrder (when race restarts after qualifying)
 	const UNPACK = 'CSize/CType/CReqI/CNumP/a32PLID';
 
 	public $Size = 36;		// 36
-	public $Type = ISP_REO;// ISP_REO
+	public $Type = ISP_REO;	// ISP_REO
 	public $ReqI;			// 0 unless this is a reply to an TINY_REO request
 	public $NumP;			// number of players in race
 
-	public $PLID;		// all PLIDs in new order
+	public $PLID;			// all PLIDs in new order
 };
 
 // To request an IS_REO packet at any time, send this IS_TINY :
@@ -1477,7 +1477,7 @@ class IS_AXI extends struct  // AutoX Info
 	const UNPACK = 'CSize/CType/CReqI/CZero/CAXStart/CNumCP/vNumO/a32LName';
 
 	public $Size = 40;		// 40
-	public $Type = ISP_AXI;// ISP_AXI
+	public $Type = ISP_AXI;	// ISP_AXI
 	public $ReqI;			// 0 unless this is a reply to an TINY_AXI request
 	public $Zero;
 
@@ -1485,7 +1485,7 @@ class IS_AXI extends struct  // AutoX Info
 	public $NumCP;			// number of checkpoints
 	public $NumO;			// number of objects
 
-	public $LName;		// the name of the layout last loaded (if loaded locally)
+	public $LName;			// the name of the layout last loaded (if loaded locally)
 };
 
 // On false start or wrong route / restricted area, an IS_PEN packet is sent :
@@ -1501,8 +1501,8 @@ class IS_AXO extends struct // AutoX Object
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
 	public $Size = 4;		// 4
-	public $Type = ISP_AXO;// ISP_AXO
-	public $ReqI;		// 0
+	public $Type = ISP_AXO;	// ISP_AXO
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id
 };
 
@@ -1708,13 +1708,13 @@ class IS_SCC extends struct // Set Car Camera - Simplified camera packet (not SH
 
 // Type : "Vec" : 3 ints (X, Y, Z) - 65536 means 1 metre
 
-class IS_SPP extends struct // Cam Pos Pack - Full camera packet (in car OR SHIFT+U mode)
+class IS_CPP extends struct // Cam Pos Pack - Full camera packet (in car OR SHIFT+U mode)
 {
 	const PACK = 'CCCxl3vvvCCfvv';
-	const UNPACL = 'CSize/CType/CReqI/CZero/l3Pos/vH/vP/vR/CViewPLID/CInGameCam/fFOV/CTime/CFlags';
+	const UNPACK = 'CSize/CType/CReqI/CZero/l3Pos/vH/vP/vR/CViewPLID/CInGameCam/fFOV/CTime/CFlags';
 
 	public $Size = 32;		// 32
-	public $Type = ISP_CPP;// ISP_CPP
+	public $Type = ISP_CPP;	// ISP_CPP
 	public $ReqI;			// instruction : 0 / or reply : ReqI as received in the TINY_SCP
 	public $Zero;
 

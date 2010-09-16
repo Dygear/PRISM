@@ -41,9 +41,9 @@ class HostHandler extends SectionHandler
 	private $connvars		= array();
 	private $hosts			= array();			# Stores references to the hosts we're connected to
 
-	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
+	public $curHostID		= NULL;				# Contains the current HostID we are talking to.
 
-	public &getCurrentHost()
+	public function &getCurrentHost()
 	{
 		return $this->curHostID;
 	}
@@ -416,7 +416,7 @@ class HostHandler extends SectionHandler
 					$this->hosts[$hostID]->setConnStatus(CONN_VERIFIED);
 					$this->hosts[$hostID]->setConnTime(time());
 					$this->hosts[$hostID]->setConnTries(0);
-					$this->hosts[$hostID]->state = new StateHandler();
+					$this->hosts[$hostID]->state = new StateHandler($packet, $hostID);
 				}
 				break;
 

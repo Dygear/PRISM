@@ -29,6 +29,7 @@ require_once(ROOTPATH . '/modules/prism_functions.php');
 require_once(ROOTPATH . '/modules/prism_config.php');
 require_once(ROOTPATH . '/modules/prism_packets.php');
 require_once(ROOTPATH . '/modules/prism_hosts.php');
+require_once(ROOTPATH . '/modules/prism_statehandler.php');
 require_once(ROOTPATH . '/modules/prism_http.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
