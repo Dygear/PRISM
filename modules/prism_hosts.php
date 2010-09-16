@@ -328,10 +328,17 @@ class HostHandler extends SectionHandler
 	public function maintenance()
 	{
 		// InSim Connection maintenance
+		$c = 0;
+		$d = 0;
 		foreach($this->hosts as $hostID => $host)
 		{
+			$c++;
 			if ($host->getConnStatus() == CONN_NOTCONNECTED)
+			{
+				if ($host->getMustConnect() == -1)
+					$d++;
 				continue;
+			}
 			else if ($host->getConnStatus() == CONN_CONNECTING)
 			{
 				// Check to see if a connection attempt is going to time out.
@@ -358,6 +365,14 @@ class HostHandler extends SectionHandler
 				$host->writePacket($ISP);
 			}
 		}
+		
+		// Are all hosts dead?
+		if ($c == $d)
+		{
+			console('We cannot seem to successfully connect to any hosts. Exiting');
+			return false;
+		}
+		return true;
 	}
 
 	private function handlePacket(&$rawPacket, &$hostID)
@@ -459,6 +474,9 @@ class HostHandler extends SectionHandler
 						console('Unknown error received from relay ('.$packet->ErrNo.')');
 						break;
 				}
+				
+				// Because of the error we close the connection to the relay.
+				$this->hosts[$hostID]->close(true);
 				break;
 		}
 	}

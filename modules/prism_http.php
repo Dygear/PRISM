@@ -135,15 +135,21 @@ ININOTES;
 		// Strip trailing slashes
 		$this->httpVars['path'] = preg_replace('/(.*)([\/\\\]*)$/U', '\\1', $this->httpVars['path']);
 		
+		if ($this->httpVars['path'] == '')
+			$this->httpVars['path'] = 'www-docs';
+		
 		// Check if it's valid
-		if ($this->httpVars['path'] == '' || !file_exists($this->httpVars['path']))
+		if (!file_exists($this->httpVars['path']))
 		{
 			console('The path to your web-root does not exists : '.$this->httpVars['path']);
 			return false;
 		}
 		
 		// Store in docRoot
-		$this->docRoot = ($this->httpVars['path'][0] == '/') ? $this->httpVars['path'] : ROOTPATH.'/'.$this->httpVars['path'];
+		$this->docRoot = 
+			($this->httpVars['path'][0] == '/' || (isset($this->httpVars['path'][1]) && $this->httpVars['path'][1] == ':')) ? 
+			$this->httpVars['path'] : 
+			ROOTPATH.'/'.$this->httpVars['path'];
 		
 		return true;
 	}
@@ -986,7 +992,7 @@ class HttpRequest
 			
 			// At this point we have parsed the entire request. We are done.
 			// Because isReceiving is now false, the HttpClient::handleInput function will 
-			// pass the values of this object to the html generation / admin class.
+			// serve the request using the variables from this class HttpRequest.
 		}
 		
 		return true;
@@ -1393,7 +1399,7 @@ class HttpResponse
 	
 	public function setResponseCode($code)
 	{
-		$this->responseCode = $code;
+		$this->responseCode = (int) $code;
 	}
 	
 	public function getResponseCode()
@@ -1422,6 +1428,8 @@ class HttpResponse
 		
 		// Store the header and reformat cases (cONtenT-TypE -> Content-Type)
 		$this->headers[ucwordsByChar(strtolower($exp[0]), '-')] = $exp[1];
+		
+		return true;
 	}
 	
 	public function getHeader($key)

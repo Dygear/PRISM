@@ -291,7 +291,8 @@ class PHPInSimMod
 			if ($this->nextMaintenance > time ())
 				continue;
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
-			$this->hosts->maintenance();
+			if (!$this->hosts->maintenance())
+				$this->isRunning = false;
 			$this->http->maintenance();
 			PHPParser::cleanSessions();
 						
