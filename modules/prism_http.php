@@ -640,8 +640,8 @@ class HttpClient
 		{
 			$scriptPath = pathinfo($this->httpRequest->SERVER['SCRIPT_NAME'], PATHINFO_DIRNAME);
 			
-			// Check if HTTP_AUTHORIZATION header exists and if so, validate it
-			if (preg_match('#^'.$this->http->getHttpAuthPath().'#', $this->http->getDocRoot().$scriptPath) &&
+			// Check if path must be auth'd and if HTTP_AUTHORIZATION header exists and if so, validate it
+			if (isDirInDir($this->http->getHttpAuthPath(), $this->http->getDocRoot().$scriptPath) &&
 				(!isset($this->httpRequest->SERVER['HTTP_AUTHORIZATION']) ||
 				 !$this->validateAuthorization()))
 			{
@@ -860,7 +860,7 @@ class HttpClient
 	private function validateAuthorization()
 	{
 		global $PRISM;
-
+console('MUST AUTH');
 		$matches = array();
 		if (!preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
 			return false;

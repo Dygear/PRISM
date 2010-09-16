@@ -46,6 +46,21 @@ function get_dir_structure($path, $recursive = TRUE, $ext = NULL)
 	return $return;
 }
 
+// check if path1 is part of path2 (ie. if path1 is a base path of path2)
+function isDirInDir($path1, $path2)
+{
+	$p1 = explode('/', $path1);
+	$p2 = explode('/', $path2);
+	
+	foreach ($p1 as $index => $part)
+	{
+		if (!isset($p2[$index]) || $part != $p2[$index])
+			return false;
+	}
+	
+	return true;
+}
+
 function findPHPLocation($windows = false)
 {
 	$phpLocation = '';
