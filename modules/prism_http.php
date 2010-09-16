@@ -42,6 +42,11 @@ class HttpHandler extends SectionHandler
 		return $this->siteDomain;
 	}
 	
+	public function getHttpAuthPath()
+	{
+		return $this->httpVars['httpAuthPath'];
+	}
+	
 	public function __destruct()
 	{
 		$this->close(true);
@@ -67,7 +72,7 @@ class HttpHandler extends SectionHandler
 	{
 		global $PRISM;
 		
-		$this->httpVars = array('ip' => '', 'port' => 0, 'path' => 'www-docs', 'siteDomain' => '');
+		$this->httpVars = array('ip' => '', 'port' => 0, 'path' => 'www-docs', 'siteDomain' => '', 'httpAuthPath' => '');
 		
 		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
 		{
@@ -107,6 +112,10 @@ ININOTES;
 		// Setup site domain
 		$this->setupSiteDomain();
 		
+		// Validate httpAuthPath
+		if (!$this->validateAuthPath())
+			return false;
+		
 		return true;
 	}
 	
@@ -138,18 +147,18 @@ ININOTES;
 		if ($this->httpVars['path'] == '')
 			$this->httpVars['path'] = 'www-docs';
 		
-		// Check if it's valid
-		if (!file_exists($this->httpVars['path']))
-		{
-			console('The path to your web-root does not exists : '.$this->httpVars['path']);
-			return false;
-		}
-		
 		// Store in docRoot
 		$this->docRoot = 
 			($this->httpVars['path'][0] == '/' || (isset($this->httpVars['path'][1]) && $this->httpVars['path'][1] == ':')) ? 
 			$this->httpVars['path'] : 
 			ROOTPATH.'/'.$this->httpVars['path'];
+		
+		// Check if it's valid
+		if (!file_exists($this->docRoot))
+		{
+			console('The path to your web-root does not exists : '.$this->httpVars['path']);
+			return false;
+		}
 		
 		return true;
 	}
@@ -168,6 +177,35 @@ ININOTES;
 		}
 		
 		$this->siteDomain = $this->httpVars['siteDomain'];
+	}
+	
+	private function validateAuthPath()
+	{
+		if ($this->httpVars['httpAuthPath'] == '')
+			return true;
+		if ($this->httpVars['httpAuthPath'] == '/')
+		{
+			$this->httpVars['httpAuthPath'] = $this->docRoot.$this->httpVars['httpAuthPath'];
+			return true;
+		}
+		
+		// Strip trailing slashes
+		$this->httpVars['httpAuthPath'] = preg_replace('/(.+)([\/\\\]*)$/U', '\\1', $this->httpVars['httpAuthPath']);
+		
+		// Check relative or absolute
+		$this->httpVars['httpAuthPath'] = 
+			($this->httpVars['httpAuthPath'][0] == '/' || (isset($this->httpVars['httpAuthPath'][1]) && $this->httpVars['httpAuthPath'][1] == ':')) ? 
+			$this->httpVars['httpAuthPath'] : 
+			$this->docRoot.'/'.$this->httpVars['httpAuthPath'];
+		
+		// Check if it's valid
+		if (!file_exists($this->httpVars['httpAuthPath']))
+		{
+			console('httpAuthPath path does not exist : '.$this->httpVars['httpAuthPath']);
+			return false;
+		}
+		
+		return true;
 	}
 	
 	public function getSelectableSockets(array &$sockReads, array &$sockWrites)
@@ -486,7 +524,7 @@ class HttpClient
 		$this->sendFilePntr = -1;
 	}
 
-	private function createErrorPage($errNo, $errStr = '')
+	private function createErrorPage($errNo, $errStr = '', $appendPadding = true)
 	{
 		$eol = "\r\n";
 		$out = '<html>'.$eol;
@@ -496,6 +534,12 @@ class HttpClient
 		$out .= '<hr><center>PRISM v'.PHPInSimMod::VERSION.'</center>'.$eol;
 		$out .= '</body>'.$eol;
 		$out .= '</html>'.$eol;
+		
+		if ($appendPadding)
+		{
+			for ($a=0; $a<6; $a++)
+				$out .= '<!-- a padding to disable MSIE and Chrome friendly error page -->'.$eol;
+		}
 		return $out;
 	}
 	
@@ -567,11 +611,17 @@ class HttpClient
 		$this->httpRequest->SERVER['HTTP_ACCEPT_LANGUAGE']	= isset($this->httpRequest->headers['Accept-Language']) ? $this->httpRequest->headers['Accept-Language'] : '';
 		$this->httpRequest->SERVER['HTTP_ACCEPT_ENCODING']	= isset($this->httpRequest->headers['Accept-Encoding']) ? $this->httpRequest->headers['Accept-Encoding'] : '';
 		$this->httpRequest->SERVER['HTTP_ACCEPT_CHARSET']	= isset($this->httpRequest->headers['Accept-Charset']) ? $this->httpRequest->headers['Accept-Charset'] : '';
+		$this->httpRequest->SERVER['HTTP_CONNECTION']		= isset($this->httpRequest->headers['Connection']) ? $this->httpRequest->headers['Connection'] : '';
 		$this->httpRequest->SERVER['HTTP_KEEP_ALIVE']		= isset($this->httpRequest->headers['Keep-Alive']) ? $this->httpRequest->headers['Keep-Alive'] : '';
 		if (isset($this->httpRequest->headers['Referer']))
 			$this->httpRequest->SERVER['HTTP_REFERER']		= $this->httpRequest->headers['Referer'];
 		if (isset($this->httpRequest->headers['Range']))
 			$this->httpRequest->SERVER['HTTP_RANGE']		= $this->httpRequest->headers['Range'];
+		if (isset($this->httpRequest->headers['Cookie']))
+			$this->httpRequest->SERVER['HTTP_COOKIE']= $this->httpRequest->headers['Cookie'];
+		if (isset($this->httpRequest->headers['Authorization']))
+			$this->httpRequest->SERVER['HTTP_AUTHORIZATION']= $this->httpRequest->headers['Authorization'];
+		$this->httpRequest->SERVER['REQUEST_TIME']			= time();
 		
 		// Check if we have to match siteDomain
 		if ($this->http->getSiteDomain() != '' &&
@@ -585,8 +635,28 @@ class HttpClient
 			return false;
 		}
 		
-		// HTTP Authorisation would go here
-		
+		// HTTP Authorisation?
+		if ($this->http->getHttpAuthPath() != '')
+		{
+			$scriptPath = pathinfo($this->httpRequest->SERVER['SCRIPT_NAME'], PATHINFO_DIRNAME);
+			
+			// Check if HTTP_AUTHORIZATION header exists and if so, validate it
+			if (preg_match('#^'.$this->http->getHttpAuthPath().'#', $this->http->getDocRoot().$scriptPath) &&
+				(!isset($this->httpRequest->SERVER['HTTP_AUTHORIZATION']) ||
+				 !$this->validateAuthorization()))
+			{
+				// Not validated - send 401 Unauthorized
+				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 401);
+				$r->addHeader('WWW-Authenticate: Basic realm="Prism admin login required"');
+				$r->addBody($this->createErrorPage(401));
+				$this->write($r->getHeaders());
+				$this->write($r->getBody());
+				$errNo = 401;
+				
+				$this->httpRequest = null;
+				return true;		// we return true this time because we may stay connected
+			}
+		}
 		
 		//var_dump($this->httpRequest->headers);
 		//var_dump($this->httpRequest->SERVER);
@@ -787,6 +857,24 @@ class HttpClient
 		return $r;
 	}
 
+	private function validateAuthorization()
+	{
+		global $PRISM;
+
+		$matches = array();
+		if (!preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
+			return false;
+		
+		$auth = explode(':', base64_decode($matches[1]), 2);
+		if (count($auth) != 2 || !$PRISM->admins->isPasswordCorrect($auth[0], $auth[1]))
+			return false;
+		
+		$this->httpRequest->SERVER['PHP_AUTH_USER']	= $auth[0];
+		$this->httpRequest->SERVER['PHP_AUTH_PW']	= $auth[1];
+
+		return true;
+	}
+	
 	private function cleanTempFiles()
 	{
 		// $FILES cleanup
@@ -1365,7 +1453,7 @@ class HttpResponse
 			304 => 'Not Modified',
 			307 => 'Temporary Redirect',
 			400 => 'Bad Request',
-			401 => 'Unauthorised',
+			401 => 'Unauthorized',
 			403 => 'Forbidden',
 			404 => 'File Not Found',
 			405 => 'Method Not Allowed',
