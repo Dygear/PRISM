@@ -32,6 +32,10 @@ define('ADMIN_LEVEL_Y',				16777216);	# Flag "y",
 define('ADMIN_LEVEL_Z',				33554432);	# Flag "z", 
 define('ADMIN_ALL',					134217727);	# All flags, a - z.
 
+define('ADMIN_ROOT', ADMIN_ALL); # Root level access. (Full Access)
+define('ADMIN_ADMIN', ADMIN_BAN + ADMIN_CFG + ADMIN_GAME + ADMIN_HOST + ADMIN_KICK + ADMIN_TRACK + ADMIN_PENALTIES + ADMIN_RCM + ADMIN_SPECTATE + ADMIN_VOTE); # Same as giving /admin password to this user.
+define('ADMIN_MOD', ADMIN_BAN + ADMIN_KICK + ADMIN_SPECTATE); # Low level access to some basic admin commands.
+
 /**
  * AdminHandler public functions :
  * ->initialise()										# (re)loads the config files and (re)connects to the host(s)

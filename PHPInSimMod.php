@@ -44,6 +44,7 @@ $PRISM->start();
  * @author ripnet (Tom Young) <ripnet@gmail.com>
  * @author morpha (Constantin Köpplinger) <morpha@xigmo.net>
  * @author Victor (Victor van Vlaardingen) <vic@lfs.net>
+ * @author GeForz () <>
 */
 class PHPInSimMod
 {

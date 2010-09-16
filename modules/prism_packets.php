@@ -842,16 +842,16 @@ class IS_RST extends struct // Race STart
 	const UNPACK = 'CSize/CType/CReqI/CZero/CRaceLaps/CQualMins/CNumP/CSpare/a6Track/CWeather/CWind/vFlags/vNumNodes/vFinish/vSplit1/vSplit2/vSplit3';
 
 	public $Size = 28;		// 28
-	public $Type = ISP_RST;// ISP_RST
-	public $ReqI;			// 0 unless this is a reply to an TINY_RST request
-	public $Zero;
+	public $Type = ISP_RST;	// ISP_RST
+	public $ReqI = TRUE;	// 0 unless this is a reply to an TINY_RST request
+	public $Zero = NULL;
 
 	public $RaceLaps;		// 0 if qualifying
 	public $QualMins;		// 0 if race
 	public $NumP;			// number of players in race
 	public $Spare;
 
-	public $Track;		// short track name
+	public $Track;			// short track name
 	public $Weather;
 	public $Wind;
 
@@ -874,12 +874,12 @@ class IS_NCN extends struct // New ConN
 	const UNPACK = 'CSize/CType/CReqI/CUCID/a24UName/a24PName/CAdmin/CTotal/CFlags/CSp3';
 
 	public $Size = 56;		// 56
-	public $Type = ISP_NCN;// ISP_NCN
-	public $ReqI;			// 0 unless this is a reply to a TINY_NCN request
+	public $Type = ISP_NCN;	// ISP_NCN
+	public $ReqI = NULL;	// 0 unless this is a reply to a TINY_NCN request
 	public $UCID;			// new connection's unique id (0 = host)
 
-	public $UName;		// username
-	public $PName;		// nickname
+	public $UName;			// username
+	public $PName;			// nickname
 
 	public $Admin;			// 1 if admin
 	public $Total;			// number of connections including host
@@ -893,8 +893,8 @@ class IS_CNL extends struct // ConN Leave
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CReason/CTotal/CSp2/CSp3';
 
 	public $Size = 8;		// 8
-	public $Type = ISP_CNL;// ISP_CNL
-	public $ReqI;		// 0
+	public $Type = ISP_CNL;	// ISP_CNL
+	public $ReqI;			// 0
 	public $UCID;			// unique id of the connection which left
 
 	public $Reason;			// leave reason (see below)
@@ -909,12 +909,12 @@ class IS_CPR extends struct // Conn Player Rename
 	const UNPACK = 'CSize/CType/CReqI/CUCID/a24PName/a8Plate';
 
 	public $Size = 36;		// 36
-	public $Type = ISP_CPR;// ISP_CPR
-	public $ReqI;		// 0
+	public $Type = ISP_CPR;	// ISP_CPR
+	public $ReqI = NULL;	// 0
 	public $UCID;			// unique id of the connection
 
-	public $PName;		// new name
-	public $Plate;		// number plate - NO ZERO AT END!
+	public $PName;			// new name
+	public $Plate;			// number plate - NO ZERO AT END!
 };
 
 class IS_NPL extends struct // New PLayer joining race (if PLID already exists, then leaving pits)
@@ -987,8 +987,8 @@ class IS_PLP extends struct // PLayer Pits (go to settings - stays in player lis
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
 	public $Size = 4;		// 4
-	public $Type = ISP_PLP;// ISP_PLP
-	public $ReqI;		// 0
+	public $Type = ISP_PLP;	// ISP_PLP
+	public $ReqI = NULL;	// 0
 	public $PLID;			// player's unique id
 };
 
@@ -998,8 +998,8 @@ class IS_PLL extends struct // PLayer Leave race (spectate - removed from player
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
 	public $Size = 4;		// 4
-	public $Type = ISP_PLL;// ISP_PLL
-	public $ReqI;		// 0
+	public $Type = ISP_PLL;	// ISP_PLL
+	public $ReqI = NULL;	// 0
 	public $PLID;			// player's unique id
 };
 
@@ -1009,8 +1009,8 @@ class IS_CRS extends struct // Car ReSet
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
 	public $Size = 4;		// 4
-	public $Type = ISP_CRS;// ISP_CRS
-	public $ReqI;		// 0
+	public $Type = ISP_CRS;	// ISP_CRS
+	public $ReqI = NULL;	// 0
 	public $PLID;			// player's unique id
 };
 
@@ -1118,8 +1118,8 @@ class IS_PLA extends struct // Pit LAne
 	const UNPACK = 'CSize/CType/CReqI/CPLID/CFact/CSp1/CSp2/CSp3';
 
 	public $Size = 8;		// 8
-	public $Type = ISP_PLA;// ISP_PLA
-	public $ReqI;		// 0
+	public $Type = ISP_PLA;	// ISP_PLA
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id
 
 	public $Fact;			// pit lane fact (see below)
@@ -1142,8 +1142,8 @@ class IS_CCH extends struct // Camera CHange
 	const UNPACK = 'CSize/CType/CReqI/CPLID/CCamera/CSp1/CSp2/CSp3';
 
 	public $Size = 8;		// 8
-	public $Type = ISP_CCH;// ISP_CCH
-	public $ReqI;		// 0
+	public $Type = ISP_CCH;	// ISP_CCH
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id
 
 	public $Camera;			// view identifier (see below)
@@ -1158,8 +1158,8 @@ class IS_PEN extends struct // PENalty (given or cleared)
 	const UNPACK = 'CSize/CType/CReqI/CPLID/COldPen/CNewPen/CReason/CSp3';
 
 	public $Size = 8;		// 8
-	public $Type = ISP_PEN;// ISP_PEN
-	public $ReqI;		// 0
+	public $Type = ISP_PEN;	// ISP_PEN
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id
 
 	public $OldPen;			// old penalty value (see below)
@@ -1174,8 +1174,8 @@ class IS_TOC extends struct // Take Over Car
 	const UNPACK = 'CSize/CType/CReqI/CPLID/COldUCID/CNewUCID/CSp2/CSp3';
 
 	public $Size = 8;		// 8
-	public $Type = ISP_TOC;// ISP_TOC
-	public $ReqI;		// 0
+	public $Type = ISP_TOC;	// ISP_TOC
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id
 
 	public $OldUCID;		// old connection's unique id
@@ -1206,8 +1206,8 @@ class IS_PFL extends struct // Player FLags (help flags changed)
 	const UNPACK = 'CSize/CType/CReqI/CPLID/vFlags/vSpare';
 
 	public $Size = 8;		// 8
-	public $Type = ISP_PFL;// ISP_PFL
-	public $ReqI;		// 0
+	public $Type = ISP_PFL;	// ISP_PFL
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id
 
 	public $Flags;			// player flags (see below)
@@ -1220,8 +1220,8 @@ class IS_FIN extends struct // FINished race notification (not a final result - 
 	const UNPACK = 'CSize/CType/CReqI/CPLID/VTTime/VBTime/CSpA/CNumStops/CConfirm/CSpB/vLapsDone/vFlags';
 
 	public $Size = 20;		// 20
-	public $Type = ISP_FIN;// ISP_FIN
-	public $ReqI;		// 0
+	public $Type = ISP_FIN;	// ISP_FIN
+	public $ReqI;			// 0
 	public $PLID;			// player's unique id (0 = player left before result was sent)
 
 	public $TTime;			// race time (ms)
@@ -1242,14 +1242,14 @@ class IS_RES extends struct // RESult (qualify or confirmed finish)
 	const UNPACK = 'CSize/CType/CReqI/CPLID/a24UName/a24PName/a8Plate/a4CName/VTTime/VBTime/CSpA/CNumStops/CConfirm/CSpB/vLapsDone/vFlags/CResultNum/CNumRes/vPSeconds';
 
 	public $Size = 84;		// 84
-	public $Type = ISP_RES;// ISP_RES
+	public $Type = ISP_RES;	// ISP_RES
 	public $ReqI;			// 0 unless this is a reply to a TINY_RES request
 	public $PLID;			// player's unique id (0 = player left before result was sent)
 
-	public $UName;		// username
-	public $PName;		// nickname
-	public $Plate;		// number plate - NO ZERO AT END!
-	public $CName;		// skin prefix
+	public $UName;			// username
+	public $PName;			// nickname
+	public $Plate;			// number plate - NO ZERO AT END!
+	public $CName;			// skin prefix
 
 	public $TTime;			// race time (ms)
 	public $BTime;			// best lap (ms)

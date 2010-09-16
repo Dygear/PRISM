@@ -43,6 +43,11 @@ class HostHandler extends SectionHandler
 
 	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 
+	public &getCurrentHost()
+	{
+		return $this->curHostID;
+	}
+
 	public function initialise()
 	{
 		global $PRISM;
@@ -411,20 +416,7 @@ class HostHandler extends SectionHandler
 					$this->hosts[$hostID]->setConnStatus(CONN_VERIFIED);
 					$this->hosts[$hostID]->setConnTime(time());
 					$this->hosts[$hostID]->setConnTries(0);
-					
-					// Send out some info requests
-					$ISP = new IS_TINY();
-					$ISP->SubT = TINY_NCN;
-					$ISP->ReqI = 1;
-					$this->hosts[$hostID]->writePacket($ISP);
-					$ISP = new IS_TINY();
-					$ISP->SubT = TINY_NPL;
-					$ISP->ReqI = 1;
-					$this->hosts[$hostID]->writePacket($ISP);
-					$ISP = new IS_TINY();
-					$ISP->SubT = TINY_RES;
-					$ISP->ReqI = 1;
-					$this->hosts[$hostID]->writePacket($ISP);
+					$this->hosts[$hostID]->state = new StateHandler();
 				}
 				break;
 
