@@ -24,7 +24,7 @@ ini_set('display_errors',		'true');
 
 define('ROOTPATH', dirname(realpath(__FILE__)));
 
-// the packets and connections module are two of the three REQUIRED modules for PRISM.
+// the REQUIRED modules for PRISM.
 require_once(ROOTPATH . '/modules/prism_functions.php');
 require_once(ROOTPATH . '/modules/prism_config.php');
 require_once(ROOTPATH . '/modules/prism_packets.php');

@@ -129,6 +129,7 @@ for ($c=0; $c<3; $c++)
 for ($c=0; $c<3; $c++)
 	$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
 $html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
+$html .= '<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />';
 $html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
 $html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
 $html .= '<input type="submit" value="Submit the form" />';

@@ -16,19 +16,32 @@ class HttpHandler extends SectionHandler
 	private $httpClients	= array();
 	private $httpNumClients	= 0;
 
-	public function &getHttpNumClients()
+	private $httpVars		= array();
+	public $cache			= null;
+	
+	private $docRoot		= '';
+	private $siteDomain		= '';
+
+	public function getHttpNumClients()
 	{
 		return $this->httpNumClients;
 	}
 
-	public function &getHttpClient($k)
+	public function getHttpClient($k)
 	{
 		return $this->httpClients[$k];
 	}
 
-	private $httpVars		= array('ip' => '', 'port' => 0);
-	public $cache			= null;
-
+	public function getDocRoot()
+	{
+		return $this->docRoot;
+	}
+	
+	public function getSiteDomain()
+	{
+		return $this->siteDomain;
+	}
+	
 	public function __destruct()
 	{
 		$this->close(true);
@@ -53,6 +66,8 @@ class HttpHandler extends SectionHandler
 	public function initialise()
 	{
 		global $PRISM;
+		
+		$this->httpVars = array('ip' => '', 'port' => 0, 'path' => 'www-docs', 'siteDomain' => '');
 		
 		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
 		{
@@ -81,7 +96,22 @@ ININOTES;
 				console('Generated config/http.ini');
 		}
 
+		// Set docRoot
+		if (!$this->setDocRoot())
+			return false;
+		
 		// Setup http socket to listen on
+		if (!$this->setupListenSocket())
+			return false;
+		
+		// Setup site domain
+		$this->setupSiteDomain();
+		
+		return true;
+	}
+	
+	private function setupListenSocket()
+	{
 		$this->close(false);
 		
 		if ($this->httpVars['ip'] != '' && $this->httpVars['port'] > 0)
@@ -90,6 +120,7 @@ ININOTES;
 			if (!is_resource($this->httpSock) || $this->httpSock === FALSE || $httpErrNo)
 			{
 				console('Error opening http socket : '.$httpErrStr.' ('.$httpErrNo.')');
+				return false;
 			}
 			else
 			{
@@ -97,6 +128,40 @@ ININOTES;
 			}
 		}
 		return true;
+	}
+	
+	private function setDocRoot()
+	{
+		// Strip trailing slashes
+		$this->httpVars['path'] = preg_replace('/(.*)([\/\\\]*)$/U', '\\1', $this->httpVars['path']);
+		
+		// Check if it's valid
+		if ($this->httpVars['path'] == '' || !file_exists($this->httpVars['path']))
+		{
+			console('The path to your web-root does not exists : '.$this->httpVars['path']);
+			return false;
+		}
+		
+		// Store in docRoot
+		$this->docRoot = ($this->httpVars['path'][0] == '/') ? $this->httpVars['path'] : ROOTPATH.'/'.$this->httpVars['path'];
+		
+		return true;
+	}
+	
+	private function setupSiteDomain()
+	{
+		$this->siteDomain = '';
+		
+		// Ignore site domain? (accept any incoming request, no matter what host the request contains)
+		if ($this->httpVars['siteDomain'] == '')
+			return;
+		if (!getIP($this->httpVars['siteDomain']))
+		{
+			console('Invalid siteDomain provided in http.ini (it does not resolve). Ignoring this setting.');
+			return;
+		}
+		
+		$this->siteDomain = $this->httpVars['siteDomain'];
 	}
 	
 	public function getSelectableSockets(array &$sockReads, array &$sockWrites)
@@ -231,7 +296,7 @@ class HttpClient
 
 	private $httpRequest	= null;
 	
-	public function __construct(HttpHandler &$http, &$sock, $ip, $port)
+	public function __construct(HttpHandler &$http, &$sock, &$ip, &$port)
 	{
 		$this->http			= $http;
 		$this->socket		= $sock;
@@ -482,7 +547,7 @@ class HttpClient
 			return true;								// Return true to just wait and try again later
 		
 		// At this point we have a fully qualified and parsed HttpRequest
-		// The HttpRequest object contains all info about the headers / GET / POST / COOKIE
+		// The HttpRequest object contains all info about the headers / GET / POST / COOKIE / FILES
 		// Just finalise it by adding some extra client info.
 		$this->httpRequest->SERVER['REMOTE_ADDR']			= $this->ip;
 		$this->httpRequest->SERVER['REMOTE_PORT']			= $this->port;
@@ -502,6 +567,21 @@ class HttpClient
 		if (isset($this->httpRequest->headers['Range']))
 			$this->httpRequest->SERVER['HTTP_RANGE']		= $this->httpRequest->headers['Range'];
 		
+		// Check if we have to match siteDomain
+		if ($this->http->getSiteDomain() != '' &&
+			$this->http->getSiteDomain() != $this->httpRequest->SERVER['SERVER_NAME'])
+		{
+			$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 404);
+			$r->addBody($this->createErrorPage(404));
+			$this->write($r->getHeaders());
+			$this->write($r->getBody());
+			$errNo = 404;
+			return false;
+		}
+		
+		// HTTP Authorisation would go here
+		
+		
 		//var_dump($this->httpRequest->headers);
 		//var_dump($this->httpRequest->SERVER);
 		//var_dump($this->httpRequest->GET);
@@ -511,7 +591,7 @@ class HttpClient
 		// Rewrite script name? (keep it internal - don't rewrite SERVER header
 		$scriptName = ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/') ? '/index.php' : $this->httpRequest->SERVER['SCRIPT_NAME'];
 		
-		if (file_exists(ROOTPATH.'/www-docs'.$scriptName))
+		if (file_exists($this->http->getDocRoot().$scriptName))
 		{
 			// Should we serve a file or pass the request to PHPParser for page generation?
 			if (preg_match('/^.*\.php$/', $scriptName))
@@ -544,7 +624,7 @@ class HttpClient
 					$this->cleanTempFiles();
 				}
 			}
-			else if (is_dir(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']))
+			else if (is_dir($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']))
 			{
 				// 403 - not allowed to view folder contents
 				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 403);
@@ -602,7 +682,7 @@ class HttpClient
 		
 		// Cache?
 		$useCache = false;
-		$scriptnameHash = md5(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+		$scriptnameHash = md5($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
 		if (isset($this->httpRequest->headers['Cache-Control']) || isset($this->httpRequest->headers['Pragma']))
 		{
 			$ifModifiedSince =
@@ -631,7 +711,7 @@ class HttpClient
 				}
 				else
 				{
-					$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+					$scriptMTime = filemtime($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
 					$this->http->cache[$scriptnameHash] = $scriptMTime;
 					if ($scriptMTime == $ifModifiedSince)
 					{
@@ -646,7 +726,7 @@ class HttpClient
 						$pragma != 'no-cache' &&
 						isset($this->http->cache[$scriptnameHash]))
 			{
-				$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+				$scriptMTime = filemtime($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
 				if ($this->http->cache[$scriptnameHash] == $scriptMTime)
 				{
 					// File has not been changed - tell the browser to use the cache (send a 304)
@@ -668,7 +748,7 @@ class HttpClient
 		}
 		else
 		{
-			$scriptMTime = filemtime(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+			$scriptMTime = filemtime($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
 
 			$r->addHeader('Content-Type: '.$this->getMimeType());
 			$r->addHeader('Last-Modified: '.date('r', $scriptMTime));
@@ -679,15 +759,15 @@ class HttpClient
 			    $exp = explode('=', $this->httpRequest->SERVER['HTTP_RANGE']);
 			    $startByte = (int) substr($exp[1], 0, -1);
 
-				$r->addHeader('Content-Length: '.(filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']) - $startByte));
+				$r->addHeader('Content-Length: '.(filesize($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']) - $startByte));
 				$this->write($r->getHeaders());
-				$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME'], $startByte);
+				$this->writeFile($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME'], $startByte);
 			}
 			else
 			{
-				$r->addHeader('Content-Length: '.filesize(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']));
+				$r->addHeader('Content-Length: '.filesize($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']));
 				$this->write($r->getHeaders());
-				$this->writeFile(ROOTPATH.'/www-docs'.$this->httpRequest->SERVER['SCRIPT_NAME']);
+				$this->writeFile($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
 			}
 			
 			// Store the filemtime in $cache
@@ -1179,9 +1259,12 @@ class HttpRequest
 				if (!$fileName)
 					continue;
 				
+				$fileError = UPLOAD_ERR_OK;
+				
 				// Store the uploaded file in a temp place
 				$tmpFileName = tempnam(sys_get_temp_dir(), 'Prism');
-				file_put_contents($tmpFileName, $value);
+				if (!@file_put_contents($tmpFileName, $value))
+					$fileError = UPLOAD_ERR_CANT_WRITE;
 				
 				// Fill $FILES with details on the file
 				if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches))
@@ -1205,7 +1288,7 @@ class HttpRequest
 						$this->FILES[$matches[1]]['tmp_name'][]	= $tmpFileName;
 						$this->FILES[$matches[1]]['type'][]		= $contentType;
 						$this->FILES[$matches[1]]['size'][]		= strlen($value);
-						$this->FILES[$matches[1]]['error'][]	= 0;
+						$this->FILES[$matches[1]]['error'][]	= $fileError;
 					}
 					else
 					{
@@ -1213,7 +1296,7 @@ class HttpRequest
 						$this->FILES[$matches[1]]['tmp_name'][$matches[2]]	= $tmpFileName;
 						$this->FILES[$matches[1]]['type'][$matches[2]]		= $contentType;
 						$this->FILES[$matches[1]]['size'][$matches[2]]		= strlen($value);
-						$this->FILES[$matches[1]]['error'][$matches[2]]		= 0;
+						$this->FILES[$matches[1]]['error'][$matches[2]]		= $fileError;
 					}
 				}
 				else
@@ -1223,7 +1306,7 @@ class HttpRequest
 						'tmp_name'	=> $tmpFileName,
 						'type'		=> $contentType,
 						'size'		=> strlen($value),
-						'error'		=> 0,
+						'error'		=> $fileError,
 					);
 				}
 			}

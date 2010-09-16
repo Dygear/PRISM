@@ -35,6 +35,9 @@ define('ADMIN_ALL',					134217727);	# All flags, a - z.
 /**
  * AdminHandler public functions :
  * ->initialise()										# (re)loads the config files and (re)connects to the host(s)
+ * ->getAdminsInfo()									# get information about all user accounts
+ * ->getAdminInfo(&$username)							# get information about a single user account
+ * ->adminExists(&$username)							# check if a user account exists
  * ->isPasswordCorrect(&$username, &$password)			# verify username + password
  * ->addAccount($username, $password, $accessFlags = 0, $connection = '', $store = true)	# Create a new admin account
  * ->deleteAccount($username, $password = '', $store = true)	# Remove an account
@@ -44,17 +47,6 @@ define('ADMIN_ALL',					134217727);	# All flags, a - z.
 class AdminHandler extends SectionHandler
 {
 	private $admins		= array();
-
-	public function &getAdminsInfo()
-	{
-		$details = array();
-		foreach ($this->admins as $user => $details)
-			$details[$user] = array(
-				'accessFlags' => $details['accessFlags'],
-				'connection' => $details['connection'],
-			);
-		return $details;
-	}
 
 	public function initialise()
 	{
@@ -142,6 +134,33 @@ ININOTES;
 		return TRUE;
 	}
 	
+	public function &getAdminsInfo()
+	{
+		$details = array();
+		foreach ($this->admins as $user => $details)
+			$details[$user] = array(
+				'accessFlags' => $details['accessFlags'],
+				'connection' => $details['connection'],
+			);
+		return $details;
+	}
+
+	public function getAdminInfo(&$username)
+	{
+		if (!isset($this->admins[$username]))
+			return false;
+
+		return array(
+			'accessFlags' => $this->admins[$username]['accessFlags'],
+			'connection' => $this->admins[$username]['connection'],
+		);
+	}
+	
+	public function adminExists(&$username)
+	{
+		return isset($this->admins[$username]);
+	}
+
 	public function isPasswordCorrect(&$username, &$password)
 	{
 		global $PRISM;

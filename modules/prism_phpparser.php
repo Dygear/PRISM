@@ -21,11 +21,11 @@ class PHPParser
 			unset(self::$sessions[$_COOKIE['PrismSession']]);
 		}
 		
-		// Change working dir to www-docs
-		chdir(ROOTPATH.'/www-docs');
+		// Change working dir to docRoot
+		chdir($PRISM->http->getDocRoot());
 		
-		$prismScriptNameHash = md5(ROOTPATH.'/www-docs'.$file);
-		$prismScriptMTime = filemtime(ROOTPATH.'/www-docs'.$file);
+		$prismScriptNameHash = md5($PRISM->http->getDocRoot().$file);
+		$prismScriptMTime = filemtime($PRISM->http->getDocRoot().$file);
 		clearstatcache();
 
 		// Run script from cache?
@@ -40,11 +40,11 @@ class PHPParser
 		else
 		{
 			// Validate the php file
-			$parseResult = validatePHPFile(ROOTPATH.'/www-docs'.$file);
+			$parseResult = validatePHPFile($PRISM->http->getDocRoot().$file);
 			if ($parseResult[0])
 			{
 				// Run the script from disk
-				$prismPhpScript = preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', file_get_contents(ROOTPATH.'/www-docs'.$file));
+				$prismPhpScript = preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', file_get_contents($PRISM->http->getDocRoot().$file));
 				ob_start();
 				eval($prismPhpScript);
 				$html = ob_get_contents();

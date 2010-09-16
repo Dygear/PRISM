@@ -4,9 +4,9 @@ Creating your own HTML pages (with php), for the PRISM webserver.
 PRISM comes with its own webserver that you can activate. By default this will 
 serve PRISM admin pages, for remote access via a browser.
 If you would like to adjust these pages, or create your own, you can. You will
-find all the default php files that generate the admin pages in the 
-PRISM/www-docs folder. When you look at these php files you will notice they 
-look pretty much like regular php files on a webserver. There are a few 
+find all the default php files that generate the admin pages in your www folder 
+PRISM/www-docs by default. When you look at these php files you will notice 
+they look pretty much like regular php files on a webserver. There are a few 
 restrictions and differences however.
 
 
