@@ -1,4 +1,4 @@
-<?
+<?php
 
 // Very simple login example
 

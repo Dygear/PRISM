@@ -195,6 +195,7 @@ ININOTES;
 			'password'		=> sha1($password.$PRISM->config->cvars['secToken']),
 			'connection'	=> $connection,
 			'accessFlags'	=> $accessFlags,
+			'realmDigest'	=> md5($username.':'.HTTP_AUTH_REALM.':'.$password),
 		);
 		
 		// Add new user section to admin.ini
@@ -231,12 +232,14 @@ ININOTES;
 			return false;
 
 		// Update the password in $this->admins
+		$this->admins[$username]['realmDigest'] = md5($username.':'.HTTP_AUTH_REALM.':'.$password);
 		$this->admins[$username]['password'] = sha1($password.$PRISM->config->cvars['secToken']);
 
-		// Rewrite password line for user in admins.ini
+		// Rewrite password and realmDigest lines for user in admins.ini
 		if ($store)
 		{
 			$this->rewriteLine('admins.ini', $username, 'password', $this->admins[$username]['password']);
+			$this->rewriteLine('admins.ini', $username, 'realmDigest', $this->admins[$username]['realmDigest']);
 		}
 
 		return true;

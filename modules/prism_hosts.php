@@ -498,6 +498,8 @@ class HostHandler extends SectionHandler
 				'id'			=> $hostID,
 				'ip'			=> $host->getIP(),
 				'port'			=> $host->getPort(),
+				'useRelay'		=> $host->getUseRelay(),
+				'hostname'		=> $host->getHostname(),
 				'udpPort'		=> $host->getUdpPort(),
 				'connStatus'	=> $host->getConnStatus(),
 				'socketType'	=> $host->getSocketType(),
@@ -662,6 +664,16 @@ class InsimConnection
 	public function &getUdpPort()
 	{
 		return $this->udpPort;
+	}
+	
+	public function &getUseRelay()
+	{
+		return $this->connType;
+	}
+	
+	public function &getHostname()
+	{
+		return $this->hostName;
 	}
 	
 	public function setUdpPort($udpPort)

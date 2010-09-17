@@ -115,10 +115,10 @@ class Interactive
 			$hostIDCache = array();
 			echo 'ID | Host details'.PHP_EOL;
 			echo '---+----------------'.PHP_EOL;
-			foreach ($hostvars as $hostID => $values)
+			foreach ($hostvars as $index => $values)
 			{
-				$hostIDCache[$c] = $hostID;
-				printf('%-2d | %s (', $c, $hostID);
+				$hostIDCache[$c] = $values['id'];
+				printf('%-2d | %s (', $c, $values['id']);
 				if (isset($values['useRelay']) && $values['useRelay'] == 1)
 					echo '"'.$values['hostname'].'" via relay';
 				else
@@ -133,40 +133,48 @@ class Interactive
 				$hostIDs = '';
 				if ($c == 2)
 				{
-					$ids = self::query(PHP_EOL.'Enter the ID number of the host you want to tie to this plugin.', array(), TRUE);
+					$ids = self::query(PHP_EOL.'Enter the ID number of the host you want to tie to this plugin. Or type * for all hosts.', array(), TRUE);
 				}
 				else
 				{
-					echo PHP_EOL.'Enter the ID numbers of the hosts you want to tie to this plugin.'.PHP_EOL;
+					echo PHP_EOL.'Enter the ID numbers of the hosts you want to tie to this plugin. Or type * for all hosts.'.PHP_EOL;
 					$ids = self::query('Separate each ID number by a space', array(), TRUE);
 				}
 				
 				// Validate user input
-				$exp = explode(' ', $ids);
-				$invalidIDs = '';
-				$IDCache = array();
-				foreach ($exp as $e)
+				if ($ids == '*')
 				{
-					if ($e == '')
-						continue;
-					
-					$id = (int) $e;
-					if ($id < 1 || $id >= $c)
-					{
-						$invalidIDs .= $e.' ';
-					}
-					else if (!in_array($id, $IDCache))
-					{
-						if ($hostIDs != '')
-							$hostIDs .= ',';
-						$hostIDs .= '"'.$hostIDCache[$id].'"';
-						$IDCache[] = $id;
-					}
-				}
-				if ($invalidIDs != '')
-					echo 'You typed one or more invalid host ID ('.trim($invalidIDs).'). Please try again.'.PHP_EOL;
-				else
+					$hostIDs .= '"*"';
 					break;
+				}
+				else
+				{
+					$exp = explode(' ', $ids);
+					$invalidIDs = '';
+					$IDCache = array();
+					foreach ($exp as $e)
+					{
+						if ($e == '')
+							continue;
+						
+						$id = (int) $e;
+						if ($id < 1 || $id >= $c)
+						{
+							$invalidIDs .= $e.' ';
+						}
+						else if (!in_array($id, $IDCache))
+						{
+							if ($hostIDs != '')
+								$hostIDs .= ',';
+							$hostIDs .= '"'.$hostIDCache[$id].'"';
+							$IDCache[] = $id;
+						}
+					}
+					if ($invalidIDs != '')
+						echo 'You typed one or more invalid host ID ('.trim($invalidIDs).'). Please try again.'.PHP_EOL;
+					else
+						break;
+				}
 			}
 			
 			// Store this plugin's settings in target var
@@ -183,7 +191,7 @@ class Interactive
 		echo 'Afterwards your http settings will be stored in ./config/http.ini for future use.'.PHP_EOL;
 
 		// Ask if we want to use a http socket at all
-		if (self::query(PHP_EOL.'Would you like to setup the web-admin socket?', array('yes', 'no')) == 'no')
+		if (self::query(PHP_EOL.'Would you like to setup the web server?', array('yes', 'no')) == 'no')
 		{
 			$vars['ip'] = '';
 			$vars['port'] = '0';
@@ -193,7 +201,7 @@ class Interactive
 		// Ask which IP address to bind the listen socket to
 		while (true)
 		{
-			$vars['ip']		= self::query('On which IP address should HTTP listen? (blank means all)', array(), true);
+			$vars['ip']		= self::query('On which IP address should we listen? (blank means all)', array(), true);
 			if ($vars['ip'] == '')
 				$vars['ip'] = '0.0.0.0';
 			
@@ -206,12 +214,18 @@ class Interactive
 		// Ask which Port to listen on
 		while (true)
 		{
-			$vars['port']	= (int) self::query('On which Port should HTTP listen?');
+			$vars['port']	= (int) self::query('On which Port should we listen?');
 			
 			if ($vars['port'] < 1 || $vars['port'] > 65535)
 				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
 			else
 				break;
+		}
+
+		// Ask if we want to turn on httpAuth
+		if (self::query('Do you want to restrict access to the admin website with a http login query?', array('yes', 'no')) == 'yes')
+		{
+			$vars['httpAuthPath'] = '/';
 		}
 		echo PHP_EOL;
 	}

@@ -120,15 +120,16 @@ class HttpHandler extends SectionHandler
 	{
 		global $PRISM;
 		
-		$this->httpVars = array(
-			'ip' => '', 
-			'port' => 0, 
-			'path' => 
-			'www-docs', 
-			'siteDomain' => '', 
-			'httpAuthPath' => '', 
-			'httpAuthType' => 'Digest', 
-			'logFile' => 'logs/http.log');
+		$this->httpVars = array
+		(
+			'ip'			=> '', 
+			'port'			=> 0, 
+			'path'			=> 'www-docs', 
+			'siteDomain'	=> '', 
+			'httpAuthPath'	=> '', 
+			'httpAuthType'	=> 'Digest', 
+			'logFile'		=> 'logs/http.log',
+		);
 		
 		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
 		{
@@ -142,7 +143,6 @@ class HttpHandler extends SectionHandler
 			Interactive::queryHttp($this->httpVars);
 			
 			# Then build a http.ini file based on these details provided.
-			if ($this->createIniFile('http.ini', 'HTTP Configuration (web admin)', $this->httpVars))
 			$extraInfo = <<<ININOTES
 ;
 ; Http listen details (for administration web pages).
@@ -245,10 +245,15 @@ ININOTES;
 			ROOTPATH.'/'.$this->httpVars['logFile'];
 		
 		// Check if its path is valid
-		$logPath = pathinfo($this->logFile, PATHINFO_DIRNAME);
-		if (!file_exists($logPath))
+		$logPath = pathinfo($this->logFile);
+		if (!isset($logPath['filename']) || $logPath['filename'] == '' || !file_exists($logPath['dirname']))
 		{
 			console('The path to your log folder does not exist : '.$logPath);
+			return false;
+		}
+		else if (is_dir($this->logFile))
+		{
+			console('The path to your http log folder is a folder itself : '.$this->logFile);
 			return false;
 		}
 		

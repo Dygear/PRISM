@@ -39,7 +39,7 @@ class PluginHandler extends SectionHandler
 		{
 			# We ask the client to manually input the plugin details here.
 			require_once(ROOTPATH . '/modules/prism_interactive.php');
-			Interactive::queryPlugins($this->pluginvars, $this->connvars);
+			Interactive::queryPlugins($this->pluginvars, $PRISM->hosts->getHostsInfo());
 
 			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
 				console('Generated config/plugins.ini');
