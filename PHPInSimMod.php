@@ -266,12 +266,12 @@ class PHPInSimMod
 						
 						case 'w':
 							console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY'));
-							for ($k=0; $k<$this->httpNumClients; $k++)
+							foreach ($this->http->getHttpInfo() as $v)
 							{
-								$lastAct = time() - $this->httpClients[$k]->lastActivity;
-								console(sprintf('%15s:%5s %5d %13d', $this->httpClients[$k]->ip, $this->httpClients[$k]->port, $lastAct));
+								$lastAct = time() - $v['lastActivity'];
+								console(sprintf('%15s:%5s %13d', $v['ip'], $v['port'], $lastAct));
 							}
-							console('Counted '.$this->httpNumClients.' http client'.(($this->httpNumClients == 1) ? '' : 's'));
+							console('Counted '.$this->http->getHttpNumClients().' http client'.(($this->http->getHttpNumClients() == 1) ? '' : 's'));
 							break;
 						
 						default :

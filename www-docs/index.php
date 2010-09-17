@@ -135,12 +135,9 @@ $html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
 $html .= '<input type="submit" value="Submit the form" />';
 $html .= '</form>';
 
-for ($x = 0; $x < 100; $x++)
-{
-	$html .= '<br /><br />SERVER values :<br />';
-	foreach ($SERVER as $k => $v)
-		$html .= htmlspecialchars($k.' => '.$v).'<br />';
-}
+$html .= '<br /><br />SERVER values :<br />';
+foreach ($SERVER as $k => $v)
+	$html .= htmlspecialchars($k.' => '.$v).'<br />';
 
 $html .= '	</body>';
 $html .= '</html>';

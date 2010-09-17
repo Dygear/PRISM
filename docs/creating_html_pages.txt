@@ -98,7 +98,7 @@ you can store for example a file handle in $_SESSION and it will be there upon
 the next http request.
 You can store a single variable in $_SESSION, or a huge, deeply recursive array.
 It is of course up to you to make sure it will not slow PRISM too much, and / or
-uses too many resources (memory).
+use too many resources (memory basically).
 
 
 APPENDIX (A) - list of standard php function(alitie)s you must not use.
@@ -117,6 +117,9 @@ all session functions
 $_SERVER
     - you can use this, but it contains the php-cli variables, not http ones
     - use $SERVER instead (see APPENDIX (B))
+
+$_REQUEST
+	- just use the individual ones instead ($_GET $_POST $_COOKIE)
 
 
 APPENDIX (B) - list of extra function(alitie)s provided by PRISM.

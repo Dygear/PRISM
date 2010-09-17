@@ -80,15 +80,13 @@ class admin extends Plugins
 
 		# w
 		console(NULL); # Print a blank line.
-		$httpNumClients = $PRISM->http->getHttpNumClients();
 		console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY'));
-		for ($k = 0; $k < $httpNumClients; ++$k)
+		foreach ($PRISM->http->getHttpInfo() as $v)
 		{
-			$httpClient = $PRISM->http->getHttpClient($k);
-			$lastAct = time() - $httpClient->lastActivity;
-			console(sprintf('%15s:%5s %5d %13d', $httpClient->ip, $httpClient->port, $lastAct));
+			$lastAct = time() - $v['lastActivity'];
+			console(sprintf('%15s:%5s %13d', $v['ip'], $v['port'], $lastAct));
 		}
-		console('Counted '.$httpNumClients.' http client'.(($httpNumClients == 1) ? '' : 's'));
+		console('Counted '.$PRISM->http->getHttpNumClients().' http client'.(($PRISM->http->getHttpNumClients() == 1) ? '' : 's'));
 
 		return PLUGIN_CONTINUE;
 	}

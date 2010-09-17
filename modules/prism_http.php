@@ -20,6 +20,7 @@ class HttpHandler extends SectionHandler
 	public $cache			= null;
 	
 	private $docRoot		= '';
+	private $logFile		= '';
 	private $siteDomain		= '';
 
 	public function getHttpNumClients()
@@ -27,14 +28,28 @@ class HttpHandler extends SectionHandler
 		return $this->httpNumClients;
 	}
 
-	public function getHttpClient($k)
+	public function &getHttpInfo()
 	{
-		return $this->httpClients[$k];
+		$info = array();
+		foreach ($this->httpClients as $k => $v)
+		{
+			$info[] = array(
+				'ip' => $v->getRemoteIP(),
+				'port' => $v->getRemotePort(),
+				'lastActivity' => $v->getLastActivity(),
+			);
+		}
+		return $info;
 	}
 
 	public function getDocRoot()
 	{
 		return $this->docRoot;
+	}
+	
+	public function getLogFile()
+	{
+		return $this->logFile;
 	}
 	
 	public function getSiteDomain()
@@ -72,7 +87,7 @@ class HttpHandler extends SectionHandler
 	{
 		global $PRISM;
 		
-		$this->httpVars = array('ip' => '', 'port' => 0, 'path' => 'www-docs', 'siteDomain' => '', 'httpAuthPath' => '');
+		$this->httpVars = array('ip' => '', 'port' => 0, 'path' => 'www-docs', 'siteDomain' => '', 'httpAuthPath' => '', 'logFile' => 'logs/http.log');
 		
 		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
 		{
@@ -103,6 +118,10 @@ ININOTES;
 
 		// Set docRoot
 		if (!$this->setDocRoot())
+			return false;
+		
+		// Set logFile
+		if (!$this->setLogFile())
 			return false;
 		
 		// Setup http socket to listen on
@@ -156,13 +175,38 @@ ININOTES;
 		// Check if it's valid
 		if (!file_exists($this->docRoot))
 		{
-			console('The path to your web-root does not exists : '.$this->httpVars['path']);
+			console('The path to your web-root does not exist : '.$this->httpVars['path']);
 			return false;
 		}
 		
 		return true;
 	}
-	
+
+	private function setLogFile()
+	{
+		// Strip trailing slashes
+		$this->httpVars['logFile'] = preg_replace('/(.*)([\/\\\]*)$/U', '\\1', $this->httpVars['logFile']);
+		
+		if ($this->httpVars['logFile'] == '')
+			$this->httpVars['logFile'] = 'logs/http.log';
+		
+		// Store in logFile
+		$this->logFile = 
+			($this->httpVars['logFile'][0] == '/' || (isset($this->httpVars['logFile'][1]) && $this->httpVars['logFile'][1] == ':')) ? 
+			$this->httpVars['logFile'] : 
+			ROOTPATH.'/'.$this->httpVars['logFile'];
+		
+		// Check if its path is valid
+		$logPath = pathinfo($this->logFile, PATHINFO_DIRNAME);
+		if (!file_exists($logPath))
+		{
+			console('The path to your log folder does not exist : '.$logPath);
+			return false;
+		}
+		
+		return true;
+	}
+
 	private function setupSiteDomain()
 	{
 		$this->siteDomain = '';
@@ -524,7 +568,7 @@ class HttpClient
 		$this->sendFilePntr = -1;
 	}
 
-	private function createErrorPage($errNo, $errStr = '', $appendPadding = true)
+	private function createErrorPage($errNo, $errStr = '', $appendPadding = false)
 	{
 		$eol = "\r\n";
 		$out = '<html>'.$eol;
@@ -584,9 +628,10 @@ class HttpClient
 					
 				$this->write($r->getHeaders());
 				$this->write($r->getBody());
+
+				$this->logRequest($r->getResponseCode(), (($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0));
 			}
 			$errNo = $this->httpRequest->errNo;
-			$this->httpRequest = null;
 			return false;
 		}
 		
@@ -632,6 +677,7 @@ class HttpClient
 			$this->write($r->getHeaders());
 			$this->write($r->getBody());
 			$errNo = 404;
+			$this->logRequest($r->getResponseCode(), (($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0));
 			return false;
 		}
 		
@@ -648,10 +694,11 @@ class HttpClient
 				// Not validated - send 401 Unauthorized
 				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 401);
 				$r->addHeader('WWW-Authenticate: Basic realm="Prism admin login required"');
-				$r->addBody($this->createErrorPage(401));
+				$r->addBody($this->createErrorPage(401, true));
 				$this->write($r->getHeaders());
 				$this->write($r->getBody());
 				$errNo = 401;
+				$this->logRequest($r->getResponseCode(), (($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0));
 				
 				$this->httpRequest = null;
 				return true;		// we return true this time because we may stay connected
@@ -695,9 +742,6 @@ class HttpClient
 					
 					$this->write($r->getHeaders());
 					$this->write($r->getBody());
-					
-					// Clean any temp files created by eg. a file upload
-					$this->cleanTempFiles();
 				}
 			}
 			else if (is_dir($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']))
@@ -734,16 +778,7 @@ class HttpClient
 		}
 		
 		// log line
-		$logLine =
-			$this->ip.' - - ['.date('d/M/Y:H:i:s O').'] '.
-			'"'.$this->httpRequest->SERVER['REQUEST_METHOD'].' '.$this->httpRequest->SERVER['REQUEST_URI'].' '.$this->httpRequest->SERVER['SERVER_PROTOCOL'].'" '.
-			$r->getResponseCode().' '.
-			(($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0).' '.
-			'"'.((isset($this->httpRequest->SERVER['HTTP_REFERER'])) ? $this->httpRequest->SERVER['HTTP_REFERER'] : '').'" '.
-			'"'.$this->httpRequest->SERVER['HTTP_USER_AGENT'].'" '.
-			'"-"';
-		console($logLine);
-		file_put_contents(ROOTPATH.'/logs/http.log', $logLine."\r\n", FILE_APPEND);
+		$this->logRequest($r->getResponseCode(), (($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0));
 		
 		// Reset httpRequest
 		$this->httpRequest = null;
@@ -875,27 +910,6 @@ class HttpClient
 		return true;
 	}
 	
-	private function cleanTempFiles()
-	{
-		// $FILES cleanup
-		foreach ($this->httpRequest->FILES as $k => $v)
-		{
-			if (is_array($v['tmp_name']))
-			{
-				foreach ($v['tmp_name'] as $c => $d)
-				{
-					if ($v['tmp_name'][$c])
-						unlink($v['tmp_name'][$c]);
-				}
-			}
-			else
-			{
-				if ($v['tmp_name'])
-					unlink($v['tmp_name']);
-			}
-		}
-	}
-
 	private function getMimeType()
 	{
 		$pathInfo = pathinfo($this->httpRequest->SERVER['SCRIPT_NAME']);
@@ -969,6 +983,23 @@ class HttpClient
 		}
 		return $mimeType;
 	}
+	
+	private function logRequest($code, $size = 0)
+	{
+		if ($this->http->getLogFile() == '')
+			return;
+		
+		$logLine =
+			$this->ip.' - - ['.date('d/M/Y:H:i:s O').'] '.
+			'"'.$this->httpRequest->requestLine.'" '.
+			$code.' '.
+			$size.' '.
+			'"'.((isset($this->httpRequest->SERVER['HTTP_REFERER'])) ? $this->httpRequest->SERVER['HTTP_REFERER'] : '-').'" '.
+			'"'.((isset($this->httpRequest->SERVER['HTTP_USER_AGENT'])) ? $this->httpRequest->SERVER['HTTP_USER_AGENT'] : '-').'" '.
+			'"-"';
+		console($logLine);
+		file_put_contents($this->http->getLogFile(), $logLine."\r\n", FILE_APPEND);
+	}
 }
 
 class HttpRequest
@@ -977,13 +1008,15 @@ class HttpRequest
 	
 	public $isReceiving		= false;
 	public $hasRequestUri	= false;
+	public $requestLine		= '';
 	public $hasHeaders		= false;
 
 	public $errNo			= 0;
 	public $errStr			= '';
 	
 	public $headers			= array();		// This will hold all of the request headers from the clients browser.
-
+	private $tmpFiles		= array();
+	
 	public $SERVER			= array();
 	public $GET				= array();		// With these arrays we try to recreate php's global vars a bit.
 	public $POST			= array();
@@ -995,6 +1028,13 @@ class HttpRequest
 
 	}
 	
+	public function __destruct()
+	{
+		// tmpFiles cleanup
+		foreach ($this->tmpFiles as $v)
+			unlink($v);
+	}
+
 	public function handleInput(&$data)
 	{
 		// We need to buffer the input - no idea how much data will 
@@ -1012,14 +1052,18 @@ class HttpRequest
 		if (!$this->hasHeaders)
 		{
 			if (!$this->parseHeaders())
+			{
+				if ($this->errNo == 0)
+					$this->errNo = 400;
 				return false;				// returns false is something went wrong (bad headers)
+			}
 		}
 		
 		// If we have headers then we can now figure out if we have received all there is,
 		// or if there is more to come. If there is, just return true and wait for more.
 		if ($this->hasHeaders)
 		{
-			// With a GET there will be no extra data
+			// With a GET there will be no extra data. With a POST however ...
 			if ($this->SERVER['REQUEST_METHOD'] == 'POST')
 			{
 				// Check if we have enough and proper data to read the POST
@@ -1106,7 +1150,7 @@ class HttpRequest
 					}
 					else if ($len > 3 && !preg_match('/^(GET|POST|HEAD).*$/', $this->rawInput))
 					{
-						$this->errNo = 400;
+						$this->errNo = 444;
 						return false;
 					}
 				}
@@ -1119,7 +1163,7 @@ class HttpRequest
 				// This cannot possibly be the end of headers, if we don't even have a request uri (or host header)
 				if (!$this->hasRequestUri || !isset($this->headers['Host']))
 				{
-					$this->errNo = 400;
+					$this->errNo = 444;
 					return false;
 				}
 				
@@ -1138,7 +1182,8 @@ class HttpRequest
 				// Read the first header (the request line)
 				if (!$this->parseRequestLine($header))
 				{
-					$this->errNo = 400;
+					if ($this->errNo == 0)
+						$this->errNo = 400;
 					return false;
 				}
 				$this->hasRequestUri = true;
@@ -1236,13 +1281,21 @@ class HttpRequest
 	
 	private function parseRequestLine($line)
 	{
+		$this->requestLine = $line;
+
 		$exp = explode(' ', $line);
 		if (count($exp) != 3)
+		{
+			$this->errNo = 444;
 			return false;
+		}
 		
 		// check the request command
 		if ($exp[0] != 'GET' && $exp[0] != 'POST' && $exp[0] != 'HEAD')
+		{
+			$this->errNo = 444;
 			return false;
+		}
 		$this->SERVER['REQUEST_METHOD'] = $exp[0];
 		
 		// Check the request uri
@@ -1359,6 +1412,8 @@ class HttpRequest
 				$tmpFileName = tempnam(sys_get_temp_dir(), 'Prism');
 				if (!@file_put_contents($tmpFileName, $value))
 					$fileError = UPLOAD_ERR_CANT_WRITE;
+				else
+					$this->tmpFiles[] = $tmpFileName;
 				
 				// Fill $FILES with details on the file
 				if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches))
@@ -1463,7 +1518,7 @@ class HttpResponse
 			414 => 'Request-URI Too Long',
 			415 => 'Unsupported Media Type',
 			416 => 'Requested Range Not Satisfiable',
-			444 => 'Request Rejected',
+			444 => 'Garbage Request Rejected',
 		);
 
 	private $responseCode	= 200;
