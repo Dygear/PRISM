@@ -165,7 +165,8 @@ function flagsToString($flagsBitwise = 0)
 define('RAND_ASCII', 1);
 define('RAND_ALPHA', 2);
 define('RAND_NUMERIC', 4);
-define('RAND_BINARY', 8);
+define('RAND_HEX', 8);
+define('RAND_BINARY', 16);
 function createRandomString($len, $type = RAND_ASCII)
 {
 	$out = '';
@@ -178,6 +179,10 @@ function createRandomString($len, $type = RAND_ASCII)
 		else if ($type & RAND_NUMERIC)
 		{
 			$out .= chr(rand(48, 57));
+		}
+		else if ($type & RAND_HEX)
+		{
+			$out .= sprintf('%02x', rand(0, 255));
 		}
 		else if ($type & RAND_BINARY)
 		{

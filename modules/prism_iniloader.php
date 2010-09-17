@@ -101,6 +101,8 @@ abstract class IniLoader
 		if (!file_exists(ROOTPATH.'/configs/'.$iniFile))
 			return false;
 		
+		$newValue = (is_numeric($value)) ? $value : '"'.$value.'"';
+
 		// Read the contents of the file into an array of lines
 		$lines = file(ROOTPATH.'/configs/'.$iniFile, FILE_IGNORE_NEW_LINES);
 		
@@ -114,14 +116,24 @@ abstract class IniLoader
 				if ($matches[1] == $section)
 					$foundSection = true;
 				else
+				{
+					// Check if we were in the correct section, but didn't find the line we were looking for
+					if ($foundSection)
+					{
+						// Create a new line and insert it.
+						$insert = $key.' = '.$newValue.PHP_EOL.PHP_EOL;
+						array_splice($lines, $num, 0, array($insert));
+						file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $lines));
+						break;
+					}
 					$foundSection = false;
+				}
 				continue;
 			}
 			
 			if ($foundSection && preg_match('/^'.$key.'\s*=\s*.*$/', $line))
 			{
 				// Rewrite the line and store the updated file
-				$newValue = (is_numeric($value)) ? $value : '"'.$value.'"';
 				$line = preg_replace('/^'.$key.'\s*=\s*"?.+"?(\s*;.*)?$/U', $key.' = '.$newValue.'\\1', $line);
 				file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $lines));
 				break;

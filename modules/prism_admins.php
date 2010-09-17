@@ -102,6 +102,8 @@ class AdminHandler extends SectionHandler
 ; [LFS Username]
 ; password = "<password>"
 ; accessFlags = "<Access flags>"
+; connection = "<host id name>"
+; realmDigest = "<md5 hash>"	; never change this yourself
 ;
 ; NOTE about the password - you can write it in plain text.
 ; When you then run PRISM, the password will be converted into a safer format.
@@ -118,10 +120,12 @@ ININOTES;
 			// Convert password?
 			if (strlen($details['password']) != 40)
 			{
+				$details['realmDigest'] = md5($username.':'.HTTP_AUTH_REALM.':'.$details['password']);
 				$details['password'] = sha1($details['password'].$PRISM->config->cvars['secToken']);
 				
-				// Rewrite this particular config line in admins.ini
+				// Rewrite these particular config lines in admins.ini
 				$this->rewriteLine('admins.ini', $username, 'password', $details['password']);
+				$this->rewriteLine('admins.ini', $username, 'realmDigest', $realmDigest);
 			}
 			
 			// Convert flags?
@@ -154,6 +158,14 @@ ININOTES;
 			'accessFlags' => $this->admins[$username]['accessFlags'],
 			'connection' => $this->admins[$username]['connection'],
 		);
+	}
+	
+	public function getRealmDigest(&$username)
+	{
+		if (!isset($this->admins[$username]))
+			return false;
+
+		return $this->admins[$username]['realmDigest'];
 	}
 	
 	public function adminExists(&$username)

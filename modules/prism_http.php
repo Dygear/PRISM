@@ -3,12 +3,13 @@
 require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
 require_once(ROOTPATH . '/modules/prism_phpparser.php');
 
-define('HTTP_KEEP_ALIVE', 10);					// Keep-alive timeout in seconds
-define('HTTP_MAX_REQUEST_SIZE', 2097152);		// Max http request size in bytes (headers + data)
-define('HTTP_MAX_URI_LENGTH', 4096);			// Max length of the uri in the first http header
-define('HTTP_MAX_CONN', 1024);					// Max number of simultaneous http connections
-												// Experimentation showed it's best to keep this pretty high.
-												// FD_SETSIZE is usually 1024; the max connections allowed on a socket.
+define('HTTP_AUTH_REALM', 'Prism administration');	// Token used for http auth & digest
+define('HTTP_KEEP_ALIVE', 10);						// Keep-alive timeout in seconds
+define('HTTP_MAX_REQUEST_SIZE', 2097152);			// Max http request size in bytes (headers + data)
+define('HTTP_MAX_URI_LENGTH', 4096);				// Max length of the uri in the first http header
+define('HTTP_MAX_CONN', 1024);						// Max number of simultaneous http connections
+													// Experimentation showed it's best to keep this pretty high.
+													// FD_SETSIZE is usually 1024; the max connections allowed on a socket.
 
 class HttpHandler extends SectionHandler
 {
@@ -18,6 +19,7 @@ class HttpHandler extends SectionHandler
 
 	private $httpVars		= array();
 	public $cache			= null;
+	private $nonceCache		= array();
 	
 	private $docRoot		= '';
 	private $logFile		= '';
@@ -62,6 +64,37 @@ class HttpHandler extends SectionHandler
 		return $this->httpVars['httpAuthPath'];
 	}
 	
+	public function getHttpAuthType()
+	{
+		return $this->httpVars['httpAuthType'];
+	}
+	
+	public function getNonceInfo(&$nonce)
+	{
+		if (!isset($this->nonceCache[$nonce]))
+			return false;
+		
+		return array($this->nonceCache[$nonce][0], $this->nonceCache[$nonce][1], $this->nonceCache[$nonce][2]);
+	}
+	
+	public function addNewNonce(&$nonce)
+	{
+		$opaque = createRandomString(16, RAND_HEX);
+		$this->nonceCache[$nonce] = array(time(), 0, $opaque);
+		return $opaque;
+	}
+	
+	public function incNonceCounter(&$nonce)
+	{
+		if (!isset($this->nonceCache[$nonce]))
+			return false;
+		
+		$this->nonceCache[$nonce][0] = time();
+		$this->nonceCache[$nonce][1]++;
+		
+		return true;
+	}
+	
 	public function __destruct()
 	{
 		$this->close(true);
@@ -87,7 +120,15 @@ class HttpHandler extends SectionHandler
 	{
 		global $PRISM;
 		
-		$this->httpVars = array('ip' => '', 'port' => 0, 'path' => 'www-docs', 'siteDomain' => '', 'httpAuthPath' => '', 'logFile' => 'logs/http.log');
+		$this->httpVars = array(
+			'ip' => '', 
+			'port' => 0, 
+			'path' => 
+			'www-docs', 
+			'siteDomain' => '', 
+			'httpAuthPath' => '', 
+			'httpAuthType' => 'Digest', 
+			'logFile' => 'logs/http.log');
 		
 		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
 		{
@@ -134,6 +175,13 @@ ININOTES;
 		// Validate httpAuthPath
 		if (!$this->validateAuthPath())
 			return false;
+		
+		// Validate httpAuthType
+		if ($this->httpVars['httpAuthType'] != 'Digest' & $this->httpVars['httpAuthType'] != 'Basic')
+		{
+			console('Invalid httpAuthType in http.ini');
+			return false;
+		}
 		
 		return true;
 	}
@@ -692,8 +740,19 @@ class HttpClient
 				 !$this->validateAuthorization()))
 			{
 				// Not validated - send 401 Unauthorized
+				do
+				{
+					$nonce = createRandomString(17, RAND_HEX);
+					if (!$this->http->getNonceInfo($nonce))
+						break;
+				} while(true);
+				$opaque = $this->http->addNewNonce($nonce);
+				
 				$r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 401);
-				$r->addHeader('WWW-Authenticate: Basic realm="Prism admin login required"');
+				if ($this->http->getHttpAuthType() == 'Digest')
+					$r->addHeader('WWW-Authenticate: Digest realm="'.HTTP_AUTH_REALM.'", qop="auth", nonce="'.$nonce.'", opaque="'.$opaque.'"');
+				else
+					$r->addHeader('WWW-Authenticate: Basic realm="'.HTTP_AUTH_REALM.'"');
 				$r->addBody($this->createErrorPage(401, true));
 				$this->write($r->getHeaders());
 				$this->write($r->getBody());
@@ -897,15 +956,63 @@ class HttpClient
 		global $PRISM;
 
 		$matches = array();
-		if (!preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
+		if (preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
+		{
+			// Basic method
+			$auth = explode(':', base64_decode($matches[1]), 2);
+			if (count($auth) != 2 || !$PRISM->admins->isPasswordCorrect($auth[0], $auth[1]))
+				return false;
+			
+			// Validated!
+			$this->httpRequest->SERVER['PHP_AUTH_USER']	= $auth[0];
+			$this->httpRequest->SERVER['PHP_AUTH_PW']	= $auth[1];
+		}
+		else if (preg_match('/^Digest (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
+		{
+			// Digest method
+			$info = array();
+			$infoTmp = $this->httpRequest->parseHeaderValue($matches[1]);
+			foreach ($infoTmp as $a => $b)
+			{
+				foreach ($b as $k => $v)
+					$info[$k] = preg_replace('/"?(.*)"?/U', '\\1', $v);
+			}
+			
+			// Check that all values are provided
+			if (!isset($info['username']) ||
+				!isset($info['realm']) ||
+				!isset($info['nonce']) ||
+				!isset($info['uri']) ||
+				!isset($info['response']) ||
+				!isset($info['opaque']) ||
+				!isset($info['qop']) ||
+				!isset($info['nc']) ||
+				!isset($info['cnonce']))
+				return false;
+
+			//  Check that nonce exists and nc is not reused AND that opaque value matches
+			if (!($nonceInfo = $this->http->getNonceInfo($info['nonce'])))
+				return false;
+			if ($nonceInfo[1] >= (int) $info['nc'] || !isset($nonceInfo[2]) || $nonceInfo[2] != $info['opaque'])
+				return false;		
+						
+			// Do the digest check
+			if (!($ha1 = $PRISM->admins->getRealmDigest($info['username'])))
+				return false;
+			$ha2 = md5($this->httpRequest->SERVER['REQUEST_METHOD'].':'.$info['uri']);
+			$response = md5($ha1.':'.$info['nonce'].':'.$info['nc'].':'.$info['cnonce'].':'.$info['qop'].':'.$ha2);
+			if ($response != $info['response'])
+				return false;
+			
+			// Validated!
+			$this->http->incNonceCounter($info['nonce']);
+			$this->httpRequest->SERVER['PHP_AUTH_USER']	= $info['username'];
+		}
+		else
+		{
+			// Unknown or no authorisation provided
 			return false;
-		
-		$auth = explode(':', base64_decode($matches[1]), 2);
-		if (count($auth) != 2 || !$PRISM->admins->isPasswordCorrect($auth[0], $auth[1]))
-			return false;
-		
-		$this->httpRequest->SERVER['PHP_AUTH_USER']	= $auth[0];
-		$this->httpRequest->SERVER['PHP_AUTH_PW']	= $auth[1];
+		}
 
 		return true;
 	}
@@ -1010,7 +1117,7 @@ class HttpRequest
 	public $hasRequestUri	= false;
 	public $requestLine		= '';
 	public $hasHeaders		= false;
-
+	
 	public $errNo			= 0;
 	public $errStr			= '';
 	
@@ -1105,7 +1212,7 @@ class HttpRequest
 						return false;
 					}
 				}
-				
+
 				// Cleanup rawInput
 				$this->rawInput = substr($this->rawInput, $this->headers['Content-Length']);
 			}
@@ -1569,8 +1676,8 @@ class HttpResponse
 			}
 		}
 		
-		// Store the header and reformat cases (cONtenT-TypE -> Content-Type)
-		$this->headers[ucwordsByChar(strtolower($exp[0]), '-')] = $exp[1];
+		// Store the header
+		$this->headers[$exp[0]] = $exp[1];
 		
 		return true;
 	}

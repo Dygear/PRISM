@@ -250,6 +250,7 @@ class Interactive
 				'password'		=> sha1($tmp['password'].$PRISM->config->cvars['secToken']),
 				'connection'	=> $tmp['connection'],
 				'accessFlags'	=> $tmp['accessFlags'],
+				'realmDigest'	=> md5($tmp['username'].':'.HTTP_AUTH_REALM.':'.$tmp['password']),
 			);
 			
 			if (self::query(PHP_EOL.'Add another admin account?', array('yes', 'no')) == 'no')
