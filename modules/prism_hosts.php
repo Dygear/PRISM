@@ -384,6 +384,8 @@ class HostHandler extends SectionHandler
 			
 			return;
 		}
+
+		$this->curHostId = $hostID; # To make sure we always know what host we are talking to, makeing the sendPacket function useful everywhere.
 		
 		# Parse Packet Header
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
@@ -406,6 +408,7 @@ class HostHandler extends SectionHandler
 	//
 	private function inspectPacket(struct &$packet, &$hostID)
 	{
+		$this->curHostID = $hostID;
 		switch($packet->Type)
 		{
 			case ISP_VER :
@@ -416,6 +419,7 @@ class HostHandler extends SectionHandler
 					$this->hosts[$hostID]->setConnStatus(CONN_VERIFIED);
 					$this->hosts[$hostID]->setConnTime(time());
 					$this->hosts[$hostID]->setConnTries(0);
+					// Here we setup the state for the connection.
 					$this->hosts[$hostID]->state = new StateHandler($packet, $hostID);
 				}
 				break;

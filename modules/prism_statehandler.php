@@ -34,7 +34,7 @@ class StateHandler
 	public $players = array();	# By design there is one here, and the other is refrence to this in the $this->clients->players array.
 
 	// Constructor
-	public function __construct($HostID)
+	public function __construct()
 	{
 		global $PRISM;
 		# Send out some info requests
@@ -43,31 +43,31 @@ class StateHandler
 		// Request every bit of information we can get.
 		// This becomes our baseline that we use and update as needed.
 		$ISP->SubT = TINY_SCP;	# Send Camera Pos (ISP_CPP)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_SST;	# Send STate info (ISP_STA)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_GTH;	# Get Time in Hundredths (SMALL_RTP)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_ISM;	# Get Multiplayer Info (ISP_ISM)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_NCN;	# get all connections (ISP_NCN)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_NPL;	# get all players (ISP_NPL)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_RES;	# get all results (ISP_RES)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_NLP;	# send an IS_NLP (ISP_NLP)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_MCI;	# send an IS_MCI (ISP_MCI)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_REO;	# send an IS_REO (ISP_REO)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_RST;	# send an IS_RST (ISP_RST)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_AXI;	# send an IS_AXI - AutoX Info (ISP_AXI)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 		$ISP->SubT = TINY_RIP;	# send an IS_RIP - Replay Information Packet (ISP_RIP)
-		$PRISM->hosts->sendPacket($ISP, $HostID);
+		$PRISM->hosts->sendPacket($ISP);
 	}
 
 	// Basicly the IS_VER Struct.
