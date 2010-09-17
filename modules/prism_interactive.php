@@ -4,9 +4,9 @@ class Interactive
 {
 	public function queryConnections(array &$vars)
 	{
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***HOST CONNECTIONS SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
-		echo 'Afterwards your connection settings will be stored in ./config/connections.ini for future use.'.PHP_EOL;
+		echo 'Afterwards your connection settings will be stored in ./config/hosts.ini for future use.'.PHP_EOL;
 
 		$c = 1;
 		while (true)
@@ -95,7 +95,7 @@ class Interactive
 			return;
 		}
 				
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***PLUGINS SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually select which plugins to load.'.PHP_EOL;
 		echo 'Afterwards your plugin settings will be stored in ./config/plugins.ini for future use.'.PHP_EOL;
 		
@@ -186,7 +186,7 @@ class Interactive
 	
 	public function queryHttp(array &$vars)
 	{
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***HTTP SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the http server.'.PHP_EOL;
 		echo 'Afterwards your http settings will be stored in ./config/http.ini for future use.'.PHP_EOL;
 
@@ -230,11 +230,51 @@ class Interactive
 		echo PHP_EOL;
 	}
 	
+	public function queryTelnet(array &$vars)
+	{
+		echo '***TELNET SETUP***'.PHP_EOL;
+		echo 'You now have the chance to manually enter the details of the telnet server.'.PHP_EOL;
+		echo 'Afterwards your telnet settings will be stored in ./config/telnet.ini for future use.'.PHP_EOL;
+
+		// Ask if we want to use a telnet socket at all
+		if (self::query(PHP_EOL.'Would you like to setup the telnet server?', array('yes', 'no')) == 'no')
+		{
+			$vars['ip'] = '';
+			$vars['port'] = '0';
+			return;
+		}
+		
+		// Ask which IP address to bind the listen socket to
+		while (true)
+		{
+			$vars['ip']		= self::query('On which IP address should we listen? (blank means all)', array(), true);
+			if ($vars['ip'] == '')
+				$vars['ip'] = '0.0.0.0';
+			
+			if (!verifyIP($vars['ip']))
+				echo 'Invalid IPv4 address entered. Please try again.'.PHP_EOL;
+			else
+				break;
+		}
+		
+		// Ask which Port to listen on
+		while (true)
+		{
+			$vars['port']	= (int) self::query('On which Port should we listen?');
+			
+			if ($vars['port'] < 1 || $vars['port'] > 65535)
+				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
+			else
+				break;
+		}
+		echo PHP_EOL;
+	}
+	
 	public function queryAdmins(array &$vars)
 	{
 		global $PRISM;
 		
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***ADMIN SETUP***'.PHP_EOL;
 		echo 'You now have the chance to create PRISM admin accounts.'.PHP_EOL;
 		echo 'Afterwards your admins settings will be stored in ./config/admins.ini for future use.'.PHP_EOL;
 

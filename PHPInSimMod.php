@@ -207,6 +207,9 @@ class PHPInSimMod
 			// Add http sockets to the arrays as needed
 			$this->http->getSelectableSockets($sockReads, $sockWrites);
 			
+			// Add telnet sockets to the arrays as needed
+			$this->telnet->getSelectableSockets($sockReads, $sockWrites);
+			
 			$this->getSelectTimeOut();
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
@@ -217,6 +220,7 @@ class PHPInSimMod
 			{
 				$numReady -= $this->hosts->checkTraffic($sockReads, $sockWrites);
 				$numReady -= $this->http->checkTraffic($sockReads, $sockWrites);
+				$numReady -= $this->telnet->checkTraffic($sockReads, $sockWrites);
 				
 				// KB input
 				if (in_array (STDIN, $sockReads))
