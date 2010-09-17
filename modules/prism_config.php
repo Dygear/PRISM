@@ -20,22 +20,27 @@ class ConfigHandler extends SectionHandler
 			'secToken'		=> 'X-0ZbIY)TN>.@sr}',
 		);
 	
+	public function __construct()
+	{
+		$this->iniFile = 'cvars.ini';
+	}
+	
 	public function initialise()
 	{
 		global $PRISM;
 		
-		if ($this->loadIniFile($this->cvars, 'cvars.ini', FALSE))
+		if ($this->loadIniFile($this->cvars, FALSE))
 		{
 			if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded cvars.ini');
+				console('Loaded '.$this->iniFile);
 		}
 		else
 		{
 			$this->cvars['secToken'] = str_replace(array('"', '\'', ' '), '.', createRandomString(16));
 			
 			console('Using cvars defaults.');
-			if ($this->createIniFile('cvars.ini', 'PHPInSimMod Configuration Variables', array('prism' => &$this->cvars)))
-				console('Generated config/cvars.ini');
+			if ($this->createIniFile('PHPInSimMod Configuration Variables', array('prism' => &$this->cvars)))
+				console('Generated config/'.$this->iniFile);
 		}
 
 		return true;

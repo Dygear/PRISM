@@ -17,18 +17,19 @@ if (isset($SERVER['PHP_AUTH_USER']))
 		(
 			'user' => $SERVER['PHP_AUTH_USER'],
 			'autoLogin' => true,
+			'counter' => 0,
 		);
 	}
 	else
 	{
 		$_SESSION['user'] = $SERVER['PHP_AUTH_USER'];
-		$_SESSION['autologin'] = true;
+		$_SESSION['autoLogin'] = true;
 	}
 }
 else
 {
-	if (isset($_SESSION['autologin']))
-		unset($_SESSION['autologin']);
+	if (isset($_SESSION['autoLogin']))
+		unset($_SESSION['autoLogin']);
 }
 
 ?>
@@ -51,7 +52,7 @@ if (isset($_SESSION['user']))
 {
 	$html .= '<div class="loginArea">';
 	$html .= 'Welcome '.htmlspecialchars($_SESSION['user']).'.';
-	if (!isset($_SESSION['autologin']) || $_SESSION['autologin'] == false)
+	if (!isset($_SESSION['autoLogin']) || $_SESSION['autoLogin'] == false)
 		$html .= ' -<a href="/login.php?logout">Logout</a>';
 	$html .= '</div>';
 }

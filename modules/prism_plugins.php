@@ -10,24 +10,29 @@ class PluginHandler extends SectionHandler
 	private $plugins			= array();			# Stores references to the plugins we've spawned.
 	private $pluginvars			= array();
 
+	public function __construct()
+	{
+		$this->iniFile = 'plugins.ini';
+	}
+	
 	public function initialise()
 	{
 		global $PRISM;
 		
 		$this->pluginvars = array();
 		
-		if ($this->loadIniFile($this->pluginvars, 'plugins.ini'))
+		if ($this->loadIniFile($this->pluginvars))
 		{
 			foreach ($this->pluginvars as $pluginID => $v)
 			{
 				if (!is_array($v))
 				{
-					console('Section error in plugins.ini file!');
+					console('Section error in '.$this->iniFile.' file!');
 					return FALSE;
 				}
 			}
 			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded plugins.ini');
+				console('Loaded '.$this->iniFile);
 
 			// Parse useHosts values of plugins
 			foreach ($this->pluginvars as $pluginID => $details)
@@ -41,8 +46,8 @@ class PluginHandler extends SectionHandler
 			require_once(ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryPlugins($this->pluginvars, $PRISM->hosts->getHostsInfo());
 
-			if ($this->createIniFile('plugins.ini', 'PHPInSimMod Plugins', $this->pluginvars))
-				console('Generated config/plugins.ini');
+			if ($this->createIniFile('PHPInSimMod Plugins', $this->pluginvars))
+				console('Generated config/'.$this->iniFile);
 
 			// Parse useHosts values of plugins
 			foreach ($this->pluginvars as $pluginID => $details)

@@ -43,22 +43,27 @@ class HostHandler extends SectionHandler
 
 	public $curHostID		= NULL;				# Contains the current HostID we are talking to. (For the plugins::sendPacket method).
 
+	public function __construct()
+	{
+		$this->iniFile = 'hosts.ini';
+	}
+	
 	public function initialise()
 	{
 		global $PRISM;
 		
-		if ($this->loadIniFile($this->connvars, 'hosts.ini'))
+		if ($this->loadIniFile($this->connvars))
 		{
 			foreach ($this->connvars as $hostID => $v)
 			{
 				if (!is_array($v))
 				{
-					console('Section error in hosts.ini file!');
+					console('Section error in '.$this->iniFile.' file!');
 					return FALSE;
 				}
 			}
 			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded hosts.ini');
+				console('Loaded '.$this->iniFile);
 		}
 		else
 		{
@@ -67,8 +72,8 @@ class HostHandler extends SectionHandler
 			Interactive::queryConnections($this->connvars);
 			
 			# Then build a connections.ini file based on these details provided.
-			if ($this->createIniFile('hosts.ini', 'InSim Connection Hosts', $this->connvars))
-				console('Generated config/hosts.ini');
+			if ($this->createIniFile('InSim Connection Hosts', $this->connvars))
+				console('Generated config/'.$this->iniFile);
 		}
 
 		// Cleanup any existing connections (in case of re-initialise)

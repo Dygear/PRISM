@@ -25,6 +25,11 @@ class HttpHandler extends SectionHandler
 	private $logFile		= '';
 	private $siteDomain		= '';
 
+	public function __construct()
+	{
+		$this->iniFile = 'http.ini';
+	}
+	
 	public function getHttpNumClients()
 	{
 		return $this->httpNumClients;
@@ -131,10 +136,10 @@ class HttpHandler extends SectionHandler
 			'logFile'		=> 'logs/http.log',
 		);
 		
-		if ($this->loadIniFile($this->httpVars, 'http.ini', false))
+		if ($this->loadIniFile($this->httpVars, false))
 		{
 			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded http.ini');
+				console('Loaded '.$this->iniFile);
 		}
 		else
 		{
@@ -153,8 +158,8 @@ class HttpHandler extends SectionHandler
 ;
 
 ININOTES;
-			if ($this->createIniFile('http.ini', 'HTTP Configuration (web admin)', array('http' => &$this->httpVars), $extraInfo))
-				console('Generated config/http.ini');
+			if ($this->createIniFile('HTTP Configuration (web admin)', array('http' => &$this->httpVars), $extraInfo))
+				console('Generated config/'.$this->iniFile);
 		}
 
 		// Set docRoot
@@ -179,7 +184,7 @@ ININOTES;
 		// Validate httpAuthType
 		if ($this->httpVars['httpAuthType'] != 'Digest' & $this->httpVars['httpAuthType'] != 'Basic')
 		{
-			console('Invalid httpAuthType in http.ini');
+			console('Invalid httpAuthType in '.$this->iniFile);
 			return false;
 		}
 		
@@ -269,7 +274,7 @@ ININOTES;
 			return;
 		if (!getIP($this->httpVars['siteDomain']))
 		{
-			console('Invalid siteDomain provided in http.ini (it does not resolve). Ignoring this setting.');
+			console('Invalid siteDomain provided in '.$this->iniFile.' (it does not resolve). Ignoring this setting.');
 			return;
 		}
 		
@@ -961,18 +966,7 @@ class HttpClient
 		global $PRISM;
 
 		$matches = array();
-		if (preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
-		{
-			// Basic method
-			$auth = explode(':', base64_decode($matches[1]), 2);
-			if (count($auth) != 2 || !$PRISM->admins->isPasswordCorrect($auth[0], $auth[1]))
-				return false;
-			
-			// Validated!
-			$this->httpRequest->SERVER['PHP_AUTH_USER']	= $auth[0];
-			$this->httpRequest->SERVER['PHP_AUTH_PW']	= $auth[1];
-		}
-		else if (preg_match('/^Digest (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
+		if (preg_match('/^Digest (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
 		{
 			// Digest method
 			$info = array();
@@ -1012,6 +1006,17 @@ class HttpClient
 			// Validated!
 			$this->http->incNonceCounter($info['nonce']);
 			$this->httpRequest->SERVER['PHP_AUTH_USER']	= $info['username'];
+		}
+		else if (preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
+		{
+			// Basic method
+			$auth = explode(':', base64_decode($matches[1]), 2);
+			if (count($auth) != 2 || !$PRISM->admins->isPasswordCorrect($auth[0], $auth[1]))
+				return false;
+			
+			// Validated!
+			$this->httpRequest->SERVER['PHP_AUTH_USER']	= $auth[0];
+			$this->httpRequest->SERVER['PHP_AUTH_PW']	= $auth[1];
 		}
 		else
 		{

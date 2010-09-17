@@ -30,6 +30,7 @@ require_once(ROOTPATH . '/modules/prism_config.php');
 require_once(ROOTPATH . '/modules/prism_packets.php');
 require_once(ROOTPATH . '/modules/prism_hosts.php');
 require_once(ROOTPATH . '/modules/prism_http.php');
+require_once(ROOTPATH . '/modules/prism_telnet.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
 
@@ -54,6 +55,7 @@ class PHPInSimMod
 	public $config				= null;
 	public $hosts				= null;
 	public $http				= null;
+	public $telnet				= null;
 	public $plugins				= null;
 	public $admins				= null;
 
@@ -82,6 +84,7 @@ class PHPInSimMod
 		$this->hosts	= new HostHandler();
 		$this->plugins	= new PluginHandler();
 		$this->http		= new HttpHandler();
+		$this->telnet	= new TelnetHandler();
 		$this->admins	= new AdminHandler();
 	}
 
@@ -156,6 +159,7 @@ class PHPInSimMod
 		if (!$this->config->initialise() ||
 			!$this->hosts->initialise() || 
 			!$this->http->initialise() || 
+			!$this->telnet->initialise() || 
 			!$this->admins->initialise() || 
 			!$this->plugins->initialise())
 		{
