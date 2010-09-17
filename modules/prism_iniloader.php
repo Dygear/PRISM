@@ -124,7 +124,7 @@ abstract class IniLoader
 						$insert = $key.' = '.$newValue.PHP_EOL.PHP_EOL;
 						array_splice($lines, $num, 0, array($insert));
 						file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $lines));
-						break;
+						return;
 					}
 					$foundSection = false;
 				}
@@ -136,8 +136,15 @@ abstract class IniLoader
 				// Rewrite the line and store the updated file
 				$line = preg_replace('/^'.$key.'\s*=\s*"?.+"?(\s*;.*)?$/U', $key.' = '.$newValue.'\\1', $line);
 				file_put_contents(ROOTPATH.'/configs/'.$iniFile, implode(PHP_EOL, $lines));
-				break;
+				return;
 			}
+		}
+		
+		// In case the last section of the file did not contain the value, we need to add it here
+		if ($foundSection)
+		{
+			$append = PHP_EOL.$key.' = '.$newValue.PHP_EOL.PHP_EOL;
+			file_put_contents(ROOTPATH.'/configs/'.$iniFile, $append, FILE_APPEND);
 		}
 		
 		return true;

@@ -125,7 +125,7 @@ ININOTES;
 				
 				// Rewrite these particular config lines in admins.ini
 				$this->rewriteLine('admins.ini', $username, 'password', $details['password']);
-				$this->rewriteLine('admins.ini', $username, 'realmDigest', $realmDigest);
+				$this->rewriteLine('admins.ini', $username, 'realmDigest', $details['realmDigest']);
 			}
 			
 			// Convert flags?
