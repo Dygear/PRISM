@@ -8,30 +8,38 @@
  * @subpackage Players
 */
 
-
-/*
-ISP_VER
-ISP_CPP
-ISP_STA
-ISP_TINY
-ISP_SMALL
-ISP_ISM
-ISP_NPL
-ISP_MCI
-ISP_REO
-ISP_RST
-ISP_AXI
-ISP_RIP
-
-ISP_FIN
-ISP_RES
-*/
-
 class StateHandler
 {
 	// Properties 
 	public $clients = array();
 	public $players = array();	# By design there is one here, and the other is refrence to this in the $this->clients->players array.
+	public static $handles = array
+	(
+		# State handles
+		ISP_TINY => 'onTiny',				# To Do.
+		ISP_SMALL => 'onSmall',				# To Do.
+		ISP_VER => 'onVersion',				# To Do.
+		ISP_CPP => 'onCameraPosisionChange',# To Do.
+		ISP_STA => 'onStateChange',			# To Do.
+		ISP_RST => 'onRaceStart',			# To Do.
+		ISP_ISM => 'onMultiPlayerStart',	# To Do.
+		ISP_NLP => 'onNodeLapPlayer',		# To Do.
+		ISP_MCI => 'onMultiCarInfo',		# To Do.
+		ISP_REO => 'onReorder',				# To Do.
+		ISP_AXI => 'onAutoXInfo',			# To Do.
+		ISP_RIP => 'onReplayInformation',	# To Do.
+		# Client handles
+		ISP_NCN => 'onClientJoin',			# To Do.
+		ISP_CNL => 'onClientLeave',			# To Do.
+		ISP_CPR => 'onClientRename',		# To Do.
+		ISP_TOC => 'onClientTakeOverCar',	# To Do.
+		# Player handles
+		ISP_FIN => 'onPlayerFinished',		# To Do.
+		ISP_RES => 'onPlayerResult',		# To Do.
+		ISP_NPL => 'onNewPlayer',			# To Do.
+		ISP_PLP => 'onPlayerPits',			# To Do.
+		ISP_PLL => 'onPlayerLeave',			# To Do.
+	);
 
 	// Constructor
 	public function __construct()
@@ -259,21 +267,16 @@ class StateHandler
 		return ($this->Host == 1) ? TRUE : FALSE;
 	}
 
-
-	public $callbacks = array
-	(
-		ISP_VER => 'onVersion',
-		ISP_CPP => 'onCameraPosisionUpdate',
-		ISP_STA => 'onStateChange',
-		
-	);
-
-	// Handles for Callbacks
+	// Callbacks for Handlers
 	public function onVersion(IS_VER $VER)
 	{
 		$this->Version = $VER->Version;
 		$this->Product = $VER->Product;
 		$this->InSimVer = $VER->InSimVer;
+	}
+	public function onCameraPosisionChange(ISP_CPP $CPP)
+	{
+	
 	}
 	public function onStateChange(IS_STA $STA)
 	{
@@ -306,6 +309,59 @@ class StateHandler
 		$this->Host = $ISM->Host;
 		$this->HName = $ISM->HName;
 	}
+
+	private $PLID;			# Player's unique id (0 = player left before result was sent)
+	private $TTime;			# Race time (ms)
+	private $BTime;			# Best lap (ms)
+	private $NumStops;		# Number of pit stops
+	private $Confirm;		# Confirmation flags : disqualified etc - see below
+	private $LapsDone;		# Laps completed
+	private $Flags;			# Player flags : help settings etc - see below
+
+	public function &getPLID()
+	{
+		return $this->PLID;
+	}
+	public function &getTTime()
+	{
+		return $this->TTime;
+	}
+	public function &getBTime()
+	{
+		return $this->BTime;
+	}
+	public function &getNumStops()
+	{
+		return $this->NumStops;
+	}
+	public function &getConfirm()
+	{
+		return $this->Confirm;
+	}
+	public function &getLapsDone()
+	{
+		return $this->LapsDone;
+	}
+	public function &getFlags();
+	{
+		return $this->Flags;
+	}
+
+	public function onPlayerFinished(IS_FIN $FIN)
+	{
+		$this->PLID = $FIN->PLID;
+		$this->TTime = $FIN->TTime;
+		$this->BTime = $FIN->BTime;
+		$this->NumStops = $FIN->NumStops;
+		$this->Confirm = $FIN->Confirm;
+		$this->LapsDone = $FIN->LapsDone;
+		$this->Flags = $FIN->Flags;
+	}
+
+	public function onPlayerResult(IS_RES $RES)
+	{
+	}
+
 	public function onTiny(IS_TINY $TINY)
 	{
 		switch ($TINY->SubT)
@@ -427,6 +483,7 @@ class PlayerHandler
 	private $NumP;			# Number in race (same when leaving pits, 1 more if new)
 	# Addon informaiton
 	public $inPits;			# For when a player is in our list, but not on track this is TRUE.
+
 
 	// Construct
 	public function __construct(IS_NPL $NPL)
