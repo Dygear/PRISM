@@ -26,7 +26,8 @@ define('SOCKTYPE_BEST',			0);
 define('SOCKTYPE_TCP',			1);
 define('SOCKTYPE_UDP',			2);
 
-define('STREAM_READ_BYTES',		1400);
+define('STREAM_READ_BYTES',		8192);
+define('STREAM_WRITE_BYTES',	1400);
 
 /**
  * HostHandler public functions :
@@ -213,9 +214,10 @@ class HostHandler extends SectionHandler
 				if ($host->getMustConnect() > -1 && $host->getMustConnect() < time())
 				{
 					if ($host->connect()) {
-						$sockReads[] = $this->hosts[$hostID]->getSocket();
 						if ($host->getSocketType() == SOCKTYPE_TCP)
 							$sockWrites[] = $this->hosts[$hostID]->getSocket();
+						else
+							$sockReads[] = $this->hosts[$hostID]->getSocket();
 					}
 				}
 			}
@@ -561,7 +563,7 @@ class InsimConnection
 	// send queue used in emergency cases (if host appears lagged or overflown with packets)
 	private $sendQ			= '';
 	private $sendQLen		= 0;
-	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
+	private $sendWindow		= STREAM_WRITE_BYTES;	// dynamic window size
 
 	// connection & host info
 	private $id				= '';			# the section id from the ini file
@@ -943,12 +945,12 @@ class InsimConnection
 		
 		// Dynamic window sizing
 		if ($bytes == $this->sendWindow)
-			$this->sendWindow += STREAM_READ_BYTES;
+			$this->sendWindow += STREAM_WRITE_BYTES;
 		else
 		{
-			$this->sendWindow -= STREAM_READ_BYTES;
-			if ($this->sendWindow < STREAM_READ_BYTES)
-				$this->sendWindow = STREAM_READ_BYTES;
+			$this->sendWindow -= STREAM_WRITE_BYTES;
+			if ($this->sendWindow < STREAM_WRITE_BYTES)
+				$this->sendWindow = STREAM_WRITE_BYTES;
 		}
 
 		// Update the sendQ

@@ -438,7 +438,7 @@ class HttpClient
 	private $sendFilePntr	= -1;				// Points to where we are in the file
 	private $sendFileSize	= 0;				// Points to where we are in the file
 
-	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
+	private $sendWindow		= STREAM_WRITE_BYTES;	// dynamic window size
 
 	private $httpRequest	= null;
 	
@@ -546,12 +546,12 @@ class HttpClient
 		
 		// Dynamic window sizing
 		if ($bytes == $this->sendWindow)
-			$this->sendWindow += STREAM_READ_BYTES;
+			$this->sendWindow += STREAM_WRITE_BYTES;
 		else
 		{
-			$this->sendWindow -= STREAM_READ_BYTES;
-			if ($this->sendWindow < STREAM_READ_BYTES)
-				$this->sendWindow = STREAM_READ_BYTES;
+			$this->sendWindow -= STREAM_WRITE_BYTES;
+			if ($this->sendWindow < STREAM_WRITE_BYTES)
+				$this->sendWindow = STREAM_WRITE_BYTES;
 		}
 
 		// Update the sendQ
@@ -594,7 +594,7 @@ class HttpClient
 			$this->sendFilePntr = (int) $startOffset;
 			fseek($this->sendFile, $this->sendFilePntr);
 			$this->sendFileSize = filesize($fileName);
-			$this->sendWindow	+= STREAM_READ_BYTES;
+			$this->sendWindow	+= STREAM_WRITE_BYTES;
 		}
 		
 		$bytes = @fwrite($this->socket, fread($this->sendFile, $this->sendWindow));
@@ -604,12 +604,12 @@ class HttpClient
 		
 		// Dynamic window sizing
 		if ($bytes == $this->sendWindow)
-			$this->sendWindow += STREAM_READ_BYTES;
+			$this->sendWindow += STREAM_WRITE_BYTES;
 		else
 		{
-			$this->sendWindow -= STREAM_READ_BYTES;
-			if ($this->sendWindow < STREAM_READ_BYTES)
-				$this->sendWindow = STREAM_READ_BYTES;
+			$this->sendWindow -= STREAM_WRITE_BYTES;
+			if ($this->sendWindow < STREAM_WRITE_BYTES)
+				$this->sendWindow = STREAM_WRITE_BYTES;
 		}
 		
 		//console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
