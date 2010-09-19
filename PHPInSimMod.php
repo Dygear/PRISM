@@ -31,6 +31,7 @@ require_once(ROOTPATH . '/modules/prism_packets.php');
 require_once(ROOTPATH . '/modules/prism_hosts.php');
 require_once(ROOTPATH . '/modules/prism_statehandler.php');
 require_once(ROOTPATH . '/modules/prism_http.php');
+require_once(ROOTPATH . '/modules/prism_telnet.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
 
@@ -56,6 +57,7 @@ class PHPInSimMod
 	public $config				= null;
 	public $hosts				= null;
 	public $http				= null;
+	public $telnet				= null;
 	public $plugins				= null;
 	public $admins				= null;
 
@@ -84,6 +86,7 @@ class PHPInSimMod
 		$this->hosts	= new HostHandler();
 		$this->plugins	= new PluginHandler();
 		$this->http		= new HttpHandler();
+		$this->telnet	= new TelnetHandler();
 		$this->admins	= new AdminHandler();
 	}
 
@@ -158,6 +161,7 @@ class PHPInSimMod
 		if (!$this->config->initialise() ||
 			!$this->hosts->initialise() || 
 			!$this->http->initialise() || 
+			!$this->telnet->initialise() || 
 			!$this->admins->initialise() || 
 			!$this->plugins->initialise())
 		{
@@ -205,6 +209,9 @@ class PHPInSimMod
 			// Add http sockets to the arrays as needed
 			$this->http->getSelectableSockets($sockReads, $sockWrites);
 			
+			// Add telnet sockets to the arrays as needed
+			$this->telnet->getSelectableSockets($sockReads, $sockWrites);
+			
 			$this->getSelectTimeOut();
 
 			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
@@ -215,6 +222,7 @@ class PHPInSimMod
 			{
 				$numReady -= $this->hosts->checkTraffic($sockReads, $sockWrites);
 				$numReady -= $this->http->checkTraffic($sockReads, $sockWrites);
+				$numReady -= $this->telnet->checkTraffic($sockReads, $sockWrites);
 				
 				// KB input
 				if (in_array (STDIN, $sockReads))
@@ -268,12 +276,12 @@ class PHPInSimMod
 						
 						case 'w':
 							console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY'));
-							for ($k=0; $k<$this->httpNumClients; $k++)
+							foreach ($this->http->getHttpInfo() as $v)
 							{
-								$lastAct = time() - $this->httpClients[$k]->lastActivity;
-								console(sprintf('%15s:%5s %5d %13d', $this->httpClients[$k]->ip, $this->httpClients[$k]->port, $lastAct));
+								$lastAct = time() - $v['lastActivity'];
+								console(sprintf('%15s:%5s %13d', $v['ip'], $v['port'], $lastAct));
 							}
-							console('Counted '.$this->httpNumClients.' http client'.(($this->httpNumClients == 1) ? '' : 's'));
+							console('Counted '.$this->http->getHttpNumClients().' http client'.(($this->http->getHttpNumClients() == 1) ? '' : 's'));
 							break;
 						
 						default :
@@ -293,7 +301,8 @@ class PHPInSimMod
 			if ($this->nextMaintenance > time ())
 				continue;
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
-			$this->hosts->maintenance();
+			if (!$this->hosts->maintenance())
+				$this->isRunning = false;
 			$this->http->maintenance();
 			PHPParser::cleanSessions();
 						

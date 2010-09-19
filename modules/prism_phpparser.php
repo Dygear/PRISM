@@ -1,5 +1,7 @@
 <?php
 
+define('PRISM_SESSION_TIMEOUT', 900);		// how long a session is valid 
+
 class PHPParser
 {
 	private static $scriptCache = array();
@@ -71,8 +73,8 @@ class PHPParser
 		if (isset($_SESSION) && $_SESSION != '')
 		{
 			$sessionID = sha1(createRandomString(128, RAND_BINARY).time());
-			self::$sessions[$sessionID] = array(time() + 900, $SERVER['REMOTE_ADDR'], $_SESSION);
-			$_RESPONSE->setCookie('PrismSession', $sessionID, time() + 900, '/', $SERVER['SERVER_NAME']);
+			self::$sessions[$sessionID] = array(time() + PRISM_SESSION_TIMEOUT, $SERVER['REMOTE_ADDR'], $_SESSION);
+			$_RESPONSE->setCookie('PrismSession', $sessionID, time() + PRISM_SESSION_TIMEOUT, '/', $SERVER['SERVER_NAME']);
 		}
 		else if (isset($_COOKIE['PrismSession']))
 		{

@@ -4,9 +4,9 @@ class Interactive
 {
 	public function queryConnections(array &$vars)
 	{
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***HOST CONNECTIONS SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
-		echo 'Afterwards your connection settings will be stored in ./config/connections.ini for future use.'.PHP_EOL;
+		echo 'Afterwards your connection settings will be stored in ./config/hosts.ini for future use.'.PHP_EOL;
 
 		$c = 1;
 		while (true)
@@ -95,7 +95,7 @@ class Interactive
 			return;
 		}
 				
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***PLUGINS SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually select which plugins to load.'.PHP_EOL;
 		echo 'Afterwards your plugin settings will be stored in ./config/plugins.ini for future use.'.PHP_EOL;
 		
@@ -115,10 +115,10 @@ class Interactive
 			$hostIDCache = array();
 			echo 'ID | Host details'.PHP_EOL;
 			echo '---+----------------'.PHP_EOL;
-			foreach ($hostvars as $hostID => $values)
+			foreach ($hostvars as $index => $values)
 			{
-				$hostIDCache[$c] = $hostID;
-				printf('%-2d | %s (', $c, $hostID);
+				$hostIDCache[$c] = $values['id'];
+				printf('%-2d | %s (', $c, $values['id']);
 				if (isset($values['useRelay']) && $values['useRelay'] == 1)
 					echo '"'.$values['hostname'].'" via relay';
 				else
@@ -133,40 +133,48 @@ class Interactive
 				$hostIDs = '';
 				if ($c == 2)
 				{
-					$ids = self::query(PHP_EOL.'Enter the ID number of the host you want to tie to this plugin.', array(), TRUE);
+					$ids = self::query(PHP_EOL.'Enter the ID number of the host you want to tie to this plugin. Or type * for all hosts.', array(), TRUE);
 				}
 				else
 				{
-					echo PHP_EOL.'Enter the ID numbers of the hosts you want to tie to this plugin.'.PHP_EOL;
+					echo PHP_EOL.'Enter the ID numbers of the hosts you want to tie to this plugin. Or type * for all hosts.'.PHP_EOL;
 					$ids = self::query('Separate each ID number by a space', array(), TRUE);
 				}
 				
 				// Validate user input
-				$exp = explode(' ', $ids);
-				$invalidIDs = '';
-				$IDCache = array();
-				foreach ($exp as $e)
+				if ($ids == '*')
 				{
-					if ($e == '')
-						continue;
-					
-					$id = (int) $e;
-					if ($id < 1 || $id >= $c)
-					{
-						$invalidIDs .= $e.' ';
-					}
-					else if (!in_array($id, $IDCache))
-					{
-						if ($hostIDs != '')
-							$hostIDs .= ',';
-						$hostIDs .= '"'.$hostIDCache[$id].'"';
-						$IDCache[] = $id;
-					}
-				}
-				if ($invalidIDs != '')
-					echo 'You typed one or more invalid host ID ('.trim($invalidIDs).'). Please try again.'.PHP_EOL;
-				else
+					$hostIDs .= '"*"';
 					break;
+				}
+				else
+				{
+					$exp = explode(' ', $ids);
+					$invalidIDs = '';
+					$IDCache = array();
+					foreach ($exp as $e)
+					{
+						if ($e == '')
+							continue;
+						
+						$id = (int) $e;
+						if ($id < 1 || $id >= $c)
+						{
+							$invalidIDs .= $e.' ';
+						}
+						else if (!in_array($id, $IDCache))
+						{
+							if ($hostIDs != '')
+								$hostIDs .= ',';
+							$hostIDs .= '"'.$hostIDCache[$id].'"';
+							$IDCache[] = $id;
+						}
+					}
+					if ($invalidIDs != '')
+						echo 'You typed one or more invalid host ID ('.trim($invalidIDs).'). Please try again.'.PHP_EOL;
+					else
+						break;
+				}
 			}
 			
 			// Store this plugin's settings in target var
@@ -178,12 +186,12 @@ class Interactive
 	
 	public function queryHttp(array &$vars)
 	{
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***HTTP SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the http server.'.PHP_EOL;
 		echo 'Afterwards your http settings will be stored in ./config/http.ini for future use.'.PHP_EOL;
 
 		// Ask if we want to use a http socket at all
-		if (self::query(PHP_EOL.'Would you like to setup the web-admin socket?', array('yes', 'no')) == 'no')
+		if (self::query(PHP_EOL.'Would you like to setup the web server?', array('yes', 'no')) == 'no')
 		{
 			$vars['ip'] = '';
 			$vars['port'] = '0';
@@ -193,7 +201,7 @@ class Interactive
 		// Ask which IP address to bind the listen socket to
 		while (true)
 		{
-			$vars['ip']		= self::query('On which IP address should HTTP listen? (blank means all)', array(), true);
+			$vars['ip']		= self::query('On which IP address should we listen? (blank means all)', array(), true);
 			if ($vars['ip'] == '')
 				$vars['ip'] = '0.0.0.0';
 			
@@ -206,7 +214,53 @@ class Interactive
 		// Ask which Port to listen on
 		while (true)
 		{
-			$vars['port']	= (int) self::query('On which Port should HTTP listen?');
+			$vars['port']	= (int) self::query('On which Port should we listen?');
+			
+			if ($vars['port'] < 1 || $vars['port'] > 65535)
+				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
+			else
+				break;
+		}
+
+		// Ask if we want to turn on httpAuth
+		if (self::query('Do you want to restrict access to the admin website with a http login query?', array('yes', 'no')) == 'yes')
+		{
+			$vars['httpAuthPath'] = '/';
+		}
+		echo PHP_EOL;
+	}
+	
+	public function queryTelnet(array &$vars)
+	{
+		echo '***TELNET SETUP***'.PHP_EOL;
+		echo 'You now have the chance to manually enter the details of the telnet server.'.PHP_EOL;
+		echo 'Afterwards your telnet settings will be stored in ./config/telnet.ini for future use.'.PHP_EOL;
+
+		// Ask if we want to use a telnet socket at all
+		if (self::query(PHP_EOL.'Would you like to setup the telnet server?', array('yes', 'no')) == 'no')
+		{
+			$vars['ip'] = '';
+			$vars['port'] = '0';
+			return;
+		}
+		
+		// Ask which IP address to bind the listen socket to
+		while (true)
+		{
+			$vars['ip']		= self::query('On which IP address should we listen? (blank means all)', array(), true);
+			if ($vars['ip'] == '')
+				$vars['ip'] = '0.0.0.0';
+			
+			if (!verifyIP($vars['ip']))
+				echo 'Invalid IPv4 address entered. Please try again.'.PHP_EOL;
+			else
+				break;
+		}
+		
+		// Ask which Port to listen on
+		while (true)
+		{
+			$vars['port']	= (int) self::query('On which Port should we listen?');
 			
 			if ($vars['port'] < 1 || $vars['port'] > 65535)
 				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
@@ -220,7 +274,7 @@ class Interactive
 	{
 		global $PRISM;
 		
-		echo '***Interactive startup***'.PHP_EOL;
+		echo '***ADMIN SETUP***'.PHP_EOL;
 		echo 'You now have the chance to create PRISM admin accounts.'.PHP_EOL;
 		echo 'Afterwards your admins settings will be stored in ./config/admins.ini for future use.'.PHP_EOL;
 
@@ -250,6 +304,7 @@ class Interactive
 				'password'		=> sha1($tmp['password'].$PRISM->config->cvars['secToken']),
 				'connection'	=> $tmp['connection'],
 				'accessFlags'	=> $tmp['accessFlags'],
+				'realmDigest'	=> md5($tmp['username'].':'.HTTP_AUTH_REALM.':'.$tmp['password']),
 			);
 			
 			if (self::query(PHP_EOL.'Add another admin account?', array('yes', 'no')) == 'no')

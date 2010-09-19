@@ -1,9 +1,36 @@
 <?php
+
+// You must always require_once or include_once the functions that you will be using.
 require_once('testinclude.php');
 
-// Cookie examples
+// Cookie examples - you don't necessarily have to write them at the beginning of the page.
 $_RESPONSE->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
 $_RESPONSE->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
+
+// Automatic web-page login after validated http auth.
+// Not sure if this is a good idea to implement later, but I wanted to demo that this is possible.
+if (isset($SERVER['PHP_AUTH_USER']))
+{
+	if (!isset($_SESSION))
+	{
+		$_SESSION = array
+		(
+			'user' => $SERVER['PHP_AUTH_USER'],
+			'autoLogin' => true,
+			'counter' => 0,
+		);
+	}
+	else
+	{
+		$_SESSION['user'] = $SERVER['PHP_AUTH_USER'];
+		$_SESSION['autoLogin'] = true;
+	}
+}
+else
+{
+	if (isset($_SESSION['autoLogin']))
+		unset($_SESSION['autoLogin']);
+}
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -25,7 +52,8 @@ if (isset($_SESSION['user']))
 {
 	$html .= '<div class="loginArea">';
 	$html .= 'Welcome '.htmlspecialchars($_SESSION['user']).'.';
-	$html .= ' -<a href="/login.php?logout">Logout</a>';
+	if (!isset($_SESSION['autoLogin']) || $_SESSION['autoLogin'] == false)
+		$html .= ' -<a href="/login.php?logout">Logout</a>';
 	$html .= '</div>';
 }
 else
@@ -98,7 +126,7 @@ if (count($_FILES) > 0)
 		{
 			foreach ($v['name'] as $c => $d)
 			{
-				$html .= htmlspecialchars('Key : '.$k).'<br />';
+				$html .= htmlspecialchars('Key : '.$k.'['.$c.']').'<br />';
 				$html .= htmlspecialchars('name : '.$v['name'][$c]).'<br />';
 				$html .= htmlspecialchars('tmp_name : '.$v['tmp_name'][$c]).'<br />';
 				$html .= htmlspecialchars('type : '.$v['type'][$c]).'<br />';
@@ -135,12 +163,9 @@ $html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
 $html .= '<input type="submit" value="Submit the form" />';
 $html .= '</form>';
 
-for ($x = 0; $x < 100; $x++)
-{
-	$html .= '<br /><br />SERVER values :<br />';
-	foreach ($SERVER as $k => $v)
-		$html .= htmlspecialchars($k.' => '.$v).'<br />';
-}
+$html .= '<br /><br />SERVER values :<br />';
+foreach ($SERVER as $k => $v)
+	$html .= htmlspecialchars($k.' => '.$v).'<br />';
 
 $html .= '	</body>';
 $html .= '</html>';

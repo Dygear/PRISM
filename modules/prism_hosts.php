@@ -26,7 +26,8 @@ define('SOCKTYPE_BEST',			0);
 define('SOCKTYPE_TCP',			1);
 define('SOCKTYPE_UDP',			2);
 
-define('STREAM_READ_BYTES',		1400);
+define('STREAM_READ_BYTES',		8192);
+define('STREAM_WRITE_BYTES',	1400);
 
 /**
  * HostHandler public functions :
@@ -48,22 +49,27 @@ class HostHandler extends SectionHandler
 		return $this->curHostID;
 	}
 
+	public function __construct()
+	{
+		$this->iniFile = 'hosts.ini';
+	}
+	
 	public function initialise()
 	{
 		global $PRISM;
 		
-		if ($this->loadIniFile($this->connvars, 'hosts.ini'))
+		if ($this->loadIniFile($this->connvars))
 		{
 			foreach ($this->connvars as $hostID => $v)
 			{
 				if (!is_array($v))
 				{
-					console('Section error in hosts.ini file!');
+					console('Section error in '.$this->iniFile.' file!');
 					return FALSE;
 				}
 			}
 			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded hosts.ini');
+				console('Loaded '.$this->iniFile);
 		}
 		else
 		{
@@ -72,8 +78,8 @@ class HostHandler extends SectionHandler
 			Interactive::queryConnections($this->connvars);
 			
 			# Then build a connections.ini file based on these details provided.
-			if ($this->createIniFile('hosts.ini', 'InSim Connection Hosts', $this->connvars))
-				console('Generated config/hosts.ini');
+			if ($this->createIniFile('InSim Connection Hosts', $this->connvars))
+				console('Generated config/'.$this->iniFile);
 		}
 
 		// Cleanup any existing connections (in case of re-initialise)
@@ -213,9 +219,10 @@ class HostHandler extends SectionHandler
 				if ($host->getMustConnect() > -1 && $host->getMustConnect() < time())
 				{
 					if ($host->connect()) {
-						$sockReads[] = $this->hosts[$hostID]->getSocket();
 						if ($host->getSocketType() == SOCKTYPE_TCP)
 							$sockWrites[] = $this->hosts[$hostID]->getSocket();
+						else
+							$sockReads[] = $this->hosts[$hostID]->getSocket();
 					}
 				}
 			}
@@ -333,10 +340,17 @@ class HostHandler extends SectionHandler
 	public function maintenance()
 	{
 		// InSim Connection maintenance
+		$c = 0;
+		$d = 0;
 		foreach($this->hosts as $hostID => $host)
 		{
+			$c++;
 			if ($host->getConnStatus() == CONN_NOTCONNECTED)
+			{
+				if ($host->getMustConnect() == -1)
+					$d++;
 				continue;
+			}
 			else if ($host->getConnStatus() == CONN_CONNECTING)
 			{
 				// Check to see if a connection attempt is going to time out.
@@ -363,6 +377,14 @@ class HostHandler extends SectionHandler
 				$host->writePacket($ISP);
 			}
 		}
+		
+		// Are all hosts dead?
+		if ($c == $d)
+		{
+			console('We cannot seem to successfully connect to any hosts. Exiting');
+			return false;
+		}
+		return true;
 	}
 
 	private function handlePacket(&$rawPacket, &$hostID)
@@ -455,6 +477,9 @@ class HostHandler extends SectionHandler
 						console('Unknown error received from relay ('.$packet->ErrNo.')');
 						break;
 				}
+				
+				// Because of the error we close the connection to the relay.
+				$this->hosts[$hostID]->close(true);
 				break;
 			default:
 				$this->hosts[$hostID]->state->dispatchPacket($packet);
@@ -478,6 +503,8 @@ class HostHandler extends SectionHandler
 				'id'			=> $hostID,
 				'ip'			=> $host->getIP(),
 				'port'			=> $host->getPort(),
+				'useRelay'		=> $host->getUseRelay(),
+				'hostname'		=> $host->getHostname(),
 				'udpPort'		=> $host->getUdpPort(),
 				'connStatus'	=> $host->getConnStatus(),
 				'socketType'	=> $host->getSocketType(),
@@ -534,7 +561,7 @@ class InsimConnection
 	// send queue used in emergency cases (if host appears lagged or overflown with packets)
 	private $sendQ			= '';
 	private $sendQLen		= 0;
-	private $sendWindow		= STREAM_READ_BYTES;	// dynamic window size
+	private $sendWindow		= STREAM_WRITE_BYTES;	// dynamic window size
 
 	// connection & host info
 	private $id				= '';			# the section id from the ini file
@@ -642,6 +669,16 @@ class InsimConnection
 	public function &getUdpPort()
 	{
 		return $this->udpPort;
+	}
+	
+	public function &getUseRelay()
+	{
+		return $this->connType;
+	}
+	
+	public function &getHostname()
+	{
+		return $this->hostName;
 	}
 	
 	public function setUdpPort($udpPort)
@@ -906,12 +943,12 @@ class InsimConnection
 		
 		// Dynamic window sizing
 		if ($bytes == $this->sendWindow)
-			$this->sendWindow += STREAM_READ_BYTES;
+			$this->sendWindow += STREAM_WRITE_BYTES;
 		else
 		{
-			$this->sendWindow -= STREAM_READ_BYTES;
-			if ($this->sendWindow < STREAM_READ_BYTES)
-				$this->sendWindow = STREAM_READ_BYTES;
+			$this->sendWindow -= STREAM_WRITE_BYTES;
+			if ($this->sendWindow < STREAM_WRITE_BYTES)
+				$this->sendWindow = STREAM_WRITE_BYTES;
 		}
 
 		// Update the sendQ

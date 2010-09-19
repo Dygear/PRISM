@@ -46,6 +46,21 @@ function get_dir_structure($path, $recursive = TRUE, $ext = NULL)
 	return $return;
 }
 
+// check if path1 is part of path2 (ie. if path1 is a base path of path2)
+function isDirInDir($path1, $path2)
+{
+	$p1 = explode('/', $path1);
+	$p2 = explode('/', $path2);
+	
+	foreach ($p1 as $index => $part)
+	{
+		if (!isset($p2[$index]) || $part != $p2[$index])
+			return false;
+	}
+	
+	return true;
+}
+
 function findPHPLocation($windows = false)
 {
 	$phpLocation = '';
@@ -150,7 +165,8 @@ function flagsToString($flagsBitwise = 0)
 define('RAND_ASCII', 1);
 define('RAND_ALPHA', 2);
 define('RAND_NUMERIC', 4);
-define('RAND_BINARY', 8);
+define('RAND_HEX', 8);
+define('RAND_BINARY', 16);
 function createRandomString($len, $type = RAND_ASCII)
 {
 	$out = '';
@@ -163,6 +179,10 @@ function createRandomString($len, $type = RAND_ASCII)
 		else if ($type & RAND_NUMERIC)
 		{
 			$out .= chr(rand(48, 57));
+		}
+		else if ($type & RAND_HEX)
+		{
+			$out .= sprintf('%02x', rand(0, 255));
 		}
 		else if ($type & RAND_BINARY)
 		{

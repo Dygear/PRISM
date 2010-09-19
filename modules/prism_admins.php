@@ -52,16 +52,21 @@ class AdminHandler extends SectionHandler
 {
 	private $admins		= array();
 
+	public function __construct()
+	{
+		$this->iniFile = 'admins.ini';
+	}
+	
 	public function initialise()
 	{
 		global $PRISM;
 		
 		$this->admins = array();
 		
-		if ($this->loadIniFile($this->admins, 'admins.ini'))
+		if ($this->loadIniFile($this->admins))
 		{
 			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-				console('Loaded admins.ini');
+				console('Loaded '.$this->iniFile);
 		}
 		else
 		{
@@ -106,14 +111,16 @@ class AdminHandler extends SectionHandler
 ; [LFS Username]
 ; password = "<password>"
 ; accessFlags = "<Access flags>"
+; connection = "<host id name>"
+; realmDigest = "<md5 hash>"	; never change this yourself
 ;
 ; NOTE about the password - you can write it in plain text.
 ; When you then run PRISM, the password will be converted into a safer format.
 ;
 
 ININOTES;
-			if ($this->createIniFile('admins.ini', 'Admins Configuration File', $this->admins, $extraInfo))
-				console('Generated config/admins.ini');
+			if ($this->createIniFile('Admins Configuration File', $this->admins, $extraInfo))
+				console('Generated config/'.$this->iniFile);
 		}
 		
 		// Read account vars to verify / maybe generate password hashes
@@ -122,10 +129,12 @@ ININOTES;
 			// Convert password?
 			if (strlen($details['password']) != 40)
 			{
+				$details['realmDigest'] = md5($username.':'.HTTP_AUTH_REALM.':'.$details['password']);
 				$details['password'] = sha1($details['password'].$PRISM->config->cvars['secToken']);
 				
-				// Rewrite this particular config line in admins.ini
-				$this->rewriteLine('admins.ini', $username, 'password', $details['password']);
+				// Rewrite these particular config lines in admins.ini
+				$this->rewriteLine($username, 'password', $details['password']);
+				$this->rewriteLine($username, 'realmDigest', $details['realmDigest']);
 			}
 			
 			// Convert flags?
@@ -160,6 +169,14 @@ ININOTES;
 		);
 	}
 	
+	public function getRealmDigest(&$username)
+	{
+		if (!isset($this->admins[$username]))
+			return false;
+
+		return $this->admins[$username]['realmDigest'];
+	}
+	
 	public function adminExists(&$username)
 	{
 		return isset($this->admins[$username]);
@@ -187,12 +204,13 @@ ININOTES;
 			'password'		=> sha1($password.$PRISM->config->cvars['secToken']),
 			'connection'	=> $connection,
 			'accessFlags'	=> $accessFlags,
+			'realmDigest'	=> md5($username.':'.HTTP_AUTH_REALM.':'.$password),
 		);
 		
 		// Add new user section to admin.ini
 		if ($store)
 		{
-			$this->appendSection('admins.ini', $username, $this->admins[$username]);
+			$this->appendSection($username, $this->admins[$username]);
 		}
 
 		return true;
@@ -209,7 +227,7 @@ ININOTES;
 		// Remove user's section from admin.ini
 		if ($store)
 		{
-			$this->removeSection('admins.ini', $username);
+			$this->removeSection($username);
 		}
 
 		return true;
@@ -223,12 +241,14 @@ ININOTES;
 			return false;
 
 		// Update the password in $this->admins
+		$this->admins[$username]['realmDigest'] = md5($username.':'.HTTP_AUTH_REALM.':'.$password);
 		$this->admins[$username]['password'] = sha1($password.$PRISM->config->cvars['secToken']);
 
-		// Rewrite password line for user in admins.ini
+		// Rewrite password and realmDigest lines for user in admins.ini
 		if ($store)
 		{
-			$this->rewriteLine('admins.ini', $username, 'password', $this->admins[$username]['password']);
+			$this->rewriteLine($username, 'password', $this->admins[$username]['password']);
+			$this->rewriteLine($username, 'realmDigest', $this->admins[$username]['realmDigest']);
 		}
 
 		return true;
@@ -245,7 +265,7 @@ ININOTES;
 		// Rewrite accessFlags line for user in admins.ini
 		if ($store)
 		{
-			$this->rewriteLine('admins.ini', $username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
+			$this->rewriteLine($username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
 		}
 
 		return true;
@@ -262,7 +282,7 @@ ININOTES;
 		// Rewrite accessFlags line for user in admins.ini
 		if ($store)
 		{
-			$this->rewriteLine('admins.ini', $username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
+			$this->rewriteLine($username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
 		}
 		
 		return true;
