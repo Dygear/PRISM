@@ -11,7 +11,7 @@
 class StateHandler extends PropertyMaster
 {
 	// Intrinsic Handles
-	public static $handles = array
+	private $handles = array
 	(
 		# State handles
 		ISP_VER => 'onVersion',				# To Do. (2)
@@ -39,6 +39,15 @@ class StateHandler extends PropertyMaster
 		ISP_RES => 'onPlayerResult',		# To Do. (35)
 	);
 
+	public function dispatchPacket(Struct $Packet)
+	{
+		if (isset($this->handles[$Packet->Type]))
+		{
+			$handle = $this->handles[$Packet->Type];
+			$this->$handle($Packet);
+		}
+		print_r($this);
+	}
 	// Extrinsic Properties
 	public $clients = array();
 	public $players = array();	# By design there is one here and a refrence to this in the $this->clients->players array.
@@ -230,7 +239,7 @@ class StateHandler extends PropertyMaster
 		$this->AXStart = $AXI->AXStart;
 		$this->NumCP = $AXI->NumCP;
 		$this->NumO = $AXI->NumO;
-		$this->LName = $AXI-LName;
+		$this->LName = $AXI->LName;
 	}
 
 	# IS_RIP (48)
@@ -261,7 +270,7 @@ class StateHandler extends PropertyMaster
 	# IS_CNL (19)
 	public function onClientLeave(IS_CNL $CNL)
 	{
-		unset($this->clients[$NCN->UCID]);
+		unset($this->clients[$CNL->UCID]);
 	}
 	# IS_CPR (20)
 	public function onClientRename(IS_CPR $CPR)
@@ -279,7 +288,6 @@ class StateHandler extends PropertyMaster
 	public function onPlayerJoin(IS_NPL $NPL)
 	{
 		$this->players[$NPL->PLID] = new PlayerHandler($NPL);
-		$this->clients[$NPL->UCID]->players[$NPL->PLID] &= $this->players[$NPL->PLID];
 	}
 	# IS_PLP (22)
 	public function onPlayerPits(IS_PLP $PLP)
@@ -289,7 +297,7 @@ class StateHandler extends PropertyMaster
 	# IS_PLL (23)
 	public function onPlayerLeave(IS_PLL $PLL)
 	{
-		unset($this->players[$NPL->PLID]); # Should unset it everywhere.
+		unset($this->players[$PLL->PLID]); # Should unset it everywhere.
 	}
 	# IS_FIN (34)
 	public function onPlayerFinished(IS_FIN $FIN)
@@ -414,7 +422,7 @@ class UserHandler
 */
 abstract class PropertyMaster
 {
-	public function &__get($property)
+	public function __get($property)
 	{
 		return $this->$property;
 	}

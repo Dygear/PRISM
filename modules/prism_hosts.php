@@ -456,6 +456,8 @@ class HostHandler extends SectionHandler
 						break;
 				}
 				break;
+			default:
+				$this->hosts[$hostID]->state->dispatchPacket($packet);
 		}
 	}
 
