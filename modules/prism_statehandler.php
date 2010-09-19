@@ -46,7 +46,6 @@ class StateHandler extends PropertyMaster
 			$handle = $this->handles[$Packet->Type];
 			$this->$handle($Packet);
 		}
-		print_r($this);
 	}
 	// Extrinsic Properties
 	public $clients = array();
