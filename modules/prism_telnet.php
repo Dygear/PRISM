@@ -389,9 +389,10 @@ class TelnetClient
 	
 	public function addInputToBuffer(&$raw)
 	{
-//		for ($a=0; $a<strlen($raw); $a++)
+		for ($a=0; $a<strlen($raw); $a++)
+			printf('%02x', ord($raw[$a]));
 //			printf('%02x', ord($this->translateClientChar($raw[$a])));
-//		echo "\n";
+		echo "\n";
 		
 		// (Control) Character translation
 		
@@ -667,7 +668,7 @@ class TelnetClient
 							while (isset($this->lineBuffer[$x]))
 								$rewrite .= $this->lineBuffer[$x++];
 							$cursorBack = KEY_ESCAPE.'['.(strlen($rewrite)+1).'D';
-							$this->write($this->inputBuffer[$a].$rewrite.' '.$cursorBack);
+							$this->write(KEY_ESCAPE.'[D'.$rewrite.' '.$cursorBack);
 						}
 						break;
 
@@ -1015,6 +1016,7 @@ class TelnetClient
 			$options	= $mapData[$a++];
 			$ascii		= $mapData[$a++];
 			
+			//console(printf());
 			$this->charMap[$func] = array($ascii, $options);
 		}
 		
