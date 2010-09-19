@@ -231,7 +231,7 @@ class TelnetClient
 	private $inputCallback	= null;
 	
 	private $charMap		= array();
-	
+	private $term			= '';
 	
 	public function __construct(&$sock, &$ip, &$port)
 	{
@@ -241,23 +241,34 @@ class TelnetClient
 		
 		$this->lastActivity	= time();
 		
-		// Send welcome message and ask for username
+		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_BINARY);
+		$this->setOption(TELNET_ACTION_WILL, TELNET_OPT_ECHO);
+		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_SGA);
+		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_LINEMODE);
+		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_NAWS);
+		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_TTYPE);
+		
+		// Set terminal state and clear screen
 		$msg = VT100_ED2.VT100_CURSORHOME;
-		$msg .= "Welcome to the ".VT100_SGR1."Prism v".PHPInSimMod::VERSION.VT100_SGR0." remote console.\r\n";
+		
+		// Send welcome message and ask for username
+		$msg .= "Welcome to the ".VT100_STYLE_BOLD."Prism v".PHPInSimMod::VERSION.VT100_STYLE_RESET." remote console.\r\n";
 		$msg .= "Please login with your Prism account details.\r\n";
+
+//		$msg .= VT100_SGR0.VT100_USG1_LINE;
+//		for ($a=106; $a<110; $a++)
+//			$msg .= chr($a);
+//		$msg .= VT100_SGR0.VT100_USG0;
+
+		$msg .= "\r\n";
 		$msg .= "Username : ";
 		
 		$this->write($msg);
 		$this->loginState = TELNET_ASKED_USERNAME;
 		
 		$this->modeState |= TELNET_MODE_INSERT;
-		$this->modeState |= TELNET_MODE_LINEEDIT;
 
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_BINARY);
-		$this->setOption(TELNET_ACTION_WILL, TELNET_OPT_ECHO);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_SGA);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_LINEMODE);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_NAWS);
+		$this->registerInputCallback($this, 'doLogin', TELNET_MODE_LINEEDIT);
 	}
 	
 	public function __destruct()
@@ -266,7 +277,11 @@ class TelnetClient
 			$this->sendQReset();
 
 		if (is_resource($this->socket))
+		{
+//			$this->write(VT100_SGR0.VT100_USG0);
 			fclose($this->socket);
+			
+		}
 	}
 
 	public function &getSocket()
@@ -304,11 +319,11 @@ class TelnetClient
 		return $this->mustClose;
 	}
 	
-	private function doLogin()
+	private function doLogin($line)
 	{
-		$line = $this->getLine();
-		if ($line === false)
-			return;
+//		$line = $this->getLine();
+//		if ($line === false)
+//			return;
 		
 		switch($this->getLoginState())
 		{
@@ -339,7 +354,11 @@ class TelnetClient
 				{
 					$this->loginState = TELNET_LOGGED_IN;
 					$this->write("Login successful\r\n");
+					$this->write("(nothing works so far from now on. ctrl-c to exit)\r\n");
 					console('Successful telnet login from '.$this->username.' on '.date('r'));
+					
+					// Unregister doLogin as callback
+					$this->registerInputCallback(null, null);
 					
 					// Now setup the screen
 				}
@@ -370,9 +389,9 @@ class TelnetClient
 	
 	public function addInputToBuffer(&$raw)
 	{
-		for ($a=0; $a<strlen($raw); $a++)
-			printf('%02x', ord($this->translateClientChar($raw[$a])));
-		echo "\n";
+//		for ($a=0; $a<strlen($raw); $a++)
+//			printf('%02x', ord($this->translateClientChar($raw[$a])));
+//		echo "\n";
 		
 		// (Control) Character translation
 		
@@ -417,6 +436,11 @@ class TelnetClient
 								console('NAWS TRUE');
 								$this->modeState |= TELNET_MODE_NAWS;
 								break;
+							case TELNET_OPT_TTYPE :
+								console('client will send ttype list');
+								$this->write(TELNET_IAC.TELNET_OPT_SB.TELNET_OPT_TTYPE.chr(1).TELNET_IAC.TELNET_OPT_SE);
+								//$this->modeState |= TELNET_MODE_NAWS;
+								break;
 						}
 						$a++;
 						break;
@@ -440,6 +464,10 @@ class TelnetClient
 								console('NAWS FALSE');
 								$this->modeState &= ~TELNET_MODE_NAWS;
 								break;
+							case TELNET_OPT_TTYPE :
+								console('client will not send ttype list');
+								//$this->modeState &= ~TELNET_MODE_NAWS;
+								break;
 						}
 						$a++;
 						break;
@@ -451,6 +479,10 @@ class TelnetClient
 								console('Server DO echo');
 								$this->modeState |= TELNET_MODE_ECHO;
 								break;
+							case TELNET_OPT_TTYPE :
+								console('Server DO ttype');
+								//$this->modeState |= TELNET_MODE_ECHO;
+								break;
 						}
 						$a++;
 						break;
@@ -461,6 +493,10 @@ class TelnetClient
 							case TELNET_OPT_ECHO :
 								console('Server DONT echo');
 								$this->modeState &= ~TELNET_MODE_ECHO;
+								break;
+							case TELNET_OPT_TTYPE :
+								console('Server DONT ttype');
+								//$this->modeState &= ~TELNET_MODE_ECHO;
 								break;
 						}
 						$a++;
@@ -561,6 +597,11 @@ class TelnetClient
 								$screenInfo = unpack('Ctype/nwidth/nheight', $subVars);
 								$this->winSize = array($screenInfo['width'], $screenInfo['height']);
 								break;
+							case TELNET_OPT_TTYPE :
+								$this->unescapeIAC($subVars);
+								$this->term = substr($subVars, 2);
+								console('SB TTYPE sub command ('.$this->term.')');
+								break;
 						}
 						$a += $dist + 1;
 						break;
@@ -608,6 +649,7 @@ class TelnetClient
 						
 						// Set close state and return false
 						$this->mustClose = true;
+						$this->registerInputCallback(null, null);
 						return false;
 					
 					case KEY_BS :
@@ -741,41 +783,59 @@ class TelnetClient
 						break;
 				}
 				
-				// Add regular char to lineBuffer
+				// Regular characers. Process them via line-edit mode or single key mode
 				if (!$special)
 				{
-					if (($enterChar = $this->isEnter($a)) === null)
-						$this->charToLineBuffer($this->inputBuffer[$a]);
+					// We must detect the Enter key here
+					$enterChar = $this->isEnter($a);
+					
+					if ($this->modeState & TELNET_MODE_LINEEDIT)
+					{
+						// Line processing
+						if ($enterChar === null)
+						{
+							// Store char in linfe buffer
+							$this->charToLineBuffer($this->inputBuffer[$a]);
+						}
+						else
+						{
+							// Detect whole lines when Enter encountered
+							$this->charToLineBuffer($enterChar, true);
+							do
+							{
+								$line = $this->getLine();
+								if ($line === false)
+									break;
+									
+								// Send line to the current input callback function (if there is one)
+								$method = $this->inputCallback[1];
+								$this->inputCallback[0]->$method($line);
+							} while(true);
+						}
+					}
 					else
-						$this->charToLineBuffer($enterChar, true);
+					{
+						// Single key processing (if there is a callback at all)
+						if ($this->inputCallback[0])
+						{
+							if ($enterChar === null)
+							{
+								$method = $this->inputCallback[1];
+								$this->inputCallback[0]->$method($this->inputBuffer[$a]);
+							}
+							else
+							{
+								$method = $this->inputCallback[1];
+								$this->inputCallback[0]->$method($enterChar);
+							}
+						}
+					}
 				}
 			}
 		}
 
 		$this->inputBuffer = substr($this->inputBuffer, $a + 1);
 		$this->inputBufferLen = strlen($this->inputBuffer);
-		
-		if ($this->getLoginState() != TELNET_LOGGED_IN)
-		{
-			$this->doLogin();
-		}
-		else
-		{
-			// Here we must decide what to do with the input. Should we notify the window? Or what?
-			// For now we just do getLine and print it out.
-			do
-			{
-				$line = $this->getLine();
-				if ($line === false)
-					break;
-					
-				// Send line to the current input callback function (if there is one)
-				if ($this->inputCallback != null)
-					$this->inputCallback($line);
-				else
-					console('TELNET INPUT : '.$line);
-			} while(true);
-		}
 
 		return true;
 	}
@@ -785,12 +845,19 @@ class TelnetClient
 	 * $editMode  = either 0 or anything else (TELNET_MODE_LINEEDIT)
 	 * 				This indicates where the function expects a single char or a whole line
 	*/
-	public function registerCallback(&$func, $editMode = 0)
+	public function registerInputCallback($class, $func, $editMode = 0)
 	{
-		if ($func == null)
+		if (!$class || !$func)
+		{
 			$this->inputCallback = null;
+			$editMode = 0;
+//			console('UNREGISTERED FUNCTION');
+		}
 		else
-			$this->inputCallback = $func;
+		{
+			$this->inputCallback = array($class, $func);
+//			console('REGISTERED FUNCTION');
+		}
 		
 		if ($editMode == 0)
 			$this->modeState &= ~TELNET_MODE_LINEEDIT;

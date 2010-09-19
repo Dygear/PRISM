@@ -96,6 +96,7 @@ define('TELNET_MODE_LINEMODE', 2);
 define('TELNET_MODE_BINARY', 4);
 define('TELNET_MODE_SGA', 8);
 define('TELNET_MODE_NAWS', 16);
+
 define('TELNET_MODE_INSERT', 1024);
 define('TELNET_MODE_LINEEDIT', 2048);
 
@@ -107,17 +108,35 @@ define('KEY_ESCAPE',				chr(0x1B));			// escape
 define('KEY_DELETE',				chr(0x7F));			// del
 
 // ANSI escape sequences VT100
+define('VT100_USG0',				KEY_ESCAPE.'(B');
+define('VT100_USG1',				KEY_ESCAPE.')B');
+define('VT100_USG0_LINE',			KEY_ESCAPE.'(0');
+define('VT100_USG1_LINE',			KEY_ESCAPE.')0');
+define('VT100_G0_ALTROM',			KEY_ESCAPE.'(1');
+define('VT100_G1_ALTROM',			KEY_ESCAPE.')1');
+define('VT100_G0_ALTROM_GFX',		KEY_ESCAPE.'(2');
+define('VT100_G1_ALTROM_GFX',		KEY_ESCAPE.')2');
+
+define('VT100_SSHIFT2',				KEY_ESCAPE.'N');
+define('VT100_SSHIFT3',				KEY_ESCAPE.'O');
+
 define('VT100_ED2',					KEY_ESCAPE.'[2J');
 
 define('VT100_CURSORHOME',			KEY_ESCAPE.'[H');
 
-define('VT100_SGR0',				KEY_ESCAPE.'[m');		// Attribs off
-define('VT100_SGR1',				KEY_ESCAPE.'[1m');		// bold
+define('VT100_STYLE_RESET',			KEY_ESCAPE.'[m');		// Attribs off
+define('VT100_STYLE_BOLD',			KEY_ESCAPE.'[1m');		// bold
 define('VT100_SGR2',				KEY_ESCAPE.'[2m');		// low intensity
 define('VT100_SGR4',				KEY_ESCAPE.'[4m');		// underline
 define('VT100_SGR5',				KEY_ESCAPE.'[5m');		// blink
 define('VT100_SGR7',				KEY_ESCAPE.'[7m');		// reverse video
 define('VT100_SGR8',				KEY_ESCAPE.'[8m');		// invisible text
+
+define('VT100_DECLL0',				KEY_ESCAPE.'[0q');		// 
+define('VT100_DECLL1',				KEY_ESCAPE.'[1q');		// 
+define('VT100_DECLL2',				KEY_ESCAPE.'[2q');		// 
+define('VT100_DECLL3',				KEY_ESCAPE.'[3q');		// 
+define('VT100_DECLL4',				KEY_ESCAPE.'[4q');		// 
 
 //define('VT100_', KEY_ESCAPE.'');
 
