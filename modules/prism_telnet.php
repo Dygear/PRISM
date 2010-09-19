@@ -389,10 +389,10 @@ class TelnetClient
 	
 	public function addInputToBuffer(&$raw)
 	{
-		for ($a=0; $a<strlen($raw); $a++)
-			printf('%02x', ord($raw[$a]));
-//			printf('%02x', ord($this->translateClientChar($raw[$a])));
-		echo "\n";
+//		for ($a=0; $a<strlen($raw); $a++)
+//			printf('%02x', ord($raw[$a]));
+////			printf('%02x', ord($this->translateClientChar($raw[$a])));
+//		echo "\n";
 		
 		// (Control) Character translation
 		
