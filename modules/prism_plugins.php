@@ -252,7 +252,7 @@ abstract class Plugins
 	/** Server Methods */
 	protected function serverGetName()
 	{
-		return $this->parent->hosts->curHostID;
+		return $this->parent->hosts[$this->parent->hosts->curHostID]->HName;
 	}
 }
 
