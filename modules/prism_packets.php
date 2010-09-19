@@ -1829,7 +1829,7 @@ class IS_RIP extends struct // Replay Information Packet
 	const UNPACK = 'CSize/CType/CReqI/CError/CMPR/CPaused/COptions/CSp3/VCTime/VTTime/a64RName';
 
 	public $Size = 80;		// 80
-	public $Type = ISP_RIP;// ISP_RIP
+	public $Type = ISP_RIP;	// ISP_RIP
 	public $ReqI;			// request : non-zero / reply : same value returned
 	public $Error;			// 0 or 1 = OK / other values are listed below
 
@@ -1841,7 +1841,7 @@ class IS_RIP extends struct // Replay Information Packet
 	public $CTime;			// (hundredths) request : destination / reply : position
 	public $TTime;			// (hundredths) request : zero / reply : replay length
 
-	public $RName;		// zero or replay name - last byte must be zero
+	public $RName;			// zero or replay name - last byte must be zero
 };
 
 // NOTE about RName :
