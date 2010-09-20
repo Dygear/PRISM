@@ -254,6 +254,63 @@ abstract class Plugins
 	{
 		return $this->parent->hosts[$this->parent->hosts->curHostID]->HName;
 	}
+	
+	/** Is Methods */
+	# Admins
+	protected function isAdmin(&$username, $hostID = NULL)
+	{
+		global $PRISM;
+		# Check the user is defined as an admin.
+		if (!$PRISM->admins->adminExists($username))
+			return FALSE;
+
+		# set the $hostID;
+		if ($hostID === NULL)
+			$hostID = $PRISM->hosts->curHostID;
+
+		# Check the user is defined as an admin on all or the host current host.
+		$adminInfo = $PRISM->admins->getAdminInfo($username);
+		return ($this->isAdminGlobal($username) || $this->isAdminLocal($username, $hostID)) ? TRUE : FALSE;
+	}
+	
+	protected function isAdminGlobal(&$username)
+	{
+		global $PRISM;
+		# Check the user is defined as an admin.
+		if (!$PRISM->admins->adminExists($username))
+			return FALSE;
+
+		$adminInfo = $PRISM->admins->getAdminInfo($username);
+		return (strpos($adminInfo['connection'], '*') !== FALSE) ? TRUE : FALSE;
+	}
+
+	protected function isAdminLocal(&$username, $hostID = NULL)
+	{
+		global $PRISM;
+		# Check the user is defined as an admin.
+		if (!$PRISM->admins->adminExists($username))
+			return FALSE;
+
+		# set the $hostID;
+		if ($hostID === NULL)
+			$hostID = $PRISM->hosts->curHostID;
+
+		# Check the user is defined as an admin on the host current host.
+		$adminInfo = $PRISM->admins->getAdminInfo($username);
+		return ((strpos($adminInfo['connection'], $hostID) !== FALSE) !== FALSE) ? TRUE : FALSE;
+	}
+
+	protected function isAdminImmune(&$username)
+	{
+		global $PRISM;
+		# Check the user is defined as an admin.
+		if (!$PRISM->admins->adminExists($username))
+			return FALSE;
+
+		# Check the user is defined as an admin on the host current host.
+		$adminInfo = $PRISM->admins->getAdminInfo($username);
+		return ($adminInfo['accessFlags'] & ADMIN_IMMUNITY) ? TRUE : FALSE;
+	}
 }
 
 ?>
