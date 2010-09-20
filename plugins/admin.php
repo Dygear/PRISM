@@ -23,36 +23,19 @@ class admin extends Plugins
 		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins reload', 'cmdAdminReload', 'Reloads the admins.', ADMIN_CFG);
+
+		# Admin Commands
+		$this->registerSayCommand('prism kick', 'cmdAdminKick', '<client>');
+		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <client> <time>');
+		$this->registerSayCommand('prism spec', 'cmdAdminSpec', '<player/client>');
+		$this->registerSayCommand('prism pit', 'cmdAdminPit', '<player/client>');
 	}
 
-	// Debug
-	public function cmdDebug($cmd, $plid, $ucid)
+	// Hosts
+	public function cmdHosts($cmd, $plid, $ucid)
 	{	// These will all be registed console commands soon.
 		global $PRISM;
 
-		# default
-		console(NULL); # Print a blank line.
-		console('Available Commands:');
-		console('	h - show host info');
-		console('	I - re-initialise PRISM (reload ini files / reconnect to hosts / reset http socket');
-		console('	p - show plugin info');
-		console('	x - exit PHPInSimMod');
-		console('	w - show www connections');
-		console('	c - show command list');
-
-		# c
-		console(NULL); # Print a blank line.
-		console(sprintf('%32s %64s', 'COMMAND', 'DESCRIPTOIN'));
-		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
-		{
-			foreach ($details->sayCommands as $command => $detail)
-			{
-				console(sprintf('%32s - %64s', $command, $detail['info']));
-			}
-		}
-
-		# h
-		console(NULL); # Print a blank line.
 		console(sprintf('%14s %28s:%-5s %8s %22s', 'Host ID', 'IP', 'PORT', 'UDPPORT', 'STATUS'));
 		foreach ($PRISM->hosts->getHostsInfo() as $host)
 		{
@@ -61,25 +44,14 @@ class admin extends Plugins
 			console(sprintf('%14s %28s:%-5s %8s %22s', $host['id'], $socketType.$host['ip'], $host['port'], $host['udpPort'], $status));
 		}
 
-		# I
-		console(NULL); # Print a blank line.
-#		console('RE-INITIALISING PRISM...');
-#		$PRISM->initialise(null, null);
+		return PLUGIN_CONTINUE;
+	}
 
-		# p
-		console(NULL); # Print a blank line.
-		console(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'));
-		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
-		{
-			console(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION));
-		}
+	// HTTP
+	public function cmdHttps($cmd, $plid, $ucid)
+	{	// These will all be registed console commands soon.
+		global $PRISM;
 
-		# x
-		console(NULL); # Print a blank line.
-#		$PRISM->isRunning = FALSE;
-
-		# w
-		console(NULL); # Print a blank line.
 		console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY'));
 		foreach ($PRISM->http->getHttpInfo() as $v)
 		{
@@ -91,17 +63,20 @@ class admin extends Plugins
 		return PLUGIN_CONTINUE;
 	}
 
+
 	// Help
 	public function cmdHelp($cmd, $plid, $ucid)
 	{
 		global $PRISM;
 
 		// (For button alignments)#  LEFT       LEFT
-		echo sprintf("%32s %64s", 'COMMAND', 'DESCRIPTOIN') . PHP_EOL;
+		echo sprintf("%32s - %64s", 'COMMAND', 'DESCRIPTOIN') . PHP_EOL;
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
-				echo sprintf("%32s - %64s", $command, $detail['info']) . PHP_EOL;
+			{
+				console(sprintf('%32s - %64s', $command, $detail['info']));
+			}
 		}
 
 		return PLUGIN_CONTINUE;
@@ -113,10 +88,10 @@ class admin extends Plugins
 		global $PRISM;
 
 		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
-		echo sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION') . PHP_EOL;
+		console(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'));
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
-			echo sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION) . PHP_EOL;
+			console(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION));
 		}
 
 		return PLUGIN_CONTINUE;
