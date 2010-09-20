@@ -249,15 +249,37 @@ abstract class Plugins
 		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
 	}
 
+	/** Host Methods */
+	protected function 
+
 	/** Server Methods */
 	protected function serverGetName()
 	{
 		return $this->parent->hosts[$this->parent->hosts->curHostID]->HName;
 	}
 	
-	/** Is Methods */
-	# Admins
-	protected function isAdmin(&$username, $hostID = NULL)
+	/** User Methods */
+	protected function userGetByPLID(&$PLID, $hostID = NULL)
+	{
+		global $PRISM;
+
+		var_dump($PRISM->hosts->curHostId);
+		var_dump($hostID);
+
+		print_r($PRISM->hosts);
+	}
+	
+	protected function userGetByUCID(&$UCID, $hostID = NULL)
+	{
+		global $PRISM;
+
+		var_dump($PRISM->hosts->curHostId);
+		var_dump($hostID);
+
+		print_r($PRISM);
+	}
+	
+	protected function userIsAdmin(&$username, $hostID = NULL)
 	{
 		global $PRISM;
 		# Check the user is defined as an admin.
@@ -273,7 +295,7 @@ abstract class Plugins
 		return ($this->isAdminGlobal($username) || $this->isAdminLocal($username, $hostID)) ? TRUE : FALSE;
 	}
 	
-	protected function isAdminGlobal(&$username)
+	protected function userIsGlobalAdmin(&$username)
 	{
 		global $PRISM;
 		# Check the user is defined as an admin.
@@ -284,7 +306,7 @@ abstract class Plugins
 		return (strpos($adminInfo['connection'], '*') !== FALSE) ? TRUE : FALSE;
 	}
 
-	protected function isAdminLocal(&$username, $hostID = NULL)
+	protected function userIsLocalAdmin(&$username, $hostID = NULL)
 	{
 		global $PRISM;
 		# Check the user is defined as an admin.

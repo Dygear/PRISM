@@ -8,9 +8,6 @@ class admin extends Plugins
 
 	public function __construct()
 	{
-		# Debug
-		$this->registerSayCommand('!', 'cmdDebug', 'Debug Console.');
-
 		# Help
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism help', 'cmdHelp', 'Displays this command list.');
@@ -22,7 +19,6 @@ class admin extends Plugins
 		# Admins
 		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
-		$this->registerSayCommand('prism admins reload', 'cmdAdminReload', 'Reloads the admins.', ADMIN_CFG);
 
 		# Admin Commands
 		$this->registerSayCommand('prism kick', 'cmdAdminKick', '<client>');
@@ -31,38 +27,24 @@ class admin extends Plugins
 		$this->registerSayCommand('prism pit', 'cmdAdminPit', '<player/client>');
 	}
 
-	// Hosts
-	public function cmdHosts($cmd, $plid, $ucid)
-	{	// These will all be registed console commands soon.
-		global $PRISM;
-
-		console(sprintf('%14s %28s:%-5s %8s %22s', 'Host ID', 'IP', 'PORT', 'UDPPORT', 'STATUS'));
-		foreach ($PRISM->hosts->getHostsInfo() as $host)
-		{
-			$status = (($host['connStatus'] == CONN_CONNECTED) ? '' : (($host['connStatus'] == CONN_VERIFIED) ? 'VERIFIED &' : ' NOT')).' CONNECTED';
-			$socketType = (($host['socketType'] == SOCKTYPE_TCP) ? 'tcp://' : 'udp://');
-			console(sprintf('%14s %28s:%-5s %8s %22s', $host['id'], $socketType.$host['ip'], $host['port'], $host['udpPort'], $status));
-		}
-
-		return PLUGIN_CONTINUE;
+	public function cmdAdminKick($cmd, $plid, $ucid)
+	{
+		console("$cmd, $plid, $ucid");
+		$this->getUserByPLID($plid);
+		$this->getUserByUCID($ucid);
 	}
-
-	// HTTP
-	public function cmdHttps($cmd, $plid, $ucid)
-	{	// These will all be registed console commands soon.
-		global $PRISM;
-
-		console(sprintf('%15s:%5s %5s', 'IP', 'PORT', 'LAST ACTIVITY'));
-		foreach ($PRISM->http->getHttpInfo() as $v)
-		{
-			$lastAct = time() - $v['lastActivity'];
-			console(sprintf('%15s:%5s %13d', $v['ip'], $v['port'], $lastAct));
-		}
-		console('Counted '.$PRISM->http->getHttpNumClients().' http client'.(($PRISM->http->getHttpNumClients() == 1) ? '' : 's'));
-
-		return PLUGIN_CONTINUE;
+	public function cmdAdminBan($cmd, $plid, $ucid)
+	{
+		console("$cmd, $plid, $ucid");
 	}
-
+	public function cmdAdminSpec($cmd, $plid, $ucid)
+	{
+		console("$cmd, $plid, $ucid");
+	}
+	public function cmdAdminPit($cmd, $plid, $ucid)
+	{
+		console("$cmd, $plid, $ucid");
+	}
 
 	// Help
 	public function cmdHelp($cmd, $plid, $ucid)
@@ -109,15 +91,6 @@ class admin extends Plugins
 			echo $user;
 			print_r($details);
 		}
-
-		return PLUGIN_CONTINUE;
-	}
-
-	public function cmdAdminReload($cmd, $plid, $ucid)
-	{
-		global $PRISM;
-
-		print_r($PRISM->admins->getAdminsInfo());
 
 		return PLUGIN_CONTINUE;
 	}
