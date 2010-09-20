@@ -520,7 +520,7 @@ class HostHandler extends SectionHandler
 			if ($id == $hostID)
 				return $host;
 		}
-		return false;
+		return null;
 	}
 	
 	public function getHostsByIp($ip)
@@ -531,7 +531,7 @@ class HostHandler extends SectionHandler
 			if ($ip == $host->getIP())
 				$hosts[$hostID] = $host;
 		}
-		return $hosts;
+		return (count($hosts)) ? $hosts : null;
 	}
 }
 
@@ -671,9 +671,9 @@ class InsimConnection
 		return $this->udpPort;
 	}
 	
-	public function &getUseRelay()
+	public function getUseRelay()
 	{
-		return $this->connType;
+		return ($this->connType == CONNTYPE_RELAY) ? true : false;
 	}
 	
 	public function &getHostname()
