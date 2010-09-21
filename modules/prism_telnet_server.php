@@ -145,9 +145,6 @@ class TelnetServer extends TelnetScreen
 ////			printf('%02x', ord($this->translateClientChar($raw[$a])));
 //		echo "\n";
 		
-		// (Control) Character translation
-		
-		
 		// Add raw input to buffer
 		$this->inputBuffer .= $raw;
 		$this->inputBufferLen += strlen($raw);
@@ -329,7 +326,14 @@ class TelnetServer extends TelnetScreen
 								break;
 							case TELNET_OPT_TTYPE :
 								$this->unescapeIAC($subVars);
-								$this->ttype = substr($subVars, 2);
+								$ttype = substr($subVars, 2);
+								if (stripos($ttype, 'xterm') !== false)
+									$this->ttype	= TELNET_TTYPE_XTERM;
+								else if (stripos($ttype, 'ansi') !== false)
+									$this->ttype	= TELNET_TTYPE_ANSI;
+								else
+									$this->ttype	= TELNET_TTYPE_OTHER;
+								
 								//console('SB TTYPE sub command ('.$this->ttype.')');
 								break;
 						}

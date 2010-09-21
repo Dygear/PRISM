@@ -106,6 +106,12 @@ define('TELNET_ECHO_NOTHING', 3);
 
 define('TELNET_CURSOR_HIDE', 1);
 
+// Terminal types
+define('TELNET_TTYPE_OTHER',	0);
+define('TELNET_TTYPE_XTERM',	1);
+define('TELNET_TTYPE_ANSI',		2);
+define('TELNET_TTYPE_NUM',		3);
+
 // Standard control keys
 define('KEY_IP',					chr(0x03));			// Interrupt Process (break)
 define('KEY_BS',					chr(0x08));			// backspace

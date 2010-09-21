@@ -221,10 +221,19 @@ class PrismTelnet extends TelnetServer
 		$msg = "Welcome to the ".VT100_STYLE_BOLD."Prism v".PHPInSimMod::VERSION.VT100_STYLE_RESET." remote console.\r\n";
 		$msg .= "Please login with your Prism account details.\r\n";
 
-//		$msg .= VT100_SGR0.VT100_USG1_LINE;
-//		for ($a=106; $a<110; $a++)
+////		if (strpos($this->ttype, 'XTERM') !== false)
+////			$msg .= VT100_STYLE_RESET.VT100_USG0_LINE;	// XTERM
+////		else
+////			$msg .= chr(15);							// WINDOWS
+//
+//		for ($a=179; $a<255; $a++)
 //			$msg .= chr($a);
-//		$msg .= VT100_SGR0.VT100_USG0;
+//
+////		if (strpos($this->ttype, 'XTERM') !== false)
+////			$msg .= VT100_STYLE_RESET.VT100_USG0; 		// XTERM
+////		else
+////			$msg .= chr(14);							// WINDOWS
+//		$msg .= "\r\n";
 
 		$msg .= "\r\n";
 		$msg .= "Username : ";
@@ -240,7 +249,7 @@ class PrismTelnet extends TelnetServer
 	{
 		$this->setCursorProperties(0);
 		$this->clearObjects(true);
-		$this->writeBuf("Goodbye...\r\n");
+		$this->writeBuf(VT100_STYLE_RESET.VT100_USG0."Goodbye...\r\n");
 		$this->flush();
 	}
 
@@ -324,9 +333,12 @@ class PrismTelnet extends TelnetServer
 	*/
 	protected function handleKey($key)
 	{
-		$this->removeById('testline');
-		$tl = new TSTextArea(0, $this->winSize[1]);
-		$tl->setId('testline');
+		if (($tl = $this->getObjectById('testline')) === null)
+		{
+			$tl = new TSTextArea(0, $this->winSize[1]);
+			$tl->setId('testline');
+			$this->add($tl);
+		}
 		
 		switch ($key)
 		{
@@ -341,28 +353,28 @@ class PrismTelnet extends TelnetServer
 			case KEY_CURLEFT :
 				$ob = $this->getObjectById('welcomeTestBox');
 				if ($ob)
-					$ob->setLocation(($ob->getX()-1), $ob->getY());
+					$ob->setX($ob->getX() - 1);
 				$tl->setText('Cursor left');
 				break;
 			
 			case KEY_CURRIGHT :
 				$ob = $this->getObjectById('welcomeTestBox');
 				if ($ob)
-					$ob->setLocation(($ob->getX()+1), $ob->getY());
+					$ob->setX($ob->getX() + 1);
 				$tl->setText('Cursor right');
 				break;
 			
 			case KEY_CURUP :
 				$ob = $this->getObjectById('welcomeTestBox');
 				if ($ob)
-					$ob->setLocation($ob->getX(), ($ob->getY()-1));
+					$ob->setY($ob->getY() - 1);
 				$tl->setText('Cursor up');
 				break;
 			
 			case KEY_CURDOWN :
 				$ob = $this->getObjectById('welcomeTestBox');
 				if ($ob)
-					$ob->setLocation($ob->getX(), ($ob->getY()+1));
+					$ob->setY($ob->getY() + 1);
 				$tl->setText('Cursor down');
 				break;
 			
@@ -431,7 +443,12 @@ class PrismTelnet extends TelnetServer
 				break;
 			
 			case KEY_F8 :
-				$tl->setText('F8 key');
+				// Toggle ttypes
+				$this->ttype++;
+				if ($this->ttype == TELNET_TTYPE_NUM)
+					$this->ttype = 0;
+				$this->updateTTypes($this->ttype);
+				$tl->setText('Toggling ttype ('.$this->ttype.')');
 				break;
 			
 			case KEY_F9 :
@@ -455,7 +472,6 @@ class PrismTelnet extends TelnetServer
 				break;
 		}
 		
-		$this->add($tl);
 		$this->redraw();
 	}
 	
@@ -466,16 +482,50 @@ class PrismTelnet extends TelnetServer
 			// Draw the welcome screen
 			$this->screenClear();
 			
-			$textArea = new TSTextArea(10, 10, 30, 5);
-			$textArea->setId('welcomeTestBox');
-			$textArea->setText('Hello all - some long text here to test this '.VT100_STYLE_BOLD.VT100_STYLE_BLUE.'TSTextArea object'.VT100_STYLE_RESET.' and its line wrapping. PS - move this area around with cursor keys :)');
-			$this->add($textArea);
+			$textContainer = new MainMenu((($this->winSize[0] - 70) / 2), 1, 70);
+			$textContainer->setId('welcomeTestBox');
+			$textContainer->setTType($this->ttype);
+			$textContainer->setBorder(TS_BORDER_REGULAR);
+			$textContainer->setCaption('Main Menu');
+			
+			$textArea = new TSTextArea();
+			$textArea->setText('Some long text here to test this '.VT100_STYLE_BOLD.VT100_STYLE_BLUE.'TSTextArea object'.VT100_STYLE_RESET.' and its line wrapping.'.KEY_ENTER.'A regular line break in a single TSTextObject works as well.');
+			$textContainer->add($textArea);
+
+			$textArea2 = new TSTextArea(0, 1, 0, 4);
+			$textArea2->setTType($this->ttype);
+			$textArea2->setBorder(TS_BORDER_REGULAR);
+			$textArea2->setCaption('Test caption');
+			//$textArea2->setMargin(1);
+			$textArea2->setText('The object now also has border and margin properties and you can set a caption.');
+			$textContainer->add($textArea2);
+
+			$textArea3 = new TSTextArea(0, 0, 0, 7);
+			$textArea3->setTType($this->ttype);
+			$textArea3->setBorder(TS_BORDER_REGULAR);
+			$textArea3->setText('Type F8 key in case you\'re seeing crappy borders. This will toggle through the different charset modes, in case auto-detection failed, or your terminal is crappy (like the osx default one - it has no line drawing charset)');
+			$textContainer->add($textArea3);
+
+			$textArea4 = new TSTextArea(0, 1);
+			$textArea4->setText('These four paragraphs are all TSTextAreas with differing properties, like border, auto-sizing vs fixed.'.KEY_ENTER.'This whole Main Menu is a extended on ScreenContainer, with a border and caption. And is auto heigth sizing.');
+			$textContainer->add($textArea4);
+
+			$this->add($textContainer);
 			$this->reDraw();
 		}
 		else
 		{
 			// Close welcome screen - draw the main menu
 		}
+	}
+}
+
+class MainMenu extends ScreenContainer
+{
+	public function __construct($x = 0, $y = 0, $cols = 0, $lines = 0)
+	{
+		$this->setLocation($x, $y);
+		$this->setSize($cols, $lines);
 	}
 }
 
