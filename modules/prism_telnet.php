@@ -2,6 +2,9 @@
 
 require_once(ROOTPATH . '/modules/prism_telnet_defines.php');
 require_once(ROOTPATH . '/modules/prism_telnet_server.php');
+require_once(ROOTPATH . '/modules/prism_telnet_accounts.php');
+require_once(ROOTPATH . '/modules/prism_telnet_hosts.php');
+require_once(ROOTPATH . '/modules/prism_telnet_plugins.php');
 
 define('TELNET_NOT_LOGGED_IN', 0);
 define('TELNET_ASKED_USERNAME', 1);
@@ -196,6 +199,8 @@ ININOTES;
 	}
 }
 
+define('TS_SECTION_MAIN', 1);
+
 /**
  * The PrismTelnet class handles :
  * -the Prism telnet login session
@@ -207,8 +212,18 @@ class PrismTelnet extends TelnetServer
 	// If filled in, the user is logged in (or half-way logging in).
 	private $username		= '';
 	
-	// We need these so we know the state of the login process.
+	// The state of the login process.
 	private $loginState		= 0;
+	
+	// Section vars
+	private $curSection		= '';		// holds the name of the currently active section
+	private $section		= null;		// holds the actual active section object itself (accounts, hosts, plugins)
+	
+	private $menuBar		= null;		// cosmetic menu bar
+	
+	private $accountSection	= null;		// handles all account related stuff
+	private $hostSection	= null;		// handles all host related stuff
+	private $pluginSection	= null;		// handles all plugin related stuff
 	
 	public function __construct(&$sock, &$ip, &$port)
 	{
@@ -219,23 +234,7 @@ class PrismTelnet extends TelnetServer
 		
 		// Send welcome message and ask for username
 		$msg = "Welcome to the ".VT100_STYLE_BOLD."Prism v".PHPInSimMod::VERSION.VT100_STYLE_RESET." remote console.\r\n";
-		$msg .= "Please login with your Prism account details.\r\n";
-
-////		if (strpos($this->ttype, 'XTERM') !== false)
-////			$msg .= VT100_STYLE_RESET.VT100_USG0_LINE;	// XTERM
-////		else
-////			$msg .= chr(15);							// WINDOWS
-//
-//		for ($a=179; $a<255; $a++)
-//			$msg .= chr($a);
-//
-////		if (strpos($this->ttype, 'XTERM') !== false)
-////			$msg .= VT100_STYLE_RESET.VT100_USG0; 		// XTERM
-////		else
-////			$msg .= chr(14);							// WINDOWS
-//		$msg .= "\r\n";
-
-		$msg .= "\r\n";
+		$msg .= "Please login with your Prism account details.\r\n\r\n";
 		$msg .= "Username : ";
 		
 		$this->writeBuf($msg);
@@ -292,14 +291,10 @@ class PrismTelnet extends TelnetServer
 					$this->setCursorProperties(TELNET_CURSOR_HIDE);
 					$this->flush();
 
-					$this->registerInputCallback($this, 'handleKey');
-
-					// Draw (test) welcome screen
-					$this->welcomeScreen(null);
 					console('Successful telnet login from '.$this->username.' on '.date('r'));
 					
 					// Now setup the screen
-					
+					$this->setupMenu();
 				}
 				else
 				{
@@ -325,6 +320,69 @@ class PrismTelnet extends TelnetServer
 		return ($PRISM->admins->isPasswordCorrect($this->username, $password));
 	}
 	
+	private function setupMenu()
+	{
+		$this->screenClear();
+		
+		// Create section bar (header bar)
+		$this->menuBar = new MenuBar($this->getTType());
+		$this->add($this->menuBar);
+		$this->curSection = 'accounts';
+		
+		// Initialise the actual sections as separate objects.
+		$this->accountSection = new TSAccountSection($this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->add($this->accountSection);
+		$this->section = $this->accountSection;
+
+		$this->hostSection = new TSHostSection($this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->setVisible(false);
+		$this->add($this->hostSection);
+
+		$this->pluginSection = new TSPluginSection($this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->setVisible(false);
+		$this->add($this->pluginSection);
+
+		$this->registerInputCallback($this, 'handleKey');
+		$this->reDraw();
+	}
+	
+	private function selectSection($section)
+	{
+		if ($this->curSection == $section)
+			return true;
+		
+
+		// Make the section active
+		switch($section)
+		{
+			case 'accounts' :
+				$this->section->setVisible(false);
+				$this->section = $this->accountSection;
+				break;
+				
+			case 'hosts' :
+				$this->section->setVisible(false);
+				$this->section = $this->hostSection;
+				break;
+				
+			case 'plugins' :
+				$this->section->setVisible(false);
+				$this->section = $this->pluginSection;
+				break;
+				
+			default :
+				return false;
+				
+		}
+
+		$this->section->setVisible(true);
+
+		$this->menuBar->selectSection($section);
+		$this->curSection = $section;
+		
+		return true;
+	}
+	
 	/**
 	 * When we are not in line-edit mode (to process a whole line of user-input),
 	 * we use this handleKey function to process single key presses.
@@ -335,13 +393,33 @@ class PrismTelnet extends TelnetServer
 	{
 		if (($tl = $this->getObjectById('testline')) === null)
 		{
-			$tl = new TSTextArea(0, $this->winSize[1]);
+			$tl = new TSTextArea(1, $this->winSize[1], $this->winSize[0], 1);
 			$tl->setId('testline');
 			$this->add($tl);
 		}
 		
+		// Handle section specific keys
+		if ($this->section->handleKey($key))
+		{
+			$this->redraw();
+			return;
+		}
+		
+		// Default key actions
 		switch ($key)
 		{
+			case 'A' :
+				$this->selectSection('accounts');
+				break;
+			
+			case 'H' :
+				$this->selectSection('hosts');
+				break;
+			
+			case 'P' :
+				$this->selectSection('plugins');
+				break;
+			
 			case 'x' :
 				$this->shutdown();
 				return;
@@ -351,30 +429,18 @@ class PrismTelnet extends TelnetServer
 				break;
 			
 			case KEY_CURLEFT :
-				$ob = $this->getObjectById('welcomeTestBox');
-				if ($ob)
-					$ob->setX($ob->getX() - 1);
 				$tl->setText('Cursor left');
 				break;
 			
 			case KEY_CURRIGHT :
-				$ob = $this->getObjectById('welcomeTestBox');
-				if ($ob)
-					$ob->setX($ob->getX() + 1);
 				$tl->setText('Cursor right');
 				break;
 			
 			case KEY_CURUP :
-				$ob = $this->getObjectById('welcomeTestBox');
-				if ($ob)
-					$ob->setY($ob->getY() - 1);
 				$tl->setText('Cursor up');
 				break;
 			
 			case KEY_CURDOWN :
-				$ob = $this->getObjectById('welcomeTestBox');
-				if ($ob)
-					$ob->setY($ob->getY() + 1);
 				$tl->setText('Cursor down');
 				break;
 			
@@ -444,11 +510,11 @@ class PrismTelnet extends TelnetServer
 			
 			case KEY_F8 :
 				// Toggle ttypes
-				$this->ttype++;
-				if ($this->ttype == TELNET_TTYPE_NUM)
-					$this->ttype = 0;
-				$this->updateTTypes($this->ttype);
-				$tl->setText('Toggling ttype ('.$this->ttype.')');
+				$this->setTType($this->getTType() + 1);
+				if ($this->getTType() == TELNET_TTYPE_NUM)
+					$this->setTType(0);
+				$this->updateTTypes($this->getTType());
+				$tl->setText('Toggling ttype ('.$this->getTType().')');
 				break;
 			
 			case KEY_F9 :
@@ -474,58 +540,62 @@ class PrismTelnet extends TelnetServer
 		
 		$this->redraw();
 	}
-	
-	private function welcomeScreen($key)
-	{
-		if ($key === null)
-		{
-			// Draw the welcome screen
-			$this->screenClear();
-			
-			$textContainer = new MainMenu((($this->winSize[0] - 70) / 2), 1, 70);
-			$textContainer->setId('welcomeTestBox');
-			$textContainer->setTType($this->ttype);
-			$textContainer->setBorder(TS_BORDER_REGULAR);
-			$textContainer->setCaption('Main Menu');
-			
-			$textArea = new TSTextArea();
-			$textArea->setText('Some long text here to test this '.VT100_STYLE_BOLD.VT100_STYLE_BLUE.'TSTextArea object'.VT100_STYLE_RESET.' and its line wrapping.'.KEY_ENTER.'A regular line break in a single TSTextObject works as well.');
-			$textContainer->add($textArea);
-
-			$textArea2 = new TSTextArea(0, 1, 0, 4);
-			$textArea2->setTType($this->ttype);
-			$textArea2->setBorder(TS_BORDER_REGULAR);
-			$textArea2->setCaption('Test caption');
-			//$textArea2->setMargin(1);
-			$textArea2->setText('The object now also has border and margin properties and you can set a caption.');
-			$textContainer->add($textArea2);
-
-			$textArea3 = new TSTextArea(0, 0, 0, 7);
-			$textArea3->setTType($this->ttype);
-			$textArea3->setBorder(TS_BORDER_REGULAR);
-			$textArea3->setText('Type F8 key in case you\'re seeing crappy borders. This will toggle through the different charset modes, in case auto-detection failed, or your terminal is crappy (like the osx default one - it has no line drawing charset)');
-			$textContainer->add($textArea3);
-
-			$textArea4 = new TSTextArea(0, 1);
-			$textArea4->setText('These four paragraphs are all TSTextAreas with differing properties, like border, auto-sizing vs fixed.'.KEY_ENTER.'This whole Main Menu is a extended on ScreenContainer, with a border and caption. And is auto heigth sizing.');
-			$textContainer->add($textArea4);
-
-			$this->add($textContainer);
-			$this->reDraw();
-		}
-		else
-		{
-			// Close welcome screen - draw the main menu
-		}
-	}
 }
 
-class MainMenu extends ScreenContainer
+class MenuBar extends ScreenContainer
 {
-	public function __construct($x = 0, $y = 0, $cols = 0, $lines = 0)
+	public function __construct($ttype)
 	{
-		$this->setLocation($x, $y);
-		$this->setSize($cols, $lines);
+		$this->setSize(80, 1);
+		$this->setId('mainMenu');
+		$this->setTType($ttype);
+		
+		$textArea = new TSTextArea(3, 1, 8, 1);
+		$textArea->setId('accounts');
+		$textArea->setOptions(TS_OPT_ISSELECTABLE | TS_OPT_ISSELECTED);
+		$textArea->setText(VT100_STYLE_BOLD.'A'.VT100_STYLE_RESET.'ccounts');
+		$this->add($textArea);
+
+		$textArea = new TSTextArea(16, 0, 5, 1);
+		$textArea->setId('hosts');
+		$textArea->setOptions(TS_OPT_ISSELECTABLE);
+		$textArea->setText(VT100_STYLE_BOLD.'H'.VT100_STYLE_RESET.'osts');
+		$this->add($textArea);
+
+		$textArea = new TSTextArea(26, 0, 7, 1);
+		$textArea->setId('plugins');
+		$textArea->setOptions(TS_OPT_ISSELECTABLE);
+		$textArea->setText(VT100_STYLE_BOLD.'P'.VT100_STYLE_RESET.'lugins');
+		$this->add($textArea);
+
+		$l = strlen('Prism v'.PHPInSimMod::VERSION);
+		$textArea = new TSTextArea(80 - ($l + 1), 0, $l, 1);
+		$textArea->setId('prismVersion');
+		$textArea->setText(VT100_STYLE_GREEN.VT100_STYLE_BOLD.'Prism v'.PHPInSimMod::VERSION.VT100_STYLE_RESET);
+		$this->add($textArea);
+
+		$line = new TSHLine(2, 2, $this->getWidth() - 2);
+		$line->setTType($this->getTType());
+		$this->add($line);
+	}
+	
+	public function selectSection($section)
+	{
+		$a = 0;
+		while ($object = $this->getObjectByIndex($a))
+		{
+			if ($object->getId() == $section)
+			{
+				if (($object->getOptions() & TS_OPT_ISSELECTED) == 0)
+					$object->toggleSelected();
+			}
+			else
+			{
+				if (($object->getOptions() & TS_OPT_ISSELECTED) > 0)
+					$object->toggleSelected();
+			}
+			$a++;
+		}
 	}
 }
 

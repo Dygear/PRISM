@@ -41,12 +41,12 @@ class TelnetServer extends TelnetScreen
 		$this->lastActivity	= time();
 		
 		// Start terminal state negotiation
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_BINARY);
-		$this->setOption(TELNET_ACTION_WILL, TELNET_OPT_ECHO);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_SGA);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_LINEMODE);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_NAWS);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_TTYPE);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_BINARY);
+		$this->setTelnetOption(TELNET_ACTION_WILL, TELNET_OPT_ECHO);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_SGA);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_LINEMODE);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_NAWS);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_TTYPE);
 
 		$this->modeState |= TELNET_MODE_INSERT;
 	}
@@ -127,7 +127,7 @@ class TelnetServer extends TelnetScreen
 		$this->registerInputCallback(null);
 	}
 
-	private function setOption($action, $option)
+	private function setTelnetOption($action, $option)
 	{
 		$this->write(TELNET_IAC.$action.$option);
 	}
@@ -328,13 +328,13 @@ class TelnetServer extends TelnetScreen
 								$this->unescapeIAC($subVars);
 								$ttype = substr($subVars, 2);
 								if (stripos($ttype, 'xterm') !== false)
-									$this->ttype	= TELNET_TTYPE_XTERM;
+									$this->setTType(TELNET_TTYPE_XTERM);
 								else if (stripos($ttype, 'ansi') !== false)
-									$this->ttype	= TELNET_TTYPE_ANSI;
+									$this->setTType(TELNET_TTYPE_ANSI);
 								else
-									$this->ttype	= TELNET_TTYPE_OTHER;
+									$this->setTType(TELNET_TTYPE_OTHER);
 								
-								//console('SB TTYPE sub command ('.$this->ttype.')');
+								//console('SB TTYPE sub command ('.$this->getTType().')');
 								break;
 						}
 						$a += $dist + 1;
