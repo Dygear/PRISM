@@ -570,7 +570,10 @@ class InsimConnection
 	private $specPass		= '';			# specpass for relay usage
 	private $pps			= 3;		
 	private $hostName		= '';			# the hostname. Can be populated by user in case of relay.
-	
+
+	// Current State
+	public $state			= NULL;			# The current state of the gameplay. (Set after the IS_VER packet is recv in the parent class.)
+
 	public function __construct(array &$icVars)
 	{
 		$this->connType		= ($icVars['connType'] == CONNTYPE_RELAY) ? CONNTYPE_RELAY : CONNTYPE_HOST;

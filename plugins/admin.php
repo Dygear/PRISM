@@ -8,7 +8,7 @@ class admin extends Plugins
 
 	public function __construct()
 	{
-		# Help
+/*		# Help
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism help', 'cmdHelp', 'Displays this command list.');
 
@@ -19,19 +19,38 @@ class admin extends Plugins
 		# Admins
 		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
-
+*/
 		# Admin Commands
-		$this->registerSayCommand('prism kick', 'cmdAdminKick', '<client>');
-		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <client> <time>');
-		$this->registerSayCommand('prism spec', 'cmdAdminSpec', '<player/client>');
-		$this->registerSayCommand('prism pit', 'cmdAdminPit', '<player/client>');
+		$this->registerSayCommand('prism kick', 'cmdAdminKick', '<targets> ...', ADMIN_KICK);
+		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time>', ADMIN_BAN);
+		$this->registerSayCommand('prism spec', 'cmdAdminSpec', '<targets> ...', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism pit', 'cmdAdminPit', '<targets> ...', ADMIN_SPECTATE);
 	}
 
 	public function cmdAdminKick($cmd, $plid, $ucid)
 	{
-		console("$cmd, $plid, $ucid");
-		$this->getUserByPLID($plid);
-		$this->getUserByUCID($ucid);
+		$castingAdmin = $this->getUserNameByUCID($ucid);
+		$argv = str_getcsv($cmd, ' ');
+		array_shift($argv); array_shift($argv);
+		if (count($argv) == 0)
+			console('Kick Needs a Target.');
+		else
+		{
+			$MST = new IS_MST();
+			foreach ($argv as $target)
+			{
+				if ($castingAdmin == $target)
+					console("Why would you even try to run this on yourself?");
+				else if ($this->isImmune($target))
+					console("Admin $castingAdmin tired to kick immune Admin $target.");
+				else
+				{
+					$MST->Msg = "/kick $target";
+					$this->sendPacket($MST);
+					console("Admin $castingAdmin kicked $target.");
+				}
+			}
+		}
 	}
 	public function cmdAdminBan($cmd, $plid, $ucid)
 	{

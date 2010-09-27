@@ -159,12 +159,30 @@ abstract class Plugins
 	/** Properties */
 	public $callbacks = array();
 	// Callbacks
+	public $consoleCommands = array();
 	public $insimCommands = array();
 	public $localCommands = array();
 	public $sayCommands = array();
 
+	/** Internal Methods */
+	private function getCallback($cmdsArray, $cmdString)
+	{
+		// Quick Lookup (Commands without Args)
+		if (isset($cmdsArray[$cmdString]))
+			return $cmdsArray[$cmdString];
+
+		// Through Lookup (Commands with Args)
+		foreach ($cmdsArray as $cmd => $details)
+		{	# Due to the nature of these commands, we have to check all instances for matches.
+			if (strpos($cmdString, $cmd) === 0) # Check if the string STARTS with our command.
+				return $details;
+		}
+		
+		return FALSE;
+	}
+
 	/** Send Methods */
-	protected function sendPacket($packetClass)
+	protected function sendPacket(Struct $packetClass)
 	{
 		global $PRISM;
 		return $PRISM->hosts->sendPacket($packetClass);
@@ -174,32 +192,57 @@ abstract class Plugins
 	// This is the yang to the registerSayCommand & registerLocalCommand function's Yin.
 	public function handleCmd(IS_MSO $packet)
 	{
-		if ($packet->UserType == MSO_PREFIX)
-			$CMD = substr($packet->Msg, $packet->TextStart + 1);
-		else if ($packet->UserType == MSO_O)
-			$CMD = $packet->Msg;
-		else
-			return;
-
-		if ($packet->UserType == MSO_PREFIX AND isset($this->sayCommands[$CMD]))
-		{
-			$method = $this->sayCommands[$CMD]['method'];
-			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
+		if ($packet->UserType == MSO_PREFIX AND
+			$cmdString = substr($packet->Msg, $packet->TextStart + 1) AND
+			$callback = $this->getCallback($this->sayCommands, $cmdString) AND
+			$callback !== FALSE
+		) {
+			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
+				$this->$callback['method']($cmdString, $packet->PLID, $packet->UCID, $packet);
+			else
+				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
 		}
-		else if ($packet->UserType == MSO_O AND isset($this->localCommands[$CMD]))
-		{
-			$method = $this->localCommands[$CMD]['method'];
-			$this->$method($CMD, $packet->PLID, $packet->UCID, $packet);
+		else if ($packet->UserType == MSO_O AND
+			$callback = $this->getCallback($this->localCommands, $packet->Msg) AND
+			$callback !== FALSE
+		) {
+			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
+				$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+			else
+				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
 		}
 	}
 	// This is the yang to the registerInsimCommand function's Yin.
 	public function handleInsimCmd(IS_III $packet)
 	{
-		if (isset($this->insimCommands[$packet->Msg]))
+		if ($callback = $this->getCallback($this->insimCommands, $packet->Msg) && $callback !== FALSE)
 		{
-			$method = $this->insimCommands[$packet->Msg]['method'];
-			$this->$method($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
+				$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+			else
+				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
 		}
+	}
+	// This is the yang to the registerConsoleCommand function's Yin.
+	public function handleConsoleCmd($string)
+	{
+		if ($callback = $this->getCallback($this->consoleCommands, $string) && $callback !== FALSE)
+		{
+			$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+		}
+	}
+
+	/** Access Level Related Functions */
+	protected function canUserAccessCommand($username, $command)
+	{
+		global $PRISM;
+		$adminInfo = $PRISM->admins->getAdminInfo($username);
+		return ($command['accessLevel'] == -1 OR $command['accessLevel'] & $adminInfo['accessFlags']) ? TRUE : FALSE;
+	}
+	// Returns true if a user's access level is equal or greater then the required level.
+	protected function checkUserLevel($userLevel, $accessLevel)
+	{
+		return ($userLevel & $accessLevel) ? TRUE : FALSE;
 	}
 
 	/** Register Methods */
@@ -220,7 +263,14 @@ abstract class Plugins
 		$this->registerSayCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the PRISM console. (STDIN)
-	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "") {}
+	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "")
+	{
+		if (!isset($this->callbacks['STDIN']) && !isset($this->callbacks['STDIN']['handleConsoleCmd']))
+		{	# We don't have any local callback hooking to the STDIN stream, make one.
+			$this->registerPacket('handleInsimCmd', 'STDIN');
+		}
+		$this->consoleCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info);
+	}
 	// Any command that comes from the "/i" type. (III)
 	protected function registerInsimCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
 	{
@@ -228,7 +278,7 @@ abstract class Plugins
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
 			$this->registerPacket('handleInsimCmd', ISP_III);
 		}
-		$this->insimCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
+		$this->insimCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the "/o" type. (MSO->Flags = MSO_O)
 	protected function registerLocalCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
@@ -237,7 +287,7 @@ abstract class Plugins
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
 			$this->registerPacket('handleCmd', ISP_MSO);
 		}
-		$this->localCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
+		$this->localCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 	// Any say event with prefix charater (ISI->Prefix) with this command type. (MSO->Flags = MSO_PREFIX)
 	protected function registerSayCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
@@ -246,40 +296,117 @@ abstract class Plugins
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
 			$this->registerPacket('handleCmd', ISP_MSO);
 		}
-		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'access' => $defaultAdminLevelToAccess);
+		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 
-	/** Host Methods */
-	protected function 
+	/** Internal Functions */
+	protected function getCurrentHostId()
+	{
+		global $PRISM;
+		return $PRISM->hosts->curHostID;
+	}
+	protected function getHostId($hostID = NULL)
+	{
+		if ($hostID === NULL)
+			return $this->getCurrentHostId();
+		return $hostID;
+	}
+	protected function getHostInfo($hostID = NULL)
+	{
+		global $PRISM;
+		$hostID = $this->getHostId($hostID);
+		if (($host = $PRISM->hosts->getHostById($hostID)) && $host !== NULL)
+			return $host;
+		return NULL;
+	}
+	protected function getHostState($hostID = NULL)
+	{
+		$hostID = $this->getHostId($hostID);
+		if (($host = $this->getHostInfo($hostID)) && $host !== NULL)
+			return $host->state;
+		return NULL;
+	}
 
 	/** Server Methods */
 	protected function serverGetName()
 	{
-		return $this->parent->hosts[$this->parent->hosts->curHostID]->HName;
+		if ($this->getHostState() !== NULL)
+			return $this->getHostState()->HName;
+		return NULL;
 	}
 	
-	/** User Methods */
-	protected function userGetByPLID(&$PLID, $hostID = NULL)
+	/** Client & Player */
+	protected function &getPlayerByPLID(&$PLID, $hostID = NULL)
 	{
-		global $PRISM;
-
-		var_dump($PRISM->hosts->curHostId);
-		var_dump($hostID);
-
-		print_r($PRISM->hosts);
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL && isset($players[$PLID]))
+			return $players[$PLID];
+		return $return;
 	}
-	
-	protected function userGetByUCID(&$UCID, $hostID = NULL)
+
+	protected function &getClientByPLID(&$PLID, $hostID = NULL)
 	{
-		global $PRISM;
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL && isset($players[$PLID]))
+		{
+			$UCID = $players[$PLID]->UCID;
+			return $this->getClientByUCID($UCID);
+		}
+		return $return;
+	}
 
-		var_dump($PRISM->hosts->curHostId);
-		var_dump($hostID);
-
-		print_r($PRISM);
+	protected function &getPlayersByUCID(&$UCID, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($clients =& $this->getHostState($hostID)->clients) && $clients !== NULL && isset($clients[$UCID]))
+			return $clients[$UCID]->players;
+		return $return;
 	}
 	
-	protected function userIsAdmin(&$username, $hostID = NULL)
+	protected function &getClientByUCID(&$UCID, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($clients =& $this->getHostState($hostID)->clients) && $clients !== NULL && isset($clients[$UCID]))
+			return $clients[$UCID];
+		return $return;
+	}
+
+	//
+
+	protected function getUserNameByUCID(&$UCID, $hostID = NULL)
+	{
+		$client = $this->getClientByUCID($UCID, $hostID);
+		return ($client === NULL) ? FALSE : $client->UName;
+	}
+
+	protected function getUserNameByPLID(&$PLID, $hostID = NULL)
+	{
+		$player = $this->getPlayerByPLID($PLID, $hostID);
+		if ($player === NULL)
+			return FALSE;
+		$UCID = $player->UCID; # if I don't do this, I get an "Indirect modification of overloaded property" notice.
+		return $this->userGetUserNameByUCID($UCID);
+	}
+
+	protected function userGetPlayerNameByUCID(&$UCID, $hostID = NULL)
+	{
+		$client = $this->userGetByUCID($UCID, $hostID);
+		return ($client === NULL) ? FALSE : $client->PName;
+	}
+
+	protected function userGetPlayerNameByPLID(&$PLID, $hostID = NULL)
+	{
+		$player = $this->userGetByPLID($PLID, $hostID);
+		return ($player === NULL) ? FALSE : $player->PName;
+	}
+
+	// Is
+	protected function isHost(&$username, $hostID = NULL)
+	{
+		return ($this->getHostState($this->getHostId($hostID))->clients[0]->UName == $username) ? TRUE : FALSE;
+	}
+
+	protected function isAdmin(&$username, $hostID = NULL)
 	{
 		global $PRISM;
 		# Check the user is defined as an admin.
@@ -287,15 +414,14 @@ abstract class Plugins
 			return FALSE;
 
 		# set the $hostID;
-		if ($hostID === NULL)
-			$hostID = $PRISM->hosts->curHostID;
+		$hostID = $this->getHostId($hostID);
 
 		# Check the user is defined as an admin on all or the host current host.
 		$adminInfo = $PRISM->admins->getAdminInfo($username);
 		return ($this->isAdminGlobal($username) || $this->isAdminLocal($username, $hostID)) ? TRUE : FALSE;
 	}
 	
-	protected function userIsGlobalAdmin(&$username)
+	protected function isAdminGlobal(&$username)
 	{
 		global $PRISM;
 		# Check the user is defined as an admin.
@@ -306,7 +432,7 @@ abstract class Plugins
 		return (strpos($adminInfo['connection'], '*') !== FALSE) ? TRUE : FALSE;
 	}
 
-	protected function userIsLocalAdmin(&$username, $hostID = NULL)
+	protected function isAdminLocal(&$username, $hostID = NULL)
 	{
 		global $PRISM;
 		# Check the user is defined as an admin.
@@ -322,7 +448,7 @@ abstract class Plugins
 		return ((strpos($adminInfo['connection'], $hostID) !== FALSE) !== FALSE) ? TRUE : FALSE;
 	}
 
-	protected function isAdminImmune(&$username)
+	protected function isImmune(&$username)
 	{
 		global $PRISM;
 		# Check the user is defined as an admin.

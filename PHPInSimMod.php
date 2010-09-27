@@ -20,7 +20,7 @@ define('PLUGIN_CONTINUE',		0);			# Plugin passes through operation. Whatever cal
 define('PLUGIN_HANDLED',		1);			# Plugin halts continued operation. Plugins following in the plugins.ini won't be called.
 
 error_reporting(E_ALL);
-ini_set('display_errors',		'true');
+ini_set('display_errors',		'TRUE');
 
 define('ROOTPATH', dirname(realpath(__FILE__)));
 
@@ -54,12 +54,12 @@ class PHPInSimMod
 	const ROOTPATH = ROOTPATH;
 
 	/* Run Time Arrays */
-	public $config				= null;
-	public $hosts				= null;
-	public $http				= null;
-	public $telnet				= null;
-	public $plugins				= null;
-	public $admins				= null;
+	public $config				= NULL;
+	public $hosts				= NULL;
+	public $http				= NULL;
+	public $telnet				= NULL;
+	public $plugins				= NULL;
+	public $admins				= NULL;
 
 	# Time outs
 	private $sleep				= NULL;
@@ -141,7 +141,7 @@ class PHPInSimMod
 			exit(1);
 
 		# Don't execute PHP internal error handler
-		return true;
+		return TRUE;
 	}
 
 	public function initialise($argc, $argv)
@@ -237,7 +237,7 @@ class PHPInSimMod
 					switch ($exp[0])
 					{
 						case 'c':
-							console(sprintf('%32s %64s', 'COMMAND', 'DESCRIPTOIN'));
+							console(sprintf('%32s - %64s', 'COMMAND', 'DESCRIPTOIN'));
 							foreach ($this->plugins->getPlugins() as $plugin => $details)
 							{
 								foreach ($details->sayCommands as $command => $detail)
@@ -259,7 +259,7 @@ class PHPInSimMod
 						
 						case 'I':
 							console('RE-INITIALISING PRISM...');
-							$this->initialise(null, null);
+							$this->initialise(NULL, NULL);
 							break;
 						
 						case 'p':
@@ -302,7 +302,7 @@ class PHPInSimMod
 				continue;
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 			if (!$this->hosts->maintenance())
-				$this->isRunning = false;
+				$this->isRunning = FALSE;
 			$this->http->maintenance();
 			PHPParser::cleanSessions();
 						
@@ -317,7 +317,7 @@ class PHPInSimMod
 
 		// Must have a max delay of a second, otherwise there is no connection maintenance done.
 		$this->sleep = 1;
-		$this->uSleep = null;
+		$this->uSleep = NULL;
 	}
 
 	public function __destruct()
