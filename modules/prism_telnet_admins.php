@@ -121,7 +121,7 @@ class TSAdminSection extends TSSection
 	
 	protected function selectItem()
 	{
-		console('Selecting item '.$this->subSection->getId().' ('.$this->subSection->getUsername().')');
+//		console('Selecting item '.$this->subSection->getId().' ('.$this->subSection->getUsername().')');
 		
 		// Change focus (set actives)
 		$this->setActive(false);
@@ -135,7 +135,7 @@ class TSAdminSection extends TSSection
 		if ($this->getActive() == true)
 			return;
 		
-		console('Selecting item '.$this->subSection->getId().' ('.$this->subSection->getUsername().')');
+//		console('Selecting item '.$this->subSection->getId().' ('.$this->subSection->getUsername().')');
 		
 		$this->setActive(true);
 		$this->getCurObject()->setBold(false);
@@ -245,7 +245,7 @@ class TSAdminContentSection extends TSSection
 					$object->getText(), 
 					23
 				);
-				console('Setting username line edit callback');
+//				console('Setting username line edit callback');
 				break;
 			
 			case 'adminPassword' :
@@ -271,7 +271,7 @@ class TSAdminContentSection extends TSSection
 						24
 					);
 				}
-				console('Setting password line edit callback');
+//				console('Setting password line edit callback');
 				break;
 			
 			case 'adminFlags' :
@@ -297,12 +297,12 @@ class TSAdminContentSection extends TSSection
 						26
 					);
 				}
-				console('Setting flags line edit callback');
+//				console('Setting flags line edit callback');
 				break;
 			
 			default :
 				$this->setInputCallback(null);
-				console('Setting key edit callback');
+//				console('Setting key edit callback');
 				break;
 		}
 		
@@ -442,7 +442,7 @@ class TSAdminContentSection extends TSSection
 		
 		$this->parentSection->redrawMenu();
 		
-		console('Save this admin '.$username.' / '.$password.' / '.$flags);
+//		console('Save this admin '.$username.' / '.$password.' / '.$flags);
 	}
 	
 	private function adminDelete()
@@ -454,14 +454,14 @@ class TSAdminContentSection extends TSSection
 		
 		$this->parentSection->redrawMenu();
 
-		console('Delete this admin '.$this->username);
+//		console('Delete this admin '.$this->username);
 	}
 	
 	public function handleAdminInput($line)
 	{
 		$this->getCurObject()->setText($line);
 		$this->setInputMode();
-		console('handleAdminInput ('.$this->getCurObject()->getId().') received a line : '.$line);
+//		console('handleAdminInput ('.$this->getCurObject()->getId().') received a line : '.$line);
 	}
 }
 

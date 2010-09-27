@@ -114,7 +114,7 @@ class TelnetServer extends TelnetScreen
 		else
 		{
 			$this->inputCallback = array($class, $func);
-			console('SETTING CALLBACK FUNCTION : '.$func);
+//			console('SETTING CALLBACK FUNCTION : '.$func);
 		}
 		
 		if ($editMode == 0)
@@ -148,10 +148,10 @@ class TelnetServer extends TelnetScreen
 	
 	public function addInputToBuffer(&$raw)
 	{
-		for ($a=0; $a<strlen($raw); $a++)
-			printf('%02x', ord($raw[$a]));
-//			printf('%02x', ord($this->translateClientChar($raw[$a])));
-		echo "\n";
+//		for ($a=0; $a<strlen($raw); $a++)
+//			printf('%02x', ord($raw[$a]));
+////			printf('%02x', ord($this->translateClientChar($raw[$a])));
+//		echo "\n";
 		
 		// Add raw input to buffer
 		$this->inputBuffer .= $raw;
@@ -176,33 +176,33 @@ class TelnetServer extends TelnetScreen
 						switch($this->inputBuffer[$a+1])
 						{
 							case TELNET_OPT_BINARY :
-								console('client WILL BINARY');
+								//console('client WILL BINARY');
 								$this->modeState |= TELNET_MODE_BINARY;
 								break;
 							case TELNET_OPT_SGA :
-								console('client WILL SGA');
+								//console('client WILL SGA');
 								$this->modeState |= TELNET_MODE_SGA;
 								break;
 							case TELNET_OPT_LINEMODE :
-								console('client WILL Linemode');
+								//console('client WILL Linemode');
 								$this->modeState |= TELNET_MODE_LINEMODE;
 								break;
 							case TELNET_OPT_NAWS :
-								console('client WILL NAWS');
+								//console('client WILL NAWS');
 								$this->modeState |= TELNET_MODE_NAWS;
 								break;
 							case TELNET_OPT_TERMINAL_SPEED :
-								console('client WILL terminal speed');
+								//console('client WILL terminal speed');
 								$this->modeState |= TELNET_MODE_TERMINAL_SPEED;
 								$this->setTelnetOption(TELNET_ACTION_DONT, TELNET_OPT_TERMINAL_SPEED);
 								break;
 							case TELNET_OPT_TTYPE :
-								console('client WILL TTYPE');
+								//console('client WILL TTYPE');
 								$this->write(TELNET_IAC.TELNET_OPT_SB.TELNET_OPT_TTYPE.chr(1).TELNET_IAC.TELNET_OPT_SE);
 								//$this->modeState |= TELNET_MODE_NAWS;
 								break;
 							case TELNET_OPT_NEW_ENVIRON :
-								console('client WILL NEW-ENVIRON');
+								//console('client WILL NEW-ENVIRON');
 								$this->modeState |= TELNET_MODE_NEW_ENVIRON;
 								$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_NEW_ENVIRON);
 								$this->write(TELNET_IAC.TELNET_OPT_SB.TELNET_OPT_NEW_ENVIRON.chr(1).TELNET_IAC.TELNET_OPT_SE);
@@ -215,31 +215,31 @@ class TelnetServer extends TelnetScreen
 						switch($this->inputBuffer[$a+1])
 						{
 							case TELNET_OPT_BINARY :
-								console('client WON\'T BINERY');
+								//console('client WON\'T BINERY');
 								$this->modeState &= ~TELNET_MODE_BINARY;
 								break;
 							case TELNET_OPT_SGA :
-								console('client WON\'T SGA');
+								//console('client WON\'T SGA');
 								$this->modeState &= ~TELNET_MODE_SGA;
 								break;
 							case TELNET_OPT_LINEMODE :
-								console('client WON\'T Linemode');
+								//console('client WON\'T Linemode');
 								$this->modeState &= ~TELNET_MODE_LINEMODE;
 								break;
 							case TELNET_OPT_NAWS :
-								console('client WON\'T NAWS');
+								//console('client WON\'T NAWS');
 								$this->modeState &= ~TELNET_MODE_NAWS;
 								break;
 							case TELNET_OPT_TERMINAL_SPEED :
-								console('client WON\'T terminal speed');
+								//console('client WON\'T terminal speed');
 								$this->modeState &= ~TELNET_MODE_TERMINAL_SPEED;
 								break;
 							case TELNET_OPT_TTYPE :
-								console('client WON\'T TTYPE');
+								//console('client WON\'T TTYPE');
 								//$this->modeState &= ~TELNET_MODE_NAWS;
 								break;
 							case TELNET_OPT_NEW_ENVIRON :
-								console('client WON\'T NEW-ENVIRON');
+								//console('client WON\'T NEW-ENVIRON');
 								$this->modeState |= TELNET_MODE_NEW_ENVIRON;
 								break;
 						}
@@ -250,11 +250,11 @@ class TelnetServer extends TelnetScreen
 						switch($this->inputBuffer[$a+1])
 						{
 							case TELNET_OPT_ECHO :
-								console('Server DO echo');
+								//console('Server DO echo');
 								$this->modeState |= TELNET_MODE_ECHO;
 								break;
 							case TELNET_OPT_TTYPE :
-								console('Server DO ttype');
+								//console('Server DO ttype');
 								//$this->modeState |= TELNET_MODE_ECHO;
 								break;
 						}
@@ -265,11 +265,11 @@ class TelnetServer extends TelnetScreen
 						switch($this->inputBuffer[$a+1])
 						{
 							case TELNET_OPT_ECHO :
-								console('Server DONT echo');
+								//console('Server DONT echo');
 								$this->modeState &= ~TELNET_MODE_ECHO;
 								break;
 							case TELNET_OPT_TTYPE :
-								console('Server DONT ttype');
+								//console('Server DONT ttype');
 								//$this->modeState &= ~TELNET_MODE_ECHO;
 								break;
 						}
@@ -340,13 +340,13 @@ class TelnetServer extends TelnetScreen
 										break;
 									
 									case LINEMODE_SLC :
-										console('SB LINEMODE SLC sub command ('.strlen($subVars).')');
+										//console('SB LINEMODE SLC sub command ('.strlen($subVars).')');
 										$this->writeCharMap(substr($subVars, 2));
 										break;
 								}
 								break;
 							case TELNET_OPT_NAWS :
-								console('SB NAWS sub command ('.strlen($subVars).')');
+								//console('SB NAWS sub command ('.strlen($subVars).')');
 								$this->unescapeIAC($subVars);
 								$screenInfo = unpack('Ctype/nwidth/nheight', $subVars);
 								$this->setWinSize($screenInfo['width'], $screenInfo['height']);
@@ -361,7 +361,7 @@ class TelnetServer extends TelnetScreen
 								else
 									$this->setTType(TELNET_TTYPE_OTHER);
 								
-								console('SB TTYPE sub command ('.$this->getTType().')');
+								//console('SB TTYPE sub command ('.$this->getTType().')');
 								break;
 							case TELNET_OPT_NEW_ENVIRON :
 								$this->unescapeIAC($subVars);
@@ -380,7 +380,7 @@ class TelnetServer extends TelnetScreen
 										break;
 								}
 								
-								console('SB NEW_ENVIRON sub command ('.strlen($subVars).')');
+								//console('SB NEW_ENVIRON sub command ('.strlen($subVars).')');
 								break;
 						}
 						$a += $dist + 1;

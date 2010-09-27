@@ -877,12 +877,12 @@ abstract class TSSection extends ScreenContainer
 				else
 					$this->parentSection->setPostCurPos(array());
 			}
-			console('Recursive : found final parent');
+//			console('Recursive : found final parent');
 		}
 		else
 		{
 			$this->parentSection->setInputCallback($class, $func, $editMode, $curPos, $defaultText, $maxLength);
-			console('Recursive : continuing up');
+//			console('Recursive : continuing up');
 		}
 	}
 	
@@ -907,14 +907,14 @@ abstract class TSSection extends ScreenContainer
 		if ($active)
 		{
 			$this->getCurObject()->setSelected(true);
-			console('ACTIVATING '.$this->getCurObject()->getId());
+//			console('ACTIVATING '.$this->getCurObject()->getId());
 			$this->setInputMode();
 		}
 		else
 		{
 			$this->getCurObject()->setSelected(false);
 			$this->setInputCallback(null);
-			console('DE-ACTIVATING'.$this->getCurObject()->getId());
+//			console('DE-ACTIVATING'.$this->getCurObject()->getId());
 		}
 	}
 	
