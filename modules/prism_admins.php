@@ -142,6 +142,10 @@ ININOTES;
 			{
 				$details['accessFlags'] = flagsToInteger($details['accessFlags']);
 			}
+			else
+			{
+				$this->rewriteLine($username, 'accessFlags', flagsToString($details['accessFlags']));
+			}
 		}
 
 		return TRUE;
@@ -149,13 +153,13 @@ ININOTES;
 	
 	public function &getAdminsInfo()
 	{
-		$details = array();
+		$info = array();
 		foreach ($this->admins as $user => $details)
-			$details[$user] = array(
+			$info[$user] = array(
 				'accessFlags' => $details['accessFlags'],
 				'connection' => $details['connection'],
 			);
-		return $details;
+		return $info;
 	}
 
 	public function getAdminInfo(&$username)
@@ -216,7 +220,7 @@ ININOTES;
 		return true;
 	}
 	
-	public function deleteAccount($username, $password = '', $store = true)
+	public function deleteAccount($username, $store = true)
 	{
 		if (!isset($this->admins[$username]))
 			return false;
@@ -237,6 +241,7 @@ ININOTES;
 	{
 		global $PRISM;
 		
+		console('Writing new password for '.$username);
 		if (!isset($this->admins[$username]))
 			return false;
 
@@ -249,6 +254,23 @@ ININOTES;
 		{
 			$this->rewriteLine($username, 'password', $this->admins[$username]['password']);
 			$this->rewriteLine($username, 'realmDigest', $this->admins[$username]['realmDigest']);
+		}
+
+		return true;
+	}
+	
+	public function setAccessFlags($username, $flags, $store = true)
+	{
+		if (!isset($this->admins[$username]))
+			return false;
+
+		// Set the permissions
+		$this->admins[$username]['accessFlags'] = $flags;
+
+		// Rewrite accessFlags line for user in admins.ini
+		if ($store)
+		{
+			$this->rewriteLine($username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
 		}
 
 		return true;

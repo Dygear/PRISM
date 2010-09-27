@@ -2,7 +2,7 @@
 
 require_once(ROOTPATH . '/modules/prism_telnet_defines.php');
 require_once(ROOTPATH . '/modules/prism_telnet_server.php');
-require_once(ROOTPATH . '/modules/prism_telnet_accounts.php');
+require_once(ROOTPATH . '/modules/prism_telnet_admins.php');
 require_once(ROOTPATH . '/modules/prism_telnet_hosts.php');
 require_once(ROOTPATH . '/modules/prism_telnet_plugins.php');
 
@@ -188,6 +188,7 @@ ININOTES;
 
 			if ($this->clients[$k]->getMustClose())
 			{
+				$this->clients[$k]->__destruct();
 				console('Closed telnet client (client ctrl-c) '.$this->clients[$k]->getRemoteIP().':'.$this->clients[$k]->getRemotePort());
 				array_splice ($this->clients, $k, 1);
 				$k--;
@@ -221,7 +222,7 @@ class PrismTelnet extends TelnetServer
 	
 	private $menuBar		= null;		// cosmetic menu bar
 	
-	private $accountSection	= null;		// handles all account related stuff
+	private $adminSection	= null;		// handles all account related stuff
 	private $hostSection	= null;		// handles all host related stuff
 	private $pluginSection	= null;		// handles all plugin related stuff
 	
@@ -246,8 +247,20 @@ class PrismTelnet extends TelnetServer
 	
 	public function __destruct()
 	{
+		$this->registerInputCallback(null);
 		$this->setCursorProperties(0);
+		
+		// Remove all visual objects
 		$this->clearObjects(true);
+		
+		// Clean up the sections
+		if ($this->adminSection)
+		{
+			$this->adminSection->__destruct();
+			$this->hostSection->__destruct();
+			$this->pluginSection->__destruct();
+		}
+		
 		$this->writeBuf(VT100_STYLE_RESET.VT100_USG0."Goodbye...\r\n");
 		$this->flush();
 	}
@@ -258,7 +271,7 @@ class PrismTelnet extends TelnetServer
 		{
 			case TELNET_NOT_LOGGED_IN :
 				// Send error notice and ask for username
-				$msg .= "Please login with your Prism account details.\r\n";
+				$msg .= "\r\nPlease login with your Prism account details.\r\n";
 				$msg .= "Username : ";
 				
 				$this->write($msg);
@@ -269,11 +282,11 @@ class PrismTelnet extends TelnetServer
 			case TELNET_ASKED_USERNAME :
 				if ($line == '')
 				{
-					$this->write('Username : ');
+					$this->write("\r\nUsername : ");
 					break;
 				}
 				$this->username = $line;
-				$this->write("Password : ");
+				$this->write("\r\nPassword : ");
 				$this->loginState = TELNET_ASKED_PASSWORD;
 				$this->setEchoChar('*');
 				
@@ -286,7 +299,7 @@ class PrismTelnet extends TelnetServer
 				{
 					$this->loginState = TELNET_LOGGED_IN;
 
-					$this->writeBuf("Login successful\r\n");
+					$this->writeBuf("\r\nLogin successful\r\n");
 					$this->writeBuf("(x or ctrl-c to exit)\r\n");
 					$this->setCursorProperties(TELNET_CURSOR_HIDE);
 					$this->flush();
@@ -298,7 +311,7 @@ class PrismTelnet extends TelnetServer
 				}
 				else
 				{
-					$msg = "Incorrect login. Please try again.\r\n";
+					$msg = "\r\nIncorrect login. Please try again.\r\n";
 					$msg .= "Username : ";
 					$this->username = '';
 					$this->write($msg);
@@ -327,18 +340,21 @@ class PrismTelnet extends TelnetServer
 		// Create section bar (header bar)
 		$this->menuBar = new MenuBar($this->getTType());
 		$this->add($this->menuBar);
-		$this->curSection = 'accounts';
 		
 		// Initialise the actual sections as separate objects.
-		$this->accountSection = new TSAccountSection($this->getWidth(), $this->getHeight()-3, $this->getTType());
-		$this->add($this->accountSection);
-		$this->section = $this->accountSection;
+		$this->adminSection = new TSAdminSection($this, $this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->adminSection->setActive(true);
+		$this->add($this->adminSection);
+		$this->section = $this->adminSection;
+		$this->curSection = 'admins';
 
-		$this->hostSection = new TSHostSection($this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->hostSection = new TSHostSection($this, $this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->hostSection->setActive(true);
 		$this->setVisible(false);
 		$this->add($this->hostSection);
 
-		$this->pluginSection = new TSPluginSection($this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->pluginSection = new TSPluginSection($this, $this->getWidth(), $this->getHeight()-3, $this->getTType());
+		$this->pluginSection->setActive(true);
 		$this->setVisible(false);
 		$this->add($this->pluginSection);
 
@@ -355,9 +371,9 @@ class PrismTelnet extends TelnetServer
 		// Make the section active
 		switch($section)
 		{
-			case 'accounts' :
+			case 'admins' :
 				$this->section->setVisible(false);
-				$this->section = $this->accountSection;
+				$this->section = $this->adminSection;
 				break;
 				
 			case 'hosts' :
@@ -399,7 +415,7 @@ class PrismTelnet extends TelnetServer
 		}
 		
 		// Handle section specific keys
-		if ($this->section->handleKey($key))
+		if ($this->section && $this->section->handleKey($key))
 		{
 			$this->redraw();
 			return;
@@ -409,7 +425,7 @@ class PrismTelnet extends TelnetServer
 		switch ($key)
 		{
 			case 'A' :
-				$this->selectSection('accounts');
+				$this->selectSection('admins');
 				break;
 			
 			case 'H' :
@@ -444,6 +460,22 @@ class PrismTelnet extends TelnetServer
 				$tl->setText('Cursor down');
 				break;
 			
+			case KEY_CURLEFT_CTRL :
+				$tl->setText('CTRL-Cursor left');
+				break;
+			
+			case KEY_CURRIGHT_CTRL :
+				$tl->setText('CTRL-Cursor right');
+				break;
+			
+			case KEY_CURUP_CTRL :
+				$tl->setText('CTRL-Cursor up');
+				break;
+			
+			case KEY_CURDOWN_CTRL :
+				$tl->setText('CTRL-Cursor down');
+				break;
+			
 			case KEY_HOME :
 				$tl->setText('Home key');
 				break;
@@ -470,6 +502,10 @@ class PrismTelnet extends TelnetServer
 			
 			case KEY_TAB :
 				$tl->setText('TAB key');
+				break;
+			
+			case KEY_SHIFTTAB :
+				$tl->setText('SHIFT-TAB key');
 				break;
 			
 			case KEY_DELETE :
@@ -550,10 +586,10 @@ class MenuBar extends ScreenContainer
 		$this->setId('mainMenu');
 		$this->setTType($ttype);
 		
-		$textArea = new TSTextArea(3, 1, 8, 1);
-		$textArea->setId('accounts');
+		$textArea = new TSTextArea(3, 1, 6, 1);
+		$textArea->setId('admins');
 		$textArea->setOptions(TS_OPT_ISSELECTABLE | TS_OPT_ISSELECTED);
-		$textArea->setText(VT100_STYLE_BOLD.'A'.VT100_STYLE_RESET.'ccounts');
+		$textArea->setText(VT100_STYLE_BOLD.'A'.VT100_STYLE_RESET.'dmins');
 		$this->add($textArea);
 
 		$textArea = new TSTextArea(16, 0, 5, 1);

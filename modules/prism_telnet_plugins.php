@@ -2,13 +2,20 @@
 
 class TSPluginSection extends TSSection
 {
-	public function __construct($width, $height, $ttype = 0)
+	public function __construct(ScreenContainer $parentSection, $width, $height, $ttype = 0)
 	{
+		parent::__construct($parentSection);
+		
 		$this->setLocation(1, 3);
 		$this->setSize($width, $height);
 		$this->setTType($ttype);
 		$this->setId('plugins');
 //		$this->setBorder(TS_BORDER_REGULAR);
+	}
+	
+	public function __destruct()
+	{
+		parent::__destruct();
 	}
 	
 	public function handleKey($key)
@@ -28,6 +35,22 @@ class TSPluginSection extends TSSection
 		}
 		
 		return true;
+	}
+
+	protected function selectItem()
+	{
+		
+	}
+
+	protected function setInputMode()
+	{
+		$object = $this->getCurObject();
+		switch ($object->getId())
+		{
+			default :
+				$this->setInputCallback(null);
+				break;
+		}
 	}
 	
 	private function createMenu()

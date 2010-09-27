@@ -3,7 +3,9 @@
 // Screen object options
 define('TS_OPT_ISSELECTABLE', 1);
 define('TS_OPT_ISSELECTED', 2);
-define('TS_OPT_HASBACKGROUND', 4);
+define('TS_OPT_ISEDITABLE', 4);
+define('TS_OPT_HASBACKGROUND', 8);
+define('TS_OPT_BOLD', 16);
 
 /**
  * ScreenObject is the base class for all screen components
@@ -199,6 +201,7 @@ abstract class ScreenObject
 	public function setOptions($options)
 	{
 		$this->options = $options;
+		$this->screenCache = '';
 	}
 	
 	public function getOptions()
@@ -216,6 +219,23 @@ abstract class ScreenObject
 				$this->options |= TS_OPT_ISSELECTED;
 			$this->screenCache = '';
 		}
+	}
+	
+	public function setSelected($selected)
+	{
+		if ($selected)
+			$this->options |= TS_OPT_ISSELECTED;
+		else
+			$this->options &= ~TS_OPT_ISSELECTED;
+		$this->screenCache = '';
+	}
+	
+	public function setBold($bold)
+	{
+		if ($bold)
+			$this->options |= TS_OPT_BOLD;
+		else
+			$this->options &= ~TS_OPT_BOLD;
 	}
 	
 	public function clearCache()
@@ -331,6 +351,11 @@ abstract class ScreenContainer extends ScreenObject
 		}
 	}
 
+	public function removeAll()
+	{
+		$this->screenObjects = array();
+	}
+
 	public function removeById($objectId)
 	{
 		foreach ($this->screenObjects as $index => $ob)
@@ -417,6 +442,8 @@ abstract class TelnetScreen extends ScreenContainer
 	protected $screenBuf			= '';
 	protected $cursorProperties		= 0;
 	
+	private $postCurPos				= null;
+	
 	protected function writeBuf($string)
 	{
 		$this->screenBuf .= $string;
@@ -469,6 +496,14 @@ abstract class TelnetScreen extends ScreenContainer
 		$this->screenBuf = '';
 	}
 	
+	public function setPostCurPos(array $curPos)
+	{
+		if (!isset($curPos[0]))
+			$this->postCurPos = null;
+		else
+			$this->postCurPos = $curPos;
+	}
+	
 	protected function redraw()
 	{
 		// Clear Screen
@@ -478,9 +513,16 @@ abstract class TelnetScreen extends ScreenContainer
 		$this->screenBuf .= $this->draw();
 		
 		// Park cursor?
-		if (($this->modeState & TELNET_MODE_LINEEDIT) == 0 && $this->getTType() != TELNET_TTYPE_XTERM)
-			$this->screenBuf .= KEY_ESCAPE.'[0;0H';
-//			$this->screenBuf .= KEY_ESCAPE.'['.$this->winSize[1].';'.$this->winSize[0].'H';
+		if ($this->postCurPos !== null)
+		{
+			$this->screenBuf .= KEY_ESCAPE.'['.$this->postCurPos[1].';'.$this->postCurPos[0].'H';
+		}
+		else
+		{
+			if (($this->modeState & TELNET_MODE_LINEEDIT) == 0 && $this->getTType() != TELNET_TTYPE_XTERM)
+				$this->screenBuf .= KEY_ESCAPE.'[0;'.($this->getWidth() - 1).'H';
+//				$this->screenBuf .= KEY_ESCAPE.'['.$this->winSize[1].';'.$this->winSize[0].'H';
+		}
 		
 		// Flush buffer to client
 		$this->flush();
@@ -538,11 +580,13 @@ class TSTextArea extends ScreenObject
 			$this->realHeight++;
 		}
 
-		$bg = false;
-		if ($this->getOptions() & TS_OPT_HASBACKGROUND || $this->getOptions() & TS_OPT_ISSELECTED)
-			$bg = !$bg;
-		if ($bg)
-			$screenBuf .= VT100_STYLE_REVERSE;
+		$style = '';
+		if (($this->getOptions() & TS_OPT_ISEDITABLE) == 0 && ($this->getOptions() & TS_OPT_HASBACKGROUND || $this->getOptions() & TS_OPT_ISSELECTED))
+			$style .= VT100_STYLE_REVERSE;
+		if ($this->getOptions() & TS_OPT_BOLD)
+			$style .= VT100_STYLE_BOLD;
+
+		$screenBuf .= $style;
 
 		// Draw content (text)
 		foreach ($this->prepareTags() as $word)
@@ -600,8 +644,8 @@ class TSTextArea extends ScreenObject
 				$screenBuf .= $word[0];
 
 				// Reactivate background after a style reset?
-				if ($bg && $word[0] == VT100_STYLE_RESET)
-					$screenBuf .= VT100_STYLE_REVERSE;
+				if ($word[0] == VT100_STYLE_RESET)
+					$screenBuf .= $style;
 			}
 		}
 		
@@ -615,7 +659,7 @@ class TSTextArea extends ScreenObject
 		}
 
 		// Turn off background?
-		if ($bg)
+		if ($style != '')
 			$screenBuf .= VT100_STYLE_RESET;
 
 		// Still have to count the last line we drew
@@ -722,26 +766,16 @@ class TSTextArea extends ScreenObject
 
 class TSTextInput extends TSTextArea
 {
-	private $submitCallback		= null;
-	private $focus				= false;
+	private $maxLength	= 24;
 	
-	public function setSubmitCallback($class, $func = null)
+	public function setMaxLength($maxLength)
 	{
-		if (!$class || !$func)
-			$this->submitCallback = null;
-		else
-			$this->submitCallback = array($class, $func);
+		$this->maxLength = (int) $maxLength;
 	}
 	
-	// handleSubmit will be the callback for the line edit mode listener
-	public function handleSubmit($text)
+	public function getMaxLength()
 	{
-		
-	}
-	
-	public function hasFocus()
-	{
-		return $this->focus;
+		return $this->maxLength;
 	}
 }
 
@@ -793,12 +827,110 @@ class TSVLine extends ScreenObject
 abstract class TSSection extends ScreenContainer
 {
 	abstract public function handleKey($key);
+	abstract protected function selectItem();
+	abstract protected function setInputMode();
 	
 	// Section info
 	private $active			= false;		// Whether this section has KB focus
 	private $curItem		= -1;			// pointer to selected item
+	protected $subSection	= null;			// This holds the currently selected subsection object (another TSSection)
 	
-	protected function nextItem()
+	protected $parentSection	= null;			// Parent section object, so we can recursively go down AND up
+	
+	public function __construct(ScreenContainer $parentSection)
+	{
+		$this->parentSection = $parentSection;
+	}
+	
+	public function __destruct()
+	{
+		$this->subSection = null;
+		$this->parentSection = null;
+	}
+	
+	protected function resetSection($hard = false)
+	{
+		$this->curItem = -1;
+		
+		if ($hard)
+		{
+			
+		}
+	}
+	
+	protected function setInputCallback($class, $func = null, $editMode = 0, array $curPos = array(0, 0), $defaultText = '', $maxLength = 23)
+	{
+		if (get_class($this->parentSection) == 'PrismTelnet')
+		{
+			if ($class === null)
+			{
+				$this->parentSection->registerInputCallback($this->parentSection, 'handleKey');
+				$this->parentSection->setPostCurPos(array());
+			}
+			else
+			{
+				$this->parentSection->registerInputCallback($class, $func, $editMode);
+				$this->parentSection->setLineBuffer($defaultText);
+				$this->parentSection->setInputBufferMaxLen($maxLength);
+				if ($editMode)
+					$this->parentSection->setPostCurPos($curPos);
+				else
+					$this->parentSection->setPostCurPos(array());
+			}
+			console('Recursive : found final parent');
+		}
+		else
+		{
+			$this->parentSection->setInputCallback($class, $func, $editMode, $curPos, $defaultText, $maxLength);
+			console('Recursive : continuing up');
+		}
+	}
+	
+	protected function getLine()
+	{
+		if (get_class($this->parentSection) == 'PrismTelnet')
+		{
+			return $this->parentSection->getLine(true);
+		}
+		else
+		{
+			return $this->parentSection->getLine();
+		}
+	}
+	
+	public function setActive($active)
+	{
+		$this->active = (boolean) $active;
+		if ($this->getCurObject() === null)
+			return;
+		
+		if ($active)
+		{
+			$this->getCurObject()->setSelected(true);
+			console('ACTIVATING '.$this->getCurObject()->getId());
+			$this->setInputMode();
+		}
+		else
+		{
+			$this->getCurObject()->setSelected(false);
+			$this->setInputCallback(null);
+			console('DE-ACTIVATING'.$this->getCurObject()->getId());
+		}
+	}
+	
+	public function getActive()
+	{
+		return $this->active;
+	}
+	
+	protected function getCurObject()
+	{
+		if ($this->curItem == -1)
+			return $this->nextItem(true);
+		return $this->getObjectByIndex($this->curItem);
+	}
+	
+	protected function nextItem($first = false)
 	{
 		// find selected object
 		$old = null;
@@ -807,6 +939,11 @@ abstract class TSSection extends ScreenContainer
 		{
 			if ($old === null)
 			{
+				if ($first && $object->getOptions() & TS_OPT_ISSELECTABLE)
+				{
+					return $object;
+				}
+				
 				if ($object->getOptions() & TS_OPT_ISSELECTED)
 				{
 					$old = $object;
@@ -816,8 +953,14 @@ abstract class TSSection extends ScreenContainer
 			{
 				if ($object->getOptions() & TS_OPT_ISSELECTABLE)
 				{
+					// Input TextArea lost focus 'the good way' - we need to grab linebufer and store it in old object
+					if ($old->getOptions() & TS_OPT_ISEDITABLE)
+					{
+						$old->setText($this->getLine());
+					}
 					$old->toggleSelected();
 					$object->toggleSelected();
+					$this->curItem = $a;
 					return $object;
 				}
 			}
@@ -845,8 +988,14 @@ abstract class TSSection extends ScreenContainer
 			{
 				if ($object->getOptions() & TS_OPT_ISSELECTABLE)
 				{
+					// Input TextArea lost focus 'the good way' - we need to grab linebufer and store it in old object
+					if ($old->getOptions() & TS_OPT_ISEDITABLE)
+					{
+						$old->setText($this->getLine());
+					}
 					$old->toggleSelected();
 					$object->toggleSelected();
+					$this->curItem = $a;
 					return $object;
 				}
 			}

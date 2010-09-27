@@ -110,7 +110,7 @@ abstract class IniLoader
 						// Create a new line and insert it.
 						$insert = $key.' = '.$newValue.PHP_EOL.PHP_EOL;
 						array_splice($lines, $num, 0, array($insert));
-						if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $lines)))
+						if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $lines).PHP_EOL))
 							return false;
 						return true;
 					}
@@ -123,7 +123,7 @@ abstract class IniLoader
 			{
 				// Rewrite the line and store the updated file
 				$line = preg_replace('/^'.$key.'\s*=\s*"?.+"?(\s*;.*)?$/U', $key.' = '.$newValue.'\\1', $line);
-				if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $lines)))
+				if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $lines).PHP_EOL))
 					return false;
 				return true;
 			}
@@ -193,7 +193,7 @@ abstract class IniLoader
 			$newLines[] = $line;
 		}
 		
-		if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $newLines)))
+		if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $newLines).PHP_EOL))
 			return false;
 		
 		return true;
