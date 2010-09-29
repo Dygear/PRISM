@@ -21,10 +21,10 @@ class Interactive
 			{
 				// Relay host connection details
 				$tmp['hostname']		= self::query('What is the name of the host (case-sensitive)?');
-				$tmp['adminPass']		= self::query('Do you have an administrator password for the host?', array(), TRUE);
+				$tmp['adminPass']		= self::query('Optional administrator password (or blank)', array(), TRUE);
 				$tmp['specPass']		= '';
 				if (!$tmp['adminPass'])
-					$tmp['specPass']	= self::query('Does the host require a spectator pass then?', array(), TRUE);
+					$tmp['specPass']	= self::query('Optional spectator pass then? (or blank)', array(), TRUE);
 			}
 			else
 			{
