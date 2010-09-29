@@ -442,7 +442,7 @@ class HostHandler extends SectionHandler
 					$this->hosts[$hostID]->setConnTime(time());
 					$this->hosts[$hostID]->setConnTries(0);
 					// Here we setup the state for the connection.
-					$this->hosts[$hostID]->state = new StateHandler($packet, $hostID);
+					$this->hosts[$hostID]->state = new StateHandler($packet);
 				}
 				break;
 
@@ -515,11 +515,8 @@ class HostHandler extends SectionHandler
 	
 	public function getHostById($id)
 	{
-		foreach ($this->hosts as $hostID => $host)
-		{
-			if ($id == $hostID)
-				return $host;
-		}
+		if (isset($this->hosts[$id]))
+			return $this->hosts[$id];
 		return null;
 	}
 	
@@ -573,7 +570,10 @@ class InsimConnection
 	private $specPass		= '';			# specpass for relay usage
 	private $pps			= 3;		
 	private $hostName		= '';			# the hostname. Can be populated by user in case of relay.
-	
+
+	// Current State
+	public $state			= NULL;			# The current state of the gameplay. (Set after the IS_VER packet is recv in the parent class.)
+
 	public function __construct(array &$icVars)
 	{
 		$this->connType		= ($icVars['connType'] == CONNTYPE_RELAY) ? CONNTYPE_RELAY : CONNTYPE_HOST;
