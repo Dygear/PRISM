@@ -114,6 +114,22 @@ abstract class struct
 		}
 		return $elements;
 	}
+	public function &__call(&$name, &$arguments)
+	{
+		return $this->call($name, $arguments);
+	}
+	public function &__callStatic(&$name, &$arguments)
+	{
+		return $this->call($name, $arguments);
+	}
+	private function &call(&$name, &$arguments)
+	{
+		if (!isset($this->$name))
+			trigger_error('Property: '.$name.' is not defined in '.get_class($this).'.', E_USER_WARNING);
+		else
+			$this->$name = array_shift($arguments);
+		return $this;
+	}
 }
 
 /* End of PRISM PACKET HEADER */
