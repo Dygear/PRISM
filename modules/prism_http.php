@@ -89,13 +89,13 @@ class HttpHandler extends SectionHandler
 		return $opaque;
 	}
 	
-	public function incNonceCounter(&$nonce)
+	public function incNonceCounter(&$nonce, &$nc)
 	{
 		if (!isset($this->nonceCache[$nonce]))
 			return false;
 		
 		$this->nonceCache[$nonce][0] = time();
-		$this->nonceCache[$nonce][1]++;
+		$this->nonceCache[$nonce][1] = $nc;
 		
 		return true;
 	}
@@ -672,7 +672,7 @@ class HttpClient
 		if (!$this->httpRequest->handleInput($data))
 		{
 			// An error was encountered while receiving the requst.
-			// Send reply and return false to close this connection (unless 444, a special 'direct reject' code).
+			// Send reply (unless 444, a special 'direct reject' code) and return false to close this connection.
 			if ($this->httpRequest->errNo != 444)
 			{
 				$r = new HttpResponse('1.1', $this->httpRequest->errNo);
@@ -688,6 +688,10 @@ class HttpClient
 				$this->write($r->getBody());
 
 				$this->logRequest($r->getResponseCode(), (($r->getHeader('Content-Length')) ? $r->getHeader('Content-Length') : 0));
+			}
+			else
+			{
+				$this->logRequest(444, 0);
 			}
 			$errNo = $this->httpRequest->errNo;
 			return false;
@@ -763,7 +767,7 @@ class HttpClient
 					$r->addHeader('WWW-Authenticate: Digest realm="'.HTTP_AUTH_REALM.'", qop="auth", nonce="'.$nonce.'", opaque="'.$opaque.'"');
 				else
 					$r->addHeader('WWW-Authenticate: Basic realm="'.HTTP_AUTH_REALM.'"');
-				$r->addBody($this->createErrorPage(401, true));
+				$r->addBody($this->createErrorPage(401, '', true));
 				$this->write($r->getHeaders());
 				$this->write($r->getBody());
 				$errNo = 401;
@@ -992,7 +996,11 @@ class HttpClient
 			//  Check that nonce exists and nc is not reused AND that opaque value matches
 			if (!($nonceInfo = $this->http->getNonceInfo($info['nonce'])))
 				return false;
-			if ($nonceInfo[1] >= (int) $info['nc'] || !isset($nonceInfo[2]) || $nonceInfo[2] != $info['opaque'])
+			if ($nonceInfo[1] >= $info['nc'])
+				return false;
+			if (!isset($nonceInfo[2]))
+				return false;
+			if ($nonceInfo[2] != $info['opaque'])
 				return false;		
 						
 			// Do the digest check
@@ -1004,7 +1012,7 @@ class HttpClient
 				return false;
 			
 			// Validated!
-			$this->http->incNonceCounter($info['nonce']);
+			$this->http->incNonceCounter($info['nonce'], $info['nc']);
 			$this->httpRequest->SERVER['PHP_AUTH_USER']	= $info['username'];
 		}
 		else if (preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))

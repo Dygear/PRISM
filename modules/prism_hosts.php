@@ -861,6 +861,7 @@ class InsimConnection
 		$this->connStatus		= CONN_NOTCONNECTED;
 		$this->lastReadTime		= 0;
 		$this->lastWriteTime	= 0;
+		$this->clearBuffer();
 		$this->sendQReset();
 		
 		if ($quick)

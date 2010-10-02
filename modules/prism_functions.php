@@ -54,6 +54,8 @@ function isDirInDir($path1, $path2)
 	
 	foreach ($p1 as $index => $part)
 	{
+		if ($part === '')
+			continue;
 		if (!isset($p2[$index]) || $part != $p2[$index])
 			return false;
 	}

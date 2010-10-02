@@ -4,4 +4,4 @@ configs/cvars.ini
 configs/plugins.ini
 configs/http.ini
 configs/telnet.ini
-logs/*
+logs/http.log

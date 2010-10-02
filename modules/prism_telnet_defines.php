@@ -6,8 +6,10 @@ define('TELNET_OPT_ECHO',			chr(0x01));	// (server) Echo (RFC 857)
 define('TELNET_OPT_SGA',			chr(0x03));	// Suppres Go Ahead (RFC 858)
 define('TELNET_OPT_TTYPE',			chr(0x18));	// Terminal Type (RFC 1091)
 define('TELNET_OPT_NAWS',			chr(0x1F));	// Window Size (RFC 1073)
+define('TELNET_OPT_TERMINAL_SPEED',	chr(0x20));	// Terminal Speed (RFC 1079)
 define('TELNET_OPT_TOGGLE_FLOW_CONTROL', chr(0x21));	// flow control (RFC 1372)
 define('TELNET_OPT_LINEMODE',		chr(0x22));	// Linemode (RFC 1184)
+define('TELNET_OPT_NEW_ENVIRON',	chr(0x27));	// environment variables (RFC 1572)
 define('TELNET_OPT_NOP',			chr(0xF1));	// No Operation.
 
 // IAC OPTION (2 bytes)
@@ -96,6 +98,8 @@ define('TELNET_MODE_LINEMODE', 2);
 define('TELNET_MODE_BINARY', 4);
 define('TELNET_MODE_SGA', 8);
 define('TELNET_MODE_NAWS', 16);
+define('TELNET_MODE_TERMINAL_SPEED', 32);
+define('TELNET_MODE_NEW_ENVIRON', 64);
 
 define('TELNET_MODE_INSERT', 1024);
 define('TELNET_MODE_LINEEDIT', 2048);
@@ -106,10 +110,17 @@ define('TELNET_ECHO_NOTHING', 3);
 
 define('TELNET_CURSOR_HIDE', 1);
 
+// Terminal types
+define('TELNET_TTYPE_OTHER',	0);
+define('TELNET_TTYPE_XTERM',	1);
+define('TELNET_TTYPE_ANSI',		2);
+define('TELNET_TTYPE_NUM',		3);
+
 // Standard control keys
 define('KEY_IP',					chr(0x03));			// Interrupt Process (break)
 define('KEY_BS',					chr(0x08));			// backspace
 define('KEY_TAB',					chr(0x09));			// TAB
+define('KEY_SHIFTTAB',				chr(0x01).chr(9));	// SHIFT-TAB
 define('KEY_ENTER',					chr(0x0A));			// Enter
 define('KEY_ESCAPE',				chr(0x1B));			// escape
 define('KEY_DELETE',				chr(0x7F));			// del
@@ -124,6 +135,11 @@ define('KEY_END',					chr(0x01).chr(5));		// End
 define('KEY_PAGEUP',				chr(0x01).chr(6));		// Home
 define('KEY_PAGEDOWN',				chr(0x01).chr(7));		// End
 define('KEY_INSERT',				chr(0x01).chr(8));		// Insert
+
+define('KEY_CURLEFT_CTRL',			chr(0x02).chr(0));		// Cursor LEFT with ctrl
+define('KEY_CURRIGHT_CTRL',			chr(0x02).chr(1));		// Cursor LEFT with ctrl
+define('KEY_CURUP_CTRL',			chr(0x02).chr(2));		// Cursor LEFT with ctrl
+define('KEY_CURDOWN_CTRL',			chr(0x02).chr(3));		// Cursor LEFT with ctrl
 
 define('KEY_F1',					chr(0x01).chr(11));		// F1
 define('KEY_F2',					chr(0x01).chr(12));		// F2

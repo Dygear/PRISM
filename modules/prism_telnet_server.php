@@ -16,6 +16,7 @@ class TelnetServer extends TelnetScreen
 	private $lineBufferPtr	= 0;
 	private $inputBuffer	= '';
 	private $inputBufferLen	= 0;
+	private $inputBufferMaxLen	= 23;
 	
 	// send queue used for backlog, in case we can't send a reply in one go
 	private $sendQ			= '';
@@ -41,12 +42,12 @@ class TelnetServer extends TelnetScreen
 		$this->lastActivity	= time();
 		
 		// Start terminal state negotiation
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_BINARY);
-		$this->setOption(TELNET_ACTION_WILL, TELNET_OPT_ECHO);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_SGA);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_LINEMODE);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_NAWS);
-		$this->setOption(TELNET_ACTION_DO, TELNET_OPT_TTYPE);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_BINARY);
+		$this->setTelnetOption(TELNET_ACTION_WILL, TELNET_OPT_ECHO);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_SGA);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_LINEMODE);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_NAWS);
+		$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_TTYPE);
 
 		$this->modeState |= TELNET_MODE_INSERT;
 	}
@@ -103,7 +104,7 @@ class TelnetServer extends TelnetScreen
 	 * $editMode  = either 0 or anything else (TELNET_MODE_LINEEDIT)
 	 * 				This indicates where the function expects a single char or a whole line
 	*/
-	protected function registerInputCallback($class, $func = null, $editMode = 0)
+	public function registerInputCallback($class, $func = null, $editMode = 0)
 	{
 		if (!$class || !$func)
 		{
@@ -113,12 +114,19 @@ class TelnetServer extends TelnetScreen
 		else
 		{
 			$this->inputCallback = array($class, $func);
+//			console('SETTING CALLBACK FUNCTION : '.$func);
 		}
 		
 		if ($editMode == 0)
+		{
 			$this->modeState &= ~TELNET_MODE_LINEEDIT;
+			$this->setCursorProperties(TELNET_CURSOR_HIDE);
+		}
 		else
+		{
 			$this->modeState |= TELNET_MODE_LINEEDIT;
+			$this->setCursorProperties(0);
+		}
 	}
 	
 	protected function shutdown()
@@ -127,7 +135,7 @@ class TelnetServer extends TelnetScreen
 		$this->registerInputCallback(null);
 	}
 
-	private function setOption($action, $option)
+	private function setTelnetOption($action, $option)
 	{
 		$this->write(TELNET_IAC.$action.$option);
 	}
@@ -144,9 +152,6 @@ class TelnetServer extends TelnetScreen
 //			printf('%02x', ord($raw[$a]));
 ////			printf('%02x', ord($this->translateClientChar($raw[$a])));
 //		echo "\n";
-		
-		// (Control) Character translation
-		
 		
 		// Add raw input to buffer
 		$this->inputBuffer .= $raw;
@@ -171,25 +176,36 @@ class TelnetServer extends TelnetScreen
 						switch($this->inputBuffer[$a+1])
 						{
 							case TELNET_OPT_BINARY :
-								//console('Binary TRUE');
+								//console('client WILL BINARY');
 								$this->modeState |= TELNET_MODE_BINARY;
 								break;
 							case TELNET_OPT_SGA :
-								//console('SGA TRUE');
+								//console('client WILL SGA');
 								$this->modeState |= TELNET_MODE_SGA;
 								break;
 							case TELNET_OPT_LINEMODE :
-								//console('Linemode TRUE');
+								//console('client WILL Linemode');
 								$this->modeState |= TELNET_MODE_LINEMODE;
 								break;
 							case TELNET_OPT_NAWS :
-								//console('NAWS TRUE');
+								//console('client WILL NAWS');
 								$this->modeState |= TELNET_MODE_NAWS;
 								break;
+							case TELNET_OPT_TERMINAL_SPEED :
+								//console('client WILL terminal speed');
+								$this->modeState |= TELNET_MODE_TERMINAL_SPEED;
+								$this->setTelnetOption(TELNET_ACTION_DONT, TELNET_OPT_TERMINAL_SPEED);
+								break;
 							case TELNET_OPT_TTYPE :
-								//console('client will send ttype list');
+								//console('client WILL TTYPE');
 								$this->write(TELNET_IAC.TELNET_OPT_SB.TELNET_OPT_TTYPE.chr(1).TELNET_IAC.TELNET_OPT_SE);
 								//$this->modeState |= TELNET_MODE_NAWS;
+								break;
+							case TELNET_OPT_NEW_ENVIRON :
+								//console('client WILL NEW-ENVIRON');
+								$this->modeState |= TELNET_MODE_NEW_ENVIRON;
+								$this->setTelnetOption(TELNET_ACTION_DO, TELNET_OPT_NEW_ENVIRON);
+								$this->write(TELNET_IAC.TELNET_OPT_SB.TELNET_OPT_NEW_ENVIRON.chr(1).TELNET_IAC.TELNET_OPT_SE);
 								break;
 						}
 						$a++;
@@ -199,24 +215,32 @@ class TelnetServer extends TelnetScreen
 						switch($this->inputBuffer[$a+1])
 						{
 							case TELNET_OPT_BINARY :
-								//console('Binary FALSE');
+								//console('client WON\'T BINERY');
 								$this->modeState &= ~TELNET_MODE_BINARY;
 								break;
 							case TELNET_OPT_SGA :
-								//console('SGA FALSE');
+								//console('client WON\'T SGA');
 								$this->modeState &= ~TELNET_MODE_SGA;
 								break;
 							case TELNET_OPT_LINEMODE :
-								//console('Linemode FALSE');
+								//console('client WON\'T Linemode');
 								$this->modeState &= ~TELNET_MODE_LINEMODE;
 								break;
 							case TELNET_OPT_NAWS :
-								//console('NAWS FALSE');
+								//console('client WON\'T NAWS');
 								$this->modeState &= ~TELNET_MODE_NAWS;
 								break;
+							case TELNET_OPT_TERMINAL_SPEED :
+								//console('client WON\'T terminal speed');
+								$this->modeState &= ~TELNET_MODE_TERMINAL_SPEED;
+								break;
 							case TELNET_OPT_TTYPE :
-								//console('client will not send ttype list');
+								//console('client WON\'T TTYPE');
 								//$this->modeState &= ~TELNET_MODE_NAWS;
+								break;
+							case TELNET_OPT_NEW_ENVIRON :
+								//console('client WON\'T NEW-ENVIRON');
+								$this->modeState |= TELNET_MODE_NEW_ENVIRON;
 								break;
 						}
 						$a++;
@@ -329,8 +353,34 @@ class TelnetServer extends TelnetScreen
 								break;
 							case TELNET_OPT_TTYPE :
 								$this->unescapeIAC($subVars);
-								$this->ttype = substr($subVars, 2);
-								//console('SB TTYPE sub command ('.$this->ttype.')');
+								$ttype = substr($subVars, 2);
+								if (stripos($ttype, 'xterm') !== false)
+									$this->setTType(TELNET_TTYPE_XTERM);
+								else if (stripos($ttype, 'ansi') !== false)
+									$this->setTType(TELNET_TTYPE_ANSI);
+								else
+									$this->setTType(TELNET_TTYPE_OTHER);
+								
+								//console('SB TTYPE sub command ('.$this->getTType().')');
+								break;
+							case TELNET_OPT_NEW_ENVIRON :
+								$this->unescapeIAC($subVars);
+
+								switch(ord($subVars[1]))
+								{
+									case 0 :		// IS
+										$values = substr($subVars, 2);
+										console('SB NEW_ENVIRON sub IS command ('.strlen($values).')');
+										break;
+									case 1 :		// SEND
+										break;
+									case 2 :		// INFO
+										$values = substr($subVars, 2);
+										console('SB NEW_ENVIRON sub INFO command ('.strlen($values).')');
+										break;
+								}
+								
+								//console('SB NEW_ENVIRON sub command ('.strlen($subVars).')');
 								break;
 						}
 						$a += $dist + 1;
@@ -409,30 +459,58 @@ class TelnetServer extends TelnetScreen
 	
 						case KEY_TAB :
 							$special = true;
-							$this->charToLineBuffer('    ');
+							$this->handleKey(KEY_TAB);
 							break;
 						
 						case KEY_DELETE :
 							$special = true;
 							
-							// See if we're not at the end of the line buffer
-							if (isset($this->lineBuffer[$this->lineBufferPtr]))
+							if ($this->getTType() == TELNET_TTYPE_XTERM &&
+								($this->modeState & TELNET_MODE_LINEMODE) == 0)
 							{
-								array_splice($this->lineBuffer, $this->lineBufferPtr, 1);
-								
-								// Update the client
-								$rewrite = '';
-								$x = $this->lineBufferPtr;
-								while (isset($this->lineBuffer[$x]))
+								// BACKSPACE
+								if ($this->lineBufferPtr > 0)
 								{
-									if ($this->echoChar !== null)
-										$rewrite .= $this->echoChar;
-									else
-										$rewrite .= $this->lineBuffer[$x];
-									$x++;
+									$this->lineBufferPtr--;
+									array_splice($this->lineBuffer, $this->lineBufferPtr, 1);
+									
+									// Update the client
+									$rewrite = '';
+									$x = $this->lineBufferPtr;
+									while (isset($this->lineBuffer[$x]))
+									{
+										if ($this->echoChar !== null)
+											$rewrite .= $this->echoChar;
+										else
+											$rewrite .= $this->lineBuffer[$x];
+										$x++;
+									}
+									$cursorBack = KEY_ESCAPE.'['.(strlen($rewrite)+1).'D';
+									$this->write(KEY_ESCAPE.'[D'.$rewrite.' '.$cursorBack);
 								}
-								$cursorBack = KEY_ESCAPE.'['.(strlen($rewrite)+1).'D';
-								$this->write($rewrite.' '.$cursorBack);
+							}
+							else
+							{
+								// DELETE
+								// See if we're not at the end of the line buffer
+								if (isset($this->lineBuffer[$this->lineBufferPtr]))
+								{
+									array_splice($this->lineBuffer, $this->lineBufferPtr, 1);
+									
+									// Update the client
+									$rewrite = '';
+									$x = $this->lineBufferPtr;
+									while (isset($this->lineBuffer[$x]))
+									{
+										if ($this->echoChar !== null)
+											$rewrite .= $this->echoChar;
+										else
+											$rewrite .= $this->lineBuffer[$x];
+										$x++;
+									}
+									$cursorBack = KEY_ESCAPE.'['.(strlen($rewrite)+1).'D';
+									$this->write($rewrite.' '.$cursorBack);
+								}
 							}
 							
 							break;
@@ -443,8 +521,12 @@ class TelnetServer extends TelnetScreen
 							$special = true;
 	
 							// Look ahead in inputBuffer to detect escape sequence
-							if (!isset($this->inputBuffer[$a+1]) || $this->inputBuffer[$a+1] != '[')
+							if (!isset($this->inputBuffer[$a+1]) || 
+								($this->inputBuffer[$a+1] != '[' && $this->inputBuffer[$a+1] != 'O'))
+							{
+								$this->handleKey(KEY_ESCAPE);
 								break;
+							}
 							
 							$input = substr($this->inputBuffer, $a);
 							$matches = array();
@@ -471,13 +553,39 @@ class TelnetServer extends TelnetScreen
 							else if (preg_match('/^('.KEY_ESCAPE.'\[(\d?)A).*$/', $input, $matches))
 							{
 								// CURSOR UP
+								$this->handleKey(KEY_CURUP);
 								//$this->write($matches[1]);
 							}
 							else if (preg_match('/^('.KEY_ESCAPE.'\[(\d?)B).*$/', $input, $matches))
 							{
 								// CURSOR DOWN
+								$this->handleKey(KEY_CURDOWN);
 								//$this->write($matches[1]);
 							}
+
+							// CTRL-Arrow keys
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)D).*$/', $input, $matches))
+							{
+								// CURSOR LEFT CTRL
+								//$char = KEY_CURLEFT_CTRL;
+							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)C).*$/', $input, $matches))
+							{
+								// CURSOR RIGHT CTRL
+								//$char = KEY_CURRIGHT_CTRL;
+							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)A).*$/', $input, $matches))
+							{
+								// CURSOR UP CTRL
+								//$char = KEY_CURUP_CTRL;
+							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)B).*$/', $input, $matches))
+							{
+								// CURSOR DOWN CTRL
+								//$char = KEY_CURDOWN_CTRL;
+							}
+							
+							// Other keys
 							else if (preg_match('/^('.KEY_ESCAPE.'\[3~).*$/', $input, $matches))
 							{
 								// Alternate DEL keycode
@@ -522,6 +630,11 @@ class TelnetServer extends TelnetScreen
 								$diff = $bufLen - $this->lineBufferPtr;
 								$this->lineBufferPtr = $bufLen;
 								$this->write(KEY_ESCAPE.'['.$diff.'C');
+							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\[Z).*$/', $input, $matches))
+							{
+								// SHIFT-TAB
+								$this->handleKey(KEY_SHIFTTAB);
 							}
 	
 							// Move inputBuffer pointer ahead to cover multibyte char?
@@ -581,11 +694,14 @@ class TelnetServer extends TelnetScreen
 						case KEY_ESCAPE :
 							
 							// Look ahead in inputBuffer to detect escape sequence
-							if (!isset($this->inputBuffer[$a+1]) || ($this->inputBuffer[$a+1] != '[' && $this->inputBuffer[$a+1] != 'O'))
+							if (!isset($this->inputBuffer[$a+1]) || 
+								($this->inputBuffer[$a+1] != '[' && $this->inputBuffer[$a+1] != 'O'))
 								break;
 							
 							$input = substr($this->inputBuffer, $a);
 							$matches = array();
+							
+							// Arrow keys
 							if (preg_match('/^('.KEY_ESCAPE.'\[(\d?)D).*$/', $input, $matches))
 							{
 								// CURSOR LEFT
@@ -606,6 +722,30 @@ class TelnetServer extends TelnetScreen
 								// CURSOR DOWN
 								$char = KEY_CURDOWN;
 							}
+							
+							// CTRL-Arrow keys
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)D).*$/', $input, $matches))
+							{
+								// CURSOR LEFT
+								$char = KEY_CURLEFT_CTRL;
+							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)C).*$/', $input, $matches))
+							{
+								// CURSOR RIGHT
+								$char = KEY_CURRIGHT_CTRL;
+							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)A).*$/', $input, $matches))
+							{
+								// CURSOR UP
+								$char = KEY_CURUP_CTRL;
+							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\O(\d?)B).*$/', $input, $matches))
+							{
+								// CURSOR DOWN
+								$char = KEY_CURDOWN_CTRL;
+							}
+							
+							// Other special keys
 							else if (preg_match('/^('.KEY_ESCAPE.'\[3~).*$/', $input, $matches))
 							{
 								// Alternate DEL keycode
@@ -662,6 +802,11 @@ class TelnetServer extends TelnetScreen
 								// Fxx
 								$char = chr(1).chr($matches[2]);
 							}
+							else if (preg_match('/^('.KEY_ESCAPE.'\[Z).*$/', $input, $matches))
+							{
+								// SHIFT-TAB
+								$char = KEY_SHIFTTAB;
+							}
 							else
 							{
 								console(substr($input, 1));
@@ -697,7 +842,7 @@ class TelnetServer extends TelnetScreen
 	}
 	
 	// Get a whole line from input
-	private function getLine()
+	public function getLine($forceFlush = false)
 	{
 		// Detect carriage return / line feed / whatever you want to call it
 		$count = count($this->lineBuffer);
@@ -729,11 +874,11 @@ class TelnetServer extends TelnetScreen
 			$line .= $this->lineBuffer[$a];
 		}
 		
-		if ($haveLine)
+		if ($haveLine || $forceFlush)
 		{
 			// Send return to client if in echo mode (and later on, if in simple mode)
-			if ($this->modeState & TELNET_MODE_ECHO)
-				$this->write("\r\n");
+//			if ($this->modeState & TELNET_MODE_ECHO)
+//				$this->write("\r\n");
 			
 			// Splice line out of line buffer
 			array_splice($this->lineBuffer, 0, $a+1);
@@ -755,7 +900,11 @@ class TelnetServer extends TelnetScreen
 		}
 		else
 		{
-			if (isset($this->inputBuffer[$a+1]) && 
+			if ($this->inputBuffer[$a] == "\r" && !isset($this->inputBuffer[$a+1]))
+			{
+				return "\r\n";
+			}
+			else if (isset($this->inputBuffer[$a+1]) && 
 				$this->inputBuffer[$a].$this->inputBuffer[$a+1] == "\r\n")
 			{
 				$a++;
@@ -765,8 +914,28 @@ class TelnetServer extends TelnetScreen
 		return null;
 	}
 	
+	public function setLineBuffer($chars)
+	{
+		$this->lineBuffer = array();
+		$this->lineBufferPtr = 0;
+		for ($a=0; $a<strlen($chars); $a++)
+			$this->lineBuffer[$this->lineBufferPtr++] = $chars[$a];
+	}
+	
+	public function setInputBufferMaxLen($maxLength)
+	{
+		$this->inputBufferMaxLen = (int) $maxLength;
+		if ($this->inputBufferMaxLen < 1)
+			$this->inputBufferMaxLen = 1;
+	}
+	
 	private function charToLineBuffer($char, $isEnter = false)
 	{
+		// If buffer 'full', just return and ignore the new char
+		if (count($this->lineBuffer) == $this->inputBufferMaxLen)
+			return;
+
+		// Add the new char			
 		if ($isEnter)
 		{
 			for ($a=0; $a<strlen($char); $a++)
