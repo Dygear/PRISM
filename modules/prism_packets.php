@@ -12,45 +12,85 @@ abstract class struct
 	public function __construct($rawPacket = NULL)
 	{
 		if ($rawPacket !== NULL)
-		{
 			$this->unpack($rawPacket);
+	}
+	public function __invoke()
+	{
+		$argv = func_get_args();
+		$argi = 0;
+		$argc = count($argv);
+		foreach ($this as $property => $value)
+		{
+			$RP = new ReflectionProperty(get_class($this), $property);
+			if ($RP->isPublic())
+				$object->$property = $argv[$argi++];
+			if ($argc == $argi)
+				continue;
 		}
 	}
 	public function __toString()
 	{
 		return $this->printPacketDetails();
 	}
+	// Magic Methods (Object Overloading)
+	public function &__get($name)
+	{
+		if (!property_exists(get_class($this), $name))
+			return FALSE;
+		else
+			return $this->$name;
+	}
+	public function &__call($name, $arguments)
+	{
+		if (property_exists(get_class($this), $name))
+			$this->$name = array_shift($arguments);
+		return $this;
+	}
+	public function __isset($name)
+	{
+		return isset($this->$name);
+	}
+	public function __unset($name)
+	{
+		if (isset($this->$name))
+			$this->$name = NULL;
+	}
+	// Normal Methods
+	public function send($hostId = NULL)
+	{
+		global $PRISM;
+		$PRISM->hosts->sendPacket($this, $hostId);
+	}
 	public function printPacketDetails($pre = '')
 	{
 		global $TYPEs;
-		$packFormat = $this::parsePackFormat();
+		$packFormat = $this->parsePackFormat();
 		$propertyNumber = -1;
 		$str = $pre . get_class($this) . ' {' . PHP_EOL;
 		foreach ($this as $property => $value)
 		{
 			$pkFnkFormat = $packFormat[++$propertyNumber];
-			
 			if (gettype($this->$property) == 'array')
 			{
-					$str .= "{$pre}\tArray\t{$property}\t= {" . PHP_EOL;
-					foreach ($this->$property as $k => $v)
+				$str .= "{$pre}\tArray\t{$property}\t= {" . PHP_EOL;
+				foreach ($this->$property as $k => $v)
+				{
+					if ($v instanceof struct)
 					{
-						if ($v instanceof struct)
-						{
-							$str .= $pre . $v->printPacketDetails($pre . "\t\t\t") . PHP_EOL;
-						}
-						else
-						{
-							$str .= "{$pre}\t\t\t{$k}\t{$v}" . PHP_EOL;
-						}
+						$str .= $pre . $v->printPacketDetails($pre . "\t\t\t") . PHP_EOL;
 					}
-					$str .= "{$pre}\t}" . PHP_EOL;
-					break;
+					else
+					{
+						$str .= "{$pre}\t\t\t{$k}\t{$v}" . PHP_EOL;
+					}
+				}
+				$str .= "{$pre}\t}" . PHP_EOL;
+				break;
 			}
 			elseif ($property == 'Type')
 			{
 				$str .= "{$pre}\t{$pkFnkFormat}\t{$property}\t= {$TYPEs[$this->Type]} ({$this->$property})" . PHP_EOL;
-			}	
+			}
 			else
 			{
 				$str .= "{$pre}\t{$pkFnkFormat}\t{$property}\t= {$this->$property}" . PHP_EOL;
@@ -60,19 +100,17 @@ abstract class struct
 	}
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-		
-		foreach ($pkClass as $property => $value)
+		foreach (unpack($this::UNPACK, $rawPacket) as $property => $value)
 		{
 			$this->$property = $value;
 		}
-		
+
 		return $this;
 	}
 	public function pack()
 	{
 		$return = '';
-		$packFormat = $this::parsePackFormat();
+		$packFormat = $this->parsePackFormat();
 		$propertyNumber = -1;
 		foreach ($this as $property => $value)
 		{
@@ -113,12 +151,6 @@ abstract class struct
 			}
 		}
 		return $elements;
-	}
-	public function &__call($name, $arguments)
-	{
-		if (isset($this->$name))
-			$this->$name = array_shift($arguments);
-		return $this;
 	}
 }
 
@@ -588,7 +620,7 @@ class IS_MOD extends struct // MODe : send to LFS to change screen mode
 // MESSAGES OUT (FROM LFS)
 // ------------
 
-class IS_MSO extends struct // MSg Out - system messages and user messages 
+class IS_MSO extends struct // MSg Out - system messages and user messages
 {
 	const PACK = 'CCxxCCCCa128';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CUserType/CTextStart/a128Msg';
@@ -682,17 +714,17 @@ class IS_MTC extends struct		// Msg To Connection - hosts only - send to a conne
 	const PACK = 'CCxxCCxxa64';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
 
-	protected $Size = 72;			# 72
-	protected $Type = ISP_MTC;		# ISP_MTC
-	protected $ReqI = 0;			# 0
+	protected $Size = 72;				# 72
+	protected $Type = ISP_MTC;			# ISP_MTC
+	protected $ReqI = 0;				# 0
 	protected $Zero = NULL;
 
-	public $UCID = 0;				# connection's unique id (0 = host)
-	public $PLID = 0;				# player's unique id (if zero, use UCID)
+	public $UCID = 0;					# connection's unique id (0 = host)
+	public $PLID = 0;					# player's unique id (if zero, use UCID)
 	protected $Sp2 = NULL;
 	protected $Sp3 = NULL;
 
-	public $Msg;					# last byte must be zero
+	public $Msg;						# last byte must be zero
 };
 
 // Message Sounds (for Sound byte)
@@ -715,13 +747,13 @@ class IS_SCH extends struct		// Single CHaracter
 	const PACK = 'CCxxCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CCharB/CFlags/CSpare2/CSpare3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_SCH;		# ISP_SCH
-	protected $ReqI = 0;			# 0
+	protected $Size = 8;				# 8
+	protected $Type = ISP_SCH;			# ISP_SCH
+	protected $ReqI = 0;				# 0
 	protected $Zero = NULL;
 
-	public $CharB;					# key to press
-	public $Flags;					# bit 0 : SHIFT / bit 1 : CTRL
+	public $CharB;						# key to press
+	public $Flags;						# bit 0 : SHIFT / bit 1 : CTRL
 	protected $Spare2 = NULL;
 	protected $Spare3 = NULL;
 };
@@ -737,17 +769,17 @@ class IS_ISM extends struct		// InSim Multi
 	const PACK = 'CCCxCxxxa32';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CHost/CSp1/CSp2/CSp3/a32HName';
 
-	protected $Size = 40;			# 40
-	protected $Type = ISP_ISM;		# ISP_ISM
-	protected $ReqI = 0;			# usually 0 / or if a reply : ReqI as received in the TINY_ISM
+	protected $Size = 40;				# 40
+	protected $Type = ISP_ISM;			# ISP_ISM
+	protected $ReqI = 0;				# usually 0 / or if a reply : ReqI as received in the TINY_ISM
 	protected $Zero = NULL;
 
-	public $Host;					# 0 = guest / 1 = host
+	public $Host;						# 0 = guest / 1 = host
 	protected $Sp1 = NULL;
 	protected $Sp2 = NULL;
 	protected $Sp3 = NULL;
 
-	public $HName;					# the name of the host joined or started
+	public $HName;						# the name of the host joined or started
 };
 
 // On ending or leaving a host, LFS will send this IS_TINY :
@@ -782,13 +814,13 @@ class IS_VTN extends struct		// VoTe Notify
 	const PACK = 'CCxxCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CAction/CSpare2/CSpare3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_VTN;		# ISP_VTN
-	public $ReqI;					# 0
+	protected $Size = 8;				# 8
+	protected $Type = ISP_VTN;			# ISP_VTN
+	public $ReqI;						# 0
 	protected $Zero;
 
-	public $UCID;					# connection's unique id
-	public $Action;					# VOTE_X (Vote Action as defined above)
+	public $UCID;						# connection's unique id
+	public $Action;						# VOTE_X (Vote Action as defined above)
 	protected $Spare2;
 	protected $Spare3;
 };
@@ -847,26 +879,26 @@ class IS_RST extends struct // Race STart
 	const PACK = 'CCCxCCCxa6CCvvvvvv';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CRaceLaps/CQualMins/CNumP/CSpare/a6Track/CWeather/CWind/vFlags/vNumNodes/vFinish/vSplit1/vSplit2/vSplit3';
 
-	protected $Size = 28;			# 28
-	protected $Type = ISP_RST;		# ISP_RST
-	public $ReqI = TRUE;			# 0 unless this is a reply to an TINY_RST request
+	protected $Size = 28;				# 28
+	protected $Type = ISP_RST;			# ISP_RST
+	public $ReqI = TRUE;				# 0 unless this is a reply to an TINY_RST request
 	protected $Zero = NULL;
 
-	public $RaceLaps;				# 0 if qualifying
-	public $QualMins;				# 0 if race
-	public $NumP;					# number of players in race
+	public $RaceLaps;					# 0 if qualifying
+	public $QualMins;					# 0 if race
+	public $NumP;						# number of players in race
 	protected $Spare;
 
-	public $Track;					# short track name
+	public $Track;						# short track name
 	public $Weather;
 	public $Wind;
 
-	public $Flags;					# race flags (must pit, can reset, etc - see below)
-	public $NumNodes;				# total number of nodes in the path
-	public $Finish;					# node index - finish line
-	public $Split1;					# node index - split 1
-	public $Split2;					# node index - split 2
-	public $Split3;					# node index - split 3
+	public $Flags;						# race flags (must pit, can reset, etc - see below)
+	public $NumNodes;					# total number of nodes in the path
+	public $Finish;						# node index - finish line
+	public $Split1;						# node index - split 1
+	public $Split2;						# node index - split 2
+	public $Split3;						# node index - split 3
 };
 
 // To request an IS_RST packet at any time, send this IS_TINY :
@@ -879,17 +911,17 @@ class IS_NCN extends struct // New ConN
 	const PACK = 'CCCCa24a24CCCx';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/a24UName/a24PName/CAdmin/CTotal/CFlags/CSp3';
 
-	protected $Size = 56;			# 56
-	protected $Type = ISP_NCN;		# ISP_NCN
-	public $ReqI = NULL;			# 0 unless this is a reply to a TINY_NCN request
-	public $UCID;					# new connection's unique id (0 = host)
+	protected $Size = 56;				# 56
+	protected $Type = ISP_NCN;			# ISP_NCN
+	public $ReqI = NULL;				# 0 unless this is a reply to a TINY_NCN request
+	public $UCID;						# new connection's unique id (0 = host)
 
-	public $UName;					# username
-	public $PName;					# nickname
+	public $UName;						# username
+	public $PName;						# nickname
 
-	public $Admin;					# 1 if admin
-	public $Total;					# number of connections including host
-	public $Flags;					# bit 2 : remote
+	public $Admin;						# 1 if admin
+	public $Total;						# number of connections including host
+	public $Flags;						# bit 2 : remote
 	protected $Sp3;
 };
 
@@ -898,13 +930,13 @@ class IS_CNL extends struct // ConN Leave
 	const PACK = 'CCxCCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CReason/CTotal/CSp2/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_CNL;		# ISP_CNL
-	public $ReqI;					# 0
-	public $UCID;					# unique id of the connection which left
+	protected $Size = 8;				# 8
+	protected $Type = ISP_CNL;			# ISP_CNL
+	public $ReqI;						# 0
+	public $UCID;						# unique id of the connection which left
 
-	public $Reason;					# leave reason (see below)
-	public $Total;					# number of connections including host
+	public $Reason;						# leave reason (see below)
+	public $Total;						# number of connections including host
 	protected $Sp2;
 	protected $Sp3;
 };
@@ -914,13 +946,13 @@ class IS_CPR extends struct // Conn Player Rename
 	const PACK = 'CCxCa24a8';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/a24PName/a8Plate';
 
-	protected $Size = 36;			# 36
-	protected $Type = ISP_CPR;		# ISP_CPR
-	public $ReqI = NULL;			# 0
-	public $UCID;					# unique id of the connection
+	protected $Size = 36;				# 36
+	protected $Type = ISP_CPR;			# ISP_CPR
+	public $ReqI = NULL;				# 0
+	public $UCID;						# unique id of the connection
 
-	public $PName;					# new name
-	public $Plate;					# number plate - NO ZERO AT END!
+	public $PName;						# new name
+	public $Plate;						# number plate - NO ZERO AT END!
 };
 
 class IS_NPL extends struct // New PLayer joining race (if PLID already exists, then leaving pits)
@@ -928,49 +960,49 @@ class IS_NPL extends struct // New PLayer joining race (if PLID already exists, 
 	const PACK = 'CCCCCCva24a8a4a16C4CCCClCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/a8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/lSpare/CSetF/CNumP/CSp2/CSp3';
 
-	protected $Size = 76;			# 76
-	protected $Type = ISP_NPL;		# ISP_NPL
-	public $ReqI;					# 0 unless this is a reply to an TINY_NPL request
-	public $PLID;					# player's newly assigned unique id
+	protected $Size = 76;				# 76
+	protected $Type = ISP_NPL;			# ISP_NPL
+	public $ReqI;						# 0 unless this is a reply to an TINY_NPL request
+	public $PLID;						# player's newly assigned unique id
 
-	public $UCID;					# connection's unique id
-	public $PType;					# bit 0 : female / bit 1 : AI / bit 2 : remote
-	public $Flags;					# player flags
+	public $UCID;						# connection's unique id
+	public $PType;						# bit 0 : female / bit 1 : AI / bit 2 : remote
+	public $Flags;						# player flags
 
-	public $PName;					# nickname
-	public $Plate;					# number plate - NO ZERO AT END!
+	public $PName;						# nickname
+	public $Plate;						# number plate - NO ZERO AT END!
 
-	public $CName;					# car name
-	public $SName;					# skin name - MAX_CAR_TEX_NAME
-	public $Tyres = array();		# compounds
+	public $CName;						# car name
+	public $SName;						# skin name - MAX_CAR_TEX_NAME
+	public $Tyres = array();			# compounds
 
-	public $H_Mass;					# added mass (kg)
-	public $H_TRes;					# intake restriction
-	public $Model;					# driver model
-	public $Pass;					# passengers byte
+	public $H_Mass;						# added mass (kg)
+	public $H_TRes;						# intake restriction
+	public $Model;						# driver model
+	public $Pass;						# passengers byte
 
 	protected $Spare;
 
-	public $SetF;					# setup flags (see below)
-	public $NumP;					# number in race (same when leaving pits, 1 more if new)
+	public $SetF;						# setup flags (see below)
+	public $NumP;						# number in race (same when leaving pits, 1 more if new)
 	protected $Sp2;
 	protected $Sp3;
 
 	public function unpack($rawPacket)
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
-		
+
 		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
 		{
 			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
 			unset($pkClass["Tyres{$Tyre}"]);
 		}
-		
+
 		foreach ($pkClass as $property => $value)
 		{
 			$this->$property = $value;
 		}
-				
+
 		return $this;
 	}
 };
@@ -992,10 +1024,10 @@ class IS_PLP extends struct // PLayer Pits (go to settings - stays in player lis
 	const PACK = 'CCxC';
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
-	protected $Size = 4;			# 4
-	protected $Type = ISP_PLP;		# ISP_PLP
-	protected $ReqI = NULL;			# 0
-	public $PLID;					# player's unique id
+	protected $Size = 4;				# 4
+	protected $Type = ISP_PLP;			# ISP_PLP
+	protected $ReqI = NULL;				# 0
+	public $PLID;						# player's unique id
 };
 
 class IS_PLL extends struct // PLayer Leave race (spectate - removed from player list)
@@ -1003,10 +1035,10 @@ class IS_PLL extends struct // PLayer Leave race (spectate - removed from player
 	const PACK = 'CCxC';
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
-	protected $Size = 4;			# 4
-	protected $Type = ISP_PLL;		# ISP_PLL
-	protected $ReqI = NULL;			# 0
-	public $PLID;					# player's unique id
+	protected $Size = 4;				# 4
+	protected $Type = ISP_PLL;			# ISP_PLL
+	protected $ReqI = NULL;				# 0
+	public $PLID;						# player's unique id
 };
 
 class IS_CRS extends struct // Car ReSet
@@ -1014,10 +1046,10 @@ class IS_CRS extends struct // Car ReSet
 	const PACK = 'CCxC';
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
-	protected $Size = 4;			# 4
-	protected $Type = ISP_CRS;		# ISP_CRS
-	protected $ReqI = NULL;			# 0
-	public $PLID;					# player's unique id
+	protected $Size = 4;				# 4
+	protected $Type = ISP_CRS;			# ISP_CRS
+	protected $ReqI = NULL;				# 0
+	public $PLID;						# player's unique id
 };
 
 class IS_LAP extends struct // LAP time
@@ -1025,20 +1057,20 @@ class IS_LAP extends struct // LAP time
 	const PACK = 'CCxCVVvvxCCx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/VLTime/VETime/vLapsDone/vFlags/CSp0/CPenalty/CNumStops/CSp3';
 
-	protected $Size = 20;			# 20
-	protected $Type = ISP_LAP;		# ISP_LAP
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 20;				# 20
+	protected $Type = ISP_LAP;			# ISP_LAP
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $LTime;					# lap time (ms)
-	public $ETime;					# total time (ms)
+	public $LTime;						# lap time (ms)
+	public $ETime;						# total time (ms)
 
-	public $LapsDone;				# laps completed
-	public $Flags;					# player flags
+	public $LapsDone;					# laps completed
+	public $Flags;						# player flags
 
 	protected $Sp0;
-	public $Penalty;				# current penalty value (see below)
-	public $NumStops;				# number of pit stops
+	public $Penalty;					# current penalty value (see below)
+	public $NumStops;					# number of pit stops
 	protected $Sp3;
 };
 
@@ -1047,17 +1079,17 @@ class IS_SPX extends struct // SPlit X time
 	const PACK = 'CCxCVVCCCx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/VSTime/VETime/CSplit/CPenalty/CNumStops/CSp3';
 
-	protected $Size = 16;			# 16
-	protected $Type = ISP_SPX;		# ISP_SPX
-	protected $ReqI = NULL;			# 0
-	public $PLID;					# player's unique id
+	protected $Size = 16;				# 16
+	protected $Type = ISP_SPX;			# ISP_SPX
+	protected $ReqI = NULL;				# 0
+	public $PLID;						# player's unique id
 
-	public $STime;					# split time (ms)
-	public $ETime;					# total time (ms)
+	public $STime;						# split time (ms)
+	public $ETime;						# total time (ms)
 
-	public $Split;					# split number 1, 2, 3
-	public $Penalty;				# current penalty value (see below)
-	public $NumStops;				# number of pit stops
+	public $Split;						# split number 1, 2, 3
+	public $Penalty;					# current penalty value (see below)
+	public $NumStops;					# number of pit stops
 	protected $Sp3;
 };
 
@@ -1066,33 +1098,33 @@ class IS_PIT extends struct // PIT stop (stop at pit garage)
 	const PACK = 'CCxCvvxCCxC4VV';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/vLapsDone/vFlags/CSp0/CPenalty/CNumStops/CSp3/C4Tyres/VWork/VSpare';
 
-	protected $Size = 24;			# 24
-	protected $Type = ISP_PIT;		# ISP_PIT
-	protected $ReqI = NULL;			# 0
-	public $PLID;					# player's unique id
+	protected $Size = 24;				# 24
+	protected $Type = ISP_PIT;			# ISP_PIT
+	protected $ReqI = NULL;				# 0
+	public $PLID;						# player's unique id
 
-	public $LapsDone;				# laps completed
-	public $Flags;					# player flags
+	public $LapsDone;					# laps completed
+	public $Flags;						# player flags
 
 	protected $Sp0;
-	public $Penalty;				# current penalty value (see below)
-	public $NumStops;				# number of pit stops
+	public $Penalty;					# current penalty value (see below)
+	public $NumStops;					# number of pit stops
 	protected $Sp3;
 
-	public $Tyres = array();		# tyres changed
+	public $Tyres = array();			# tyres changed
 
-	public $Work;					# pit work
+	public $Work;						# pit work
 	protected $Spare;
 
 	public function unpack($rawPacket)
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
-		
+
 		foreach ($pkClass as $property => $value)
 		{
 			$this->$property = $value;
 		}
-		
+
 		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
 		{
 			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
@@ -1109,12 +1141,12 @@ class IS_PSF extends struct // Pit Stop Finished
 	const PACK = 'CCxCVV';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/VSTime/VSpare';
 
-	protected $Size = 12;			# 12
-	protected $Type = ISP_PSF;		# ISP_PSF
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 12;				# 12
+	protected $Type = ISP_PSF;			# ISP_PSF
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $STime;					# stop time (ms)
+	public $STime;						# stop time (ms)
 	protected $Spare;
 };
 
@@ -1123,12 +1155,12 @@ class IS_PLA extends struct // Pit LAne
 	const PACK = 'CCxCCxxx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/CFact/CSp1/CSp2/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_PLA;		# ISP_PLA
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 8;				# 8
+	protected $Type = ISP_PLA;			# ISP_PLA
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $Fact;					# pit lane fact (see below)
+	public $Fact;						# pit lane fact (see below)
 	protected $Sp1;
 	protected $Sp2;
 	protected $Sp3;
@@ -1147,12 +1179,12 @@ class IS_CCH extends struct // Camera CHange
 	const PACK = 'CCxCCxxx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/CCamera/CSp1/CSp2/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_CCH;		# ISP_CCH
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 8;				# 8
+	protected $Type = ISP_CCH;			# ISP_CCH
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $Camera;					# view identifier (see below)
+	public $Camera;						# view identifier (see below)
 	protected $Sp1;
 	protected $Sp2;
 	protected $Sp3;
@@ -1163,14 +1195,14 @@ class IS_PEN extends struct // PENalty (given or cleared)
 	const PACK = 'CCxCCCCx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/COldPen/CNewPen/CReason/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_PEN;		# ISP_PEN
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 8;				# 8
+	protected $Type = ISP_PEN;			# ISP_PEN
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $OldPen;					# old penalty value (see below)
-	public $NewPen;					# new penalty value (see below)
-	public $Reason;					# penalty reason (see below)
+	public $OldPen;						# old penalty value (see below)
+	public $NewPen;						# new penalty value (see below)
+	public $Reason;						# penalty reason (see below)
 	protected $Sp3;
 };
 
@@ -1179,13 +1211,13 @@ class IS_TOC extends struct // Take Over Car
 	const PACK = 'CCxCCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/COldUCID/CNewUCID/CSp2/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_TOC;		# ISP_TOC
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 8;				# 8
+	protected $Type = ISP_TOC;			# ISP_TOC
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $OldUCID;				# old connection's unique id
-	public $NewUCID;				# new connection's unique id
+	public $OldUCID;					# old connection's unique id
+	public $NewUCID;					# new connection's unique id
 	protected $Sp2;
 	protected $Sp3;
 };
@@ -1195,14 +1227,14 @@ class IS_FLG extends struct // FLaG (yellow or blue flag changed)
 	const PACK = 'CCxCCCCx';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/COffOn/CFlag/CCarBehind/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_FLG;		# ISP_FLG
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 8;				# 8
+	protected $Type = ISP_FLG;			# ISP_FLG
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $OffOn;					# 0 = off / 1 = on
-	public $Flag;					# 1 = given blue / 2 = causing yellow
-	public $CarBehind;				# unique id of obstructed player
+	public $OffOn;						# 0 = off / 1 = on
+	public $Flag;						# 1 = given blue / 2 = causing yellow
+	public $CarBehind;					# unique id of obstructed player
 	protected $Sp3;
 };
 
@@ -1211,12 +1243,12 @@ class IS_PFL extends struct // Player FLags (help flags changed)
 	const PACK = 'CCxCvv';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/vFlags/vSpare';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_PFL;		# ISP_PFL
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 8;				# 8
+	protected $Type = ISP_PFL;			# ISP_PFL
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 
-	public $Flags;					# player flags (see below)
+	public $Flags;						# player flags (see below)
 	protected $Spare;
 };
 
@@ -1225,21 +1257,21 @@ class IS_FIN extends struct // FINished race notification (not a final result - 
 	const PACK = 'CCxCVVxCCxvv';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/VTTime/VBTime/CSpA/CNumStops/CConfirm/CSpB/vLapsDone/vFlags';
 
-	protected $Size = 20;			# 20
-	protected $Type = ISP_FIN;		# ISP_FIN
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id (0 = player left before result was sent)
+	protected $Size = 20;				# 20
+	protected $Type = ISP_FIN;			# ISP_FIN
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id (0 = player left before result was sent)
 
-	public $TTime;					# race time (ms)
-	public $BTime;					# best lap (ms)
+	public $TTime;						# race time (ms)
+	public $BTime;						# best lap (ms)
 
 	protected $SpA;
-	public $NumStops;				# number of pit stops
-	public $Confirm;				# confirmation flags : disqualified etc - see below
+	public $NumStops;					# number of pit stops
+	public $Confirm;					# confirmation flags : disqualified etc - see below
 	protected $SpB;
 
-	public $LapsDone;				# laps completed
-	public $Flags;					# player flags : help settings etc - see below
+	public $LapsDone;					# laps completed
+	public $Flags;						# player flags : help settings etc - see below
 };
 
 class IS_RES extends struct // RESult (qualify or confirmed finish)
@@ -1247,30 +1279,30 @@ class IS_RES extends struct // RESult (qualify or confirmed finish)
 	const PACK = 'CCxCa24a24a8a4VVxCCxvvCCv';
 	const UNPACK = 'CSize/CType/CReqI/CPLID/a24UName/a24PName/a8Plate/a4CName/VTTime/VBTime/CSpA/CNumStops/CConfirm/CSpB/vLapsDone/vFlags/CResultNum/CNumRes/vPSeconds';
 
-	protected $Size = 84;			# 84
-	protected $Type = ISP_RES;		# ISP_RES
-	public $ReqI;					# 0 unless this is a reply to a TINY_RES request
-	public $PLID;					# player's unique id (0 = player left before result was sent)
+	protected $Size = 84;				# 84
+	protected $Type = ISP_RES;			# ISP_RES
+	public $ReqI;						# 0 unless this is a reply to a TINY_RES request
+	public $PLID;						# player's unique id (0 = player left before result was sent)
 
-	public $UName;					# username
-	public $PName;					# nickname
-	public $Plate;					# number plate - NO ZERO AT END!
-	public $CName;					# skin prefix
+	public $UName;						# username
+	public $PName;						# nickname
+	public $Plate;						# number plate - NO ZERO AT END!
+	public $CName;						# skin prefix
 
-	public $TTime;					# race time (ms)
-	public $BTime;					# best lap (ms)
+	public $TTime;						# race time (ms)
+	public $BTime;						# best lap (ms)
 
 	protected $SpA;
-	public $NumStops;				# number of pit stops
-	public $Confirm;				# confirmation flags : disqualified etc - see below
+	public $NumStops;					# number of pit stops
+	public $Confirm;					# confirmation flags : disqualified etc - see below
 	protected $SpB;
 
-	public $LapsDone;				# laps completed
-	public $Flags;					# player flags : help settings etc - see below
+	public $LapsDone;					# laps completed
+	public $Flags;						# player flags : help settings etc - see below
 
-	public $ResultNum;				# finish or qualify pos (0 = win / 255 = not added to table)
-	public $NumRes;					# total number of results (qualify doesn't always add a new one)
-	public $PSeconds;				# penalty time in seconds (already included in race time)
+	public $ResultNum;					# finish or qualify pos (0 = win / 255 = not added to table)
+	public $NumRes;						# total number of results (qualify doesn't always add a new one)
+	public $PSeconds;					# penalty time in seconds (already included in race time)
 };
 
 // IS_REO : REOrder - this packet can be sent in either direction
@@ -1288,12 +1320,12 @@ class IS_REO extends struct // REOrder (when race restarts after qualifying)
 	const PACK = 'CCCCa32';
 	const UNPACK = 'CSize/CType/CReqI/CNumP/a32PLID';
 
-	protected $Size = 36;			# 36
-	protected $Type = ISP_REO;		# ISP_REO
-	public $ReqI;					# 0 unless this is a reply to an TINY_REO request
-	public $NumP;					# number of players in race
+	protected $Size = 36;				# 36
+	protected $Type = ISP_REO;			# ISP_REO
+	public $ReqI;						# 0 unless this is a reply to an TINY_REO request
+	public $NumP;						# number of players in race
 
-	public $PLID;					# all PLIDs in new order
+	public $PLID;						# all PLIDs in new order
 };
 
 // To request an IS_REO packet at any time, send this IS_TINY :
@@ -1358,7 +1390,7 @@ $LEAVR = array(LEAVR_DISCO => 'LEAVR_DISCO', LEAVR_TIMEOUT => 'LEAVR_TIMEOUT', L
 
 // Penalty values (VALID means the penalty can now be cleared)
 
-define('PENALTY_NONE',		0);	// 0		
+define('PENALTY_NONE',		0);	// 0
 define('PENALTY_DT',		1);	// 1
 define('PENALTY_DT_VALID',	2);	// 2
 define('PENALTY_SG',		3);	// 3
@@ -1482,16 +1514,16 @@ class IS_AXI extends struct  // AutoX Info
 	const PACK = 'CCCxCCva32';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CAXStart/CNumCP/vNumO/a32LName';
 
-	protected $Size = 40;			# 40
-	protected $Type = ISP_AXI;		# ISP_AXI
-	public $ReqI;					# 0 unless this is a reply to an TINY_AXI request
+	protected $Size = 40;				# 40
+	protected $Type = ISP_AXI;			# ISP_AXI
+	public $ReqI;						# 0 unless this is a reply to an TINY_AXI request
 	protected $Zero;
 
-	public $AXStart;				# autocross start position
-	public $NumCP;					# number of checkpoints
-	public $NumO;					# number of objects
+	public $AXStart;					# autocross start position
+	public $NumCP;						# number of checkpoints
+	public $NumO;						# number of objects
 
-	public $LName;					# the name of the layout last loaded (if loaded locally)
+	public $LName;						# the name of the layout last loaded (if loaded locally)
 };
 
 // On false start or wrong route / restricted area, an IS_PEN packet is sent :
@@ -1506,10 +1538,10 @@ class IS_AXO extends struct // AutoX Object
 	const PACK = 'CCxC';
 	const UNPACK = 'CSize/CType/CReqI/CPLID';
 
-	protected $Size = 4;			# 4
-	protected $Type = ISP_AXO;		# ISP_AXO
-	protected $ReqI;				# 0
-	public $PLID;					# player's unique id
+	protected $Size = 4;				# 4
+	protected $Type = ISP_AXO;			# ISP_AXO
+	protected $ReqI;					# 0
+	public $PLID;						# player's unique id
 };
 
 
@@ -1531,10 +1563,10 @@ class NodeLap extends struct // Car info in 6 bytes - there is an array of these
 	const PACK = 'vvCC';
 	const UNPACK = 'vNode/vLap/CPLID/CPosition';
 
-	public $Node;					# current path node
-	public $Lap;					# current lap
-	public $PLID;					# player's unique id
-	public $Position;				# current race position : 0 = unknown, 1 = leader, etc...
+	public $Node;						# current path node
+	public $Lap;						# current lap
+	public $PLID;						# player's unique id
+	public $Position;					# current race position : 0 = unknown, 1 = leader, etc...
 };
 
 class IS_NLP extends struct // Node and Lap Packet - variable size
@@ -1542,17 +1574,17 @@ class IS_NLP extends struct // Node and Lap Packet - variable size
 	const PACK = 'CCCC';
 	const UNPACK = 'CSize/CType/CReqI/CNumP';
 
-	protected $Size;				# 4 + NumP * 6 (PLUS 2 if needed to make it a multiple of 4)
-	protected $Type = ISP_NLP;		# ISP_NLP
-	public $ReqI;					# 0 unless this is a reply to an TINY_NLP request
-	public $NumP;					# number of players in race
+	protected $Size;					# 4 + NumP * 6 (PLUS 2 if needed to make it a multiple of 4)
+	protected $Type = ISP_NLP;			# ISP_NLP
+	public $ReqI;						# 0 unless this is a reply to an TINY_NLP request
+	public $NumP;						# number of players in race
 
-	public $Info = array();			# node and lap of each player, 1 to 32 of these (NumP)
+	public $Info = array();				# node and lap of each player, 1 to 32 of these (NumP)
 
 	public function unpack($rawPacket)
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
-		
+
 		foreach ($pkClass as $property => $value)
 		{
 			$this->$property = $value;
@@ -1575,19 +1607,19 @@ class CompCar extends struct // Car info in 28 bytes - there is an array of thes
 	const PACK = 'vvCCCxlllvvvs';
 	const UNPACK = 'vNode/vLap/CPLID/CPosition/CInfo/CSp3/lX/lY/lZ/vSpeed/vDirection/vHeading/sAngVel';
 
-	public $Node;					# current path node
-	public $Lap;					# current lap
-	public $PLID;					# player's unique id
-	public $Position;				# current race position : 0 = unknown, 1 = leader, etc...
-	public $Info;					# flags and other info - see below
+	public $Node;						# current path node
+	public $Lap;						# current lap
+	public $PLID;						# player's unique id
+	public $Position;					# current race position : 0 = unknown, 1 = leader, etc...
+	public $Info;						# flags and other info - see below
 	protected $Sp3;
-	public $X;						# X map (65536 = 1 metre)
-	public $Y;						# Y map (65536 = 1 metre)
-	public $Z;						# Z alt (65536 = 1 metre)
-	public $Speed;					# speed (32768 = 100 m/s)
-	public $Direction;				# direction of car's motion : 0 = world y direction, 32768 = 180 deg
-	public $Heading;				# direction of forward axis : 0 = world y direction, 32768 = 180 deg
-	public $AngVel;					# signed, rate of change of heading : (16384 = 360 deg/s)
+	public $X;							# X map (65536 = 1 metre)
+	public $Y;							# Y map (65536 = 1 metre)
+	public $Z;							# Z alt (65536 = 1 metre)
+	public $Speed;						# speed (32768 = 100 m/s)
+	public $Direction;					# direction of car's motion : 0 = world y direction, 32768 = 180 deg
+	public $Heading;					# direction of forward axis : 0 = world y direction, 32768 = 180 deg
+	public $AngVel;						# signed, rate of change of heading : (16384 = 360 deg/s)
 };
 
 // NOTE 1) Info byte - the bits in this byte have the following meanings :
@@ -1607,17 +1639,17 @@ class IS_MCI extends struct // Multi Car Info - if more than 8 in race then more
 	const PACK = 'CCCC';
 	const UNPACK = 'CSize/CType/CReqI/CNumC';
 
-	protected $Size;				# 4 + NumC * 28
-	protected $Type = ISP_MCI;		# ISP_MCI
-	public $ReqI;					# 0 unless this is a reply to an TINY_MCI request
-	public $NumC;					# number of valid CompCar structs in this packet
+	protected $Size;					# 4 + NumC * 28
+	protected $Type = ISP_MCI;			# ISP_MCI
+	public $ReqI;						# 0 unless this is a reply to an TINY_MCI request
+	public $NumC;						# number of valid CompCar structs in this packet
 
-	public $Info = array();			# car info for each player, 1 to 8 of these (NumC)
+	public $Info = array();				# car info for each player, 1 to 8 of these (NumC)
 
 	public function unpack($rawPacket)
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
-		
+
 		foreach ($pkClass as $property => $value)
 		{
 			$this->$property = $value;
@@ -1693,13 +1725,13 @@ class IS_SCC extends struct // Set Car Camera - Simplified camera packet (not SH
 	const PACK = 'CCxxCCxx';
 	const UNPACK = 'CSize/CType/CReqI/CZero/CViewPLID/CInGameCam/CSp2/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_SCC;		# ISP_SCC
-	protected $ReqI;				# 0
+	protected $Size = 8;				# 8
+	protected $Type = ISP_SCC;			# ISP_SCC
+	protected $ReqI;					# 0
 	protected $Zero;
 
-	public $ViewPLID;				# UniqueID of player to view
-	public $InGameCam;				# InGameCam (as reported in StatePack)
+	public $ViewPLID;					# UniqueID of player to view
+	public $InGameCam;					# InGameCam (as reported in StatePack)
 	protected $Sp2;
 	protected $Sp3;
 };
@@ -1719,24 +1751,24 @@ class IS_CPP extends struct // Cam Pos Pack - Full camera packet (in car OR SHIF
 	const PACK = 'CCCxl3vvvCCfvv';
 	const UNPACK = 'CSize/CType/CReqI/CZero/l3Pos/vH/vP/vR/CViewPLID/CInGameCam/fFOV/CTime/CFlags';
 
-	protected $Size = 32;			# 32
-	protected $Type = ISP_CPP;		# ISP_CPP
-	public $ReqI;					# instruction : 0 / or reply : ReqI as received in the TINY_SCP
+	protected $Size = 32;				# 32
+	protected $Type = ISP_CPP;			# ISP_CPP
+	public $ReqI;						# instruction : 0 / or reply : ReqI as received in the TINY_SCP
 	protected $Zero;
 
-	public $Pos;					# Position vector
+	public $Pos;						# Position vector
 
-	public $H;						# heading - 0 points along Y axis
-	public $P;						# pitch   - 0 means looking at horizon
-	public $R;						# roll    - 0 means no roll
+	public $H;							# heading - 0 points along Y axis
+	public $P;							# pitch   - 0 means looking at horizon
+	public $R;							# roll    - 0 means no roll
 
-	public $ViewPLID;				# Unique ID of viewed player (0 = none)
-	public $InGameCam;				# InGameCam (as reported in StatePack)
+	public $ViewPLID;					# Unique ID of viewed player (0 = none)
+	public $InGameCam;					# InGameCam (as reported in StatePack)
 
-	public $FOV;					# 4-byte float : FOV in degrees
+	public $FOV;						# 4-byte float : FOV in degrees
 
-	public $Time;					# Time to get there (0 means instant + reset)
-	public $Flags;					# ISS state flags (see below)
+	public $Time;						# Time to get there (0 means instant + reset)
+	public $Flags;						# ISS state flags (see below)
 };
 
 // The ISS state flags that can be set are :
@@ -1834,20 +1866,20 @@ class IS_RIP extends struct // Replay Information Packet
 	const PACK = 'CCCCCCCxVVa64';
 	const UNPACK = 'CSize/CType/CReqI/CError/CMPR/CPaused/COptions/CSp3/VCTime/VTTime/a64RName';
 
-	protected $Size = 80;			# 80
-	protected $Type = ISP_RIP;		# ISP_RIP
-	public $ReqI;					# request : non-zero / reply : same value returned
-	public $Error;					# 0 or 1 = OK / other values are listed below
+	protected $Size = 80;				# 80
+	protected $Type = ISP_RIP;			# ISP_RIP
+	public $ReqI;						# request : non-zero / reply : same value returned
+	public $Error;						# 0 or 1 = OK / other values are listed below
 
-	public $MPR;					# 0 = SPR / 1 = MPR
-	public $Paused;					# request : pause on arrival / reply : paused state
-	public $Options;				# various options - see below
+	public $MPR;						# 0 = SPR / 1 = MPR
+	public $Paused;						# request : pause on arrival / reply : paused state
+	public $Options;					# various options - see below
 	protected $Sp3;
 
-	public $CTime;					# (hundredths) request : destination / reply : position
-	public $TTime;					# (hundredths) request : zero / reply : replay length
+	public $CTime;						# (hundredths) request : destination / reply : position
+	public $TTime;						# (hundredths) request : zero / reply : replay length
 
-	public $RName;					# zero or replay name - last byte must be zero
+	public $RName;						# zero or replay name - last byte must be zero
 };
 
 // NOTE about RName :
@@ -1894,17 +1926,17 @@ class IS_SSH extends struct // ScreenSHot
 	const PACK = 'CCCCxxxxa32';
 	const UNPACK = 'CSize/CType/CReqI/CError/CSp0/CSp1/CSp2/CSp3/a32BMP';
 
-	protected $Size = 40;			# 40
-	protected $Type = ISP_SSH;		# ISP_SSH
-	public $ReqI;					# request : non-zero / reply : same value returned
-	public $Error;					# 0 = OK / other values are listed below
+	protected $Size = 40;				# 40
+	protected $Type = ISP_SSH;			# ISP_SSH
+	public $ReqI;						# request : non-zero / reply : same value returned
+	public $Error;						# 0 = OK / other values are listed below
 
-	protected $Sp0;					# 0
-	protected $Sp1;					# 0
-	protected $Sp2;					# 0
-	protected $Sp3;					# 0
+	protected $Sp0;						# 0
+	protected $Sp1;						# 0
+	protected $Sp2;						# 0
+	protected $Sp3;						# 0
 
-	public $BMP;					# name of screenshot file - last byte must be zero
+	public $BMP;						# name of screenshot file - last byte must be zero
 };
 
 // Error codes returned in IS_SSH replies :
@@ -1949,14 +1981,14 @@ class IS_BFN extends struct  // Button FunctioN - delete buttons / receive butto
 	const PACK = 'CCxCCCCx';
 	const UNPACK = 'CSize/CType/CReqI/CSubT/CUCID/CClickID/CInst/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_BFN;		# ISP_BFN
-	protected $ReqI;				# 0
-	public $SubT;					# subtype, from BFN_ enumeration (see below)
+	protected $Size = 8;				# 8
+	protected $Type = ISP_BFN;			# ISP_BFN
+	protected $ReqI;					# 0
+	public $SubT;						# subtype, from BFN_ enumeration (see below)
 
-	public $UCID;					# connection to send to or from (0 = local / 255 = all)
-	public $ClickID;				# ID of button to delete (if SubT is BFN_DEL_BTN)
-	public $Inst;					# used internally by InSim
+	public $UCID;						# connection to send to or from (0 = local / 255 = all)
+	public $ClickID;					# ID of button to delete (if SubT is BFN_DEL_BTN)
+	public $Inst;						# used internally by InSim
 	protected $Sp3;
 };
 
@@ -1979,22 +2011,22 @@ class IS_BTN extends struct // BuTtoN - button header - followed by 0 to 240 cha
 	const PACK = 'CCCCCCCCCCCCa240';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CBStyle/CTypeIn/CL/CT/CW/CH/a240Text';
 
-	protected $Size;				# 12 + TEXT_SIZE (a multiple of 4)
-	protected $Type = ISP_BTN;		# ISP_BTN
-	public $ReqI;					# non-zero (returned in IS_BTC and IS_BTT packets)
-	public $UCID;					# connection to display the button (0 = local / 255 = all)
+	protected $Size;					# 12 + TEXT_SIZE (a multiple of 4)
+	protected $Type = ISP_BTN;			# ISP_BTN
+	public $ReqI;						# non-zero (returned in IS_BTC and IS_BTT packets)
+	public $UCID;						# connection to display the button (0 = local / 255 = all)
 
-	public $ClickID;				# button ID (0 to 239)
-	public $Inst;					# some extra flags - see below
-	public $BStyle;					# button style flags - see below
-	public $TypeIn;					# max chars to type in - see below
+	public $ClickID;					# button ID (0 to 239)
+	public $Inst;						# some extra flags - see below
+	public $BStyle;						# button style flags - see below
+	public $TypeIn;						# max chars to type in - see below
 
-	public $L;						# left   : 0 - 200
-	public $T;						# top    : 0 - 200
-	public $W;						# width  : 0 - 200
-	public $H;						# height : 0 - 200
+	public $L;							# left   : 0 - 200
+	public $T;							# top    : 0 - 200
+	public $W;							# width  : 0 - 200
+	public $H;							# height : 0 - 200
 
-	public $Text;					# 0 to 240 characters of text
+	public $Text;						# 0 to 240 characters of text
 
 	public function pack()
 	{
@@ -2016,7 +2048,7 @@ class IS_BTN extends struct // BuTtoN - button header - followed by 0 to 240 cha
 			else
 				$return .= pack($pkFnkFormat, $this->$property);
 		}
-		
+
 		return $return;
 	}
 };
@@ -2056,14 +2088,14 @@ $INST = array(INST_ALWAYS_ON => 'INST_ALWAYS_ON');
 
 // BStyle byte : style flags for the button
 
-define('ISB_C1',		1);		// you can choose a standard
-define('ISB_C2',		2);		// interface colour using
-define('ISB_C4',		4);		// these 3 lowest bits - see below
-define('ISB_CLICK',		8);		// click this button to send IS_BTC
-define('ISB_LIGHT',		16);	// light button
-define('ISB_DARK',		32);	// dark button
-define('ISB_LEFT',		64);	// align text to left
-define('ISB_RIGHT',		128);	// align text to right
+define('ISB_C1',		1);			// you can choose a standard
+define('ISB_C2',		2);			// interface colour using
+define('ISB_C4',		4);			// these 3 lowest bits - see below
+define('ISB_CLICK',		8);			// click this button to send IS_BTC
+define('ISB_LIGHT',		16);		// light button
+define('ISB_DARK',		32);		// dark button
+define('ISB_LEFT',		64);		// align text to left
+define('ISB_RIGHT',		128);		// align text to right
 
 // colour 0 : light grey		(not user editable)
 // colour 1 : title colour		(default:yellow)
@@ -2086,14 +2118,14 @@ class IS_BTC extends struct // BuTton Click - sent back when user clicks a butto
 	const PACK = 'CCCCCCCx';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CCFlags/CSp3';
 
-	protected $Size = 8;			# 8
-	protected $Type = ISP_BTC;		# ISP_BTC
-	public $ReqI;					# ReqI as received in the IS_BTN
-	public $UCID;					# connection that clicked the button (zero if local)
+	protected $Size = 8;				# 8
+	protected $Type = ISP_BTC;			# ISP_BTC
+	public $ReqI;						# ReqI as received in the IS_BTN
+	public $UCID;						# connection that clicked the button (zero if local)
 
-	public $ClickID;				# button identifier originally sent in IS_BTN
-	public $Inst;					# used internally by InSim
-	public $CFlags;					# button click flags - see below
+	public $ClickID;					# button identifier originally sent in IS_BTN
+	public $Inst;						# used internally by InSim
+	public $CFlags;						# button click flags - see below
 	protected $Sp3;
 };
 
@@ -2113,17 +2145,17 @@ class IS_BTT extends struct // BuTton Type - sent back when user types into a te
 	const PACK = 'CCCCCCCxa96';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CTypeIn/CSp3/a96Text';
 
-	protected $Size = 104;			# 104
-	protected $Type = ISP_BIT;		# ISP_BTT
-	public $ReqI;					# ReqI as received in the IS_BTN
-	public $UCID;					# connection that typed into the button (zero if local)
+	protected $Size = 104;				# 104
+	protected $Type = ISP_BIT;			# ISP_BTT
+	public $ReqI;						# ReqI as received in the IS_BTN
+	public $UCID;						# connection that typed into the button (zero if local)
 
-	public $ClickID;				# button identifier originally sent in IS_BTN
-	public $Inst;					# used internally by InSim
-	public $TypeIn;					# from original button specification
+	public $ClickID;					# button identifier originally sent in IS_BTN
+	public $Inst;						# used internally by InSim
+	public $TypeIn;						# from original button specification
 	protected $Sp3;
 
-	public $Text;					# typed text, zero to TypeIn specified in IS_BTN
+	public $Text;						# typed text, zero to TypeIn specified in IS_BTN
 
 	public function pack()
 	{
@@ -2145,7 +2177,7 @@ class IS_BTT extends struct // BuTton Type - sent back when user types into a te
 			else
 				$return .= pack($pkFnkFormat, $this->$property);
 		}
-		
+
 		return $return;
 	}
 };
@@ -2173,17 +2205,17 @@ class OutSimPack extends struct
 	const PACK = 'Vf3ffff3f3fll';
 	const UNPACK = 'VTime/f3AngVel/fHeading/fPitch/fRoll/f3Accel/f3Vel/l3Pos/lID';
 
-	public $Time;					# time in milliseconds (to check order)
+	public $Time;						# time in milliseconds (to check order)
 
-	public $AngVel;					# 3 floats, angular velocity vector
-	public $Heading;				# anticlockwise from above (Z)
-	public $Pitch;					# anticlockwise from right (X)
-	public $Roll;					# anticlockwise from front (Y)
-	public $Accel;					# 3 floats X, Y, Z
-	public $Vel;					# 3 floats X, Y, Z
-	public $Pos;					# 3 ints   X, Y, Z (1m = 65536)
+	public $AngVel;						# 3 floats, angular velocity vector
+	public $Heading;					# anticlockwise from above (Z)
+	public $Pitch;						# anticlockwise from right (X)
+	public $Roll;						# anticlockwise from front (Y)
+	public $Accel;						# 3 floats X, Y, Z
+	public $Vel;						# 3 floats X, Y, Z
+	public $Pos;						# 3 ints   X, Y, Z (1m = 65536)
 
-	public $ID;						# optional - only if OutSim ID is specified
+	public $ID;							# optional - only if OutSim ID is specified
 };
 
 // NOTE 1) X and Y axes are on the ground, Z is up.
@@ -2215,26 +2247,26 @@ class OutGaugePack extends struct
 	const PACK = 'Va4vCxfffffffVVfffa16a16l';
 	const UNPACK = 'VTime/a4Car/vFlags/CGear/CSpareB/fSpeed/fRPM/fTurbo/fEngTemp/fFuel/fOilPressure/fOilTemp/VDashLights/VShowLights/fThrottle/fBrake/fClutch/a16Display1/a16Display2/lID';
 
-	public $Time;					# time in milliseconds (to check order)
+	public $Time;						# time in milliseconds (to check order)
 
-	public $Car;					# Car name
-	public $Flags;					# Info (see OG_x below)
-	public $Gear;					# Reverse:0, Neutral:1, First:2...
+	public $Car;						# Car name
+	public $Flags;						# Info (see OG_x below)
+	public $Gear;						# Reverse:0, Neutral:1, First:2...
 	protected $SpareB;
-	public $Speed;					# M/S
-	public $RPM;					# RPM
-	public $Turbo;					# BAR
-	public $EngTemp;				# C
-	public $Fuel;					# 0 to 1
-	public $OilPressure;			# BAR
-	public $OilTemp;				# C
-	public $DashLights;				# Dash lights available (see DL_x below)
-	public $ShowLights;				# Dash lights currently switched on
-	public $Throttle;				# 0 to 1
-	public $Brake;					# 0 to 1
-	public $Clutch;					# 0 to 1
-	public $Display1;				# Usually Fuel
-	public $Display2;				# Usually Settings
+	public $Speed;						# M/S
+	public $RPM;						# RPM
+	public $Turbo;						# BAR
+	public $EngTemp;					# C
+	public $Fuel;						# 0 to 1
+	public $OilPressure;				# BAR
+	public $OilTemp;					# C
+	public $DashLights;					# Dash lights available (see DL_x below)
+	public $ShowLights;					# Dash lights currently switched on
+	public $Throttle;					# 0 to 1
+	public $Brake;						# 0 to 1
+	public $Clutch;						# 0 to 1
+	public $Display1;					# Usually Fuel
+	public $Display2;					# Usually Settings
 
 	public $ID;						# optional - only if OutGauge ID is specified
 };
@@ -2268,7 +2300,7 @@ $DL = array(DL_SHIFT => 'DL_SHIFT', DL_FULLBEAM => 'DL_FULLBEAM', DL_HANDBRAKE =
 
 // InSimRelay for LFS InSim version 4 (LFS 0.5X and up)
 //
-// The Relay code below can be seen as an extension to the regular 
+// The Relay code below can be seen as an extension to the regular
 // InSim protocol, as the packets are constructed in the same
 // manner as regular InSim packets.
 //
@@ -2306,8 +2338,8 @@ class IR_HLR extends struct // HostList Request
 	const PACK = 'CCCx';
 	const UNPACK = 'CSize/CType/CReqI/CSp0';
 
-	protected $Size = 4;			# 4
-	protected $Type = IRP_HLR;		# IRP_HLR
+	protected $Size = 4;				# 4
+	protected $Type = IRP_HLR;			# IRP_HLR
 	public $ReqI;
 	protected $Sp0;
 };
@@ -2322,11 +2354,11 @@ class HInfo // Sub packet for IR_HOS. Contains host information
 	const PACK = 'a32a6CC';
 	const UNPACK = 'a32HName/a6Track/CFlags/CNumConns';
 
-	public $HName;					# Name of the host
+	public $HName;						# Name of the host
 
-	public $Track;					# Short track name
-	public $Flags;					# Info flags about the host - see NOTE 1) below
-	public $NumConns;				# Number of people on the host
+	public $Track;						# Short track name
+	public $Flags;						# Info flags about the host - see NOTE 1) below
+	public $NumConns;					# Number of people on the host
 };
 
 // NOTE 1)
@@ -2345,17 +2377,17 @@ class IR_HOS extends struct // Hostlist (hosts connected to the Relay)
 	const PACK = 'CCCCa6';
 	const UNPACK = 'CSize/CType/CReqI/CNumHosts/a6Info';
 
-	protected $Size;				# 4 + NumHosts * 40
-	protected $Type = IRP_HOS;		# IRP_HOS
-	public $ReqI;					# As given in IR_HLR
-	public $NumHosts;				# Number of hosts described in this packet
+	protected $Size;					# 4 + NumHosts * 40
+	protected $Type = IRP_HOS;			# IRP_HOS
+	public $ReqI;						# As given in IR_HLR
+	public $NumHosts;					# Number of hosts described in this packet
 
-	public $Info = array();			# Host info for every host in the Relay. 1 to 6 of these in a IR_HOS
+	public $Info = array();				# Host info for every host in the Relay. 1 to 6 of these in a IR_HOS
 
 	public function unpack()
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
-		
+
 		foreach ($pkClass as $property => $value)
 		{
 			$this->$property = $value;
@@ -2378,14 +2410,14 @@ class IR_SEL extends struct // Relay select - packet to select a host, so relay 
 	const PACK = 'CCCxa32a16a16';
 	const UNPACK = 'CSize/CType/CReqI/CZero/a32HName/a16Admin/a16Spec';
 
-	protected $Size = 68;			# 68
-	protected $Type = IRP_SEL;		# IRP_SEL
-	public $ReqI;					# If non-zero Relay will reply with an IS_VER packet
-	protected $Zero;				# 0
+	protected $Size = 68;				# 68
+	protected $Type = IRP_SEL;			# IRP_SEL
+	public $ReqI;						# If non-zero Relay will reply with an IS_VER packet
+	protected $Zero;					# 0
 
-	public $HName;					# Hostname to receive data from - may be colourcode stripped
-	public $Admin;					# Admin password (to gain admin access to host)
-	public $Spec;					# Spectator password (if host requires it)
+	public $HName;						# Hostname to receive data from - may be colourcode stripped
+	public $Admin;						# Admin password (to gain admin access to host)
+	public $Spec;						# Spectator password (if host requires it)
 
 };
 
@@ -2397,8 +2429,8 @@ class IR_ARQ extends struct // Admin Request
 	const PACK = 'CCCx';
 	const UNPACK = 'CSize/CType/CReqI/CSp0';
 
-	protected $Size = 4;			# 4
-	protected $Type = IRP_ARQ;		# IRP_ARQ
+	protected $Size = 4;				# 4
+	protected $Type = IRP_ARQ;			# IRP_ARQ
 	public $ReqI;
 	protected $Sp0;
 };
@@ -2411,14 +2443,14 @@ class IR_ARP extends struct // Admin Response
 	const PACK = 'CCCC';
 	const UNPACK = 'CSize/CType/CReqI/CAdmin';
 
-	protected $Size = 4;			# 4
-	protected $Type = IRP_ARP;		# IRP_ARP
+	protected $Size = 4;				# 4
+	protected $Type = IRP_ARP;			# IRP_ARP
 	public $ReqI;
-	public $Admin;					# 0- no admin; 1- admin
+	public $Admin;						# 0- no admin; 1- admin
 };
 
 
-// If you specify a wrong value, like invalid packet / hostname / adminpass / specpass, 
+// If you specify a wrong value, like invalid packet / hostname / adminpass / specpass,
 // the Relay returns an error packet :
 
 class IR_ERR extends struct
@@ -2426,10 +2458,10 @@ class IR_ERR extends struct
 	const PACK = 'CCCC';
 	const UNPACK = 'CSize/CType/CReqI/CErrNo';
 
-	protected $Size = 4;			# 4
-	protected $Type = IRP_ERR;		# IRP_ERR
-	public $ReqI;					# As given in RL_SEL, otherwise 0
-	public $ErrNo;					# Error number - see NOTE 2) below
+	protected $Size = 4;				# 4
+	protected $Type = IRP_ERR;			# IRP_ERR
+	public $ReqI;						# As given in RL_SEL, otherwise 0
+	public $ErrNo;						# Error number - see NOTE 2) below
 };
 
 // NOTE 2) Error numbers :
@@ -2482,4 +2514,5 @@ foreach ($TYPEs as $Type => $Name)
 	$TYPEs[$Type] = substr_replace($Name, '', 2, 1);
 }
 /* End of PRISM PACKET FOOTER */
+
 ?>

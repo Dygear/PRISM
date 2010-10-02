@@ -486,9 +486,9 @@ class HostHandler extends SectionHandler
 		}
 	}
 
-	public function sendPacket(struct $packetClass, $hostId = FALSE)
+	public function sendPacket(struct $packetClass, $hostId = NULL)
 	{
-		if ($hostId === FALSE)
+		if ($hostId === NULL)
 			return $this->hosts[$this->curHostID]->writePacket($packetClass);
 		else
 			return $this->hosts[$hostId]->writePacket($packetClass);

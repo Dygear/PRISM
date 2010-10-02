@@ -21,48 +21,70 @@ class admin extends Plugins
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
 */
 		# Admin Commands
-		$this->registerSayCommand('prism kick', 'cmdAdminKick', '<targets> ...', ADMIN_KICK);
+		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ...', ADMIN_KICK);
 		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time>', ADMIN_BAN);
-		$this->registerSayCommand('prism spec', 'cmdAdminSpec', '<targets> ...', ADMIN_SPECTATE);
-		$this->registerSayCommand('prism pit', 'cmdAdminPit', '<targets> ...', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism pit', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
 	}
 
-	public function cmdAdminKick($cmd, $plid, $ucid)
+	public function cmdAdminBan($cmd, $plid, $ucid)
 	{
-		$castingAdmin = $this->getUserNameByUCID($ucid);
+		# We are going to use this in all instances.
+		$MTC = new IS_MTC();
+		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
-		array_shift($argv); array_shift($argv);
+		array_shift($argv); $cmd = array_shift($argv);
+
+		$castingAdmin = $this->getUserNameByUCID($ucid);
+
+		# If we don't have target(s), then we can't do anything.
 		if (count($argv) == 0)
-			console('Kick Needs a Target.');
+			$this->UCID($ucid)->Msg("$cmd needs a target.")->Send();
+
+		$target = array_shift($argv);
+		$minutes = array_shift($argv);
+
+		if ($castingAdmin == $target)
+			$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
+		else if ($this->isImmune($target))
+			$MTC->UCID(255)->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
 		else
 		{
 			$MST = new IS_MST();
+			$MST->Msg("/ban $target $minutes")->Send();
+			$MTC->UCID(255)->Msg("Admin $castingAdmin banned $target for $minutes minute(s).");
+		}
+	}
+
+	public function castLFSCommand($cmd, $plid, $ucid)
+	{
+		# We are going to use this in all instances.
+		$MTC = new IS_MTC();
+		# Get the command and it's args.
+		$argv = str_getcsv($cmd, ' ');
+		array_shift($argv); $cmd = array_shift($argv);
+
+		$castingAdmin = $this->getUserNameByUCID($ucid);
+
+		# If we don't have target(s), then we can't do anything.
+		if (count($argv) == 0)
+			$this->UCID($ucid)->Msg("$cmd needs a target.")->Send();
+		else
+		{
 			foreach ($argv as $target)
 			{
 				if ($castingAdmin == $target)
-					console("Why would you even try to run this on yourself?");
+					$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
 				else if ($this->isImmune($target))
-					console("Admin $castingAdmin tired to kick immune Admin $target.");
+					$MTC->UCID(255)->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
 				else
 				{
-					$MST->Msg = "/kick $target";
-					$this->sendPacket($MST);
-					console("Admin $castingAdmin kicked $target.");
+					$MST = new IS_MST();
+					$MST->Msg("/{$cmd} $target")->Send();
+					$MTC->UCID(255)->Msg("Admin $castingAdmin {$cmd}ed $target.");
 				}
 			}
 		}
-	}
-	public function cmdAdminBan($cmd, $plid, $ucid)
-	{
-		console("$cmd, $plid, $ucid");
-	}
-	public function cmdAdminSpec($cmd, $plid, $ucid)
-	{
-		console("$cmd, $plid, $ucid");
-	}
-	public function cmdAdminPit($cmd, $plid, $ucid)
-	{
-		console("$cmd, $plid, $ucid");
 	}
 
 	// Help
@@ -88,12 +110,13 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
+		$MTC = new IS_MTC;
+		$MTC->PLID($plid);
+
 		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
-		console(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'));
+		$MTC->Msg(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'))->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
-		{
-			console(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION));
-		}
+			$MTC->Msg(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION))->Send();
 
 		return PLUGIN_CONTINUE;
 	}
@@ -103,11 +126,14 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
+		$MTC = new IS_MTC;
+		$MTC->PLID($plid);
+
 		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
-		echo sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION') . PHP_EOL;
+		$MTC->Msg(sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'))->Send();
 		foreach ($PRISM->admins->getAdminsInfo() as $user => $details)
 		{
-			echo $user;
+			$MTC->Msg($user)->Send();
 			print_r($details);
 		}
 
