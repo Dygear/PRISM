@@ -1,3 +1,59 @@
+0.3.0
+	* Refactored Core & Modules
+	* PRISM can be global'ed for easy access to variables.
+	* HTTP Interface for PRISM.
+	* Telnet with DOM model.
+	* Packet properties can now be chained like methods for a quick write of variables.
+	* Added admin functions
+		plugin::isAdmin()
+		plugin::isAdminGlobal()
+		plugin::isAdminLocal()
+		plugin::isImmune()
+	* Added admin commands in the admin plugin.
+		`prism kick`
+		`prism ban`
+		`prism spec`
+		`prism pit`
+	* PRISM now quits when there are no active connections.
+	* Game state information now stored on a per host basis.
+	* Made protected propertys in the packets class are read only. (Via __get()). 
+
+0.2.0
+	+ Updated the packet filter to be compatable with Victor's useHost CSV changes.
+	= Does not print_r($this); on each onSay function call in theTime plugin.
+	* Major structure changes thoughout the Plugins & PHPInSimMod Class.
+	+ Added basic admin system to PRISM.
+	+ Fixed NULL sleep bugs that came to the surface.
+	+ Prefixed say commands now work as they should.
+	+ plugin::register* commands done.
+	+ Admin levels setup.
+
+0.1.9
+	+ Finished interactive startup.
+	+ Made sample config files.
+	* Added very basic plugin interface to PRISM.
+		* Plugins can now send packets, not just receive them. (Via $this->sendPacket());
+		* Added a fullback constructor to the plugins class, should there not be one in the child plugin.
+		* Fixed the three shutdown error messages and cleaned up the look of the packet module.
+		* plugins::registerPacket function accepts a variable number of packets.
+		* Added plugin list to the available console commands under 'P'.
+		* Made sure plugins only get packets from their subscribed hosts.
+	* Cleaned up some extra information being printed to the console and made it respect the debug level.
+	* Added emergency defaults for the cvars array, made not having a cvar.ini file a non fatal error.
+
+0.1.8
+	* Added packet length check to ensure data integrity.
+	* Memory efficient improved in handlePacket function.
+	* Added emergency defaults for the cvars array.
+	= Made a generic connections.ini file.
+	+ Implemented GeForz's error handling system.
+	+ Implemented GeForz's __toString function in structs class.
+	+ Implemented GeForz's printPacketStructure in strufts class, with some edits.
+	+ Implemented GeForz's some other edits.
+	= Neater default cvars handling.
+	= Fixed a duplicate entry in default cvars and added a missing one.
+	= Fixed small udpPort bug in case duplicate udpPort was found in connections config causing prism to listen to a nonexistent socket (would throw php error).
+
 0.1.7
 	+ Added multi-connection capability
 	+ Added UDP support, including secondary UDP port
