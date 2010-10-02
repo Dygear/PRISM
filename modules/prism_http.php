@@ -1115,7 +1115,10 @@ class HttpClient
 			return;
 		
 		$logLine =
-			$this->ip.' - - ['.date('d/M/Y:H:i:s O').'] '.
+			$this->ip.' '.
+			'- '.
+			((isset($this->httpRequest->SERVER['PHP_AUTH_USER'])) ? str_replace(' ', '_', $this->httpRequest->SERVER['PHP_AUTH_USER']) : '-').' '.
+			'['.date('d/M/Y:H:i:s O').'] '.
 			'"'.$this->httpRequest->requestLine.'" '.
 			$code.' '.
 			$size.' '.
