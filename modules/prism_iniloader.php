@@ -193,7 +193,7 @@ abstract class IniLoader
 			$newLines[] = $line;
 		}
 		
-		if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $newLines).PHP_EOL))
+		if (!file_put_contents(ROOTPATH.'/configs/'.$this->iniFile, implode(PHP_EOL, $newLines)))
 			return false;
 		
 		return true;
