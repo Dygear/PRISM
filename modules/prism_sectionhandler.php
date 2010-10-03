@@ -2,12 +2,9 @@
 
 require_once(ROOTPATH . '/modules/prism_iniloader.php');
 
-class SectionHandler extends IniLoader
+abstract class SectionHandler extends IniLoader
 {
-	public function __construct()
-	{
-		
-	}
+	abstract public function initialise();
 }
 
 ?>

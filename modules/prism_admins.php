@@ -159,6 +159,7 @@ ININOTES;
 			$info[$user] = array(
 				'accessFlags' => $details['accessFlags'],
 				'connection' => $details['connection'],
+				'temporary' => isset($details['temporary']) ? $details['temporary'] : false,
 			);
 		return $info;
 	}
@@ -171,6 +172,7 @@ ININOTES;
 		return array(
 			'accessFlags' => $this->admins[$username]['accessFlags'],
 			'connection' => $this->admins[$username]['connection'],
+			'temporary' => isset($this->admins[$username]['temporary']) ? $this->admins[$username]['temporary'] : false,
 		);
 	}
 	
@@ -217,7 +219,24 @@ ININOTES;
 		{
 			$this->appendSection($username, $this->admins[$username]);
 		}
+		else
+		{
+			$this->admins[$username]['temporary'] = true;
+		}
 
+		return true;
+	}
+	
+	public function makePermanent($username)
+	{
+		if (!isset($this->admins[$username]) || 
+			!isset($this->admins[$username]['temporary']) || 
+			!$this->admins[$username]['temporary'])
+			return false;
+		
+		unset($this->admins[$username]['temporary']);
+		$this->appendSection($username, $this->admins[$username]);
+		
 		return true;
 	}
 	

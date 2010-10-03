@@ -334,7 +334,7 @@ class ClientHandler extends PropertyMaster
 
 		global $PRISM;
 		if ($this->UCID == 0)
-			$PRISM->admins->addAccount($this->UName, '', ADMIN_SERVER, $PRISM->hosts->getCurrentHost(), FALSE);
+			$PRISM->admins->addAccount('*'.$PRISM->hosts->getCurrentHost(), '', ADMIN_SERVER, $PRISM->hosts->getCurrentHost(), FALSE);
 		else if ($this->Admin == TRUE)
 			$PRISM->admins->addAccount($this->UName, '', ADMIN_ADMIN, $PRISM->hosts->getCurrentHost(), FALSE);
 	}
