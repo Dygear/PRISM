@@ -68,12 +68,16 @@ class StateHandler extends PropertyMaster
 		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
 		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
 		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
-		$ISP->SubT(TINY_NLP)->Send();	# send an IS_NLP (ISP_NLP)
-		$ISP->SubT(TINY_MCI)->Send();	# send an IS_MCI (ISP_MCI)
 		$ISP->SubT(TINY_REO)->Send();	# send an IS_REO (ISP_REO)
 		$ISP->SubT(TINY_RST)->Send();	# send an IS_RST (ISP_RST)
 		$ISP->SubT(TINY_AXI)->Send();	# send an IS_AXI - AutoX Info (ISP_AXI)
-		$ISP->SubT(TINY_RIP)->Send();	# send an IS_RIP - Replay Information Packet (ISP_RIP)
+
+		if (!$PRISM->hosts->getHostById()->isRelay())
+		{
+			$ISP->SubT(TINY_NLP)->Send();	# send an IS_NLP (ISP_NLP)
+			$ISP->SubT(TINY_MCI)->Send();	# send an IS_MCI (ISP_MCI)
+			$ISP->SubT(TINY_RIP)->Send();	# send an IS_RIP - Replay Information Packet (ISP_RIP)
+		}
 	}
 
 	// Intrinsic Properties & Handlers

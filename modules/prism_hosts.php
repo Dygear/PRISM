@@ -493,7 +493,8 @@ class HostHandler extends SectionHandler
 		
 		$host = $this->hosts[$hostId];
 		
-		if ($host->isRelay() && !$host->isAdmin() &&
+		if (
+			$host->isRelay() && !$host->isAdmin() &&
 			(
 				($packetClass instanceof IS_TINY && $packetClass->SubT == TINY_VTC)
 				|| $packetClass instanceof IS_MST
@@ -505,7 +506,14 @@ class HostHandler extends SectionHandler
 				|| $packetClass instanceof IS_BTN
 			)
 		)
-			trigger_error('Invalid packet to relay host, packet not allowed to be forwarded without admin privileges.', E_USER_WARNING);
+			trigger_error('Attempted to send invalid packet to relay host, packet not allowed to be forwarded without admin privileges.', E_USER_WARNING);
+		else if (
+			$packetClass instanceof IS_TINY
+			&& $packetClass->SubT == TINY_NLP
+			|| $packetClass->SubT == TINY_MCI
+			|| $packetClass->SubT == TINY_RIP
+		)
+			trigger_error('Attempted to send invalid packet to relay host, packet request makes no sense in this context.', E_USER_WARNING);
 		else
 			return $host->writePacket($packetClass);
 	}
@@ -530,11 +538,15 @@ class HostHandler extends SectionHandler
 		return $info;
 	}
 	
-	public function getHostById($id)
+	public function getHostById($hostId = NULL)
 	{
-		if (isset($this->hosts[$id]))
-			return $this->hosts[$id];
-		return null;
+		if ($hostId == NULL)
+			$hostId = $this->getCurrentHost();
+
+		if (isset($this->hosts[$hostId]))
+			return $this->hosts[$hostId];
+
+		return NULL;
 	}
 	
 	public function getHostsByIp($ip)
