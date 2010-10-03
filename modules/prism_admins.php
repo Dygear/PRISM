@@ -34,7 +34,7 @@ define('ADMIN_ALL',					134217727);	# All flags, a - z.
 
 define('ADMIN_MOD', ADMIN_BAN + ADMIN_KICK + ADMIN_SPECTATE); # Low level access to some basic admin commands.
 define('ADMIN_ADMIN', ADMIN_MOD + ADMIN_CFG + ADMIN_GAME + ADMIN_HOST + ADMIN_TRACK + ADMIN_PENALTIES + ADMIN_RCM + ADMIN_VOTE); # Same as giving /admin password to this user.
-define('ADMIN_HOST', ADMIN_ADMIN + ADMIN_IMMUNITY + ADMIN_UNIMMUNIZE); # Automicaly given to server hosts.
+define('ADMIN_SERVER', ADMIN_ADMIN + ADMIN_IMMUNITY + ADMIN_UNIMMUNIZE); # Automicaly given to server hosts.
 define('ADMIN_ROOT', ADMIN_ALL); # Root level access. (Full Access)
 
 /**

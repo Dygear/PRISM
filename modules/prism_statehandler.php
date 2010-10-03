@@ -61,32 +61,19 @@ class StateHandler extends PropertyMaster
 		$ISP->ReqI = 1;
 		// Request every bit of information we can get.
 		// This becomes our baseline that we use and update as needed.
-		$ISP->SubT = TINY_GTH;	# Get Time in Hundredths (SMALL_RTP)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_SCP;	# Send Camera Pos (ISP_CPP)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_SST;	# Send STate info (ISP_STA)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_ISM;	# Get Multiplayer Info (ISP_ISM)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_NCN;	# get all connections (ISP_NCN)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_NPL;	# get all players (ISP_NPL)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_RES;	# get all results (ISP_RES)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_NLP;	# send an IS_NLP (ISP_NLP)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_MCI;	# send an IS_MCI (ISP_MCI)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_REO;	# send an IS_REO (ISP_REO)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_RST;	# send an IS_RST (ISP_RST)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_AXI;	# send an IS_AXI - AutoX Info (ISP_AXI)
-		$PRISM->hosts->sendPacket($ISP);
-		$ISP->SubT = TINY_RIP;	# send an IS_RIP - Replay Information Packet (ISP_RIP)
-		$PRISM->hosts->sendPacket($ISP);
+		$ISP->SubT(TINY_GTH)->Send();	# Get Time in Hundredths (SMALL_RTP)
+		$ISP->SubT(TINY_SCP)->Send();	# Send Camera Pos (ISP_CPP)
+		$ISP->SubT(TINY_SST)->Send();	# Send STate info (ISP_STA)
+		$ISP->SubT(TINY_ISM)->Send();	# Get Multiplayer Info (ISP_ISM)
+		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
+		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
+		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
+		$ISP->SubT(TINY_NLP)->Send();	# send an IS_NLP (ISP_NLP)
+		$ISP->SubT(TINY_MCI)->Send();	# send an IS_MCI (ISP_MCI)
+		$ISP->SubT(TINY_REO)->Send();	# send an IS_REO (ISP_REO)
+		$ISP->SubT(TINY_RST)->Send();	# send an IS_RST (ISP_RST)
+		$ISP->SubT(TINY_AXI)->Send();	# send an IS_AXI - AutoX Info (ISP_AXI)
+		$ISP->SubT(TINY_RIP)->Send();	# send an IS_RIP - Replay Information Packet (ISP_RIP)
 	}
 
 	// Intrinsic Properties & Handlers
@@ -334,7 +321,7 @@ class ClientHandler extends PropertyMaster
 	// Construct
 	public function __construct(IS_NCN $NCN)
 	{
-		$this->UCID = $NCN->UCID; # Where this is 0, client should be given the ADMIN_HOST permission level.
+		$this->UCID = $NCN->UCID; # Where this is 0, client should be given the ADMIN_SERVER permission level.
 		$this->UName = $NCN->UName;
 		$this->PName = $NCN->PName;
 		$this->Admin = $NCN->Admin;	# Where this is 1, client should be given the ADMIN_ADMIN permission level.
@@ -343,7 +330,7 @@ class ClientHandler extends PropertyMaster
 
 		global $PRISM;
 		if ($this->UCID == 0)
-			$PRISM->admins->addAccount($this->UName, '', ADMIN_HOST, $PRISM->hosts->getCurrentHost(), FALSE);
+			$PRISM->admins->addAccount($this->UName, '', ADMIN_SERVER, $PRISM->hosts->getCurrentHost(), FALSE);
 		else if ($this->Admin == TRUE)
 			$PRISM->admins->addAccount($this->UName, '', ADMIN_ADMIN, $PRISM->hosts->getCurrentHost(), FALSE);
 	}

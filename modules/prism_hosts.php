@@ -493,8 +493,7 @@ class HostHandler extends SectionHandler
 		
 		$host = $this->hosts[$hostId];
 		
-		if (
-			$host->isRelay() == TRUE && $host->isAdmin == FALSE &&
+		if ($host->isRelay() && !$host->isAdmin() &&
 			(
 				($packetClass instanceof IS_TINY && $packetClass->SubT == TINY_VTC)
 				|| $packetClass instanceof IS_MST
@@ -506,7 +505,7 @@ class HostHandler extends SectionHandler
 				|| $packetClass instanceof IS_BTN
 			)
 		)
-			trigger_error('You may not send this packet to the remote host. It is not exliable in this context', E_USER_WARNING);
+			trigger_error('Invalid packet to relay host, packet not allowed to be forwarded without admin privileges.', E_USER_WARNING);
 		else
 			return $host->writePacket($packetClass);
 	}
