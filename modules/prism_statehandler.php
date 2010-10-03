@@ -334,12 +334,18 @@ class ClientHandler extends PropertyMaster
 	// Construct
 	public function __construct(IS_NCN $NCN)
 	{
-		$this->UCID = $NCN->UCID;
+		$this->UCID = $NCN->UCID; # Where this is 0, client should be given the ADMIN_HOST permission level.
 		$this->UName = $NCN->UName;
 		$this->PName = $NCN->PName;
 		$this->Admin = $NCN->Admin;	# Where this is 1, client should be given the ADMIN_ADMIN permission level.
 		$this->Total = $NCN->Total;
 		$this->Flags = $NCN->Flags;
+
+		global $PRISM;
+		if ($this->UCID == 0)
+			$PRISM->admins->addAccount($this->UName, '', ADMIN_HOST, $PRISM->hosts->getCurrentHost(), FALSE);
+		else if ($this->Admin == TRUE)
+			$PRISM->admins->addAccount($this->UName, '', ADMIN_ADMIN, $PRISM->hosts->getCurrentHost(), FALSE);
 	}
 
 	public function onRename(IS_CPR $CPR)
@@ -349,7 +355,7 @@ class ClientHandler extends PropertyMaster
 	}
 	
 	// Is
-	public function isAdmin(){ return ($this->Admin == 1) ? TRUE : FALSE; }
+	public function isAdmin(){ return ($this->UCID == 0 || $this->Admin == 1) ? TRUE : FALSE; }
 	public function isRemote(){ return ($this->Flags == 2) ? TRUE : FALSE; }
 }
 
