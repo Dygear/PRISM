@@ -141,7 +141,7 @@ class admin extends Plugins
 	public function cmdVersion($cmd, $plid, $ucid)
 	{
 		$MTC = new IS_MTC();
-		$MTC->UCID($ucid)->Msg('PRISM Version' PHPInSimMod::Version)->Send();
+		$MTC->UCID($ucid)->Msg('PRISM Version' . PHPInSimMod::Version)->Send();
 	}
 
 	// Admins
