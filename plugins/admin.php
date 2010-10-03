@@ -8,10 +8,11 @@ class admin extends Plugins
 
 	public function __construct()
 	{
-/*		# Help
+		# Help
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism help', 'cmdHelp', 'Displays this command list.');
-
+		$this->registerSayCommand('prism version', 'cmdVersion', 'Displays the version of PRISM.');
+/*
 		# Plugins
 		$this->registerSayCommand('prism plugins', 'cmdPluginList', 'Displays a list of plugins.');
 		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.');
@@ -29,37 +30,42 @@ class admin extends Plugins
 
 	public function cmdAdminBan($cmd, $plid, $ucid)
 	{
-		# We are going to use this in all instances.
-		$MTC = new IS_MTC();
 		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
 		array_shift($argv); $cmd = array_shift($argv);
 
 		$castingAdmin = $this->getUserNameByUCID($ucid);
 
-		# If we don't have target(s), then we can't do anything.
-		if (count($argv) == 0)
-			$this->UCID($ucid)->Msg("$cmd needs a target.")->Send();
-
 		$target = array_shift($argv);
 		$minutes = array_shift($argv);
 
-		if ($castingAdmin == $target)
+		# If we don't have target(s), then we can't do anything.
+		if (count($argv) == 0)
+		{
+			$MTC = new IS_MTC;
+			$MTC->UCID($ucid)->Msg("$cmd needs a target.")->Send();
+		}
+		else if ($castingAdmin == $target)
+		{
+			$MTC = new IS_MTC;
 			$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
+		}
 		else if ($this->isImmune($target))
-			$MTC->UCID(255)->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
+		{
+			$MSX = new IS_MSX;
+			$MSX->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
+		}
 		else
 		{
 			$MST = new IS_MST();
 			$MST->Msg("/ban $target $minutes")->Send();
-			$MTC->UCID(255)->Msg("Admin $castingAdmin banned $target for $minutes minute(s).");
+			$MSX = new IS_MSX;
+			$MSX->Msg("Admin $castingAdmin banned $target for $minutes minute(s).");
 		}
 	}
 
 	public function castLFSCommand($cmd, $plid, $ucid)
 	{
-		# We are going to use this in all instances.
-		$MTC = new IS_MTC();
 		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
 		array_shift($argv); $cmd = array_shift($argv);
@@ -68,20 +74,30 @@ class admin extends Plugins
 
 		# If we don't have target(s), then we can't do anything.
 		if (count($argv) == 0)
-			$this->UCID($ucid)->Msg("$cmd needs a target.")->Send();
+		{
+			$MTC = new IS_MTC;
+			$MTC->UCID($ucid)->Msg("$cmd needs a target.")->Send();
+		}
 		else
 		{
 			foreach ($argv as $target)
 			{
 				if ($castingAdmin == $target)
+				{
+					$MTC = new IS_MTC;
 					$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
+				}
 				else if ($this->isImmune($target))
-					$MTC->UCID(255)->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
+				{
+					$MSX = new IS_MSX;
+					$MSX->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
+				}
 				else
 				{
 					$MST = new IS_MST();
 					$MST->Msg("/{$cmd} $target")->Send();
-					$MTC->UCID(255)->Msg("Admin $castingAdmin {$cmd}ed $target.");
+					$MSX = new IS_MSX;
+					$MSX->Msg("Admin $castingAdmin {$cmd}ed $target.")->Send();
 				}
 			}
 		}
@@ -119,6 +135,13 @@ class admin extends Plugins
 			$MTC->Msg(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION))->Send();
 
 		return PLUGIN_CONTINUE;
+	}
+
+	// Version
+	public function cmdVersion($cmd, $plid, $ucid)
+	{
+		$MTC = new IS_MTC();
+		$MTC->UCID($ucid)->Msg('PRISM Version' PHPInSimMod::Version)->Send();
 	}
 
 	// Admins
