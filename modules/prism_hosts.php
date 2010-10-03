@@ -489,9 +489,26 @@ class HostHandler extends SectionHandler
 	public function sendPacket(struct $packetClass, $hostId = NULL)
 	{
 		if ($hostId === NULL)
-			return $this->hosts[$this->curHostID]->writePacket($packetClass);
+			$hostId = $this->curHostID;
+		
+		$host = $this->hosts[$hostId];
+		
+		if (
+			$host->isRelay() == TRUE && $host->isAdmin == FALSE &&
+			(
+				($packetClass instanceof IS_TINY && $packetClass->SubT == TINY_VTC)
+				|| $packetClass instanceof IS_MST
+				|| $packetClass instanceof IS_MSX
+				|| $packetClass instanceof IS_MSL
+				|| $packetClass instanceof IS_MTC
+				|| $packetClass instanceof IS_SCH
+				|| $packetClass instanceof IS_BFN
+				|| $packetClass instanceof IS_BTN
+			)
+		)
+			trigger_error('You may not send this packet to the remote host. It is not exliable in this context', E_USER_WARNING);
 		else
-			return $this->hosts[$hostId]->writePacket($packetClass);
+			return $host->writePacket($packetClass);
 	}
 	
 	public function &getHostsInfo()
@@ -503,9 +520,10 @@ class HostHandler extends SectionHandler
 				'id'			=> $hostID,
 				'ip'			=> $host->getIP(),
 				'port'			=> $host->getPort(),
-				'useRelay'		=> $host->getUseRelay(),
+				'useRelay'		=> $host->isRelay(),
 				'hostname'		=> $host->getHostname(),
 				'udpPort'		=> $host->getUdpPort(),
+				'isAdmin'		=> $host->isAdmin(),
 				'connStatus'	=> $host->getConnStatus(),
 				'socketType'	=> $host->getSocketType(),
 			);
@@ -670,10 +688,15 @@ class InsimConnection
 	{
 		return $this->udpPort;
 	}
-	
-	public function getUseRelay()
+
+	public function isAdmin()
 	{
-		return ($this->connType == CONNTYPE_RELAY) ? true : false;
+		return ($this->adminPass != '') ? TRUE : FALSE;
+	}
+	
+	public function isRelay()
+	{
+		return ($this->connType == CONNTYPE_RELAY) ? TRUE : FALSE;
 	}
 	
 	public function &getHostname()
