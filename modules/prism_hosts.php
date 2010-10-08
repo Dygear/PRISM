@@ -120,7 +120,7 @@ class HostHandler extends SectionHandler
 					'hostName'		=> $hostName,
 					'adminPass'		=> $adminPass,
 					'specPass'		=> $specPass,
-					'prefix'		=> $prefix;
+					'prefix'		=> $prefix,
 					'pps'			=> $PRISM->config->cvars['relayPPS'],
 				);				
 				$ic = new InsimConnection($icVars);
@@ -174,7 +174,7 @@ class HostHandler extends SectionHandler
 					'udpPort'		=> $udpPort,
 					'pps'			=> $pps,
 					'adminPass'		=> $adminPass,
-					'prefix'		=> $prefix;
+					'prefix'		=> $prefix
 				);
 				$ic = new InsimConnection($icVars);
 
@@ -417,7 +417,7 @@ class HostHandler extends SectionHandler
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($TYPEs[$pH['Type']]))
 		{
-			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+			if ($PRISM->config->cvars['debugMode'] & (PRISM_DEBUG_CORE & PRISM_DEBUG_MODULES))
 				console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
