@@ -2,7 +2,7 @@
 
 class Interactive
 {
-	public function queryConnections(array &$vars)
+	public function queryHosts(array &$vars)
 	{
 		echo '***HOST CONNECTIONS SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
@@ -52,19 +52,21 @@ class Interactive
 			// Ask for the alias (hostID) for this connection
 			while (true)
 			{
-				$alias = self::query('What would you like this connection to be known as?', array(), TRUE);
-				if (!isset($vars[$alias]))
+				$hostID = self::query('What would you like this connection to be known as?', array(), TRUE);
+				if (isset($vars[$hostID]))
+					echo 'There already is a connection by that name. Please enter another one.'.PHP_EOL;
+				else if (!preg_match('/^[a-zA-Z0-9]+$/', $hostID))
+					echo 'Please only use characters a-z, A-Z and 0-9'.PHP_EOL;
+				else
 					break;
-				
-				echo 'There already is a connection by that name. Please enter another one.'.PHP_EOL;
 			}
 			
 			$c++;
-			if ($alias == '')
+			if ($hostID == '')
 				$vars["host #{$c}"] = $tmp;
 			else
-				$vars[$alias] = $tmp;
-			unset($alias);
+				$vars[$hostID] = $tmp;
+			unset($hostID);
 
 			if (self::query(PHP_EOL.'Would you like to add another host?', array('yes', 'no')) == 'no')
 				break;
@@ -98,8 +100,6 @@ class Interactive
 		echo '***PLUGINS SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually select which plugins to load.'.PHP_EOL;
 		echo 'Afterwards your plugin settings will be stored in ./config/plugins.ini for future use.'.PHP_EOL;
-		
-		$hosts = array();
 		
 		// Loop through the plugins now, so we can tie hosts to each plugin
 		foreach ($plugins as $plugin)
@@ -274,6 +274,8 @@ class Interactive
 	{
 		global $PRISM;
 		
+		$hostVars = $PRISM->hosts->getHostsInfo();
+		
 		echo '***ADMIN SETUP***'.PHP_EOL;
 		echo 'You now have the chance to create PRISM admin accounts.'.PHP_EOL;
 		echo 'Afterwards your admins settings will be stored in ./config/admins.ini for future use.'.PHP_EOL;
@@ -297,7 +299,75 @@ class Interactive
 				else
 					break;
 			} while(true);
-			$tmp['connection']			= self::query('Give the connection name on which the admin may be active. Leave blank for all connections.', array(), true);
+			
+			// Print a list of available hosts			
+			$c = 1;
+			$hostIDCache = array();
+			echo 'ID | Host details'.PHP_EOL;
+			echo '---+----------------'.PHP_EOL;
+			foreach ($hostVars as $index => $values)
+			{
+				$hostIDCache[$c] = $values['id'];
+				printf('%-2d | %s (', $c, $values['id']);
+				if (isset($values['useRelay']) && $values['useRelay'] == 1)
+					echo '"'.$values['hostname'].'" via relay';
+				else
+					echo '"'.$values['ip'].':'.$values['port'].'"';
+				echo ')'.PHP_EOL;
+				$c++;
+			}
+
+			// Select which hosts to tie to this new admin
+			while (true)
+			{
+				$hostIDs = '';
+				if ($c == 2)
+				{
+					$ids = self::query(PHP_EOL.'Enter the ID number of the host you want to tie to this admin. Or type * for all hosts.', array(), TRUE);
+				}
+				else
+				{
+					echo PHP_EOL.'Enter the ID numbers of the hosts you want to tie to this admin. Or type * for all hosts.'.PHP_EOL;
+					$ids = self::query('Separate each ID number by a space', array(), TRUE);
+				}
+				
+				// Validate user input
+				if ($ids == '*')
+				{
+					$hostIDs .= '*';
+					break;
+				}
+				else
+				{
+					$exp = explode(' ', $ids);
+					$invalidIDs = '';
+					$IDCache = array();
+					foreach ($exp as $e)
+					{
+						if ($e == '')
+							continue;
+						
+						$id = (int) $e;
+						if ($id < 1 || $id >= $c)
+						{
+							$invalidIDs .= $e.' ';
+						}
+						else if (!in_array($id, $IDCache))
+						{
+							if ($hostIDs != '')
+								$hostIDs .= ',';
+							$hostIDs .= $hostIDCache[$id];
+							$IDCache[] = $id;
+						}
+					}
+					if ($invalidIDs != '')
+						echo 'You typed one or more invalid host ID ('.trim($invalidIDs).'). Please try again.'.PHP_EOL;
+					else
+						break;
+				}
+			}
+			
+			$tmp['connection']			= $hostIDs;
 			$tmp['accessFlags']			= 'abcdefghijklmnopqrstuvwxyz';
 			
 			$vars[$tmp['username']] 	= array(

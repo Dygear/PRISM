@@ -75,7 +75,7 @@ class HostHandler extends SectionHandler
 		{
 			# We ask the client to manually input the connection details here.
 			require_once(ROOTPATH . '/modules/prism_interactive.php');
-			Interactive::queryConnections($this->connvars);
+			Interactive::queryHosts($this->connvars);
 			
 			# Then build a connections.ini file based on these details provided.
 			if ($this->createIniFile('InSim Connection Hosts', $this->connvars))
@@ -497,29 +497,37 @@ class HostHandler extends SectionHandler
 		
 		$host = $this->hosts[$hostId];
 		
-		if (
-			$host->isRelay() && !$host->isAdmin() &&
-			(
-				($packetClass instanceof IS_TINY && $packetClass->SubT == TINY_VTC)
-				|| $packetClass instanceof IS_MST
-				|| $packetClass instanceof IS_MSX
-				|| $packetClass instanceof IS_MSL
-				|| $packetClass instanceof IS_MTC
-				|| $packetClass instanceof IS_SCH
-				|| $packetClass instanceof IS_BFN
-				|| $packetClass instanceof IS_BTN
+		if ($host->isRelay())
+		{
+			if (!$host->isAdmin() &&
+				(
+					($packetClass instanceof IS_TINY && $packetClass->SubT == TINY_VTC)
+					|| $packetClass instanceof IS_MST
+					|| $packetClass instanceof IS_MSX
+					|| $packetClass instanceof IS_MSL
+					|| $packetClass instanceof IS_MTC
+					|| $packetClass instanceof IS_SCH
+					|| $packetClass instanceof IS_BFN
+					|| $packetClass instanceof IS_BTN
+				)
 			)
-		)
-			trigger_error('Attempted to send invalid packet to relay host, packet not allowed to be forwarded without admin privileges.', E_USER_WARNING);
-		else if (
-			$packetClass instanceof IS_TINY
-			&& $packetClass->SubT == TINY_NLP
-			|| $packetClass->SubT == TINY_MCI
-			|| $packetClass->SubT == TINY_RIP
-		)
-			trigger_error('Attempted to send invalid packet to relay host, packet request makes no sense in this context.', E_USER_WARNING);
-		else
-			return $host->writePacket($packetClass);
+			{
+				trigger_error('Attempted to send invalid packet to relay host, packet not allowed to be forwarded without admin privileges.', E_USER_WARNING);
+				return 0;
+			}
+			else if (
+				$packetClass instanceof IS_TINY
+				&& ($packetClass->SubT == TINY_NLP
+				|| $packetClass->SubT == TINY_MCI
+				|| $packetClass->SubT == TINY_RIP)
+			)
+			{
+				trigger_error('Attempted to send invalid packet to relay host, packet request makes no sense in this context.', E_USER_WARNING);
+				return 0;
+			}
+		}
+
+		return $host->writePacket($packetClass);
 	}
 	
 	public function &getHostsInfo()

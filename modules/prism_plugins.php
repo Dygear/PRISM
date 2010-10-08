@@ -408,16 +408,17 @@ abstract class Plugins
 
 	protected function isAdmin(&$username, $hostID = NULL)
 	{
-		global $PRISM;
+//		global $PRISM;
 		# Check the user is defined as an admin.
-		if (!$PRISM->admins->adminExists($username))
-			return FALSE;
+//		if (!$PRISM->admins->adminExists($username))
+//			return FALSE;
 
 		# set the $hostID;
-		$hostID = $this->getHostId($hostID);
+		if ($hostID === NULL)
+			$hostID = $this->getHostId($hostID);
 
 		# Check the user is defined as an admin on all or the host current host.
-		$adminInfo = $PRISM->admins->getAdminInfo($username);
+//		$adminInfo = $PRISM->admins->getAdminInfo($username);
 		return ($this->isAdminGlobal($username) || $this->isAdminLocal($username, $hostID)) ? TRUE : FALSE;
 	}
 	
