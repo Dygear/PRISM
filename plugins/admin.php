@@ -109,7 +109,7 @@ class admin extends Plugins
 		global $PRISM;
 
 		// (For button alignments)#  LEFT       LEFT
-		echo sprintf("%32s - %64s", 'COMMAND', 'DESCRIPTOIN') . PHP_EOL;
+		echo sprintf("%32s - %64s", 'COMMAND', 'DESCRIPTION') . PHP_EOL;
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
