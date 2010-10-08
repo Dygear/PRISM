@@ -105,6 +105,7 @@ class HostHandler extends SectionHandler
 				$hostName		= isset($v['hostname']) ? substr($v['hostname'], 0, 31) : '';
 				$adminPass		= isset($v['adminPass']) ? substr($v['adminPass'], 0, 15) : '';
 				$specPass		= isset($v['specPass']) ? substr($v['specPass'], 0, 15) : '';
+				$prefix			= isset($v['prefix']) ? substr($v['prefix'], 0, 1) : $PRISM->config->cvars['prefix'];
 
 				// Some value checking - guess we should output some user notices here too if things go wrong.
 				if ($hostName == '')
@@ -119,6 +120,7 @@ class HostHandler extends SectionHandler
 					'hostName'		=> $hostName,
 					'adminPass'		=> $adminPass,
 					'specPass'		=> $specPass,
+					'prefix'		=> $prefix;
 					'pps'			=> $PRISM->config->cvars['relayPPS'],
 				);				
 				$ic = new InsimConnection($icVars);
@@ -134,6 +136,7 @@ class HostHandler extends SectionHandler
 				$pps			= isset($v['pps']) ? (int) $v['pps'] : 3;
 				$adminPass		= isset($v['password']) ? substr($v['password'], 0, 15) : '';
 				$socketType		= isset($v['socketType']) ? (int) $v['socketType'] : SOCKTYPE_TCP;
+				$prefix			= isset($v['prefix']) ? substr($v['prefix'], 0, 1) : $PRISM->config->cvars['prefix'];
 				
 				// Some value checking
 				if ($port < 1 || $port > 65535)
@@ -171,6 +174,7 @@ class HostHandler extends SectionHandler
 					'udpPort'		=> $udpPort,
 					'pps'			=> $pps,
 					'adminPass'		=> $adminPass,
+					'prefix'		=> $prefix;
 				);
 				$ic = new InsimConnection($icVars);
 
@@ -612,6 +616,7 @@ class InsimConnection
 		$this->port			= $icVars['port'];
 		$this->pps			= $icVars['pps'];
 		$this->adminPass	= $icVars['adminPass'];
+		$this->prefix		= $icVars['prefix'];
 
 		$this->udpPort		= isset($icVars['udpPort']) ? $icVars['udpPort'] : 0;
 		$this->hostName		= isset($icVars['hostName']) ? $icVars['hostName'] : '';
@@ -821,7 +826,7 @@ class InsimConnection
 			$ISP->ReqI		= TRUE;
 			$ISP->UDPPort	= ($this->udpPort > 0) ? $this->udpPort : 0;
 			$ISP->Flags		= ISF_LOCAL | ISF_MSO_COLS | ISF_NLP;
-			$ISP->Prefix	= ord('!');
+			$ISP->Prefix	= $this->prefix;
 			$ISP->Interval	= round(1000 / $this->pps);
 			$ISP->Admin		= $this->adminPass;
 			$ISP->IName		= 'PRISM v' . PHPInSimMod::VERSION;

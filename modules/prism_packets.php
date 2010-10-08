@@ -1994,7 +1994,7 @@ class IS_BFN extends struct  // Button FunctioN - delete buttons / receive butto
 
 // the fourth byte of IS_BFN packets is one of these
 define('BFN_DEL_BTN',	0);	//  0 - instruction     : delete one button (must set ClickID)
-define('BFN_CLEAR',		1);	//  1 - instruction		: clear all buttons made by this insim instance
+define('BFN_CLEAR',		1);	//  1 - instruction	    : clear all buttons made by this insim instance
 define('BFN_USER_CLEAR',2);	//  2 - info            : user cleared this insim instance's buttons
 define('BFN_REQUEST',	3);	//  3 - user request    : SHIFT+B or SHIFT+I - request for buttons
 $BFN = array(BFN_DEL_BTN => 'BFN_DEL_BTN', BFN_CLEAR => 'BFN_CLEAR', BFN_USER_CLEAR => 'BFN_USER_CLEAR', BFN_REQUEST => 'BFN_REQUEST');
