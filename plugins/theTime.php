@@ -1,7 +1,7 @@
 <?php
 class theTime extends Plugins
 {
-	const NAME = 'The Time';
+	const NAME = 'Time Teller';
 	const DESCRIPTION = 'Prints the time to the client who asks for it.';
 	const AUTHOR = 'PRISM Dev Team';
 	const VERSION = PHPInSimMod::VERSION;
