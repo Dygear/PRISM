@@ -42,6 +42,8 @@ class HostHandler extends SectionHandler
 	private $connvars		= array();
 	private $hosts			= array();			# Stores references to the hosts we're connected to
 
+	public $state			= array();
+
 	public $curHostID		= NULL;				# Contains the current HostID we are talking to.
 
 	public function &getCurrentHost()
@@ -105,7 +107,7 @@ class HostHandler extends SectionHandler
 				$hostName		= isset($v['hostname']) ? substr($v['hostname'], 0, 31) : '';
 				$adminPass		= isset($v['adminPass']) ? substr($v['adminPass'], 0, 15) : '';
 				$specPass		= isset($v['specPass']) ? substr($v['specPass'], 0, 15) : '';
-				$prefix			= isset($v['prefix']) ? substr($v['prefix'], 0, 1) : $PRISM->config->cvars['prefix'];
+				$prefix			= isset($v['prefix']) ? substr($v['prefix'], 0, 1) : '';
 
 				// Some value checking - guess we should output some user notices here too if things go wrong.
 				if ($hostName == '')
@@ -136,7 +138,7 @@ class HostHandler extends SectionHandler
 				$pps			= isset($v['pps']) ? (int) $v['pps'] : 3;
 				$adminPass		= isset($v['password']) ? substr($v['password'], 0, 15) : '';
 				$socketType		= isset($v['socketType']) ? (int) $v['socketType'] : SOCKTYPE_TCP;
-				$prefix			= isset($v['prefix']) ? substr($v['prefix'], 0, 1) : $PRISM->config->cvars['prefix'];
+				$prefix			= isset($v['prefix']) ? substr($v['prefix'], 0, 1) : '';
 				
 				// Some value checking
 				if ($port < 1 || $port > 65535)
@@ -417,7 +419,7 @@ class HostHandler extends SectionHandler
 		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
 		if (isset($TYPEs[$pH['Type']]))
 		{
-			if ($PRISM->config->cvars['debugMode'] & (PRISM_DEBUG_CORE & PRISM_DEBUG_MODULES))
+			if ($PRISM->config->cvars['debugMode'] & (PRISM_DEBUG_CORE + PRISM_DEBUG_MODULES))
 				console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
@@ -446,7 +448,7 @@ class HostHandler extends SectionHandler
 					$this->hosts[$hostID]->setConnTime(time());
 					$this->hosts[$hostID]->setConnTries(0);
 					// Here we setup the state for the connection.
-					$this->hosts[$hostID]->state = new StateHandler($packet);
+					$this->state[$hostID] = new StateHandler($packet);
 				}
 				break;
 
@@ -486,7 +488,7 @@ class HostHandler extends SectionHandler
 				$this->hosts[$hostID]->close(true);
 				break;
 			default:
-				$this->hosts[$hostID]->state->dispatchPacket($packet);
+				$this->state[$hostID]->dispatchPacket($packet);
 		}
 	}
 
@@ -612,9 +614,6 @@ class InsimConnection
 	private $pps			= 3;		
 	private $hostName		= '';			# the hostname. Can be populated by user in case of relay.
 
-	// Current State
-	public $state			= NULL;			# The current state of the gameplay. (Set after the IS_VER packet is recv in the parent class.)
-
 	public function __construct(array &$icVars)
 	{
 		$this->connType		= ($icVars['connType'] == CONNTYPE_RELAY) ? CONNTYPE_RELAY : CONNTYPE_HOST;
@@ -624,7 +623,7 @@ class InsimConnection
 		$this->port			= $icVars['port'];
 		$this->pps			= $icVars['pps'];
 		$this->adminPass	= $icVars['adminPass'];
-		$this->prefix		= $icVars['prefix'];
+		$this->prefix		= ($icVars['prefix'] == '') ? $PRISM->config->cvars['prefix'] : $icVars['prefix'];
 
 		$this->udpPort		= isset($icVars['udpPort']) ? $icVars['udpPort'] : 0;
 		$this->hostName		= isset($icVars['hostName']) ? $icVars['hostName'] : '';
@@ -834,7 +833,7 @@ class InsimConnection
 			$ISP->ReqI		= TRUE;
 			$ISP->UDPPort	= ($this->udpPort > 0) ? $this->udpPort : 0;
 			$ISP->Flags		= ISF_LOCAL | ISF_MSO_COLS | ISF_NLP;
-			$ISP->Prefix	= $this->prefix;
+			$ISP->Prefix	= ord($this->prefix);
 			$ISP->Interval	= round(1000 / $this->pps);
 			$ISP->Admin		= $this->adminPass;
 			$ISP->IName		= 'PRISM v' . PHPInSimMod::VERSION;

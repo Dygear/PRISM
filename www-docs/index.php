@@ -1,14 +1,4 @@
 <?php
-
-// You must always require_once or include_once the functions that you will be using.
-require_once('testinclude.php');
-
-// Cookie examples - you don't necessarily have to write them at the beginning of the page.
-$_RESPONSE->setCookie('testCookie', 'a test value in this cookie', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
-$_RESPONSE->setCookie('anotherCookie', '#@$%"!$:;%@{}P$%', time() + 60*60*24*7, '/', $SERVER['SERVER_NAME']);
-
-// Automatic web-page login after validated http auth.
-// Not sure if this is a good idea to implement later, but I wanted to demo that this is possible.
 if (isset($SERVER['PHP_AUTH_USER']))
 {
 	if (!isset($_SESSION))
@@ -31,148 +21,63 @@ else
 	if (isset($_SESSION['autoLogin']))
 		unset($_SESSION['autoLogin']);
 }
-
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
-<head>
-<title>Prism http server test page</title>
-<style type="text/css">
-div.loginArea {
-	float: right;
-	clear: both;
-}
-</style>
-</head>
-<body>
+	<head>
+		<title>PRISM :: Server Status</title>
+		<link rel="stylesheet" href="/style/default.css" type="text/css" media="screen" />
+	</head>
+	<body>
+		<div class="loginArea">
+<?php	if (isset($_SESSION['user'])):	?>
+			Welcome <?php echo htmlspecialchars($_SESSION['user']); ?>.
+<?php		if (!isset($_SESSION['autoLogin']) || $_SESSION['autoLogin'] == false):	?>
+				-<a href="/login.php?logout">Logout</a>
+<?php		endIf;	?>
+<?php	else:	?>
+			<form method="post" action="/login.php">
+				<input type="text" name="loginUser" value="" size="16" maxlength="24" />
+				<input type="password" name="loginPass" value="" size="16" maxlength="24" />
+				<input type="submit" value="Login" />
+			</form>
+<?php	endIf;	?>
+		</div>
+		<table>
+			<tbody>
+				<tr>
+					<th width="16%">Server Name</th>
+					<th width="10%">Type</th>
+					<th width="10%">Uptime</th>
+					<th width="8%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Transmitted">TX</abbr></th>
+					<th width="8%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Recived">RX</abbr></th>
+					<th width="8%">Clients</th>
+					<th width="8%">Players</th>
+					<th width="8%">Slots</th>
+					<th width="24%">Clients (Players) / Slots</th>
+				</tr>
+<?php	forEach ($PRISM->hosts->getHostsInfo() as $info):	?>
+				<tr>
+					<td><?php echo $info['id']; ?></td>
+					<td><?php echo ($info['useRelay']) ? 'Relay' : 'Direct'; ?></td>
+					<td>1:01:24:25</td>
+					<td>2</td>
+					<td>24</td>
+					<td><?php echo count($PRISM->hosts->state[$info['id']]->NumConns); ?></td>
+					<td><?php echo count($PRISM->hosts->state[$info['id']]->NumP); ?></td>
+					<td>64</td>
+					<td>
+						<div class="meter">
+							<div class="bar" style="width: 6.25%;"></div>
+							<div class="text">4 (1) / 64</div>
+						</div>
+					</td>
+				</tr>
+<?php	endForEach;	?>
+		</table>
+	</body>
+</html>
 <?php
-
-$html = '';
-if (isset($_SESSION['user']))
-{
-	$html .= '<div class="loginArea">';
-	$html .= 'Welcome '.htmlspecialchars($_SESSION['user']).'.';
-	if (!isset($_SESSION['autoLogin']) || $_SESSION['autoLogin'] == false)
-		$html .= ' -<a href="/login.php?logout">Logout</a>';
-	$html .= '</div>';
-}
-else
-{
-	$html .= '<div class="loginArea">';
-	$html .= '<form method="post" action="/login.php">';
-	$html .= '<input type="text" name="loginUser" value="" size="16" maxlength="24" />';
-	$html .= '<input type="password" name="loginPass" value="" size="16" maxlength="24" />';
-	$html .= '<input type="submit" value="Login" />';
-	$html .= '</form>';
-	$html .= '</div>';
-}
-$html .= '<a href="/"><img src="images/test.gif" border="0" alt="" style="float: right; clear: both;" /></a>';
-$html .= someTestFunction().'<br />';
-
-if (isset($_SESSION))
-{
-	$html .= 'The following SESSION values have been found :<br />';
-	if (is_array($_SESSION))
-	{
-		foreach ($_SESSION as $k => $v)
-			$html .= htmlspecialchars($k.' => '.$v).'<br />';
-	}
-	else
-		$html .= htmlspecialchars($_SESSION).'<br />';
-	$html .= '<br />';
-}
-
-if (count($_COOKIE) > 0)
-{
-	$html .= '		The following COOKIE values have been found :<br />';
-	foreach ($_COOKIE as $k => $v)
-		$html .= htmlspecialchars($k.' => '.$v).'<br />';
-	$html .= '<br />';
-}
-
-if (count($_GET) > 0)
-{
-	$html .= '		You submitted the following GET values :<br />';
-	foreach ($_GET as $k => $v)
-		$html .= htmlspecialchars($k.' => '.$v).'<br />';
-	$html .= '<br />';
-}
-
-if (count($_POST) > 0)
-{
-	$html .= '		You submitted the following POST values :<br />';
-	foreach ($_POST as $k => $v)
-	{
-		if (is_array($v))
-		{
-			$html .= '<strong>'.$k.'-array</strong><br />';
-			foreach ($v as $k2 => $v2)
-				$html .= '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$k.'['.htmlspecialchars($k2).'] => '.htmlspecialchars($v2).'<br />';
-		}
-		else
-		{
-			$html .= htmlspecialchars($k.' => '.$v).'<br />';
-		}
-	}
-	$html .= '<br />';
-}
-
-if (count($_FILES) > 0)
-{
-	$html .= 'You submitted the following FILES values :<br />';
-	foreach ($_FILES as $k => $v)
-	{
-		if (is_array($v['name']))
-		{
-			foreach ($v['name'] as $c => $d)
-			{
-				$html .= htmlspecialchars('Key : '.$k.'['.$c.']').'<br />';
-				$html .= htmlspecialchars('name : '.$v['name'][$c]).'<br />';
-				$html .= htmlspecialchars('tmp_name : '.$v['tmp_name'][$c]).'<br />';
-				$html .= htmlspecialchars('type : '.$v['type'][$c]).'<br />';
-				$html .= htmlspecialchars('size : '.$v['size'][$c]).'<br />';
-				$html .= htmlspecialchars('error : '.$v['error'][$c]).'<br />';
-			}
-		}
-		else
-		{
-			$html .= htmlspecialchars('Key : '.$k).'<br />';
-			$html .= htmlspecialchars('name : '.$v['name']).'<br />';
-			$html .= htmlspecialchars('tmp_name : '.$v['tmp_name']).'<br />';
-			$html .= htmlspecialchars('type : '.$v['type']).'<br />';
-			$html .= htmlspecialchars('size : '.$v['size']).'<br />';
-			$html .= htmlspecialchars('error : '.$v['error']).'<br />';
-		}
-	}
-	$html .= '<br />';
-}
-
-$html .= 'Here\'s a form to test POST requests and file uploads<br />';
-$html .= '<form method="post" enctype="multipart/form-data" action="/?'.$SERVER['QUERY_STRING'].'">';
-$html .= '';
-for ($c=0; $c<3; $c++)
-	$html .= 'name="postval'.$c.'" : <input type="text" name="postval'.$c.'" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
-for ($c=0; $c<3; $c++)
-	$html .= 'name="postval[blah'.$c.']" : <input type="text" name="postval[blah'.$c.']" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
-for ($c=0; $c<3; $c++)
-	$html .= 'name="postval[]" : <input type="text" name="postval[]" value="'.htmlspecialchars(createRandomString(24)).'" maxlength="48" size="32" /><br />';
-$html .= 'name="postvalother" : <input type="text" name="postvalother" value="" maxlength="48" size="32" /><br />';
-$html .= '<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />';
-$html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
-$html .= 'name="testFile[]" : <input type="file" name="testFile[]" /><br />';
-$html .= '<input type="submit" value="Submit the form" />';
-$html .= '</form>';
-
-$html .= '<br /><br />SERVER values :<br />';
-foreach ($SERVER as $k => $v)
-	$html .= htmlspecialchars($k.' => '.$v).'<br />';
-
-$html .= '	</body>';
-$html .= '</html>';
-
-echo $html;
-
-//unset($_SESSION);
 if (isset($_SESSION))
 {
 	$_SESSION['counter']++;
@@ -187,5 +92,4 @@ else
 		'lasttime' => time()
 	);
 }
-
 ?>

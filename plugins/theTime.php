@@ -1,7 +1,7 @@
 <?php
 class theTime extends Plugins
 {
-	const NAME = 'The Time';
+	const NAME = 'Time Teller';
 	const DESCRIPTION = 'Prints the time to the client who asks for it.';
 	const AUTHOR = 'PRISM Dev Team';
 	const VERSION = PHPInSimMod::VERSION;
@@ -15,7 +15,7 @@ class theTime extends Plugins
 	public function cmdTime($cmd, $plid, $ucid)
 	{
 		$MTC = new IS_MTC();
-		$MTC->PLID($plid)->Msg('The time is, '.date('H:i:s').', server local time.')->send();
+		$MTC->UCID($ucid)->Msg('The time is, '.date('H:i:s').', server local time.')->send();
 		return PLUGIN_CONTINUE;
 	}
 }
