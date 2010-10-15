@@ -3,7 +3,7 @@ class theTime extends Plugins
 {
 	const NAME = 'Time Teller';
 	const DESCRIPTION = 'Prints the time to the client who asks for it.';
-	const AUTHOR = 'PRISM Dev Team';
+	const AUTHOR = 'Mark \'Dygear\' Tomlin';
 	const VERSION = PHPInSimMod::VERSION;
 
 	public function __construct()

@@ -42,10 +42,10 @@ td .meter {
 	border-width:.09em;
 	border-color:#777 #ccc #ccc #777;
 }
-.meter .bar {
-	height:1.268em;
-	background-color: #496fc7;
-}
+.meter .bar { height:1.268em; }
+.meter .admins { background-color:#C7496F; float:left; }
+.meter .clients { background-color:#496FC7; float:left; }
+.meter .players { background-color:#6FC749; float:left; }
 .meter .text {
 	color:#fff;
 	position:absolute;

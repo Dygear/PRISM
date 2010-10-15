@@ -109,6 +109,17 @@ abstract class struct
 	}
 	public function pack()
 	{
+		# Message Packets
+		if (($this instanceof IS_MST || $this instanceof IS_MTC) && strLen($this->Msg) >= 64)
+			$this->Msg = subStr($this->Msg, 0, 60) . '...';
+		if ($this instanceof IS_MSX && strLen($this->Msg) >= 96)
+			$this->Msg = subStr($this->Msg, 0, 92) . '...';
+		if ($this instanceof IS_MSL && strLen($this->Msg) >= 128)
+			$this->Msg = subStr($this->Msg, 0, 124) . '...';
+		# Button Packets
+		if ($this instanceof IS_BTN && strLen($this->Text) >= 240)
+			$this->Text = subStr($this->Msg, 0, 236) . '...';
+
 		$return = '';
 		$packFormat = $this->parsePackFormat();
 		$propertyNumber = -1;
@@ -724,7 +735,7 @@ class IS_MTC extends struct		// Msg To Connection - hosts only - send to a conne
 	protected $Sp2 = NULL;
 	protected $Sp3 = NULL;
 
-	public $Msg;						# last byte must be zero
+	public $Msg = '';					# last byte must be zero
 };
 
 // Message Sounds (for Sound byte)
@@ -2011,46 +2022,22 @@ class IS_BTN extends struct // BuTtoN - button header - followed by 0 to 240 cha
 	const PACK = 'CCCCCCCCCCCCa240';
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CBStyle/CTypeIn/CL/CT/CW/CH/a240Text';
 
-	protected $Size;					# 12 + TEXT_SIZE (a multiple of 4)
+	protected $Size = 252;				# 12 + TEXT_SIZE (a multiple of 4)
 	protected $Type = ISP_BTN;			# ISP_BTN
-	public $ReqI;						# non-zero (returned in IS_BTC and IS_BTT packets)
-	public $UCID;						# connection to display the button (0 = local / 255 = all)
+	public $ReqI = 255;					# non-zero (returned in IS_BTC and IS_BTT packets)
+	public $UCID = 255;					# connection to display the button (0 = local / 255 = all)
 
-	public $ClickID;					# button ID (0 to 239)
-	public $Inst;						# some extra flags - see below
-	public $BStyle;						# button style flags - see below
-	public $TypeIn;						# max chars to type in - see below
+	public $ClickID = 0;				# button ID (0 to 239)
+	public $Inst = NULL;				# some extra flags - see below
+	public $BStyle = NULL;				# button style flags - see below
+	public $TypeIn = NULL;				# max chars to type in - see below
 
-	public $L;							# left   : 0 - 200
-	public $T;							# top    : 0 - 200
-	public $W;							# width  : 0 - 200
-	public $H;							# height : 0 - 200
+	public $L = IS_X_MIN;				# left   : 0 - 200
+	public $T = IS_Y_MIN;				# top    : 0 - 200
+	public $W = 0;						# width  : 0 - 200
+	public $H = 0;						# height : 0 - 200
 
-	public $Text;						# 0 to 240 characters of text
-
-	public function pack()
-	{
-		$return = '';
-		$packFormat = $this::parsePackFormat();
-		$propertyNumber = -1;
-
-		$strLen = strlen($this->Text);
-		$strLen = ($strLen + ($strLen % 4));
-		$this->Size = $strLen + 12;
-
-		foreach ($this as $property => $value)
-		{
-			$pkFnkFormat = $packFormat[++$propertyNumber];
-			if ($property == 'Text')
-				$return .= pack('a' . $strLen, $this->Text);
-			else if ($pkFnkFormat == 'x')
-				$return .= pack('C', 0); # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
-			else
-				$return .= pack($pkFnkFormat, $this->$property);
-		}
-
-		return $return;
-	}
+	public $Text = '';					# 0 to 240 characters of text
 };
 
 // ClickID byte : this value is returned in IS_BTC and IS_BTT packets.
