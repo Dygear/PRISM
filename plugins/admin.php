@@ -12,20 +12,20 @@ class admin extends Plugins
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism version', 'cmdVersion', 'Displays the version of PRISM.');
-/*
-		# Plugins
-		$this->registerSayCommand('prism plugins', 'cmdPluginList', 'Displays a list of plugins.');
-		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.');
 
 		# Admins
 		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
-*/
+
+		# Plugins
+		$this->registerSayCommand('prism plugins', 'cmdPluginList', 'Displays a list of plugins.');
+		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.');
+
 		# Admin Commands
-		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ...', ADMIN_KICK);
 		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time>', ADMIN_BAN);
-		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ...', ADMIN_KICK);
 		$this->registerSayCommand('prism pit', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
 	}
 
 	public function cmdAdminBan($cmd, $plid, $ucid)
@@ -107,15 +107,15 @@ class admin extends Plugins
 	public function cmdHelp($cmd, $plid, $ucid)
 	{
 		global $PRISM;
+		$MTC = new IS_MTC;
+		$MTC->UCID($ucid);
 
-		// (For button alignments)#  LEFT       LEFT
-		echo sprintf("%32s - %64s", 'COMMAND', 'DESCRIPTION') . PHP_EOL;
+		$MTC->Msg('^7COMMAND')->Send();
+		$MTC->Msg('DESCRIPTION')->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
-			{
-				console(sprintf('%32s - %64s', $command, $detail['info']));
-			}
+				$MTC->Msg("^7{$command}^8 - {$detail['info']}")->Send();
 		}
 
 		return PLUGIN_CONTINUE;
@@ -127,12 +127,16 @@ class admin extends Plugins
 		global $PRISM;
 
 		$MTC = new IS_MTC;
-		$MTC->PLID($plid);
+		$MTC->UCID($ucid);
 
-		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
-		$MTC->Msg(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'))->Send();
+		$MTC->Msg(sprintf('^7%s ^3%s ^8%s', 'NAME', 'VERSION', 'AUTHOR'))->Send();
+		$MTC->Msg('DESCRIPTION')->Send();
+
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
-			$MTC->Msg(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION))->Send();
+		{
+			$MTC->Msg(sprintf('^7%s ^3%s ^8%s', $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR))->Send();
+			$MTC->Msg($plugin::DESCRIPTION)->Send();
+		}
 
 		return PLUGIN_CONTINUE;
 	}
@@ -141,7 +145,7 @@ class admin extends Plugins
 	public function cmdVersion($cmd, $plid, $ucid)
 	{
 		$MTC = new IS_MTC();
-		$MTC->UCID($ucid)->Msg('PRISM Version ' . PHPInSimMod::VERSION)->Send();
+		$MTC->UCID($ucid)->Msg('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
 	}
 
 	// Admins
@@ -150,15 +154,10 @@ class admin extends Plugins
 		global $PRISM;
 
 		$MTC = new IS_MTC;
-		$MTC->PLID($plid);
+		$MTC->UCID($ucid)->Msg('Admins detailed to this server:')->Send();
 
-		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
-		$MTC->Msg(sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'))->Send();
 		foreach ($PRISM->admins->getAdminsInfo() as $user => $details)
-		{
 			$MTC->Msg($user)->Send();
-			print_r($details);
-		}
 
 		return PLUGIN_CONTINUE;
 	}

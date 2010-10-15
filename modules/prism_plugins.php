@@ -314,16 +314,15 @@ abstract class Plugins
 	protected function getHostInfo($hostID = NULL)
 	{
 		global $PRISM;
-		$hostID = $this->getHostId($hostID);
 		if (($host = $PRISM->hosts->getHostById($hostID)) && $host !== NULL)
 			return $host;
 		return NULL;
 	}
 	protected function getHostState($hostID = NULL)
 	{
-		$hostID = $this->getHostId($hostID);
-		if (($host = $this->getHostInfo($hostID)) && $host !== NULL)
-			return $host->state;
+		global $PRISM;
+		if (($state = $PRISM->hosts->getStateById($hostID)) && $state !== NULL)
+			return $state;
 		return NULL;
 	}
 
@@ -370,8 +369,6 @@ abstract class Plugins
 			return $clients[$UCID];
 		return $return;
 	}
-
-	//
 
 	protected function getUserNameByUCID(&$UCID, $hostID = NULL)
 	{

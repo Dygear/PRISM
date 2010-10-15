@@ -573,6 +573,17 @@ class HostHandler extends SectionHandler
 		}
 		return (count($hosts)) ? $hosts : null;
 	}
+
+	public function getStateById($hostId = NULL)
+	{
+		if ($hostId == NULL)
+			$hostId = $this->getCurrentHost();
+
+		if (isset($this->state[$hostId]))
+			return $this->state[$hostId];
+
+		return NULL;
+	}
 }
 
 class InsimConnection
