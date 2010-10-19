@@ -112,8 +112,8 @@ abstract class struct
 		# Message Packets
 		if (($this instanceof IS_MST || $this instanceof IS_MTC) && ($strLen = strLen($this->Msg)) >= 64)
 		{
-			for ($Msg = $this->Msg, $start = 0; $start < $strLen; $start += 64)
-				$this->Msg(subStr($Msg, $start, 64))->Send();
+			for ($Msg = $this->Msg, $start = 0; $start < $strLen; $start += 63)
+				$this->Msg(subStr($Msg, $start, 63))->Send();
 		}
 		if ($this instanceof IS_MSX && strLen($this->Msg) >= 96)
 			$this->Msg = subStr($this->Msg, 0, 92) . '...';
