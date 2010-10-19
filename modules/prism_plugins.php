@@ -131,13 +131,13 @@ class PluginHandler extends SectionHandler
 		$PRISM->hosts->curHostID = $hostID;
 		foreach ($this->plugins as $name => $plugin)
 		{
-			if (!$this->isPluginEligibleForPacket($name, $hostID))
+			# If the packet we are looking at has no callbacks for this packet type don't go to the loop.
+			if (!isset($plugin->callbacks[$packet->Type]))
 				continue;
 
-			if (!isset($plugin->callbacks[$packet->Type]))
-			{	# If the packet we are looking at has no callbacks for this packet type don't go to the loop.
+			# If the plugin is not registered on this server, skip this plugin.
+			if (!$this->isPluginEligibleForPacket($name, $hostID))
 				continue;
-			}
 
 			foreach ($plugin->callbacks[$packet->Type] as $callback)
 			{
@@ -145,6 +145,11 @@ class PluginHandler extends SectionHandler
 					continue 2; # Skips all of the rest of the plugins who wanted this packet.
 			}
 		}
+	}
+	
+	public function triggerTimerCallback($plugin, $timeStamp)
+	{
+		$this->plugins[$plugin]->triggerTimerCallback($timeStamp);
 	}
 }
 
@@ -163,6 +168,8 @@ abstract class Plugins
 	public $insimCommands = array();
 	public $localCommands = array();
 	public $sayCommands = array();
+	// Timers
+	public $timers = array();
 
 	/** Internal Methods */
 	private function getCallback($cmdsArray, $cmdString)
@@ -198,7 +205,7 @@ abstract class Plugins
 			$callback !== FALSE
 		) {
 			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
-				$this->$callback['method']($cmdString, $packet->PLID, $packet->UCID, $packet);
+				$this->$callback['method']($cmdString, $packet->UCID, $packet);
 			else
 				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
 		}
@@ -207,7 +214,7 @@ abstract class Plugins
 			$callback !== FALSE
 		) {
 			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
-				$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
 				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
 		}
@@ -218,7 +225,7 @@ abstract class Plugins
 		if ($callback = $this->getCallback($this->insimCommands, $packet->Msg) && $callback !== FALSE)
 		{
 			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
-				$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
 				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
 		}
@@ -228,7 +235,7 @@ abstract class Plugins
 	{
 		if ($callback = $this->getCallback($this->consoleCommands, $string) && $callback !== FALSE)
 		{
-			$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+			$this->$callback['method']($string, 0);
 		}
 	}
 
@@ -256,14 +263,14 @@ abstract class Plugins
 	}
 
 	// Setup the callbackMethod trigger to accapt a command that could come from anywhere.
-	protected function registerCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		$this->registerInsimCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 		$this->registerLocalCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 		$this->registerSayCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the PRISM console. (STDIN)
-	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "")
+	protected function registerConsoleCommand($cmd, $callbackMethod, $info = '')
 	{
 		if (!isset($this->callbacks['STDIN']) && !isset($this->callbacks['STDIN']['handleConsoleCmd']))
 		{	# We don't have any local callback hooking to the STDIN stream, make one.
@@ -272,7 +279,7 @@ abstract class Plugins
 		$this->consoleCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info);
 	}
 	// Any command that comes from the "/i" type. (III)
-	protected function registerInsimCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerInsimCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		if (!isset($this->callbacks[ISP_III]) && !isset($this->callbacks[ISP_III]['handleInsimCmd']))
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
@@ -281,7 +288,7 @@ abstract class Plugins
 		$this->insimCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the "/o" type. (MSO->Flags = MSO_O)
-	protected function registerLocalCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerLocalCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd']))
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
@@ -290,13 +297,30 @@ abstract class Plugins
 		$this->localCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 	// Any say event with prefix charater (ISI->Prefix) with this command type. (MSO->Flags = MSO_PREFIX)
-	protected function registerSayCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerSayCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd']))
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
 			$this->registerPacket('handleCmd', ISP_MSO);
 		}
 		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
+	}
+	/** Timed Callbacks. */
+	// Registers a callback method to be executed in Seconds + µSeconds from now.
+	protected function registerTimer($callbackMethod, $Seconds = 1, $µSeconds = 0)
+	{
+		$timeStamp = microtime(TRUE) + $Seconds += $µSeconds /= 1000000;
+		if (!isset($this->timers["$timeStamp"]))
+			$this->timers["$timeStamp"] = array();
+		$this->timers["$timeStamp"][] = $callbackMethod;
+		return $timeStamp;
+	}
+	// Fires the methods within the plugin.
+	public function triggerTimerCallback($timeStamp)
+	{
+		foreach ($this->timers[$timeStamp] as $callback)
+			$this->$callback();
+		unset($this->timers[$timeStamp]);
 	}
 
 	/** Internal Functions */

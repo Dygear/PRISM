@@ -450,6 +450,7 @@ class HostHandler extends SectionHandler
 					// Here we setup the state for the connection.
 					$this->state[$hostID] = new StateHandler($packet);
 				}
+				$this->state[$hostID]->dispatchPacket($packet);
 				break;
 
 			case IRP_ERR :

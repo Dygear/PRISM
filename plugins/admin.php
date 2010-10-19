@@ -28,17 +28,15 @@ class admin extends Plugins
 		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
 	}
 
-	public function cmdAdminBan($cmd, $plid, $ucid)
+	public function cmdAdminBan($cmd, $ucid)
 	{
 		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
 		array_shift($argv); $cmd = array_shift($argv);
-
+		$target = array_shift($argv); $minutes = array_shift($argv);
+		
 		$castingAdmin = $this->getUserNameByUCID($ucid);
-
-		$target = array_shift($argv);
-		$minutes = array_shift($argv);
-
+		
 		# If we don't have target(s), then we can't do anything.
 		if (count($argv) == 0)
 		{
@@ -64,7 +62,7 @@ class admin extends Plugins
 		}
 	}
 
-	public function castLFSCommand($cmd, $plid, $ucid)
+	public function castLFSCommand($cmd, $ucid)
 	{
 		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
@@ -104,14 +102,13 @@ class admin extends Plugins
 	}
 
 	// Help
-	public function cmdHelp($cmd, $plid, $ucid)
+	public function cmdHelp($cmd, $ucid)
 	{
 		global $PRISM;
 		$MTC = new IS_MTC;
 		$MTC->UCID($ucid);
 
-		$MTC->Msg('^7COMMAND')->Send();
-		$MTC->Msg('DESCRIPTION')->Send();
+		$MTC->Msg('^7COMMAND^8 - DESCRIPTION')->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
@@ -122,19 +119,19 @@ class admin extends Plugins
 	}
 
 	// Plugins
-	public function cmdPluginList($cmd, $plid, $ucid)
+	public function cmdPluginList($cmd, $ucid)
 	{
 		global $PRISM;
 
 		$MTC = new IS_MTC;
 		$MTC->UCID($ucid);
 
-		$MTC->Msg(sprintf('^7%s ^3%s ^8%s', 'NAME', 'VERSION', 'AUTHOR'))->Send();
+		$MTC->Msg('^7NAME ^3VERSION ^8AUTHOR')->Send();
 		$MTC->Msg('DESCRIPTION')->Send();
 
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
-			$MTC->Msg(sprintf('^7%s ^3%s ^8%s', $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR))->Send();
+			$MTC->Msg(sprintf('^7%s ^3%s ^8%s', $plugin::VERSION, $plugin::AUTHOR))->Send();
 			$MTC->Msg($plugin::DESCRIPTION)->Send();
 		}
 
@@ -142,14 +139,14 @@ class admin extends Plugins
 	}
 
 	// Version
-	public function cmdVersion($cmd, $plid, $ucid)
+	public function cmdVersion($cmd, $ucid)
 	{
 		$MTC = new IS_MTC();
 		$MTC->UCID($ucid)->Msg('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
 	}
 
 	// Admins
-	public function cmdAdminList($cmd, $plid, $ucid)
+	public function cmdAdminList($cmd, $ucid)
 	{
 		global $PRISM;
 
@@ -157,7 +154,7 @@ class admin extends Plugins
 		$MTC->UCID($ucid)->Msg('Admins detailed to this server:')->Send();
 
 		foreach ($PRISM->admins->getAdminsInfo() as $user => $details)
-			$MTC->Msg($user)->Send();
+			$MTC->Msg("    $user")->Send();
 
 		return PLUGIN_CONTINUE;
 	}

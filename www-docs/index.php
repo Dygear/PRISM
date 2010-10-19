@@ -65,7 +65,7 @@
 ?>
 				<tr>
 					<td><?php echo $command; ?></td>
-					<td><?php echo $detail['info']; ?></td>
+					<td><?php echo htmlspecialchars($detail['info'], ENT_QUOTES); ?></td>
 				</tr>
 <?php
 		endForEach;

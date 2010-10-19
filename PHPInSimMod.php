@@ -311,13 +311,37 @@ class PHPInSimMod
 
 	private function updateSelectTimeOut(&$sleep, &$uSleep)
 	{
-		# If timer & cron array is empty, set the Sleep to 1 & uSleep to NULL.
-			# Must have a max delay of a second, otherwise there is no connection maintenance done.
-		# Else set the timeout to the delta of now as compared to the next timer or cronjob event, what ever is smaller.
-		# A Cron Jobs distance to now will have to be recalcuated after each socket_select call, well do that here also.
-
-		$sleep = 1;
-		$uSleep = NULL;
+		$timeNow = microtime(TRUE);
+		foreach ($this->plugins->getPlugins() as $plugin => $details)
+		{
+			if (!empty($details->timers))
+			{
+				if (!isset($nextTimeout))
+					$nextTimeout = key($details->timers);
+				else if (($timeStamp = key($details->timers)) < $nextTimeout)
+					$nextTimeout = $timeStamp;
+				
+				if ($timeNow > $nextTimeout)
+				{	# Here we execute and clean stale timers.
+					$this->plugins->triggerTimerCallback($plugin, $nextTimeout);
+					$this->updateSelectTimeOut($sleep, $uSleep);
+				}
+			}
+		}
+		
+		# If there are no timers set, set the Sleep to 1 & uSleep to NULL.
+		if (!isset($nextTimeout))
+		{	# Must have a max delay of a second, otherwise there is no connection maintenance done.
+			$sleep = 1;
+			$uSleep = NULL;
+		}
+		else
+		{	# Else set the timeout to the delta of now as compared to the next timer.
+			if (($nextTimeout -= $timeNow) > 1)
+				list($sleep, $uSleep) = array(1, NULL);
+			else
+				list($sleep, $uSleep) = explode('.', sprintf('%1.6f', $nextTimeout));
+		}
 	}
 
 	public function __destruct()

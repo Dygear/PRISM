@@ -60,6 +60,7 @@ abstract class struct
 	{
 		global $PRISM;
 		$PRISM->hosts->sendPacket($this, $hostId);
+		return $this;
 	}
 	public function printPacketDetails($pre = '')
 	{

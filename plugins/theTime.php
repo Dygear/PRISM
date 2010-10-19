@@ -12,7 +12,7 @@ class theTime extends Plugins
 		$this->registerSayCommand('time', 'cmdTime', 'Displays the time.');
 	}
 
-	public function cmdTime($cmd, $plid, $ucid)
+	public function cmdTime($cmd, $ucid)
 	{
 		$MTC = new IS_MTC();
 		$MTC->UCID($ucid)->Msg('The time is, '.date('H:i:s').', server local time.')->send();
