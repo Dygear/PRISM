@@ -15,6 +15,9 @@ class colorButtons extends Plugins
 	}
 	public function cmdColorButtons($cmd, $ucid)
 	{
+		global $PRISM;
+		$PRISM->_errorHandler(E_NOTICE, 'Backtrace', __FILE__, __LINE__, 'Backtrace');
+
 		if (!isset($this->BTNs[$ucid]))
 			$this->BTNs[$ucid] = array();
 
@@ -29,20 +32,20 @@ class colorButtons extends Plugins
 			for ($x = 0, $i = 0; $x <= 9; ++$x, ++$i)
 			{
 				$BTN->ClickID(++$BTN->ClickID)->L($X + ($x * $BTN->W) + 1)->T($Y + ($y * $BTN->H) + 1)->Text("{$y}^$i{$x}")->BStyle(ISB_LIGHT + $y)->Send();
-				$this->BTNs[$ucid][$BTN->ClickID] = $BTN;
+				$this->BTNs[$ucid][] = $BTN->ClickID;
 			}
 		}
 		# X Axis Header
 		for ($i = 0; $i <= 9; ++$i)
 		{
 			$BTN->ClickID(++$BTN->ClickID)->L($X + ($i * $BTN->W) + 1)->T($Y - ($BTN->H + 1))->BStyle(ISB_DARK)->Text("^$i$i")->Send();
-			$this->BTNs[$ucid][$BTN->ClickID] = $BTN;
+			$this->BTNs[$ucid][] = $BTN->ClickID;
 		}
 		# Y Axis Header
 		for ($i = 0; $i <= 7; ++$i)
 		{
-			$this->BTNs[$ucid][$BTN->ClickID] = $BTN->ClickID(++$BTN->ClickID)->L($X - $BTN->W)->T($Y + ($i * $BTN->H) + 1)->BStyle(ISB_DARK + $i)->Text($i)->Send();
-			$this->BTNs[$ucid][$BTN->ClickID] = $BTN;
+			$BTN->ClickID(++$BTN->ClickID)->L($X - $BTN->W)->T($Y + ($i * $BTN->H) + 1)->BStyle(ISB_DARK + $i)->Text($i)->Send();
+			$this->BTNs[$ucid][] = $BTN->ClickID;
 		}
 
 		$timeStamp = $this->registerTimer('tmrClearButtons', 5);
@@ -56,10 +59,9 @@ class colorButtons extends Plugins
 		{
 			if ($time < $timeNow)
 			{
-				print_r($this->BTNs);
 				$BFN = new IS_BFN;
 				$BFN->SubT(BFN_DEL_BTN)->UCID($ucid);
-				foreach ($this->BTNs[$ucid] as $ClickID => $BTN)
+				foreach ($this->BTNs[$ucid] as $ClickID)
 					$BFN->ClickID($ClickID)->Send();
 				unset($this->BTNs[$ucid]);
 				unset($this->Time[$time]);
