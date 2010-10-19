@@ -110,15 +110,24 @@ abstract class struct
 	public function pack()
 	{
 		# Message Packets
-		if (($this instanceof IS_MST || $this instanceof IS_MTC) && ($strLen = strLen($this->Msg)) >= 64)
+		if (($this instanceof IS_MST || $this instanceof IS_MTC) && strLen($this->Msg) >= 64)
 		{
-			for ($Msg = $this->Msg, $start = 0; $start < $strLen; $start += 63)
-				$this->Msg(subStr($Msg, $start, 63))->Send();
+			foreach(explode("\n", wordwrap($this->Msg, 63, "\n", TRUE)) as $Msg)
+				$this->Msg($Msg)->Send();
+			return;
 		}
 		if ($this instanceof IS_MSX && strLen($this->Msg) >= 96)
-			$this->Msg = subStr($this->Msg, 0, 92) . '...';
+		{
+			foreach(explode("\n", wordwrap($this->Msg, 95, "\n", TRUE)) as $Msg)
+				$this->Msg($Msg)->Send();
+			return;
+		}
 		if ($this instanceof IS_MSL && strLen($this->Msg) >= 128)
-			$this->Msg = subStr($this->Msg, 0, 124) . '...';
+		{
+			foreach(explode("\n", wordwrap($this->Msg, 127, "\n", TRUE)) as $Msg)
+				$this->Msg($Msg)->Send();
+			return;
+		}
 		# Button Packets
 		if ($this instanceof IS_BTN && strLen($this->Text) >= 240)
 			$this->Text = subStr($this->Msg, 0, 236) . '...';
