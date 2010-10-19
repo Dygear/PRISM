@@ -212,7 +212,7 @@ class PHPInSimMod
 			// Add telnet sockets to the arrays as needed
 			$this->telnet->getSelectableSockets($sockReads, $sockWrites);
 			
-			$this->getSelectTimeOut();
+			$this->updateSelectTimeOut($this->sleep, $this->uSleep);
 
 			# Error suppression used because this function returns a "Invalid CRT parameters detected" only on Windows.
 			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept, $this->sleep, $this->uSleep);
@@ -309,15 +309,15 @@ class PHPInSimMod
 		} // End while(isRunning)
 	}
 
-	private function getSelectTimeOut()
+	private function updateSelectTimeOut(&$sleep, &$uSleep)
 	{
 		# If timer & cron array is empty, set the Sleep to 1 & uSleep to NULL.
 			# Must have a max delay of a second, otherwise there is no connection maintenance done.
 		# Else set the timeout to the delta of now as compared to the next timer or cronjob event, what ever is smaller.
 		# A Cron Jobs distance to now will have to be recalcuated after each socket_select call, well do that here also.
 
-		$this->sleep = 1;
-		$this->uSleep = NULL;
+		$sleep = 1;
+		$uSleep = NULL;
 	}
 
 	public function __destruct()

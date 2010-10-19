@@ -110,8 +110,11 @@ abstract class struct
 	public function pack()
 	{
 		# Message Packets
-		if (($this instanceof IS_MST || $this instanceof IS_MTC) && strLen($this->Msg) >= 64)
-			$this->Msg = subStr($this->Msg, 0, 60) . '...';
+		if (($this instanceof IS_MST || $this instanceof IS_MTC) && ($strLen = strLen($this->Msg)) >= 64)
+		{
+			for ($Msg = $this->Msg, $start = 0; $start < $strLen; $start += 64)
+				$this->Msg(subStr($Msg, $start, 64))->Send();
+		}
 		if ($this instanceof IS_MSX && strLen($this->Msg) >= 96)
 			$this->Msg = subStr($this->Msg, 0, 92) . '...';
 		if ($this instanceof IS_MSL && strLen($this->Msg) >= 128)
