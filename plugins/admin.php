@@ -22,10 +22,57 @@ class admin extends Plugins
 		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.');
 
 		# Admin Commands
-		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time>', ADMIN_BAN);
-		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ...', ADMIN_KICK);
-		$this->registerSayCommand('prism pit', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
-		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time> - Ban Client.', ADMIN_BAN);
+		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ... - Kick Client.', ADMIN_KICK);
+		$this->registerSayCommand('prism pit', 'castLFSCommand', '<targets> ... - Pit Client.', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ... - Spectate Client.', ADMIN_SPECTATE);
+
+		$this->registerSayCommand('prism rcon', 'cmdRCON', '"<command>" - Remote Console Commands', ADMIN_CFG + ADMIN_UNIMMUNIZE);
+		
+		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessage', '"Msg" <USERNAME> <Time> - Race Control Messages', ADMIN_RCM);
+		$this->registerSayCommand('prism rcm all', 'cmdRaceControlMessageAll', '"Msg" <Time> - Race Control Messages', ADMIN_RCM);
+	}
+
+	// Race Control Messages
+	public function cmdRaceControlMessage($cmd, $ucid)
+	{
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 4)
+			$this->registerTimeout('tmrClearRCM', $argv[4]);
+		else
+			$this->registerTimeout('tmrClearRCM', 5);
+
+		$argv = $this->raceControlMessage($cmd);
+
+		$MST = new IS_MST();
+		$MST->Msg("/rcm {$argv[2]}")->Send();
+		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+	}
+
+	public function tmrClearRCM()
+	{
+		$argv = $this->raceControlMessage($cmd);
+
+	}
+
+	public function cmdRaceControlMessageAll($cmd, $ucid)
+	{
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 3)
+			$this->registerTimeout('tmrClearRCM', $argv[3]);
+		else
+			$this->registerTimeout('tmrClearRCM', 5);
+
+		$argv = $this->raceControlMessage($cmd);
+
+		$MST = new IS_MST();
+		$MST->Msg("/rcm {$argv[2]}")->Send();
+		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+	}
+
+	public function cmdRCON($cmd, $ucid)
+	{
+		$argv = str_getcsv($cmd, ' ');
+		$MST = new IS_MST();
+		$MST->Msg(array_pop($argv))->Send();
 	}
 
 	public function cmdAdminBan($cmd, $ucid)

@@ -10,7 +10,6 @@ class welcome extends Plugins
 	{
 		$this->registerPacket(ISP_VER, 'onPrismConnect');
 		$this->registerPacket(ISP_NCN, 'onClientConnect');
-		$this->registerSayCommand('ncn', 'onClientConnect');
 	}
 
 	public function onPrismConnect()

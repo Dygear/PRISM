@@ -1,0 +1,2 @@
+http://wiki.alliedmods.net/Menu_API_(SourceMod)
+http://wiki.alliedmods.net/Admin_Menu_(SourceMod_Scripting)

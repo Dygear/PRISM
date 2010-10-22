@@ -282,7 +282,7 @@ abstract class Plugins
 	protected function registerInsimCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		if (!isset($this->callbacks[ISP_III]) && !isset($this->callbacks[ISP_III]['handleInsimCmd']))
-		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
+		{	# We don't have any local callback hooking to the ISP_III packet, make one.
 			$this->registerPacket('handleInsimCmd', ISP_III);
 		}
 		$this->insimCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);

@@ -15,11 +15,11 @@ class colorButtons extends Plugins
 	}
 	public function cmdColorButtons($cmd, $ucid)
 	{
-		global $PRISM;
-		$PRISM->_errorHandler(E_NOTICE, 'Backtrace', __FILE__, __LINE__, 'Backtrace');
-
 		if (!isset($this->BTNs[$ucid]))
 			$this->BTNs[$ucid] = array();
+
+		var_dump($ucid);
+		var_dump($this->getUserNameByUCID($ucid));
 
 		$BTN = new IS_BTN;
 		$BTN->UCID($ucid)->ClickID(0)->W(10)->H(10);

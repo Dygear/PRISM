@@ -1,0 +1,1 @@
+http://wiki.alliedmods.net/Optimizing_Plugins_(SourceMod_Scripting)

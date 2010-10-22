@@ -1,6 +1,6 @@
 <?php	include_once('./session.php'); ?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<html dir="ltr" lang="en">
 	<head>
 		<title>PRISM :: Server Status</title>
 		<link rel="stylesheet" href="/style/default.css" type="text/css" media="screen" />

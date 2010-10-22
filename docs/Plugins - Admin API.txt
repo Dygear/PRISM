@@ -1,0 +1,1 @@
+http://wiki.alliedmods.net/Admin_API_(SourceMod)
