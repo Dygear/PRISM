@@ -3,12 +3,8 @@ There are two types of commands that have their own sub types, these are;
 [list]
 	[*][b]Server Commands[/b] - Fired from one of the following input methods.
 	[list]
-		[*]The server console itself (/ commands.)
-		[*]The remote console - Known as RCON Commands, with three sub types.
-		[list]
-			[*]PRISM Console (Available Directly on Linux & Max OS X)
-			[*}PRISM RCON say command. (`prism rcon <command>`)
-		[/list]
+		[*]The server console itself, for example / commands. (PRISM can not directly detect these, but can issue commands in this way).
+		[*]The remote console - Known as RCON Commands, can be issued from the PRISM Console (Available Directly on Linux & Max OS X).
 		[*]The Plugin::serverCommand function.
 	[/list]
 	[*][b]Console Commands[/b] - Fire from one of the following input methods.
@@ -20,17 +16,18 @@ There are two types of commands that have their own sub types, these are;
 			[*]Say commands.
 			[*]PRISM Console via Telnet (For Windows)
 			[*]PRISM Console via HTTP Server.
+			[*}PRISM RCON say command. (`prism rcon <command>`)
 		[/list]
 	[/list]
 [/list]
-For server commands, there is no client username, it is NULL. For console/client commands, the isuseing client's username is given, but it may be NULL to indicate that the command is from the server.
+For server commands, there is no client username, it is NULL. For console/client commands, the issuing client's username is given, but it may be NULL to indicate that the command is from the server.
 
 [b]Server Commands[/b]
-As noted above, server commands are fired through the server console, whether remote, local, or through the Source engine. There is no client username associated with a server command.
-Server commands are registered through the RegServerCmd() function defined in console.inc. When registering a server command, you may be hooking an already existing command, and thus the return value is important.
+As noted above, server commands are fired through the server console, whether remote or local.
+Server commands are registered through the registerServerCommand() function defined in console.inc. When registering a server command, you may be hooking to a command that is already hooked by another method or another plugin and thus the return value is important.
 [list]
-	[*][b]PLUGIN_CONTINUE[/b] - The command will be processed, any subsueqent hooks into this command will be proccessed.
-	[*][b]PLUGIN_HANDLED[/b] - The command will be processed, no further hooks will be called for this command until it is fired again.
+	[*][b]PLUGIN_CONTINUE[/b] - The command will be processed and any subsueqent hooks into this command will be proccessed.
+	[*][b]PLUGIN_HANDLED[/b] - The command will be processed, no further hooks will be called for this command until it issued again.
 	[*][b]PLUGIN_STOP[/b] - This is used only to stop repeating timers within PRISM.
 [/list]
 
@@ -63,7 +60,7 @@ Before we implement this, a common point of confusion is that the whole 'Msg' is
 		$this->registerSayCommand('command', 'callbackMethod', 'Information about the function');
 	}
 	public function callbackMethod($Msg, $UName) {
-		$this->clientPrint(count($this->getClients()), PRINT_CHAT, $UName);
+		$this->clientPrint($UName, PRINT_CHAT, count($this->getClients()));
 	}
 }[/php]
 
@@ -76,13 +73,13 @@ Let's create a simple admin command which kicks another client by their user nam
 		$this->registerSayCommand('prism kick', 'cmdKick', '<UName> - Kicks a client from the server', ADMIN_KICK);
 	}
 	public function cmdKick($Msg, $UName) {
-		$argc = count($argv = explode(' ', $Msg));
-		if ($argc < 3) {
-			$this->clientPrint('Useage: `prism kick <UName>`', PRINT_CHAT, $UName);
+		if (($argc = count($argv = explode(' ', $Msg))) < 3) {
+			$this->clientPrint($UName, PRINT_CHAT, 'Useage: `prism kick <UName>`');
+
 			return PLUGIN_HANDLED;
 		}
 
-		$Target = array_pop($argv);
+		$target = array_pop($argv);
  
 		foreach ($this->getClients() as $ClUName => $client) {
 			if ($Target == $ClUName) {
@@ -91,7 +88,7 @@ Let's create a simple admin command which kicks another client by their user nam
 			}
 		}
  
-		$this->clientPrint("Could not find any player with the name: '$target'.", PRINT_CHAT, $UName);
+		$this->clientPrint($UName, PRINT_CHAT, "Could not find any player with the name: '{$target}'.");
 		return PLUGIN_HANDLED;
 	}
 }[/php]
@@ -99,8 +96,8 @@ Let's create a simple admin command which kicks another client by their user nam
 [b]Immunity[/b]
 In our previous example, we did not take immunity into account. Two functions are used to find this information.
 [list]
-	[*]$this->canAdminTarget: Tests raw UName values for immunity.
-	[*]$this->canUserTarget: Tests in-game clients for immunity.
+	[*]Admin::canAdminTarget(): Tests raw UName values for immunity.
+	[*]Admin::canUserTarget(): Tests in-game clients for immunity.
 [/list]
 
 When checking for immunity, the following heuristics are performed in this exact order:
@@ -115,13 +112,12 @@ So, how can we adapt our function about to use immunity?
 
 [php]
 public function cmdKick($Msg, $UName) {
-	$argc = count($argv = explode(' ', $Msg));
-	if ($argc < 3) {
+	if (($argc = count($argv = explode(' ', $Msg))) < 3) {
 		$this->clientPrint('Useage: `prism kick <UName>`', PRINT_CHAT, $UName);
 		return PLUGIN_HANDLED;
 	}
 
-	$Target = array_pop($argv);
+	$target = array_pop($argv);
 
 	foreach ($this->getClients() as $ClUName => $client) {
 		if ($Target == $ClUName) {
@@ -131,11 +127,11 @@ public function cmdKick($Msg, $UName) {
 	}
 
 	if (!$this->canUserTarget($UName, $Target)) {
-		$this->clientPrint('You cannot target this client.', PRINT_CHAT, $UName);
+		$this->clientPrint($UName, PRINT_CHAT, 'You cannot target this client.');
 		return PLUGIN_HANDLED;
 	}
 
-	$this->clientPrint("Could not find any player with the name: '$target'.", PRINT_CHAT, $UName);
+	$this->clientPrint($UName, PRINT_CHAT, "Could not find any player with the name: '{$target}'.");
 	return PLUGIN_HANDLED;
 }
 [/php]

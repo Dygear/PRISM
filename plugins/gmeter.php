@@ -25,7 +25,7 @@ class gmeter extends Plugins {
 			}
 			
 			// Speeds
-			$cSpeed = (($CompCar->Speed / 32768) * 100);
+			$cSpeed = (($CompCar->Speed / 32768) * 100); # Meters Per Second
 			$lSpeed = (isset($this->SPEEDs[$CompCar->PLID])) ? $this->SPEEDs[$CompCar->PLID] : 0;
 
 			// Times

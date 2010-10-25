@@ -5,13 +5,13 @@ CVARs are [b]c[/b]onsole [b]var[/b]iables. They store string, float, or numerica
 CVARs are accessed through functions. There are two ways to obtain a CVARs; You can either create a new CVAR, or find an existing one. If you create a CVAR that already exists, it will automatically re-use the old one.
 
 [b]Finding CVARs[/b]
-Finding CVARs is very simple. For example, let's say you want to use p_MsgsPerSecond from antiflood.php.
+Finding CVARs is very simple. For example, let's say you want to use pMsgsPerSecond from antiflood.php.
 
 [php]class example extends Plugins {
 	private $pMsgsPerSecond;
  
 	public function __construct() {
-		$this->pMsgsPerSecond = $this->findCVAR('p_MsgsPerSecond');
+		$this->pMsgsPerSecond = $this->findCVAR('pMsgsPerSecond');
 	}
 }[/php]
 

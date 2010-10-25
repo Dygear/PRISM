@@ -37,7 +37,10 @@ class PluginHandler extends SectionHandler
 			// Parse useHosts values of plugins
 			foreach ($this->pluginvars as $pluginID => $details)
 			{
-				$this->pluginvars[$pluginID]['useHosts'] = explode(',', $details['useHosts']);
+				if (isset($details['useHosts']))
+					$this->pluginvars[$pluginID]['useHosts'] = explode(',', $details['useHosts']);
+				else
+					unset($this->pluginvars[$pluginID]);
 			}
 		}
 		else
@@ -204,19 +207,19 @@ abstract class Plugins
 			$callback = $this->getCallback($this->sayCommands, $cmdString) AND
 			$callback !== FALSE
 		) {
-			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
+			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
 				$this->$callback['method']($cmdString, $packet->UCID, $packet);
 			else
-				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
+				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
 		}
 		else if ($packet->UserType == MSO_O AND
 			$callback = $this->getCallback($this->localCommands, $packet->Msg) AND
 			$callback !== FALSE
 		) {
-			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
+			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
 				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
-				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
+				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
 		}
 	}
 	// This is the yang to the registerInsimCommand function's Yin.
@@ -224,10 +227,10 @@ abstract class Plugins
 	{
 		if ($callback = $this->getCallback($this->insimCommands, $packet->Msg) && $callback !== FALSE)
 		{
-			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
+			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
 				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
-				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
+				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
 		}
 	}
 	// This is the yang to the registerConsoleCommand function's Yin.
@@ -306,10 +309,10 @@ abstract class Plugins
 		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 	/** Timed Callbacks. */
-	// Registers a callback method to be executed in Seconds + µSeconds from now.
-	protected function registerTimer($callbackMethod, $Seconds = 1, $µSeconds = 0)
+	// Registers a callback method to be executed in Seconds + uSeconds from now.
+	protected function registerTimer($callbackMethod, $args = array(), $Seconds = 1, $uSeconds = 0)
 	{
-		$timeStamp = microtime(TRUE) + $Seconds += $µSeconds /= 1000000;
+		$timeStamp = microtime(TRUE) + ($Seconds + ($uSeconds / 1000000));
 		if (!isset($this->timers["$timeStamp"]))
 			$this->timers["$timeStamp"] = array();
 		$this->timers["$timeStamp"][] = $callbackMethod;
@@ -366,26 +369,49 @@ abstract class Plugins
 			return $players[$PLID];
 		return $return;
 	}
-
-	protected function &getClientByPLID(&$PLID, $hostID = NULL)
-	{
-		$return = NULL;
-		if (($players = $this->getHostState($hostID)->players) && $players !== NULL && isset($players[$PLID]))
-		{
-			$UCID = $players[$PLID]->UCID;
-			return $this->getClientByUCID($UCID);
-		}
-		return $return;
-	}
-
-	protected function &getPlayersByUCID(&$UCID, $hostID = NULL)
+	protected function &getPlayerByUCID(&$UCID, $hostID = NULL)
 	{
 		$return = NULL;
 		if (($clients =& $this->getHostState($hostID)->clients) && $clients !== NULL && isset($clients[$UCID]))
 			return $clients[$UCID]->players;
 		return $return;
 	}
-	
+	protected function &getPlayerByPName(&$PName, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL)
+		{
+			foreach ($players as $plid => $player)
+			{
+				if ($player->PName == $PName)
+					return $player;
+			}
+		}
+		return $return;
+	}
+	protected function &getPlayerByUName(&$UName, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL)
+		{
+			foreach ($players as $plid => $player)
+			{
+				if ($player->UName == $UName)
+					return $player;
+			}
+		}
+		return $return;
+	}
+	protected function &getClientByPLID(&$PLID, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL && isset($players[$PLID]))
+		{
+			$UCID = $players[$PLID]->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
+			return $this->getClientByUCID($UCID);
+		}
+		return $return;
+	}
 	protected function &getClientByUCID(&$UCID, $hostID = NULL)
 	{
 		$return = NULL;
@@ -393,34 +419,35 @@ abstract class Plugins
 			return $clients[$UCID];
 		return $return;
 	}
-
-	protected function getUserNameByUCID(&$UCID, $hostID = NULL)
+	protected function &getClientByPName(&$PName, $hostID = NULL)
 	{
-		$client = $this->getClientByUCID($UCID, $hostID);
-		return ($client === NULL) ? FALSE : $client->UName;
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL)
+		{
+			foreach ($players as $plid => $player)
+			{
+				if ($player->PName == $PName)
+				{
+					$UCID = $player->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
+					return $this->getClientByUCID($UCID);
+				}
+			}
+		}
+		return $return;
 	}
-
-	protected function getUserNameByPLID(&$PLID, $hostID = NULL)
+	protected function &getClientByUName(&$UName, $hostID = NULL)
 	{
-		$player = $this->getPlayerByPLID($PLID, $hostID);
-		if ($player === NULL)
-			return FALSE;
-		$UCID = $player->UCID; # if I don't do this, I get an "Indirect modification of overloaded property" notice.
-		return $this->userGetUserNameByUCID($UCID);
+		$return = NULL;
+		if (($clients = $this->getHostState($hostID)->clients) && $clients !== NULL)
+		{
+			foreach ($clients as $ucid => $client)
+			{
+				if ($client->UName == $UName)
+					return $client;
+			}
+		}
+		return $return;
 	}
-
-	protected function userGetPlayerNameByUCID(&$UCID, $hostID = NULL)
-	{
-		$client = $this->userGetByUCID($UCID, $hostID);
-		return ($client === NULL) ? FALSE : $client->PName;
-	}
-
-	protected function userGetPlayerNameByPLID(&$PLID, $hostID = NULL)
-	{
-		$player = $this->userGetByPLID($PLID, $hostID);
-		return ($player === NULL) ? FALSE : $player->PName;
-	}
-
 	// Is
 	protected function isHost(&$username, $hostID = NULL)
 	{

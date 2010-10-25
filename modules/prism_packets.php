@@ -131,7 +131,7 @@ abstract class struct
 		}
 		# Button Packets
 		if ($this instanceof IS_BTN && strLen($this->Text) >= 240)
-			$this->Text = subStr($this->Msg, 0, 236) . '...';
+			$this->Text = subStr($this->Msg, 0, 239);
 
 		$return = '';
 		$packFormat = $this->parsePackFormat();
@@ -141,8 +141,21 @@ abstract class struct
 			$pkFnkFormat = $packFormat[++$propertyNumber];
 			if ($pkFnkFormat == 'x')
 				$return .= pack('C', 0); # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
+			else if (is_array($pkFnkFormat))
+			{
+				list($type, $elements) = $pkFnkFormat;
+				if (($j = count($value)) > $elements)
+					$j = $elements;
+				for ($i = 0; $i < $j; ++$i, --$j)
+				{
+					var_dump($value, $type, $elements, $i, $j, $value[$i]);
+					$return .= pack($type, $value[$i]);
+				}
+				if ($j > 0);
+					$return .= pack("x{$j}");	# Fills the rest of the space with null data.
+			}
 			else
-				$return .= pack($pkFnkFormat, $this->$property);
+				$return .= pack($pkFnkFormat, $value);
 		}
 		return $return;
 	}
@@ -162,16 +175,24 @@ abstract class struct
 	{
 		$format = $this::PACK; # It does not like using $this::PACK directly.
 		$elements = array();
-		for ($i = 0, $j = 1, $k = strLen($format); $i < $k; ++$i, ++$j)
+		for ($i = 0, $j = 1, $k = strLen($format); $i < $k; ++$i, ++$j) # i = Current Character; j = Look ahead for numbers.
 		{
-			if (is_string($format{$i}) && !isset($format{$j}) || !is_numeric($format{$j}))
+			# Is current is string and next is no number
+			if (is_string($format{$i}) && !isset($format[$j]) || !is_numeric($format[$j]))
 				$elements[] = $format{$i};
 			else
 			{
-				while (isset($format[$j]) && is_numeric($format[$j]))
-					++$j;
-				$elements[] = substr($format, $i, $j - $i);
-				$i = $j - 1;
+				while (isset($format{$j}) && is_numeric($format{$j}))
+					++$j;	# Will be the last number of the current element.
+
+				$number = substr($format, $i + 1, $j - ($i + 1));
+
+				if ($format{$i} == 'a' || $format{$i} == 'A') # In these cases it's a string type where dealing with.
+					$elements[] = $format{$i}.$number;
+				else # In these cases, we should get an array.
+					$elements[] = array($format{$i}, $number);
+
+				$i = $j - 1; # Movies the pointer to the end of this element.
 			}
 		}
 		return $elements;
@@ -1341,8 +1362,8 @@ class IS_RES extends struct // RESult (qualify or confirmed finish)
 
 class IS_REO extends struct // REOrder (when race restarts after qualifying)
 {
-	const PACK = 'CCCCa32';
-	const UNPACK = 'CSize/CType/CReqI/CNumP/a32PLID';
+	const PACK = 'CCCCC32';
+	const UNPACK = 'CSize/CType/CReqI/CNumP/C32PLID';
 
 	protected $Size = 36;				# 36
 	protected $Type = ISP_REO;			# ISP_REO
@@ -1350,6 +1371,26 @@ class IS_REO extends struct // REOrder (when race restarts after qualifying)
 	public $NumP;						# number of players in race
 
 	public $PLID;						# all PLIDs in new order
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+
+		$pkClass['PLID'] = array();
+		for ($Pos = 1; $Pos <= 32; ++$Pos)
+		{
+			if ($pkClass["PLID{$Pos}"] != 0)
+				$pkClass['PLID'][$Pos] = $pkClass["PLID{$Pos}"];
+			unset($pkClass["PLID{$Pos}"]);
+		}
+
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		return $this;
+	}
 };
 
 // To request an IS_REO packet at any time, send this IS_TINY :

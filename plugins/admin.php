@@ -178,7 +178,7 @@ class admin extends Plugins
 
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
-			$MTC->Msg(sprintf('^7%s ^3%s ^8%s', $plugin::VERSION, $plugin::AUTHOR))->Send();
+			$MTC->Msg(sprintf('^7%s ^3%s ^8%s', $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR))->Send();
 			$MTC->Msg($plugin::DESCRIPTION)->Send();
 		}
 

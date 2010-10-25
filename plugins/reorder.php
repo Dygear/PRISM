@@ -1,0 +1,56 @@
+<?php
+class reorder extends Plugins
+{
+	const NAME = 'Reorder Plugin';
+	const AUTHOR = 'Dygear & misiek08';
+	const VERSION = PHPInSimMod::VERSION;
+	const DESCRIPTION = 'Used as a shell for quickly writing down ideas and seeing how they work.';
+
+	private $PLID = array();
+	private $reorder = FALSE;
+
+	public function __construct()
+	{
+		$this->registerSayCommand('prism reo', 'cmdREO', "<PName> ... - Set's the grid for the next race.", ADMIN_VOTE);
+		$this->registerPacket('onReorder', ISP_REO);
+		$this->registerPacket('onVoteAction', ISP_TINY);
+	}
+	public function cmdREO($Msg, $UCID)
+	{
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 2)
+		{
+			$this->clientPrint($UCID, PRINT_CHAT, 'You must give at least one PName.');
+			return PLUGIN_CONTINUE;
+		}
+
+		$this->reorder = TRUE;
+		$this->PLID = array();
+
+		foreach ($PNames as $PName)
+			$this->PLID[] = $this->getPlayerByPName($PName)->PLID;
+
+		$IS_REO = new IS_REO;
+		$IS_REO->NumP(count($this->PLID))->PLID($this->PLID)->pack();
+		return PLUGIN_HANDLED;
+	}
+	public function onReorder(IS_REO $REO)
+	{
+		$this->reorder = FALSE;
+		foreach ($REO->PLID as $Pos => $PLID)
+			console(sprintf("Pos: %02d | PLID: %02d | UName: %24s | PName: %24s", $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName));
+		$this->PLID = $REO->PLID;
+		return PLUGIN_CONTINUE;
+	}
+	public function onVoteAction(IS_TINY $TINY)
+	{
+		if ($TINY->SubT == SMALL_VTA)
+		{
+			if (!$this->reorder)
+				return PLUGIN_CONTINUE;
+
+			$IS_REO = new IS_REO;
+			$IS_REO->NumP(count($this->PLID))->PLID($this->PLID)->pack();
+		}
+	}
+}
+?>
