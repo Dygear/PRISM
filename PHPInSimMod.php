@@ -131,13 +131,13 @@ class PHPInSimMod
 		foreach ($trace as $index => $call)
 		{
 			if ($call['function'] == 'main') break;
-			if ($index > 0 && isset($call['file']) && isset($call['line']))
+			if ($index > 0 AND isset($call['file']) AND isset($call['line']))
 			{
 				console("\t".$index.' :: '.$call['function'].' in '.$call['file'].':'.$call['line']);
 			}
 		}
 
-		if (isset($andExit) && $andExit == TRUE)
+		if (isset($andExit) AND $andExit == TRUE)
 			exit(1);
 
 		# Don't execute PHP internal error handler
@@ -158,26 +158,25 @@ class PHPInSimMod
 		}
 		
 		// Initialise handlers (load config files)
-		if (!$this->config->initialise() ||
-			!$this->hosts->initialise() || 
-			!$this->http->initialise() || 
-			!$this->telnet->initialise() || 
-			!$this->admins->initialise() || 
+		if (!$this->config->initialise() OR
+			!$this->hosts->initialise() OR 
+			!$this->http->initialise() OR 
+			!$this->telnet->initialise() OR 
+			!$this->admins->initialise() OR 
 			!$this->plugins->initialise())
 		{
 			console('Fatal error encountered. Exiting...');
 			exit(1);
 		}
 		
-		if (
-			(($pluginsLoaded = $this->plugins->loadPlugins()) == 0) &&
-			($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE))
+		if ($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
 		{
-			console('No Plugins Loaded');
-		} else if ($pluginsLoaded == 1) {
-			console('One Plugin Loaded');
-		} else {
-			console("{$pluginsLoaded} Plugins Loaded.");
+			if (($pluginsLoaded = $this->plugins->loadPlugins()) == 0)
+				console('No Plugins Loaded');
+			else if ($pluginsLoaded == 1)
+				console('One Plugin Loaded');
+			else
+				console("{$pluginsLoaded} Plugins Loaded.");
 		}
 	}
 		
@@ -311,38 +310,32 @@ class PHPInSimMod
 
 	private function updateSelectTimeOut(&$sleep, &$uSleep)
 	{
-		$timeNow = microtime(TRUE);
-		foreach ($this->plugins->getPlugins() as $plugin => $details)
+		$this->sleep = 1;
+		$this->uSleep = NULL;
+/*		$sleepTime = NULL;
+		foreach ($this->plugins->getPlugins() as $plugin => $object)
 		{
-			if (!empty($details->timers))
-			{
-				if (!isset($nextTimeout))
-					$nextTimeout = key($details->timers);
-				else if (($timeStamp = key($details->timers)) < $nextTimeout)
-					$nextTimeout = $timeStamp;
-				
-				if ($timeNow > $nextTimeout)
-				{	# Here we execute and clean stale timers.
-					$this->plugins->triggerTimerCallback($plugin, $nextTimeout);
-					$this->updateSelectTimeOut($sleep, $uSleep);
-				}
-			}
+			$timeout = $object->executeTimers();
+			if ($timeout < $sleepTime)
+				$sleepTime = $timeout;
 		}
-		
-		# If there are no timers set, set the Sleep to 1 & uSleep to NULL.
-		if (!isset($nextTimeout))
+
+		# If there are no timers set or the next timeout is more then a second away, set the Sleep to 1 & uSleep to NULL.
+		if ($sleepTime == NULL OR $sleepTime >= 1)
 		{	# Must have a max delay of a second, otherwise there is no connection maintenance done.
 			$sleep = 1;
 			$uSleep = NULL;
 		}
 		else
-		{	# Else set the timeout to the delta of now as compared to the next timer.
-			if (($nextTimeout -= $timeNow) > 1)
-				list($sleep, $uSleep) = array(1, NULL);
-			else
-				list($sleep, $uSleep) = explode('.', sprintf('%1.6f', $nextTimeout));
+		{	# Set the timeout to the delta of now as compared to the next timer.
+			list($sleep, $uSleep) = explode('.', sprintf('%1.6f', $timeNow - $sleepTime));
+			if ($sleep >= 1 OR $uSleep >= 1000000)
+			{
+				$sleep = 1;
+				$uSleep = NULL;
+			}
 		}
-	}
+*/	}
 
 	public function __destruct()
 	{

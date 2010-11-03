@@ -5,6 +5,11 @@
  * @subpackage Plugin
 */
 
+define('PRINT_CHAT',		(1 << 0)); # 
+define('PRINT_RCM',			(1 << 1)); # 
+define('PRINT_NUM',			(1 << 2)-1); # 
+define('PRINT_CONTEXT',		PRINT_NUM); # 
+
 class PluginHandler extends SectionHandler
 {
 	private $plugins			= array();			# Stores references to the plugins we've spawned.
@@ -149,11 +154,6 @@ class PluginHandler extends SectionHandler
 			}
 		}
 	}
-	
-	public function triggerTimerCallback($plugin, $timeStamp)
-	{
-		$this->plugins[$plugin]->triggerTimerCallback($timeStamp);
-	}
 }
 
 abstract class Plugins
@@ -171,8 +171,6 @@ abstract class Plugins
 	public $insimCommands = array();
 	public $localCommands = array();
 	public $sayCommands = array();
-	// Timers
-	public $timers = array();
 
 	/** Internal Methods */
 	private function getCallback($cmdsArray, $cmdString)
@@ -238,7 +236,7 @@ abstract class Plugins
 	{
 		if ($callback = $this->getCallback($this->consoleCommands, $string) && $callback !== FALSE)
 		{
-			$this->$callback['method']($string, 0);
+			$this->$callback['method']($string, NULL);
 		}
 	}
 
@@ -308,24 +306,6 @@ abstract class Plugins
 		}
 		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
-	/** Timed Callbacks. */
-	// Registers a callback method to be executed in Seconds + uSeconds from now.
-	protected function registerTimer($callbackMethod, $args = array(), $Seconds = 1, $uSeconds = 0)
-	{
-		$timeStamp = microtime(TRUE) + ($Seconds + ($uSeconds / 1000000));
-		if (!isset($this->timers["$timeStamp"]))
-			$this->timers["$timeStamp"] = array();
-		$this->timers["$timeStamp"][] = $callbackMethod;
-		return $timeStamp;
-	}
-	// Fires the methods within the plugin.
-	public function triggerTimerCallback($timeStamp)
-	{
-		foreach ($this->timers[$timeStamp] as $callback)
-			$this->$callback();
-		unset($this->timers[$timeStamp]);
-	}
-
 	/** Internal Functions */
 	protected function getCurrentHostId()
 	{
@@ -507,6 +487,75 @@ abstract class Plugins
 		# Check the user is defined as an admin on the host current host.
 		$adminInfo = $PRISM->admins->getAdminInfo($username);
 		return ($adminInfo['accessFlags'] & ADMIN_IMMUNITY) ? TRUE : FALSE;
+	}
+
+	// Timers
+	const TIMER_CLOSE = 0; /** Timer will run once, the default behavior. */
+	const TIMER_REPEAT = 1; /** Timer will repeat until it returns PLUGIN_STOP. */
+	const TIMER_NOTRACK = 2; /** Timer will not carry over through track changes. */
+
+	private $timers = array();	# Array of timers.
+	protected $timeout = NULL;	# When the next timeout is, read only from outside of this class.
+
+	/** Timed Callbacks. */
+	// Registers a callback method.
+	protected function createTimer($interval = 1.0, $callback, $args = NULL, $flags = Plugin::TIMER_CLOSE)
+	{
+		# This will be the time when this timer is to trigger.
+		$timestamp = microtime(TRUE) + $interval;
+
+		# Check is this timestamp is unused, makes a new one if one is not present.
+		if (!isset($this->timers["$timestamp"]))
+			$this->timers["$timestamp"] = array();
+
+		# Adds our timer to the array.
+		$this->timers["$timestamp"][$callback] = array('interval' => $interval, 'args' => $args, 'flags' => $flags);
+
+		$this->getTimeout($timestamp);
+
+		# Return our timestamp.
+		return $timestamp;
+	}
+	// Check to see if this timeout is less then our known next timeout.
+	protected function getTimeout($timestamp = NULL)
+	{
+		if ($timestamp !== NULL AND $this->timeout > $timestamp)
+			$this->timeout = $timestamp;
+		return $this->timeout;
+	}
+	// Sort the array to make sure the next timer (smallest float) is on the top of the list.
+	protected function sortTimers()
+	{
+		return ksort($this->timers);
+	}
+	// Executes the elapsed timers, and returns when the next timer should execute or NULL if no timers are left.
+	public function executeTimers()
+	{
+		$timeNow = microtime(TRUE);
+		if (!empty($this->timers))
+		{
+			foreach ($this->timers as $timestamp => $timer)
+			{
+				# Check to see if the first timer (next to be executed) has elpased.
+				if ($timeNow < $timestamp)
+					continue; # We continue as we don't have, or no longer have, any elpased timers.
+				# Here we execute elapsed timers.
+				foreach ($this->timers[$timestamp] as $callback => $info)
+				{
+					$return = $this->$callback($info['args']);
+					if ($info['flags'] == Plugin::TIMER_CLOSE OR $return == PLUGIN_STOP)
+					{
+						unset($this->timers[$timestamp][$callback]);
+						if ($timestamp > $this->timeout)
+							$this->timeout = NULL;
+					}
+					else if ($timer['flags'] == Plugin::TIMER_REPEAT)
+						$this->createTimer($info['interval'], $info['args'], $info['flags']);
+				}
+				$this->sortTimers();
+			}
+		}
+		return NULL;
 	}
 }
 

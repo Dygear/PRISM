@@ -21,11 +21,11 @@ class gmeter extends Plugins {
 			if (!isset($this->BTNs[$CompCar->PLID])) {
 				$this->BTNs[$CompCar->PLID] = new IS_BTN;
 				$this->BTNs[$CompCar->PLID]->T(184)->L(164)->W(10)->H(6)->BStyle(ISB_DARK + ISB_RIGHT + 1)->Send();
-				$this->BTNs[$CompCar->PLID]->W(0)->H(0);
+				$this->BTNs[$CompCar->PLID]->W(0)->H(0); # Optimization: Allows LFS to ignore everything in the packet, but the Text Field.
 			}
-			
+
 			// Speeds
-			$cSpeed = (($CompCar->Speed / 32768) * 100); # Meters Per Second
+			$cSpeed = (($CompCar->Speed / 32768) * 100); # Convert to Meters Per Second
 			$lSpeed = (isset($this->SPEEDs[$CompCar->PLID])) ? $this->SPEEDs[$CompCar->PLID] : 0;
 
 			// Times
@@ -36,7 +36,7 @@ class gmeter extends Plugins {
 
 			// Update Button
 			$this->BTNs[$CompCar->PLID]->Text(sprintf('%.2f', $gForce))->Send();
-			
+
 			// Save State
 			$this->TIMEs[$CompCar->PLID] = $cTime;
 			$this->SPEEDs[$CompCar->PLID] = $cSpeed;

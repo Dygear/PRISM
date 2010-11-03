@@ -1,9 +1,9 @@
 <?php
 class theTime extends Plugins
 {
-	const NAME = 'Time Teller';
+	const NAME = 'Gnomon';
 	const DESCRIPTION = 'Prints the time to the client who asks for it.';
-	const AUTHOR = 'Mark \'Dygear\' Tomlin';
+	const AUTHOR = "Mark 'Dygear' Tomlin";
 	const VERSION = PHPInSimMod::VERSION;
 
 	public function __construct()

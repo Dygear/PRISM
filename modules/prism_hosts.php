@@ -32,9 +32,9 @@ define('STREAM_WRITE_BYTES',	1400);
 /**
  * HostHandler public functions :
  * ->initialise()									# (re)loads the config files and (re)connects to the host(s)
- * ->sendPacket($packetClass, $hostId = FALSE)		# send a packet to either the last incoming host, or to $hostID
+ * ->sendPacket($packetClass, $hostId = NULL)		# send a packet to either the last incoming host, or to $hostID
  * ->getHostsInfo()									# retreive an array of information about all the hosts
- * ->getHostById(string $id)						# get a host object by its hostID
+ * ->getHostById(string $hostId)						# get a host object by its hostID
  * ->getHostsByIp(string $ip)						# get all hosts with a certain IP
 **/
 class HostHandler extends SectionHandler
@@ -434,7 +434,7 @@ class HostHandler extends SectionHandler
 	// inspectPacket is used to act upon certain packets like error messages
 	// We need these packets for proper basic PRISM connection functionality
 	//
-	private function inspectPacket(struct &$packet, &$hostID)
+	private function inspectPacket(Struct &$packet, &$hostID)
 	{
 		$this->curHostID = $hostID;
 		switch($packet->Type)
@@ -493,7 +493,7 @@ class HostHandler extends SectionHandler
 		}
 	}
 
-	public function sendPacket(struct $packetClass, $hostId = NULL)
+	public function sendPacket(Struct $packetClass, $hostId = NULL)
 	{
 		if ($hostId === NULL)
 			$hostId = $this->curHostID;
@@ -516,7 +516,7 @@ class HostHandler extends SectionHandler
 			)
 			{
 				trigger_error('Attempted to send invalid packet to relay host, packet not allowed to be forwarded without admin privileges.', E_USER_WARNING);
-				return 0;
+				return FALSE;
 			}
 			else if (
 				$packetClass instanceof IS_TINY
@@ -526,7 +526,7 @@ class HostHandler extends SectionHandler
 			)
 			{
 				trigger_error('Attempted to send invalid packet to relay host, packet request makes no sense in this context.', E_USER_WARNING);
-				return 0;
+				return FALSE;
 			}
 		}
 
@@ -843,9 +843,9 @@ class InsimConnection
 			// Send IS_ISI packet
 			$ISP			= new IS_ISI();
 			$ISP->ReqI		= TRUE;
-			$ISP->UDPPort	= ($this->udpPort > 0) ? $this->udpPort : 0;
-			$ISP->Flags		= ISF_MSO_COLS | ISF_MCI;
-			$ISP->Prefix	= ord($this->prefix);
+			$ISP->UDPPort	= (isset($this->udpPort) && $this->udpPort > 0) ? $this->udpPort : 0;
+			$ISP->Flags		= (isset($this->Flags) && $this->Flags > 0) ? $this->Flags : ISF_MSO_COLS | ISF_MCI;
+			$ISP->Prefix	= (isset($this->prefix)) ? ord($this->prefix) : ord('!');
 			$ISP->Interval	= round(1000 / $this->pps);
 			$ISP->Admin		= $this->adminPass;
 			$ISP->IName		= 'PRISM v' . PHPInSimMod::VERSION;
@@ -854,12 +854,12 @@ class InsimConnection
 		else if ($this->connType == CONNTYPE_RELAY)
 		{
 			// Send IR_SEL packet
-			$ISP			= new IR_SEL();
-			$ISP->ReqI		= TRUE;
-			$ISP->HName		= $this->hostName;
-			$ISP->Admin		= $this->adminPass;
-			$ISP->Spec		= $this->specPass;
-			$this->writePacket($ISP);
+			$SEL			= new IR_SEL();
+			$SEL->ReqI		= TRUE;
+			$SEL->HName		= $this->hostName;
+			$SEL->Admin		= $this->adminPass;
+			$SEL->Spec		= $this->specPass;
+			$this->writePacket($SEL);
 		}
 		else
 		{
@@ -939,7 +939,7 @@ class InsimConnection
 			$this->mustConnect = -1;
 	}
 	
-	public function writePacket(struct &$packet)
+	public function writePacket(Struct &$packet)
 	{
 		if ($this->socketType	== SOCKTYPE_UDP)
 			return $this->writeUDP($packet->pack());
@@ -950,7 +950,9 @@ class InsimConnection
 	public function writeUDP(&$data)
 	{
 		$this->lastWriteTime = time();
-		return @fwrite ($this->socket, $data);
+		if (($bytes = @fwrite($this->socket, $data)) === FALSE)
+			console('UDP: Error sending packet through socket.');
+		return $bytes;
 	}
 	
 	public function writeTCP($data, $sendQPacket = FALSE)
@@ -964,14 +966,16 @@ class InsimConnection
 		{
 			// This packet came from the sendQ. We just try to send this and don't bother too much about error checking.
 			// That's done from the sendQ flushing code.
-			$bytes = @fwrite ($this->socket, $data);
+			if (($bytes = @fwrite($this->socket, $data)) === FALSE)
+				console('TCP: Error sending packet through socket.');
 		}
 		else
 		{
 			if ($this->sendQLen == 0)
 			{
 				// It's Ok to send packet
-				$bytes = @fwrite ($this->socket, $data);
+				if (($bytes = @fwrite($this->socket, $data)) === FALSE)
+					console('TCP: Error sending packet through socket.');
 				$this->lastWriteTime = time();
 		
 				if (!$bytes || $bytes != strlen($data))
