@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - Telnet Module
+ * @package PRISM
+ * @subpackage Telnet
+*/
 
 // IAC ACTION OPTION (3 bytes)
 define('TELNET_OPT_BINARY',			chr(0x00));	// Binary (RCF 856)

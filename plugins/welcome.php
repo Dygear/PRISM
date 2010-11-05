@@ -8,11 +8,11 @@ class welcome extends Plugins
 
 	public function __construct()
 	{
-		$this->registerPacket(ISP_VER, 'onPrismConnect');
-		$this->registerPacket(ISP_NCN, 'onClientConnect');
+		$this->registerPacket('onPrismConnect', ISP_VER);
+		$this->registerPacket('onClientConnect', ISP_NCN);
 	}
 
-	public function onPrismConnect()
+	public function onPrismConnect(IS_VER $VER)
 	{
 		$MSX = new IS_MSX;
 		$MSX->Msg('PRISM Version ^3'.PHPInSimMod::VERSION.'^8 Has Connected.')->Send();

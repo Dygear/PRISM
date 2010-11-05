@@ -429,6 +429,40 @@ abstract class Plugins
 		return $return;
 	}
 	// Is
+	/**
+	 * @parm $x - A IS_MCI->CompCar->X
+	 * @parm $y - A IS_MCI->CompCar->Y
+	 * @parm $polygon - A array of X, Y points.
+	 * @author PHP version by filur & Dygear
+	 * @coauthor Original code by Brian J. Fox of MetaHTML.
+	 */
+	public function isInPoly($x, $y, array $vertices)
+	{
+		$lines_crossed = 0;
+		foreach ($vertices as $index => $cVertex)
+		{
+			if ($index == 0) continue;
+
+			$lVertex =& $vertices[$index - 1];
+
+			$min_x = min($lVertex['x'], $cVertex['x']);
+			$max_x = max($lVertex['x'], $cVertex['x']);
+			$min_y = min($lVertex['y'], $cVertex['y']);
+			$max_y = max($lVertex['y'], $cVertex['y']);
+
+			if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
+			{
+				if ($x < $min_x && $y > $min_y && $y < $max_y)
+					++$lines_crossed;
+				continue;
+			}
+
+			$slope = ($lVertex['y'] - $cVertex['y']) / ($lVertex['x'] - $cVertex['x']);
+			if ((($y - ($lVertex['y'] - ($slope * $lVertex['x']))) / $slope) >= $x)
+				++$lines_crossed;
+		}
+		return ($lines_crossed % 2) ? TRUE : FALSE;
+	}
 	protected function isHost(&$username, $hostID = NULL)
 	{
 		return ($this->getHostState($this->getHostId($hostID))->clients[0]->UName == $username) ? TRUE : FALSE;
@@ -499,7 +533,7 @@ abstract class Plugins
 
 	/** Timed Callbacks. */
 	// Registers a callback method.
-	protected function createTimer($interval = 1.0, $callback, $args = NULL, $flags = Plugin::TIMER_CLOSE)
+	protected function createTimer($interval = 1.0, $callback, $args = NULL, $flags = Plugins::TIMER_CLOSE)
 	{
 		# This will be the time when this timer is to trigger.
 		$timestamp = microtime(TRUE) + $interval;

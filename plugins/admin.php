@@ -37,9 +37,9 @@ class admin extends Plugins
 	public function cmdRaceControlMessage($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 4)
-			$this->registerTimeout('tmrClearRCM', $argv[4]);
+			$this->createTimer($argv[4], 'tmrClearRCM');
 		else
-			$this->registerTimeout('tmrClearRCM', 5);
+			$this->createTimer(5, 'tmrClearRCM');
 
 		$argv = $this->raceControlMessage($cmd);
 
@@ -57,9 +57,9 @@ class admin extends Plugins
 	public function cmdRaceControlMessageAll($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 3)
-			$this->registerTimeout('tmrClearRCM', $argv[3]);
+			$this->createTimer($argv[3], 'tmrClearRCM');
 		else
-			$this->registerTimeout('tmrClearRCM', 5);
+			$this->createTimer(5, 'tmrClearRCM');
 
 		$argv = $this->raceControlMessage($cmd);
 

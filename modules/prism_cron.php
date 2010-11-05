@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - CRON Module
+ * @package PRISM
+ * @subpackage CRON
+*/
 
 /**
 * 

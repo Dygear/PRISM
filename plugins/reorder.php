@@ -8,9 +8,11 @@ class reorder extends Plugins
 
 	private $PLID = array();
 	private $reorder = FALSE;
+	private $IS_REO;
 
 	public function __construct()
 	{
+		$this->IS_REO = new IS_REO;
 		$this->registerSayCommand('prism reo', 'cmdREO', "<PName> ... - Set's the grid for the next race.", ADMIN_VOTE);
 		$this->registerPacket('onReorder', ISP_REO);
 		$this->registerPacket('onVoteAction', ISP_TINY);
@@ -29,28 +31,26 @@ class reorder extends Plugins
 		foreach ($PNames as $PName)
 			$this->PLID[] = $this->getPlayerByPName($PName)->PLID;
 
-		$IS_REO = new IS_REO;
-		$IS_REO->NumP(count($this->PLID))->PLID($this->PLID)->pack();
+		$this->IS_REO->NumP(count($this->PLID))->PLID($this->PLID);
+
 		return PLUGIN_HANDLED;
 	}
 	public function onReorder(IS_REO $REO)
 	{
-		$this->reorder = FALSE;
+		$this->reorder = FALSE;	# As we are copying LFS REO state, we don't need to send this packet on TINY_VTA packet.
+
 		foreach ($REO->PLID as $Pos => $PLID)
 			console(sprintf("Pos: %02d | PLID: %02d | UName: %24s | PName: %24s", $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName));
-		$this->PLID = $REO->PLID;
+
+		$this->IS_REO->NumP(count($REO->PLID))->PLID($REO->PLID); # Updates our list.
+
 		return PLUGIN_CONTINUE;
 	}
 	public function onVoteAction(IS_TINY $TINY)
 	{
-		if ($TINY->SubT == SMALL_VTA)
-		{
-			if (!$this->reorder)
-				return PLUGIN_CONTINUE;
-
-			$IS_REO = new IS_REO;
-			$IS_REO->NumP(count($this->PLID))->PLID($this->PLID)->pack();
-		}
+		if ($this->reorder AND $TINY->SubT == SMALL_VTA AND $this->IS_REO instanceof IS_REO)
+			$this->IS_REO->Send();
+		return PLUGIN_CONTINUE;
 	}
 }
 ?>

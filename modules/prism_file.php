@@ -1,4 +1,10 @@
 <?php
+/**
+ * PHPInSimMod - File Module
+ * @package PRISM
+ * @subpackage File
+*/
+
 class file {
 	const EXTENSIONS = array(
 		'3gp' => 'video/3gpp',

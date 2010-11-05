@@ -378,6 +378,7 @@ class HostHandler extends SectionHandler
 			// Do we need to keep the connection alive with a ping?
 			if ($host->getLastWriteTime() < time () - KEEPALIVE_TIME)
 			{
+				console('Pong!');
 				$ISP = new IS_TINY();
 				$ISP->SubT = TINY_NONE;
 				$host->writePacket($ISP);
@@ -395,7 +396,7 @@ class HostHandler extends SectionHandler
 
 	private function handlePacket(&$rawPacket, &$hostID)
 	{
-		global $TYPEs, $PRISM;
+		global $PRISM, $TYPEs, $TINY, $SMALL;
 		
 		// Check packet size
 		if ((strlen($rawPacket) % 4) > 0)
@@ -416,11 +417,23 @@ class HostHandler extends SectionHandler
 		$this->curHostId = $hostID; # To make sure we always know what host we are talking to, makeing the sendPacket function useful everywhere.
 		
 		# Parse Packet Header
-		$pH = unpack('CSize/CType/CReqI/CData', $rawPacket);
+		$pH = unpack('CSize/CType/CReqI/CSubT', $rawPacket);
 		if (isset($TYPEs[$pH['Type']]))
 		{
 			if ($PRISM->config->cvars['debugMode'] & (PRISM_DEBUG_CORE + PRISM_DEBUG_MODULES))
-				console($TYPEs[$pH['Type']] . ' Packet from '.$hostID);
+			{
+				switch ($pH['Type'])
+				{
+					case ISP_TINY:
+						console("${TINY[$pH['SubT']]} Packet from {$hostID}.");
+					break;
+					case ISP_SMALL:
+						console("${SMALL[$pH['SubT']]} Packet from {$hostID}.");
+					break;
+					default:
+						console("${TYPEs[$pH['Type']]} Packet from {$hostID}.");
+				}
+			}
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
 			$PRISM->plugins->dispatchPacket($packet, $hostID);

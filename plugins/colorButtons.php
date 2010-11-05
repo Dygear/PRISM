@@ -2,7 +2,7 @@
 class colorButtons extends Plugins
 {
 	const NAME = 'Color Buttons Example';
-	const AUTHOR = 'Mark \'Dygear\' Tomlin';
+	const AUTHOR = "Mark 'Dygear' Tomlin";
 	const VERSION = '1.1.0';
 	const DESCRIPTION = 'Shows how to use colors in buttons with BStyle & Color Escape Codes.';
 
@@ -49,7 +49,7 @@ class colorButtons extends Plugins
 		for ($i = 0; $i <= 7; ++$i)
 			$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X - $BTN->W)->T($Y + ($i * $BTN->H) + 1)->BStyle(ISB_DARK + $i)->Text($i)->Send()->ClickID;
 
-		$timeStamp = $this->registerTimer('tmrClearButtons', $TTL);
+		$timeStamp = $this->createTimer($TTL, 'tmrClearButtons');
 		$this->Time[$timeStamp] = $ucid;
 		ksort($this->Time);
 	}

@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - Telnet Module
+ * @package PRISM
+ * @subpackage Telnet
+*/
 
 require_once(ROOTPATH . '/modules/prism_telnet_screen.php');
 

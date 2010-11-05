@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - Http Module
+ * @package PRISM
+ * @subpackage Http
+*/
 
 require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
 require_once(ROOTPATH . '/modules/prism_phpparser.php');

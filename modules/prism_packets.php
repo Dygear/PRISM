@@ -1,5 +1,4 @@
 <?php
-
 /**
  * PHPInSimMod - Packet Module
  * @package PRISM
@@ -710,6 +709,7 @@ class IS_MST extends Struct		// MSg Type - send to LFS to type message or comman
 		{
 			foreach(explode("\n", wordwrap($this->Msg, 63, "\n", TRUE)) as $Msg)
 				$this->Msg($Msg)->Send();
+			return;
 		}
 		return parent::pack();
 	}
@@ -2115,7 +2115,7 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
 	{
 		if (strLen($this->Text) > 239)
 			$this->Text = subStr($this->Msg, 0, 239);
-		parent::pack();
+		return parent::pack();
 	}
 };
 

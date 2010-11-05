@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - Interactive Module
+ * @package PRISM
+ * @subpackage Interactive
+*/
 
 class Interactive
 {
