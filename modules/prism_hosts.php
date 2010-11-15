@@ -737,6 +737,11 @@ class InsimConnection
 		return $this->udpPort;
 	}
 
+	public function &getPPS()
+	{
+		return $this->pps;
+	}
+
 	public function isAdmin()
 	{
 		return ($this->adminPass != '') ? TRUE : FALSE;

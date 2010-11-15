@@ -18,6 +18,7 @@ define('MAINTENANCE_INTERVAL', 	2);			# The frequency in seconds to do connectio
 // Return Codes: 
 define('PLUGIN_CONTINUE',		0);			# Plugin passes through operation. Whatever called it continues.
 define('PLUGIN_HANDLED',		1);			# Plugin halts continued operation. Plugins following in the plugins.ini won't be called.
+define('PLUGIN_STOP',			2);			# Plugin stops timer from triggering again in the future.
 
 error_reporting(E_ALL);
 ini_set('display_errors',		'TRUE');
@@ -310,12 +311,14 @@ class PHPInSimMod
 
 	private function updateSelectTimeOut(&$sleep, &$uSleep)
 	{
-		$this->sleep = 1;
-		$this->uSleep = NULL;
-/*		$sleepTime = NULL;
+		$sleep = 1;
+		$uSleep = NULL;
+
+		$sleepTime = NULL;
 		foreach ($this->plugins->getPlugins() as $plugin => $object)
 		{
 			$timeout = $object->executeTimers();
+
 			if ($timeout < $sleepTime)
 				$sleepTime = $timeout;
 		}
@@ -329,13 +332,13 @@ class PHPInSimMod
 		else
 		{	# Set the timeout to the delta of now as compared to the next timer.
 			list($sleep, $uSleep) = explode('.', sprintf('%1.6f', $timeNow - $sleepTime));
-			if ($sleep >= 1 OR $uSleep >= 1000000)
+			if (($sleep >= 1 AND $uSleep >= 1) OR $uSleep >= 1000000)
 			{
 				$sleep = 1;
 				$uSleep = NULL;
 			}
 		}
-*/	}
+	}
 
 	public function __destruct()
 	{

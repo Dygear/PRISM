@@ -68,6 +68,7 @@ class colorButtons extends Plugins
 				unset($this->Time[$time]);
 			}
 		}
+		return PLUGIN_STOP;
 	}
 }
 ?>

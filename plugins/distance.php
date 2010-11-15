@@ -13,6 +13,7 @@ class distance extends Plugins {
 		$this->registerPacket('onMCI', ISP_MCI);
 	}
 	public function onMCI($Packet) {
+		$PPS = $this->getHostInfo()->getPPS();
 		foreach ($Packet->Info as $CompCar) {
 			$PLID = $CompCar->PLID;
 			// Spawn a new button instance if one is not here.
@@ -53,11 +54,23 @@ class distance extends Plugins {
 				$this->BTNs[$PLID]['Totl'] = new IS_BTN;
 				$this->BTNs[$PLID]['Totl']->ClickID(7)->T(184)->L(126)->W(25)->H(6)->BStyle(ISB_DARK + ISB_RIGHT + 6)->Send()->W(0)->H(0);
 
-				# 
+				# These would be the bit length display buttons.
+				$this->BTNs[$PLID]['Bits'] = new IS_BTN;
+				$this->BTNs[$PLID]['Bits']->ClickID(47)->T(190)->L(101)->W(50)->H(6)->BStyle(ISB_LIGHT + ISB_RIGHT + 6)->Send()->W(0)->H(0);
+				$this->BTNs[$PLID]['BitC'] = new IS_BTN;
+				$this->BTNs[$PLID]['BitC']->ClickID(57)->T(190)->L(151)->W(12)->H(6)->BStyle(ISB_LIGHT + ISB_RIGHT + 4)->Send()->W(0)->H(0);
+
+
+				$this->BTNs[$PLID]['MPS'] = new IS_BTN;
+				$this->BTNs[$PLID]['MPS']->ClickID(8)->T(190)->L(26)->W(25)->H(6)->BStyle(ISB_LIGHT + 4)->Send()->W(0)->H(0);
+				$this->BTNs[$PLID]['MPH'] = new IS_BTN;
+				$this->BTNs[$PLID]['MPH']->ClickID(18)->T(190)->L(51)->W(25)->H(6)->BStyle(ISB_LIGHT + 4)->Send()->W(0)->H(0);
+				$this->BTNs[$PLID]['KPH'] = new IS_BTN;
+				$this->BTNs[$PLID]['KPH']->ClickID(28)->T(190)->L(76)->W(25)->H(6)->BStyle(ISB_LIGHT + 4)->Send()->W(0)->H(0);
+
+				# (Re)set the total distance.
 				$this->TOTALs[$PLID] = 0;
 			}
-			$BTN->ClickID(47)->T(190)->L(101)->W(50)->H(6)->BStyle(ISB_LIGHT + ISB_RIGHT + 6)->Send()->W(0)->H(0);
-			$BTN->ClickID(57)->T(190)->L(151)->W(12)->H(6)->BStyle(ISB_LIGHT + ISB_RIGHT + 4)->Send()->W(0)->H(0);
 
 			// Setup our Coord data.
 			$lCoords = (isset($this->COORDs[$PLID])) ? $this->COORDs[$PLID] : $CompCar;
@@ -67,17 +80,29 @@ class distance extends Plugins {
 			$X = abs($cCoords->X - $lCoords->X);
 			$Y = abs($cCoords->Y - $lCoords->Y);
 			$Z = abs($cCoords->Z - $lCoords->Z);
-			$D = round(sqrt(pow($X, 2) + pow($Y, 2) + pow($Z, 2)));
+			$D = round(sqrt(($X * $X) + ($Y * $Y) + ($Z * $Z)));
+			$T = $this->TOTALs[$PLID] += $D;
+			$B = base_convert($T, 10, 2);
+
+			// Caclulate Speed
+			$MPS = number_format($CompCar->Speed / 327.68, 1);		# Meters Per Second
+			$MPH = number_format($CompCar->Speed / 146.486067, 1);	# Miles Per Hour
+			$KPH = number_format($CompCar->Speed / 91.01, 1);		# Kilometers Per Hour
+
 
 			// Update Buttons
 			$this->BTNs[$PLID]['X']->Text(number_format($X))->Send();
 			$this->BTNs[$PLID]['Y']->Text(number_format($Y))->Send();
 			$this->BTNs[$PLID]['Z']->Text(number_format($Z))->Send();
 			$this->BTNs[$PLID]['Dist']->Text(number_format($D))->Send();
-			$this->BTNs[$PLID]['Totl']->Text(number_format($this->TOTALs[$PLID] += $D))->Send();
-			$binary = base_convert($this->BTNs[$PLID]['Totl']->Text, 10, 2);
-			$BTN->ClickID(47)->Text($binary)->Send(); # Binary Total Distance
-			$BTN->ClickID(57)->Text(strlen($binary) . ' bits')->Send(); # Binary Bit Count
+			$this->BTNs[$PLID]['Totl']->Text(number_format($T))->Send();
+			$this->BTNs[$PLID]['Bits']->Text($B)->Send(); # Binary Total Distance
+			$this->BTNs[$PLID]['BitC']->Text(strlen($B) . ' bits')->Send(); # Binary Bit Count
+
+			$this->BTNs[$PLID]['MPS']->Text($MPS)->Send();
+			$this->BTNs[$PLID]['MPH']->Text($MPH)->Send();
+			$this->BTNs[$PLID]['KPH']->Text($KPH)->Send();
+
 			$this->COORDs[$PLID] = $cCoords;
 		}
 	}

@@ -5,10 +5,10 @@
  * @subpackage Plugin
 */
 
-define('PRINT_CHAT',		(1 << 0)); # 
-define('PRINT_RCM',			(1 << 1)); # 
-define('PRINT_NUM',			(1 << 2)-1); # 
-define('PRINT_CONTEXT',		PRINT_NUM); # 
+define('PRINT_CHAT',		(1 << 0));		# 1
+define('PRINT_RCM',			(1 << 1));		# 2
+define('PRINT_NUM',			(1 << 2)-1);	# 4 - 1
+define('PRINT_CONTEXT',		PRINT_NUM);		# 3
 
 class PluginHandler extends SectionHandler
 {
@@ -528,8 +528,8 @@ abstract class Plugins
 	const TIMER_REPEAT = 1; /** Timer will repeat until it returns PLUGIN_STOP. */
 	const TIMER_NOTRACK = 2; /** Timer will not carry over through track changes. */
 
-	private $timers = array();	# Array of timers.
-	protected $timeout = NULL;	# When the next timeout is, read only from outside of this class.
+	public $timers = array();	# Array of timers.
+	public $timeout = NULL;		# When the next timeout is, read only from outside of this class.
 
 	/** Timed Callbacks. */
 	// Registers a callback method.
@@ -577,13 +577,17 @@ abstract class Plugins
 				foreach ($this->timers[$timestamp] as $callback => $info)
 				{
 					$return = $this->$callback($info['args']);
-					if ($info['flags'] == Plugin::TIMER_CLOSE OR $return == PLUGIN_STOP)
+					if ($info['flags'] == Plugins::TIMER_CLOSE OR $return == PLUGIN_STOP)
 					{
 						unset($this->timers[$timestamp][$callback]);
+
+						if (count($this->timers[$timestamp]) == 0)
+							unset($this->timers[$timestamp]);
+
 						if ($timestamp > $this->timeout)
 							$this->timeout = NULL;
 					}
-					else if ($timer['flags'] == Plugin::TIMER_REPEAT)
+					else if ($timer['flags'] == Plugins::TIMER_REPEAT)
 						$this->createTimer($info['interval'], $info['args'], $info['flags']);
 				}
 				$this->sortTimers();
