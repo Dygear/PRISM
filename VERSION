@@ -2,7 +2,8 @@
 	* Refactored Core & Modules
 	* PRISM can be global'ed for easy access to variables.
 	* HTTP server for PRISM with test web page.
-	* Telnet server with experimental admin accounts page.
+	* Telnet server for remote administration.
+	* Experimental telnet admin accounts page.
 	* Packet properties can now be chained like methods for a quick write of variables.
 	* Added admin functions
 		plugin::isAdmin()
