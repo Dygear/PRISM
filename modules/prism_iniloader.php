@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - INILoader Module
+ * @package PRISM
+ * @subpackage INILonader
+*/
 
 /**
  * protected IniLoader methods (to be extended by other classes, like the section handlers)

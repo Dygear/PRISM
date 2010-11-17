@@ -18,6 +18,7 @@ define('MAINTENANCE_INTERVAL', 	2);			# The frequency in seconds to do connectio
 // Return Codes: 
 define('PLUGIN_CONTINUE',		0);			# Plugin passes through operation. Whatever called it continues.
 define('PLUGIN_HANDLED',		1);			# Plugin halts continued operation. Plugins following in the plugins.ini won't be called.
+define('PLUGIN_STOP',			2);			# Plugin stops timer from triggering again in the future.
 
 error_reporting(E_ALL);
 ini_set('display_errors',		'TRUE');
@@ -50,7 +51,7 @@ $PRISM->start();
 */
 class PHPInSimMod
 {
-	const VERSION = '0.3.0';
+	const VERSION = '0.3.1';
 	const ROOTPATH = ROOTPATH;
 
 	/* Run Time Arrays */
@@ -131,13 +132,13 @@ class PHPInSimMod
 		foreach ($trace as $index => $call)
 		{
 			if ($call['function'] == 'main') break;
-			if ($index > 0 && isset($call['file']) && isset($call['line']))
+			if ($index > 0 AND isset($call['file']) AND isset($call['line']))
 			{
 				console("\t".$index.' :: '.$call['function'].' in '.$call['file'].':'.$call['line']);
 			}
 		}
 
-		if (isset($andExit) && $andExit == TRUE)
+		if (isset($andExit) AND $andExit == TRUE)
 			exit(1);
 
 		# Don't execute PHP internal error handler
@@ -158,26 +159,25 @@ class PHPInSimMod
 		}
 		
 		// Initialise handlers (load config files)
-		if (!$this->config->initialise() ||
-			!$this->hosts->initialise() || 
-			!$this->http->initialise() || 
-			!$this->telnet->initialise() || 
-			!$this->admins->initialise() || 
+		if (!$this->config->initialise() OR
+			!$this->hosts->initialise() OR 
+			!$this->http->initialise() OR 
+			!$this->telnet->initialise() OR 
+			!$this->admins->initialise() OR 
 			!$this->plugins->initialise())
 		{
 			console('Fatal error encountered. Exiting...');
 			exit(1);
 		}
 		
-		if (
-			(($pluginsLoaded = $this->plugins->loadPlugins()) == 0) &&
-			($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE))
+		if ($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
 		{
-			console('No Plugins Loaded');
-		} else if ($pluginsLoaded == 1) {
-			console('One Plugin Loaded');
-		} else {
-			console("{$pluginsLoaded} Plugins Loaded.");
+			if (($pluginsLoaded = $this->plugins->loadPlugins()) == 0)
+				console('No Plugins Loaded');
+			else if ($pluginsLoaded == 1)
+				console('One Plugin Loaded');
+			else
+				console("{$pluginsLoaded} Plugins Loaded.");
 		}
 	}
 		
@@ -212,9 +212,9 @@ class PHPInSimMod
 			// Add telnet sockets to the arrays as needed
 			$this->telnet->getSelectableSockets($sockReads, $sockWrites);
 			
-			$this->getSelectTimeOut();
+			$this->updateSelectTimeOut($this->sleep, $this->uSleep);
 
-			# Error suppressed used because this function returns a "Invalid CRT parameters detected" only on Windows.
+			# Error suppression used because this function returns a "Invalid CRT parameters detected" only on Windows.
 			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept, $this->sleep, $this->uSleep);
 			
 			// Keep looping until you've handled all activities on the sockets.
@@ -309,15 +309,35 @@ class PHPInSimMod
 		} // End while(isRunning)
 	}
 
-	private function getSelectTimeOut()
+	private function updateSelectTimeOut(&$sleep, &$uSleep)
 	{
-		# If timer & cron array is empty, set the Sleep & uSleep to NULL.
-		# Else set the timeout to the detla of now as compared to the next timer or cronjob event, what ever is smaller.
-		# A Cron Jobs distance to now will have to be recalcuated after each socket_select call, well do that here also.
+		$sleep = 1;
+		$uSleep = NULL;
 
-		// Must have a max delay of a second, otherwise there is no connection maintenance done.
-		$this->sleep = 1;
-		$this->uSleep = NULL;
+		$sleepTime = NULL;
+		foreach ($this->plugins->getPlugins() as $plugin => $object)
+		{
+			$timeout = $object->executeTimers();
+
+			if ($timeout < $sleepTime)
+				$sleepTime = $timeout;
+		}
+
+		# If there are no timers set or the next timeout is more then a second away, set the Sleep to 1 & uSleep to NULL.
+		if ($sleepTime == NULL OR $sleepTime >= 1)
+		{	# Must have a max delay of a second, otherwise there is no connection maintenance done.
+			$sleep = 1;
+			$uSleep = NULL;
+		}
+		else
+		{	# Set the timeout to the delta of now as compared to the next timer.
+			list($sleep, $uSleep) = explode('.', sprintf('%1.6f', $timeNow - $sleepTime));
+			if (($sleep >= 1 AND $uSleep >= 1) OR $uSleep >= 1000000)
+			{
+				$sleep = 1;
+				$uSleep = NULL;
+			}
+		}
 	}
 
 	public function __destruct()

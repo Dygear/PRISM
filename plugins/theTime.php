@@ -1,9 +1,9 @@
 <?php
 class theTime extends Plugins
 {
-	const NAME = 'Time Teller';
+	const NAME = 'Gnomon';
 	const DESCRIPTION = 'Prints the time to the client who asks for it.';
-	const AUTHOR = 'PRISM Dev Team';
+	const AUTHOR = "Mark 'Dygear' Tomlin";
 	const VERSION = PHPInSimMod::VERSION;
 
 	public function __construct()
@@ -12,10 +12,10 @@ class theTime extends Plugins
 		$this->registerSayCommand('time', 'cmdTime', 'Displays the time.');
 	}
 
-	public function cmdTime($cmd, $plid, $ucid)
+	public function cmdTime($cmd, $ucid)
 	{
 		$MTC = new IS_MTC();
-		$MTC->UCID($ucid)->Msg('The time is, '.date('H:i:s').', server local time.')->send();
+		$MTC->UCID($ucid)->Msg('The time is, '.date('H:i:s').', server local time.')->Send();
 		return PLUGIN_CONTINUE;
 	}
 }

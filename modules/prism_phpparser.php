@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - PHPParser Module
+ * @package PRISM
+ * @subpackage PHPParser
+*/
 
 define('PRISM_SESSION_TIMEOUT', 900);		// how long a session is valid 
 

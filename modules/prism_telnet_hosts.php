@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - Telnet Module
+ * @package PRISM
+ * @subpackage Telnet
+*/
 
 class TSHostSection extends TSSection
 {

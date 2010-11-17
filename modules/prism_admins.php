@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - Admin Module
+ * @package PRISM
+ * @subpackage Admin
+*/
 
 require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
 

@@ -1,0 +1,6 @@
+Listening for http requests on 0.0.0.0:80
+Listening for telnet input on 0.0.0.0:24
+6 Plugins Loaded.
+Connecting to 127.0.0.1:29999 ... #1
+Connected to 127.0.0.1:29999
+StateHandler::onPlayerResult(To Do)

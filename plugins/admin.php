@@ -12,33 +12,78 @@ class admin extends Plugins
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism version', 'cmdVersion', 'Displays the version of PRISM.');
-/*
-		# Plugins
-		$this->registerSayCommand('prism plugins', 'cmdPluginList', 'Displays a list of plugins.');
-		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.');
 
 		# Admins
 		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
-*/
+
+		# Plugins
+		$this->registerSayCommand('prism plugins', 'cmdPluginList', 'Displays a list of plugins.');
+		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.');
+
 		# Admin Commands
-		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ...', ADMIN_KICK);
-		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time>', ADMIN_BAN);
-		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
-		$this->registerSayCommand('prism pit', 'castLFSCommand', '<targets> ...', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time> - Ban Client.', ADMIN_BAN);
+		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ... - Kick Client.', ADMIN_KICK);
+		$this->registerSayCommand('prism pit', 'castLFSCommand', '<targets> ... - Pit Client.', ADMIN_SPECTATE);
+		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ... - Spectate Client.', ADMIN_SPECTATE);
+
+		$this->registerSayCommand('prism rcon', 'cmdRCON', '"<command>" - Remote Console Commands', ADMIN_CFG + ADMIN_UNIMMUNIZE);
+		
+		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessage', '"Msg" <USERNAME> <Time> - Race Control Messages', ADMIN_RCM);
+		$this->registerSayCommand('prism rcm all', 'cmdRaceControlMessageAll', '"Msg" <Time> - Race Control Messages', ADMIN_RCM);
 	}
 
-	public function cmdAdminBan($cmd, $plid, $ucid)
+	// Race Control Messages
+	public function cmdRaceControlMessage($cmd, $ucid)
+	{
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 4)
+			$this->createTimer($argv[4], 'tmrClearRCM');
+		else
+			$this->createTimer(5, 'tmrClearRCM');
+
+		$argv = $this->raceControlMessage($cmd);
+
+		$MST = new IS_MST();
+		$MST->Msg("/rcm {$argv[2]}")->Send();
+		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+	}
+
+	public function tmrClearRCM()
+	{
+		$argv = $this->raceControlMessage($cmd);
+
+	}
+
+	public function cmdRaceControlMessageAll($cmd, $ucid)
+	{
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 3)
+			$this->createTimer($argv[3], 'tmrClearRCM');
+		else
+			$this->createTimer(5, 'tmrClearRCM');
+
+		$argv = $this->raceControlMessage($cmd);
+
+		$MST = new IS_MST();
+		$MST->Msg("/rcm {$argv[2]}")->Send();
+		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+	}
+
+	public function cmdRCON($cmd, $ucid)
+	{
+		$argv = str_getcsv($cmd, ' ');
+		$MST = new IS_MST();
+		$MST->Msg(array_pop($argv))->Send();
+	}
+
+	public function cmdAdminBan($cmd, $ucid)
 	{
 		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
 		array_shift($argv); $cmd = array_shift($argv);
-
+		$target = array_shift($argv); $minutes = array_shift($argv);
+		
 		$castingAdmin = $this->getUserNameByUCID($ucid);
-
-		$target = array_shift($argv);
-		$minutes = array_shift($argv);
-
+		
 		# If we don't have target(s), then we can't do anything.
 		if (count($argv) == 0)
 		{
@@ -64,7 +109,7 @@ class admin extends Plugins
 		}
 	}
 
-	public function castLFSCommand($cmd, $plid, $ucid)
+	public function castLFSCommand($cmd, $ucid)
 	{
 		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
@@ -104,61 +149,59 @@ class admin extends Plugins
 	}
 
 	// Help
-	public function cmdHelp($cmd, $plid, $ucid)
+	public function cmdHelp($cmd, $ucid)
 	{
 		global $PRISM;
+		$MTC = new IS_MTC;
+		$MTC->UCID($ucid);
 
-		// (For button alignments)#  LEFT       LEFT
-		echo sprintf("%32s - %64s", 'COMMAND', 'DESCRIPTION') . PHP_EOL;
+		$MTC->Msg('^7COMMAND^8 - DESCRIPTION')->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
-			{
-				console(sprintf('%32s - %64s', $command, $detail['info']));
-			}
+				$MTC->Msg("^7{$command}^8 - {$detail['info']}")->Send();
 		}
 
 		return PLUGIN_CONTINUE;
 	}
 
 	// Plugins
-	public function cmdPluginList($cmd, $plid, $ucid)
+	public function cmdPluginList($cmd, $ucid)
 	{
 		global $PRISM;
 
 		$MTC = new IS_MTC;
-		$MTC->PLID($plid);
+		$MTC->UCID($ucid);
 
-		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
-		$MTC->Msg(sprintf('%28s %8s %24s %64s', 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'))->Send();
+		$MTC->Msg('^7NAME ^3VERSION ^8AUTHOR')->Send();
+		$MTC->Msg('DESCRIPTION')->Send();
+
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
-			$MTC->Msg(sprintf("%28s %8s %24s %64s", $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR, $plugin::DESCRIPTION))->Send();
+		{
+			$MTC->Msg(sprintf('^7%s ^3%s ^8%s', $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR))->Send();
+			$MTC->Msg($plugin::DESCRIPTION)->Send();
+		}
 
 		return PLUGIN_CONTINUE;
 	}
 
 	// Version
-	public function cmdVersion($cmd, $plid, $ucid)
+	public function cmdVersion($cmd, $ucid)
 	{
 		$MTC = new IS_MTC();
-		$MTC->UCID($ucid)->Msg('PRISM Version ' . PHPInSimMod::VERSION)->Send();
+		$MTC->UCID($ucid)->Msg('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
 	}
 
 	// Admins
-	public function cmdAdminList($cmd, $plid, $ucid)
+	public function cmdAdminList($cmd, $ucid)
 	{
 		global $PRISM;
 
 		$MTC = new IS_MTC;
-		$MTC->PLID($plid);
+		$MTC->UCID($ucid)->Msg('Admins detailed to this server:')->Send();
 
-		// (For button alignments)		#  MIDDLE    MIDDLE   RIGHT     LEFT
-		$MTC->Msg(sprintf("%28s %8s %24s %64s", 'NAME', 'VERSION', 'AUTHOR', 'DESCRIPTION'))->Send();
 		foreach ($PRISM->admins->getAdminsInfo() as $user => $details)
-		{
-			$MTC->Msg($user)->Send();
-			print_r($details);
-		}
+			$MTC->Msg("    $user")->Send();
 
 		return PLUGIN_CONTINUE;
 	}

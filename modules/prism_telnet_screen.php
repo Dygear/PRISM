@@ -1,4 +1,9 @@
 <?php
+/**
+ * PHPInSimMod - Telnet Module
+ * @package PRISM
+ * @subpackage Telnet
+*/
 
 // Screen object options
 define('TS_OPT_ISSELECTABLE', 1);

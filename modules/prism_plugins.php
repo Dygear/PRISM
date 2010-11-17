@@ -5,6 +5,11 @@
  * @subpackage Plugin
 */
 
+define('PRINT_CHAT',		(1 << 0));		# 1
+define('PRINT_RCM',			(1 << 1));		# 2
+define('PRINT_NUM',			(1 << 2)-1);	# 4 - 1
+define('PRINT_CONTEXT',		PRINT_NUM);		# 3
+
 class PluginHandler extends SectionHandler
 {
 	private $plugins			= array();			# Stores references to the plugins we've spawned.
@@ -37,7 +42,10 @@ class PluginHandler extends SectionHandler
 			// Parse useHosts values of plugins
 			foreach ($this->pluginvars as $pluginID => $details)
 			{
-				$this->pluginvars[$pluginID]['useHosts'] = explode(',', $details['useHosts']);
+				if (isset($details['useHosts']))
+					$this->pluginvars[$pluginID]['useHosts'] = explode(',', $details['useHosts']);
+				else
+					unset($this->pluginvars[$pluginID]);
 			}
 		}
 		else
@@ -131,13 +139,13 @@ class PluginHandler extends SectionHandler
 		$PRISM->hosts->curHostID = $hostID;
 		foreach ($this->plugins as $name => $plugin)
 		{
-			if (!$this->isPluginEligibleForPacket($name, $hostID))
+			# If the packet we are looking at has no callbacks for this packet type don't go to the loop.
+			if (!isset($plugin->callbacks[$packet->Type]))
 				continue;
 
-			if (!isset($plugin->callbacks[$packet->Type]))
-			{	# If the packet we are looking at has no callbacks for this packet type don't go to the loop.
+			# If the plugin is not registered on this server, skip this plugin.
+			if (!$this->isPluginEligibleForPacket($name, $hostID))
 				continue;
-			}
 
 			foreach ($plugin->callbacks[$packet->Type] as $callback)
 			{
@@ -197,19 +205,19 @@ abstract class Plugins
 			$callback = $this->getCallback($this->sayCommands, $cmdString) AND
 			$callback !== FALSE
 		) {
-			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
-				$this->$callback['method']($cmdString, $packet->PLID, $packet->UCID, $packet);
+			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
+				$this->$callback['method']($cmdString, $packet->UCID, $packet);
 			else
-				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
+				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
 		}
 		else if ($packet->UserType == MSO_O AND
 			$callback = $this->getCallback($this->localCommands, $packet->Msg) AND
 			$callback !== FALSE
 		) {
-			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
-				$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
+				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
-				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
+				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
 		}
 	}
 	// This is the yang to the registerInsimCommand function's Yin.
@@ -217,10 +225,10 @@ abstract class Plugins
 	{
 		if ($callback = $this->getCallback($this->insimCommands, $packet->Msg) && $callback !== FALSE)
 		{
-			if ($this->canUserAccessCommand($this->getUserNameByUCID($packet->UCID), $callback))
-				$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
+				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
-				console("{$this->getUserNameByUCID($packet->UCID)} tried to access {$callback['method']}.");
+				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
 		}
 	}
 	// This is the yang to the registerConsoleCommand function's Yin.
@@ -228,7 +236,7 @@ abstract class Plugins
 	{
 		if ($callback = $this->getCallback($this->consoleCommands, $string) && $callback !== FALSE)
 		{
-			$this->$callback['method']($packet->Msg, $packet->PLID, $packet->UCID, $packet);
+			$this->$callback['method']($string, NULL);
 		}
 	}
 
@@ -256,14 +264,14 @@ abstract class Plugins
 	}
 
 	// Setup the callbackMethod trigger to accapt a command that could come from anywhere.
-	protected function registerCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		$this->registerInsimCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 		$this->registerLocalCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 		$this->registerSayCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the PRISM console. (STDIN)
-	protected function registerConsoleCommand($cmd, $callbackMethod, $info = "")
+	protected function registerConsoleCommand($cmd, $callbackMethod, $info = '')
 	{
 		if (!isset($this->callbacks['STDIN']) && !isset($this->callbacks['STDIN']['handleConsoleCmd']))
 		{	# We don't have any local callback hooking to the STDIN stream, make one.
@@ -272,16 +280,16 @@ abstract class Plugins
 		$this->consoleCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info);
 	}
 	// Any command that comes from the "/i" type. (III)
-	protected function registerInsimCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerInsimCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		if (!isset($this->callbacks[ISP_III]) && !isset($this->callbacks[ISP_III]['handleInsimCmd']))
-		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
+		{	# We don't have any local callback hooking to the ISP_III packet, make one.
 			$this->registerPacket('handleInsimCmd', ISP_III);
 		}
 		$this->insimCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 	// Any command that comes from the "/o" type. (MSO->Flags = MSO_O)
-	protected function registerLocalCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerLocalCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd']))
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
@@ -290,7 +298,7 @@ abstract class Plugins
 		$this->localCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
 	// Any say event with prefix charater (ISI->Prefix) with this command type. (MSO->Flags = MSO_PREFIX)
-	protected function registerSayCommand($cmd, $callbackMethod, $info = "", $defaultAdminLevelToAccess = -1)
+	protected function registerSayCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
 	{
 		if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd']))
 		{	# We don't have any local callback hooking to the ISP_MSO packet, make one.
@@ -298,7 +306,6 @@ abstract class Plugins
 		}
 		$this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
 	}
-
 	/** Internal Functions */
 	protected function getCurrentHostId()
 	{
@@ -314,16 +321,15 @@ abstract class Plugins
 	protected function getHostInfo($hostID = NULL)
 	{
 		global $PRISM;
-		$hostID = $this->getHostId($hostID);
 		if (($host = $PRISM->hosts->getHostById($hostID)) && $host !== NULL)
 			return $host;
 		return NULL;
 	}
 	protected function getHostState($hostID = NULL)
 	{
-		$hostID = $this->getHostId($hostID);
-		if (($host = $this->getHostInfo($hostID)) && $host !== NULL)
-			return $host->state;
+		global $PRISM;
+		if (($state = $PRISM->hosts->getStateById($hostID)) && $state !== NULL)
+			return $state;
 		return NULL;
 	}
 
@@ -343,26 +349,49 @@ abstract class Plugins
 			return $players[$PLID];
 		return $return;
 	}
-
-	protected function &getClientByPLID(&$PLID, $hostID = NULL)
-	{
-		$return = NULL;
-		if (($players = $this->getHostState($hostID)->players) && $players !== NULL && isset($players[$PLID]))
-		{
-			$UCID = $players[$PLID]->UCID;
-			return $this->getClientByUCID($UCID);
-		}
-		return $return;
-	}
-
-	protected function &getPlayersByUCID(&$UCID, $hostID = NULL)
+	protected function &getPlayerByUCID(&$UCID, $hostID = NULL)
 	{
 		$return = NULL;
 		if (($clients =& $this->getHostState($hostID)->clients) && $clients !== NULL && isset($clients[$UCID]))
 			return $clients[$UCID]->players;
 		return $return;
 	}
-	
+	protected function &getPlayerByPName(&$PName, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL)
+		{
+			foreach ($players as $plid => $player)
+			{
+				if ($player->PName == $PName)
+					return $player;
+			}
+		}
+		return $return;
+	}
+	protected function &getPlayerByUName(&$UName, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL)
+		{
+			foreach ($players as $plid => $player)
+			{
+				if ($player->UName == $UName)
+					return $player;
+			}
+		}
+		return $return;
+	}
+	protected function &getClientByPLID(&$PLID, $hostID = NULL)
+	{
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL && isset($players[$PLID]))
+		{
+			$UCID = $players[$PLID]->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
+			return $this->getClientByUCID($UCID);
+		}
+		return $return;
+	}
 	protected function &getClientByUCID(&$UCID, $hostID = NULL)
 	{
 		$return = NULL;
@@ -370,37 +399,70 @@ abstract class Plugins
 			return $clients[$UCID];
 		return $return;
 	}
-
-	//
-
-	protected function getUserNameByUCID(&$UCID, $hostID = NULL)
+	protected function &getClientByPName(&$PName, $hostID = NULL)
 	{
-		$client = $this->getClientByUCID($UCID, $hostID);
-		return ($client === NULL) ? FALSE : $client->UName;
+		$return = NULL;
+		if (($players = $this->getHostState($hostID)->players) && $players !== NULL)
+		{
+			foreach ($players as $plid => $player)
+			{
+				if ($player->PName == $PName)
+				{
+					$UCID = $player->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
+					return $this->getClientByUCID($UCID);
+				}
+			}
+		}
+		return $return;
 	}
-
-	protected function getUserNameByPLID(&$PLID, $hostID = NULL)
+	protected function &getClientByUName(&$UName, $hostID = NULL)
 	{
-		$player = $this->getPlayerByPLID($PLID, $hostID);
-		if ($player === NULL)
-			return FALSE;
-		$UCID = $player->UCID; # if I don't do this, I get an "Indirect modification of overloaded property" notice.
-		return $this->userGetUserNameByUCID($UCID);
+		$return = NULL;
+		if (($clients = $this->getHostState($hostID)->clients) && $clients !== NULL)
+		{
+			foreach ($clients as $ucid => $client)
+			{
+				if ($client->UName == $UName)
+					return $client;
+			}
+		}
+		return $return;
 	}
-
-	protected function userGetPlayerNameByUCID(&$UCID, $hostID = NULL)
-	{
-		$client = $this->userGetByUCID($UCID, $hostID);
-		return ($client === NULL) ? FALSE : $client->PName;
-	}
-
-	protected function userGetPlayerNameByPLID(&$PLID, $hostID = NULL)
-	{
-		$player = $this->userGetByPLID($PLID, $hostID);
-		return ($player === NULL) ? FALSE : $player->PName;
-	}
-
 	// Is
+	/**
+	 * @parm $x - A IS_MCI->CompCar->X
+	 * @parm $y - A IS_MCI->CompCar->Y
+	 * @parm $polygon - A array of X, Y points.
+	 * @author PHP version by filur & Dygear
+	 * @coauthor Original code by Brian J. Fox of MetaHTML.
+	 */
+	public function isInPoly($x, $y, array $vertices)
+	{
+		$lines_crossed = 0;
+		foreach ($vertices as $index => $cVertex)
+		{
+			if ($index == 0) continue;
+
+			$lVertex =& $vertices[$index - 1];
+
+			$min_x = min($lVertex['x'], $cVertex['x']);
+			$max_x = max($lVertex['x'], $cVertex['x']);
+			$min_y = min($lVertex['y'], $cVertex['y']);
+			$max_y = max($lVertex['y'], $cVertex['y']);
+
+			if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
+			{
+				if ($x < $min_x && $y > $min_y && $y < $max_y)
+					++$lines_crossed;
+				continue;
+			}
+
+			$slope = ($lVertex['y'] - $cVertex['y']) / ($lVertex['x'] - $cVertex['x']);
+			if ((($y - ($lVertex['y'] - ($slope * $lVertex['x']))) / $slope) >= $x)
+				++$lines_crossed;
+		}
+		return ($lines_crossed % 2) ? TRUE : FALSE;
+	}
 	protected function isHost(&$username, $hostID = NULL)
 	{
 		return ($this->getHostState($this->getHostId($hostID))->clients[0]->UName == $username) ? TRUE : FALSE;
@@ -459,6 +521,79 @@ abstract class Plugins
 		# Check the user is defined as an admin on the host current host.
 		$adminInfo = $PRISM->admins->getAdminInfo($username);
 		return ($adminInfo['accessFlags'] & ADMIN_IMMUNITY) ? TRUE : FALSE;
+	}
+
+	// Timers
+	const TIMER_CLOSE = 0; /** Timer will run once, the default behavior. */
+	const TIMER_REPEAT = 1; /** Timer will repeat until it returns PLUGIN_STOP. */
+	const TIMER_NOTRACK = 2; /** Timer will not carry over through track changes. */
+
+	public $timers = array();	# Array of timers.
+	public $timeout = NULL;		# When the next timeout is, read only from outside of this class.
+
+	/** Timed Callbacks. */
+	// Registers a callback method.
+	protected function createTimer($interval = 1.0, $callback, $args = NULL, $flags = Plugins::TIMER_CLOSE)
+	{
+		# This will be the time when this timer is to trigger.
+		$timestamp = microtime(TRUE) + $interval;
+
+		# Check is this timestamp is unused, makes a new one if one is not present.
+		if (!isset($this->timers["$timestamp"]))
+			$this->timers["$timestamp"] = array();
+
+		# Adds our timer to the array.
+		$this->timers["$timestamp"][$callback] = array('interval' => $interval, 'args' => $args, 'flags' => $flags);
+
+		$this->getTimeout($timestamp);
+
+		# Return our timestamp.
+		return $timestamp;
+	}
+	// Check to see if this timeout is less then our known next timeout.
+	protected function getTimeout($timestamp = NULL)
+	{
+		if ($timestamp !== NULL AND $this->timeout > $timestamp)
+			$this->timeout = $timestamp;
+		return $this->timeout;
+	}
+	// Sort the array to make sure the next timer (smallest float) is on the top of the list.
+	protected function sortTimers()
+	{
+		return ksort($this->timers);
+	}
+	// Executes the elapsed timers, and returns when the next timer should execute or NULL if no timers are left.
+	public function executeTimers()
+	{
+		$timeNow = microtime(TRUE);
+		if (!empty($this->timers))
+		{
+			foreach ($this->timers as $timestamp => $timer)
+			{
+				# Check to see if the first timer (next to be executed) has elpased.
+				if ($timeNow < $timestamp)
+					continue; # We continue as we don't have, or no longer have, any elpased timers.
+				# Here we execute elapsed timers.
+				foreach ($this->timers[$timestamp] as $callback => $info)
+				{
+					$return = $this->$callback($info['args']);
+					if ($info['flags'] == Plugins::TIMER_CLOSE OR $return == PLUGIN_STOP)
+					{
+						unset($this->timers[$timestamp][$callback]);
+
+						if (count($this->timers[$timestamp]) == 0)
+							unset($this->timers[$timestamp]);
+
+						if ($timestamp > $this->timeout)
+							$this->timeout = NULL;
+					}
+					else if ($timer['flags'] == Plugins::TIMER_REPEAT)
+						$this->createTimer($info['interval'], $info['args'], $info['flags']);
+				}
+				$this->sortTimers();
+			}
+		}
+		return NULL;
 	}
 }
 

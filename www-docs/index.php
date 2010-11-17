@@ -1,29 +1,6 @@
-<?php
-if (isset($SERVER['PHP_AUTH_USER']))
-{
-	if (!isset($_SESSION))
-	{
-		$_SESSION = array
-		(
-			'user' => $SERVER['PHP_AUTH_USER'],
-			'autoLogin' => true,
-			'counter' => 0,
-		);
-	}
-	else
-	{
-		$_SESSION['user'] = $SERVER['PHP_AUTH_USER'];
-		$_SESSION['autoLogin'] = true;
-	}
-}
-else
-{
-	if (isset($_SESSION['autoLogin']))
-		unset($_SESSION['autoLogin']);
-}
-?>
+<?php	include_once('./session.php'); ?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<html dir="ltr" lang="en">
 	<head>
 		<title>PRISM :: Server Status</title>
 		<link rel="stylesheet" href="/style/default.css" type="text/css" media="screen" />
@@ -32,10 +9,10 @@ else
 		<div class="loginArea">
 <?php	if (isset($_SESSION['user'])):	?>
 			Welcome <?php echo htmlspecialchars($_SESSION['user']); ?>.
-<?php		if (!isset($_SESSION['autoLogin']) || $_SESSION['autoLogin'] == false):	?>
+<?php		if (!isset($_SESSION['autoLogin']) || $_SESSION['autoLogin'] == FALSE):	?>
 				-<a href="/login.php?logout">Logout</a>
-<?php		endIf;	?>
-<?php	else:	?>
+<?php		endIf;
+		else:	?>
 			<form method="post" action="/login.php">
 				<input type="text" name="loginUser" value="" size="16" maxlength="24" />
 				<input type="password" name="loginPass" value="" size="16" maxlength="24" />
@@ -46,34 +23,92 @@ else
 		<table>
 			<tbody>
 				<tr>
-					<th width="16%">Server Name</th>
+					<th width="24%">Host Alias</th>
 					<th width="10%">Type</th>
-					<th width="10%">Uptime</th>
-					<th width="8%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Transmitted">TX</abbr></th>
-					<th width="8%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Recived">RX</abbr></th>
-					<th width="8%">Clients</th>
-					<th width="8%">Players</th>
-					<th width="8%">Slots</th>
+					<th width="10%">IP:Port (UDP Port)</th>
+					<th width="16%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Transmitted">TX</abbr></th>
+					<th width="16%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Recived">RX</abbr></th>
 					<th width="24%">Clients (Players) / Slots</th>
 				</tr>
 <?php	forEach ($PRISM->hosts->getHostsInfo() as $info):	?>
 				<tr>
 					<td><?php echo $info['id']; ?></td>
 					<td><?php echo ($info['useRelay']) ? 'Relay' : 'Direct'; ?></td>
-					<td>1:01:24:25</td>
+					<td><?php echo "{$info['ip']}:{$info['port']} ({$info['udpPort']})"; ?></td>
 					<td>2</td>
 					<td>24</td>
-					<td><?php echo count($PRISM->hosts->state[$info['id']]->NumConns); ?></td>
-					<td><?php echo count($PRISM->hosts->state[$info['id']]->NumP); ?></td>
-					<td>64</td>
+<?php		if ($info['connStatus'] == CONN_VERIFIED):	?>
 					<td>
 						<div class="meter">
-							<div class="bar" style="width: 6.25%;"></div>
-							<div class="text">4 (1) / 64</div>
+<!--						<div class="bar admins" style="width: 6.25%; float:left;"></div> -->
+							<div class="bar players" style="width: <?php echo ($PRISM->hosts->state[$info['id']]->NumP / 47) * 100; ?>%; float:left;"></div>
+							<div class="bar clients" style="width: <?php echo ($PRISM->hosts->state[$info['id']]->NumConns / 47) * 100; ?>%; float:left;"></div>
+							<div class="text"><?php echo "{$PRISM->hosts->state[$info['id']]->NumConns} ({$PRISM->hosts->state[$info['id']]->NumP}) / 47"; ?></div>
 						</div>
 					</td>
+<?php		else:	?>
+					<td>NOT CONNECTED</td>
+<?php		endIf;	?>
 				</tr>
 <?php	endForEach;	?>
+			</tbody>
+		</table>
+		<table>
+			<tbody>
+				<tr>
+					<th>Command</th>
+					<th>Descriptoin</th>
+				</tr>
+<?php
+	forEach ($PRISM->plugins->getPlugins() as $plugin => $details):
+		forEach ($details->sayCommands as $command => $detail):
+?>
+				<tr>
+					<td><?php echo $command; ?></td>
+					<td><?php echo htmlspecialchars($detail['info'], ENT_QUOTES); ?></td>
+				</tr>
+<?php
+		endForEach;
+	endForEach;
+?>
+			</tbody>
+		</table>
+		<table>
+			<tbody>
+				<tr>
+					<th>Name</th>
+					<th>Version</th>
+					<th>Author</th>
+					<th>Descriptiom</th>
+				</tr>
+<?php	forEach ($PRISM->plugins->getPlugins() as $plugin => $details):	?>
+				<tr>
+					<td><?php echo $plugin::NAME; ?></td>
+					<td><?php echo $plugin::VERSION; ?></td>
+					<td><?php echo $plugin::AUTHOR; ?></td>
+					<td><?php echo $plugin::DESCRIPTION; ?></td>
+				</tr>
+<?php	endForEach;	?>
+			</tbody>
+		</table>
+		<table>
+			<tbody>
+				<tr>
+					<th>IP</th>
+					<th>PORT</th>
+					<th>LAST ACTIVITY</th>
+				</tr>
+<?php	forEach ($PRISM->http->getHttpInfo() as $Client):	?>
+				<tr>
+					<td><?php echo $Client['ip']; ?></td>
+					<td><?php echo $Client['port']; ?></td>
+					<td><?php echo time() - $Client['lastActivity']; ?></td>
+				</tr>
+<?php	endForEach;	?>
+				<tr>
+					<td colspan="3">Counted <?php echo $PRISM->http->getHttpNumClients(); ?> http client(s).</td>
+				</tr>
+			</tbody>
 		</table>
 	</body>
 </html>

@@ -8,20 +8,29 @@ class welcome extends Plugins
 
 	public function __construct()
 	{
-		$this->registerPacket(ISP_VER, 'onPrismConnect'); # PRISM Connect Announce.
-		$this->registerPacket(ISP_NCN, 'onClientConnect'); # Player Connect M.O.T.D.
+		$this->registerPacket('onPrismConnect', ISP_VER);
+#		$this->registerPacket('onClientConnect', ISP_NCN);
+		$this->registerPacket('onChat', ISP_MSO);
 	}
 
-	public function onPrismConnect()
+	public function onPrismConnect(IS_VER $VER)
 	{
 		$MSX = new IS_MSX;
-		$MSX->Msg('PRISM Version '.PHPInSimMod::VERSION.' Has Connected.')->Send();
+		$MSX->Msg('PRISM Version ^3'.PHPInSimMod::VERSION.'^8 Has Connected.')->Send();
 	}
-	
+
 	public function onClientConnect(IS_NCN $NCN)
 	{
-#		$BTN = new IS_BTN;
-#		$BTN->UCID($NCN->UCID)->Text('Welcome to a PRISM Powered Server.')->Send();
+		$BTN = new IS_BTN;
+		$BTN->ClickID(100)->UCID($NCN->UCID)->T(166)->L(29)->W(25)->H(6);
+		$BTN->Text('Welcome to this ^3PRISM ^7Powered^8 Server.')->Send();
+		$BTN->ClickID(101)->T($BTN->T + $BTN->H);
+		$BTN->Text('PRISM Version ^7'.PHPInSimMod::VERSION.'^8.')->Send();
+	}
+	
+	public function onChat(IS_MSO $MSO)
+	{
+		console($MSO->Msg);
 	}
 }
 ?>
