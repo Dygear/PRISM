@@ -1,6 +1,7 @@
 <?php
 class welcome extends Plugins
 {
+	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'Welcome & MOTD';
 	const AUTHOR = 'PRISM Dev Team';
 	const VERSION = PHPInSimMod::VERSION;

@@ -1,6 +1,7 @@
 <?php
 class theTime extends Plugins
 {
+	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'Gnomon';
 	const DESCRIPTION = 'Prints the time to the client who asks for it.';
 	const AUTHOR = "Mark 'Dygear' Tomlin";

@@ -1,5 +1,6 @@
 <?php
 class distance extends Plugins {
+	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'Distance Meter';
 	const AUTHOR = "Mark 'Dygear' Tomlin";
 	const VERSION = '0.1.0';

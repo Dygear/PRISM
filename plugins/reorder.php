@@ -1,6 +1,7 @@
 <?php
 class reorder extends Plugins
 {
+	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'Reorder Plugin';
 	const AUTHOR = 'Dygear & misiek08';
 	const VERSION = PHPInSimMod::VERSION;

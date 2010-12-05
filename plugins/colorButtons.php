@@ -1,6 +1,7 @@
 <?php
 class colorButtons extends Plugins
 {
+	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'Color Buttons Example';
 	const AUTHOR = "Mark 'Dygear' Tomlin";
 	const VERSION = '1.1.0';

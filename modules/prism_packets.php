@@ -34,8 +34,9 @@ abstract class Struct
 	// Magic Methods (Object Overloading)
 	public function &__get($name)
 	{
+		$return = FALSE;
 		if (!property_exists(get_class($this), $name))
-			return FALSE;
+			return $return;
 		else
 			return $this->$name;
 	}
