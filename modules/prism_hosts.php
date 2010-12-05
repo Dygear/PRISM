@@ -641,6 +641,8 @@ class InsimConnection
 
 	public function __construct(array &$icVars)
 	{
+		global $PRISM;
+
 		$this->connType		= ($icVars['connType'] == CONNTYPE_RELAY) ? CONNTYPE_RELAY : CONNTYPE_HOST;
 		$this->socketType	= ($icVars['socketType'] == SOCKTYPE_UDP) ? SOCKTYPE_UDP : SOCKTYPE_TCP;
 		$this->id			= $icVars['id'];
