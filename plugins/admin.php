@@ -83,7 +83,7 @@ class admin extends Plugins
 		array_shift($argv); $cmd = array_shift($argv);
 		$target = array_shift($argv); $minutes = array_shift($argv);
 		
-		$castingAdmin = $this->getUserNameByUCID($ucid);
+		$castingAdmin = $this->getClientByUCID($ucid);
 		
 		# If we don't have target(s), then we can't do anything.
 		if (count($argv) == 0)
@@ -91,7 +91,7 @@ class admin extends Plugins
 			$MTC = new IS_MTC;
 			$MTC->UCID($ucid)->Msg("$cmd needs a target.")->Send();
 		}
-		else if ($castingAdmin == $target)
+		else if ($castingAdmin->UName == $target)
 		{
 			$MTC = new IS_MTC;
 			$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
@@ -99,14 +99,14 @@ class admin extends Plugins
 		else if ($this->isImmune($target))
 		{
 			$MSX = new IS_MSX;
-			$MSX->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
+			$MSX->Msg("Admin {$castingAdmin->UName} tired to kick immune Admin $target.")->Send();
 		}
 		else
 		{
 			$MST = new IS_MST();
 			$MST->Msg("/ban $target $minutes")->Send();
 			$MSX = new IS_MSX;
-			$MSX->Msg("Admin $castingAdmin banned $target for $minutes minute(s).");
+			$MSX->Msg("Admin {$castingAdmin->UName} banned $target for $minutes minute(s).");
 		}
 	}
 
@@ -116,7 +116,7 @@ class admin extends Plugins
 		$argv = str_getcsv($cmd, ' ');
 		array_shift($argv); $cmd = array_shift($argv);
 
-		$castingAdmin = $this->getUserNameByUCID($ucid);
+		$castingAdmin = $this->getClientByUCID($ucid);
 
 		# If we don't have target(s), then we can't do anything.
 		if (count($argv) == 0)
@@ -128,7 +128,7 @@ class admin extends Plugins
 		{
 			foreach ($argv as $target)
 			{
-				if ($castingAdmin == $target)
+				if ($castingAdmin->UName == $target)
 				{
 					$MTC = new IS_MTC;
 					$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
@@ -136,14 +136,14 @@ class admin extends Plugins
 				else if ($this->isImmune($target))
 				{
 					$MSX = new IS_MSX;
-					$MSX->Msg("Admin $castingAdmin tired to kick immune Admin $target.")->Send();
+					$MSX->Msg("Admin {$castingAdmin->UName} tired to kick immune Admin $target.")->Send();
 				}
 				else
 				{
 					$MST = new IS_MST();
 					$MST->Msg("/{$cmd} $target")->Send();
 					$MSX = new IS_MSX;
-					$MSX->Msg("Admin $castingAdmin {$cmd}ed $target.")->Send();
+					$MSX->Msg("Admin {$castingAdmin->UName} {$cmd}ed $target.")->Send();
 				}
 			}
 		}
