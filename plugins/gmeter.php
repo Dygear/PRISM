@@ -22,7 +22,6 @@ class gmeter extends Plugins {
 			if (!isset($this->BTNs[$CompCar->PLID])) {
 				$this->BTNs[$CompCar->PLID] = new IS_BTN;
 				$this->BTNs[$CompCar->PLID]->T(184)->L(164)->W(10)->H(6)->BStyle(ISB_DARK + ISB_RIGHT + 1)->Send();
-				$this->BTNs[$CompCar->PLID]->W(0)->H(0); # Optimization: Allows LFS to ignore everything in the packet, but the Text Field.
 			}
 
 			// Speeds
