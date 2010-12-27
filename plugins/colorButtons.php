@@ -41,14 +41,14 @@ class colorButtons extends Plugins
 		for ($y = 0; $y <= 7; ++$y)
 		{
 			for ($x = 0, $i = 0; $x <= 9; ++$x, ++$i)
-				$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X + ($x * $BTN->W) + 1)->T($Y + ($y * $BTN->H) + 1)->Text("{$y}^$i{$x}")->BStyle(ISB_LIGHT + $y)->Send()->ClickID;
+				$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X + ($x * $BTN->W) + 1)->T($Y + ($y * $BTN->H) + 1)->Text("{$y}^$i{$x}")->BStyle(ISB_LIGHT + $y)->Send();
 		}
 		# X Axis Header
 		for ($i = 0; $i <= 9; ++$i)
-			$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X + ($i * $BTN->W) + 1)->T($Y - ($BTN->H + 1))->BStyle(ISB_DARK)->Text("^$i$i")->Send()->ClickID;
+			$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X + ($i * $BTN->W) + 1)->T($Y - ($BTN->H + 1))->BStyle(ISB_DARK)->Text("^$i$i")->Send();
 		# Y Axis Header
 		for ($i = 0; $i <= 7; ++$i)
-			$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X - $BTN->W)->T($Y + ($i * $BTN->H) + 1)->BStyle(ISB_DARK + $i)->Text($i)->Send()->ClickID;
+			$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X - $BTN->W)->T($Y + ($i * $BTN->H) + 1)->BStyle(ISB_DARK + $i)->Text($i)->Send();
 
 		$timeStamp = $this->createTimer($TTL, 'tmrClearButtons');
 		$this->Time[$timeStamp] = $ucid;
