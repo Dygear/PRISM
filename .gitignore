@@ -5,3 +5,5 @@ configs/plugins.ini
 configs/http.ini
 configs/telnet.ini
 logs/http.log
+Thumbs.db
+Desktop.ini
