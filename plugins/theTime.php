@@ -16,7 +16,7 @@ class theTime extends Plugins
 	public function cmdTime($cmd, $ucid)
 	{
 		$MTC = new IS_MTC();
-		$MTC->UCID($ucid)->Msg('The time is, '.date('H:i:s').', server local time.')->Send();
+		$MTC->UCID($ucid)->Msg('^7The time is, '.date('g:i:s A (H:i:s), T.'))->Send();
 		return PLUGIN_CONTINUE;
 	}
 }
