@@ -70,6 +70,10 @@ class gapmon extends Plugins
 	
 	public function onNodeLap(IS_NLP $NLP)
 	{
+		# If there is less then 2 plays, this is not going to work, so abort the function.
+		if (count($this->race) < 2)
+			return PLUGIN_CONTINUE;
+		
 		if($this->follow !== FALSE)
 		{
 			$BTN = new IS_BTN();
@@ -77,7 +81,8 @@ class gapmon extends Plugins
 			if(($NLP->PLID == $this->follow) && ($this->race[$this->follow]['position'] >= 2))
 			{
 				# Gap ahead
-				foreach($this->race as $racer) {
+				foreach($this->race as $racer)
+				{
 					if($racer['position'] == $this->race[$this->follow]['position'] - 1)
 					{
 						$gap = $this->race[$this->follow]['etime'] - $racer['etime'];

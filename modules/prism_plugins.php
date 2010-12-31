@@ -64,7 +64,7 @@ class PluginHandler extends SectionHandler
 			}
 		}
 		
-		return true;
+		return TRUE;
 	}
 
 	public function loadPlugins()
@@ -85,7 +85,11 @@ class PluginHandler extends SectionHandler
 			# As we can't find any plugin files, we invalidate the the ini settings.
 			$this->pluginvars = NULL;
 		}
-		
+
+		# If there are no plugins, then don't loop through the list.
+		if ($this->pluginvars == NULL)
+			return TRUE;
+
 		# Find what plugin files have ini entrys
 		foreach ($this->pluginvars as $pluginSection => $pluginHosts)
 		{

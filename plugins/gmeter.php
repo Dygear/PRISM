@@ -18,26 +18,26 @@ class gmeter extends Plugins {
 	public function onMCI($Packet) {
 		$cTime = microtime(TRUE);
 		foreach ($Packet->Info as $CompCar) {
-			// Spawn a new button instance if one is not here.
+			# Spawn a new button instance if one is not here.
 			if (!isset($this->BTNs[$CompCar->PLID])) {
 				$this->BTNs[$CompCar->PLID] = new IS_BTN;
 				$this->BTNs[$CompCar->PLID]->T(184)->L(164)->W(10)->H(6)->BStyle(ISB_DARK + ISB_RIGHT + 1)->Send();
 			}
 
-			// Speeds
+			# Speeds
 			$cSpeed = (($CompCar->Speed / 32768) * 100); # Convert to Meters Per Second
 			$lSpeed = (isset($this->SPEEDs[$CompCar->PLID])) ? $this->SPEEDs[$CompCar->PLID] : 0;
 
-			// Times
+			# Times
 			$lTime = (isset($this->TIMEs[$CompCar->PLID])) ? $this->TIMEs[$CompCar->PLID] : 0;
 
-			// Get gForce
+			# Get gForce
 			$gForce = round(($cSpeed - $lSpeed) / ($this::GRAVITY * ($cTime - $lTime)), 2);
 
-			// Update Button
+			# Update Button
 			$this->BTNs[$CompCar->PLID]->Text(sprintf('%.2f', $gForce))->Send();
 
-			// Save State
+			# Save State
 			$this->TIMEs[$CompCar->PLID] = $cTime;
 			$this->SPEEDs[$CompCar->PLID] = $cSpeed;
 		}
