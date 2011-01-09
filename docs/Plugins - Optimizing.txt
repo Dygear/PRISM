@@ -58,7 +58,7 @@ Similarly, you may not want to put $this->getMaxClients() in a loop about player
 
 [b]Switch instead of If[/b]
 If you can, you should use switch cases instead of if. This is because for an if statement, the compiler must branch to each consecutive if case. Using the example from above, observe the switch version:
-[php]$UName = $this->getClientUName($UCID)
+[php]$UName = $this->getClientByUCID($UCID)->UName;
 switch ($UName)
 {
 	case 'Scawen':
@@ -72,7 +72,7 @@ switch ($UName)
 		break;
 }[/php]
 This will generate what's called a "case table". Rather than worm through displaced if tests, the compiler generates a table of possible values. The best case is:
-[code]  JUMP Table[CALL $this->getUserUName][/code]
+[code]  JUMP Table[CALL $this->getUserByUCID($UCID)->UName][/code]
 If your switch cases are listed in perfectly sequential order (that is, skipping no numbers, either ascending or descending), the PHP engine can make the best optimizations. For example, "7,8,9" and "2,1,0" are examples of perfect switch cases. "1,3,4" is not.
 
 [b]Foreach instead of For[/b]

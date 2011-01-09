@@ -8,7 +8,6 @@ class gapmon extends Plugins
 	const DESCRIPTION = 'Gap Monitoring Tool';
 
 	private $race = array();
-	private $follow = FALSE;
 	private $BtnX = 100;	# midpoint between buttons, span 15+5 left and right
 	private $BtnY = 175;	# top buttons' vertical position
 	
@@ -31,14 +30,12 @@ class gapmon extends Plugins
 			'etime' => 0,
 			'gapahead' => 0,
 			'gapbehind' => 0,
-			'REMOTE' => TRUE
+			'REMOTE' => TRUE,
+			'FOLLOW' => TRUE,	# If the user wants to use this feature, auto
 		);
 	
 		if(!($NPL->UCID & 6))
 		{
-			$this->follow = $NPL->ReqI;	# PLID to Time For.
-			$this->race[$this->follow]['REMOTE'] = FALSE;
-			
 			$BTN = new IS_BTN();
 			$BTN->ClickID(100)->BStyle(16)->L($this->BtnX-20)->T($this->BtnY)->W(15)->H(5)->Text('0.00')->Send(); # Top Left
 			$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text('0.00')->Send(); # Bottom Left
@@ -73,46 +70,47 @@ class gapmon extends Plugins
 		# If there is less then 2 plays, this is not going to work, so abort the function.
 		if (count($this->race) < 2)
 			return PLUGIN_CONTINUE;
-		
-		if($this->follow !== FALSE)
+
+		# If this user does not want the  
+		if($this->follow == FALSE)
+			return PLUGIN_CONTINUE;
+
+		$BTN = new IS_BTN();
+
+		if(($NLP->PLID == $this->follow) && ($this->race[$this->follow]['position'] >= 2))
 		{
-			$BTN = new IS_BTN();
-
-			if(($NLP->PLID == $this->follow) && ($this->race[$this->follow]['position'] >= 2))
+			# Gap ahead
+			foreach($this->race as $racer)
 			{
-				# Gap ahead
-				foreach($this->race as $racer)
+				if($racer['position'] == $this->race[$this->follow]['position'] - 1)
 				{
-					if($racer['position'] == $this->race[$this->follow]['position'] - 1)
-					{
-						$gap = $this->race[$this->follow]['etime'] - $racer['etime'];
-						$diff = $gap - $this->race[$this->follow]['gapahead'];
+					$gap = $this->race[$this->follow]['etime'] - $racer['etime'];
+					$diff = $gap - $this->race[$this->follow]['gapahead'];
 
-						$BTN->ClickID(100)->BStyle(16)->L($this->BtnX-20)->T($this->BtnY)->W(15)->H(5)->Text('+'.number_format($gap / 1000, 2))->Send(); # Top Left
-						if($diff <= 0)
-							$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text(number_format($diff / 1000, 2))->Send(); # Bottom Left
-						else
-							$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text('+'.number_format($diff / 1000, 2))->Send(); # Bottom Left
+					$BTN->ClickID(100)->BStyle(16)->L($this->BtnX-20)->T($this->BtnY)->W(15)->H(5)->Text('+'.number_format($gap / 1000, 2))->Send(); # Top Left
+					if($diff <= 0)
+						$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text(number_format($diff / 1000, 2))->Send(); # Bottom Left
+					else
+						$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text('+'.number_format($diff / 1000, 2))->Send(); # Bottom Left
 
-						$this->race[$this->follow]['gapahead'] = $gap;
-					}
+					$this->race[$this->follow]['gapahead'] = $gap;
 				}
 			}
-			
-			if($this->race[$NLP->PLID]['position'] == $this->race[$this->follow]['position'] + 1)
-			{
-				# Gap behind
-				$gap = $this->race[$NLP->PLID]['etime'] - $this->race[$this->follow]['etime'];
-				$diff = $gap - $this->race[$this->follow]['gapbehind'];
+		}
+		
+		if($this->race[$NLP->PLID]['position'] == $this->race[$this->follow]['position'] + 1)
+		{
+			# Gap behind
+			$gap = $this->race[$NLP->PLID]['etime'] - $this->race[$this->follow]['etime'];
+			$diff = $gap - $this->race[$this->follow]['gapbehind'];
 
-				$BTN->ClickID(102)->BStyle(16)->L($this->BtnX+5)->T($this->BtnY)->W(15)->H(5)->Text('+'.number_format($gap / 1000, 2))->Send(); # Top Right
-				if($diff <= 0)
-					$BTN->ClickID(103)->BStyle(20)->L($this->BtnX+5)->T($this->BtnY+5)->W(15)->H(5)->Text(number_format($diff / 1000, 2))->Send(); # Bottom Right
-				else
-					$BTN->ClickID(103)->BStyle(20)->L($this->BtnX+5)->T($this->BtnY+5)->W(15)->H(5)->Text('+'.number_format($diff / 1000, 2))->Send(); # Bottom Right
+			$BTN->ClickID(102)->BStyle(16)->L($this->BtnX+5)->T($this->BtnY)->W(15)->H(5)->Text('+'.number_format($gap / 1000, 2))->Send(); # Top Right
+			if($diff <= 0)
+				$BTN->ClickID(103)->BStyle(20)->L($this->BtnX+5)->T($this->BtnY+5)->W(15)->H(5)->Text(number_format($diff / 1000, 2))->Send(); # Bottom Right
+			else
+				$BTN->ClickID(103)->BStyle(20)->L($this->BtnX+5)->T($this->BtnY+5)->W(15)->H(5)->Text('+'.number_format($diff / 1000, 2))->Send(); # Bottom Right
 
-				$this->race[$this->follow]['gapbehind'] = $gap;
-			}
+			$this->race[$this->follow]['gapbehind'] = $gap;
 		}
 	}
 	

@@ -378,7 +378,6 @@ class HostHandler extends SectionHandler
 			// Do we need to keep the connection alive with a ping?
 			if ($host->getLastWriteTime() < time () - KEEPALIVE_TIME)
 			{
-				console('Pong!');
 				$ISP = new IS_TINY();
 				$ISP->SubT = TINY_NONE;
 				$host->writePacket($ISP);

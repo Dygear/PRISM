@@ -34,7 +34,9 @@ require_once(ROOTPATH . '/modules/prism_statehandler.php');
 require_once(ROOTPATH . '/modules/prism_http.php');
 require_once(ROOTPATH . '/modules/prism_telnet.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
+require_once(ROOTPATH . '/modules/prism_timers.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
+
 
 $PRISM = new PHPInSimMod();
 $PRISM->initialise($argc, $argv);
@@ -47,11 +49,10 @@ $PRISM->start();
  * @author ripnet (Tom Young) <ripnet@gmail.com>
  * @author morpha (Constantin Köpplinger) <morpha@xigmo.net>
  * @author Victor (Victor van Vlaardingen) <vic@lfs.net>
- * @author GeForz () <>
 */
 class PHPInSimMod
 {
-	const VERSION = '0.3.2';
+	const VERSION = '0.3.3';
 	const ROOTPATH = ROOTPATH;
 
 	/* Run Time Arrays */
@@ -212,6 +213,7 @@ class PHPInSimMod
 			// Add telnet sockets to the arrays as needed
 			$this->telnet->getSelectableSockets($sockReads, $sockWrites);
 			
+			// Update timeout if there are timers waiting to be fired.
 			$this->updateSelectTimeOut($this->sleep, $this->uSleep);
 
 			# Error suppression used because this function returns a "Invalid CRT parameters detected" only on Windows.

@@ -13,6 +13,50 @@ class colorButtons extends Plugins
 	public function __construct()
 	{
 		$this->registerSayCommand('prism buttons', 'cmdColorButtons', '<x=15> <y=75> <ttl=10> - Shows the different color options available.');
+		$this->registerSayCommand('prism prompt', 'cmdPrompt', '<x=81> <y=67> <ttl=10> - ');
+	}
+	public function cmdPrompt($cmd, $ucid)
+	{
+		$X = 67.1875; $Y = 80.75; $TTL = 10;
+
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 2)
+		{
+			switch ($argc)
+			{
+				case 5:
+					$TTL = (int) array_pop($argv);
+				case 4:
+					$Y = (int) array_pop($argv);
+				case 3:
+					$X = (int) array_pop($argv);
+			}
+		}
+
+		if (!isset($this->BTNs[$ucid]))
+			$this->BTNs[$ucid] = array();
+
+		$BTN = new IS_BTN;
+		$BTN->UCID($ucid)->ClickID(0);
+
+		# Confirm Folder Delete
+		#
+		#	ICON	Are you sure you want to remove the folder 'Jefferson Airplane' and
+		#	ICON	move all it's contents to the Recycle Bin?
+		#	
+		# 													|	 Yes     |	|	 No	   |
+
+		# Prompt Area
+		$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->T($Y)->L($X)->W(65.625)->H(38.5)->BStyle(ISB_DARK)->Send();
+
+		# Buttons
+		$this->BTNs[$ucid][] = $BTN->T($Y + ($BTN->H - 12.1875))->W(12.1875)->H(5.25);
+		$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($BTN->L + 60)->BStyle(ISB_LIGHT + 5)->Text('Yes')->Send();
+		$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($BTN->L + 81.75)->BStyle(ISB_LIGHT + 4)->Text('No')->Send();
+		
+
+		$timeStamp = $this->createTimer('tmrClearButtons', $TTL);
+		$this->Time[$timeStamp] = $ucid;
+		ksort($this->Time);
 	}
 	public function cmdColorButtons($cmd, $ucid)
 	{
@@ -50,7 +94,7 @@ class colorButtons extends Plugins
 		for ($i = 0; $i <= 7; ++$i)
 			$this->BTNs[$ucid][] = $BTN->ClickID(++$BTN->ClickID)->L($X - $BTN->W)->T($Y + ($i * $BTN->H) + 1)->BStyle(ISB_DARK + $i)->Text($i)->Send();
 
-		$timeStamp = $this->createTimer($TTL, 'tmrClearButtons');
+		$timeStamp = $this->createTimer('tmrClearButtons', $TTL);
 		$this->Time[$timeStamp] = $ucid;
 		ksort($this->Time);
 	}

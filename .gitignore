@@ -4,6 +4,6 @@ configs/cvars.ini
 configs/plugins.ini
 configs/http.ini
 configs/telnet.ini
-logs/http.log
+logs/*
 Thumbs.db
 Desktop.ini
