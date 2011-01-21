@@ -30,50 +30,52 @@ class admin extends Plugins
 
 		$this->registerSayCommand('prism rcon', 'cmdRCON', '"<command>" - Remote Console Commands', ADMIN_CFG + ADMIN_UNIMMUNIZE);
 		
-		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessage', '"Msg" <USERNAME> <Time> - Race Control Messages', ADMIN_RCM);
+		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessagePlayer', '"Msg" <USERNAME> <Time> - Race Control Messages', ADMIN_RCM);
 		$this->registerSayCommand('prism rcm all', 'cmdRaceControlMessageAll', '"Msg" <Time> - Race Control Messages', ADMIN_RCM);
 	}
 
 	// Race Control Messages
-	public function cmdRaceControlMessage($cmd, $ucid)
+	public function cmdRaceControlMessagePlayer($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 4)
-			$this->createTimer($argv[4], 'tmrClearRCM');
+			$this->createTimer('tmrClearRCM', $argv[4], Timer::Close, $argv[3]);
 		else
-			$this->createTimer(5, 'tmrClearRCM');
+			$this->createTimer('tmrClearRCM', 5);
 
 		$argv = $this->raceControlMessage($cmd);
 
 		$MST = new IS_MST();
 		$MST->Msg("/rcm {$argv[2]}")->Send();
 		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
-	}
-
-	public function tmrClearRCM()
-	{
-		$argv = $this->raceControlMessage($cmd);
-
 	}
 
 	public function cmdRaceControlMessageAll($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 3)
-			$this->createTimer($argv[3], 'tmrClearRCM');
+			$this->createTimer('tmrClearRCM', $argv[3]);
 		else
-			$this->createTimer(5, 'tmrClearRCM');
+			$this->createTimer('tmrClearRCM', 5);
 
 		$argv = $this->raceControlMessage($cmd);
 
 		$MST = new IS_MST();
 		$MST->Msg("/rcm {$argv[2]}")->Send();
-		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+		$MST->Msg("/rcm_all")->Send();
+	}
+
+	public function tmrClearRCM($args = NULL)
+	{
+		print_r($args);
+		$MST = new IS_MST();
+		$MST->Msg("/rcc_all")->Send();
+		$MST->Msg("/rcc_ply {$argv[3]}")->Send();
 	}
 
 	public function cmdRCON($cmd, $ucid)
 	{
 		$argv = str_getcsv($cmd, ' ');
 		$MST = new IS_MST();
-		$MST->Msg(array_pop($argv))->Send();
+		$MST->Msg("{$argv[2]} {$argv[3]}")->Send();
 	}
 
 	public function cmdAdminBan($cmd, $ucid)
