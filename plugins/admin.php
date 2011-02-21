@@ -30,7 +30,7 @@ class admin extends Plugins
 
 		$this->registerSayCommand('prism rcon', 'cmdRCON', '"<command>" - Remote Console Commands', ADMIN_CFG + ADMIN_UNIMMUNIZE);
 		
-		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessagePlayer', '"Msg" <USERNAME> <Time> - Race Control Messages', ADMIN_RCM);
+		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessagePlayer', '"Msg" <Time> <USERNAME> - Race Control Messages', ADMIN_RCM);
 		$this->registerSayCommand('prism rcm all', 'cmdRaceControlMessageAll', '"Msg" <Time> - Race Control Messages', ADMIN_RCM);
 	}
 
@@ -38,7 +38,8 @@ class admin extends Plugins
 	public function cmdRaceControlMessagePlayer($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 4)
-			$this->createTimer('tmrClearRCM', $argv[4], Timer::Close, $argv[3]);
+			$this->createTimer('tmrClearRCM', $argv[3], Timer::Close, $argv[4]);
+			$argv[4] = implode(' ', range(4, count($argv)));
 		else
 			$this->createTimer('tmrClearRCM', 5);
 
@@ -46,7 +47,7 @@ class admin extends Plugins
 
 		$MST = new IS_MST();
 		$MST->Msg("/rcm {$argv[2]}")->Send();
-		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+		$MST->Msg("/rcm_ply {$argv[4]}")->Send();
 	}
 
 	public function cmdRaceControlMessageAll($cmd, $ucid)
@@ -83,7 +84,7 @@ class admin extends Plugins
 		# Get the command and it's args.
 		$argv = str_getcsv($cmd, ' ');
 		array_shift($argv); $cmd = array_shift($argv);
-		$target = array_shift($argv); $minutes = array_shift($argv);
+		$minutes = array_shift($argv); $target = implode(' ', $argv);
 		
 		$castingAdmin = $this->getClientByUCID($ucid);
 		
@@ -138,7 +139,7 @@ class admin extends Plugins
 				else if ($this->isImmune($target))
 				{
 					$MSX = new IS_MSX;
-					$MSX->Msg("Admin {$castingAdmin->UName} tired to kick immune Admin $target.")->Send();
+					$MSX->Msg("Admin {$castingAdmin->UName} tired to {$cmd} immune Admin $target.")->Send();
 				}
 				else
 				{
