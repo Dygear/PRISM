@@ -26,7 +26,7 @@ class Time
 	 * @param: Unit - The number of time units you want translated into verbose text.
 	 * @param: Type - The type of unit (i.e. seconds, minutes, hours, days, weeks) that you are passing in.
 	*/
-	static function getLength($unit, $type = Time::UNIT_SECONDS);
+	static function getLength($unit, $type = Time::UNIT_SECONDS)
 	{
 		if ($unit > 0)
 		{
