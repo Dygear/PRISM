@@ -863,7 +863,7 @@ class InsimConnection
 			$ISP			= new IS_ISI();
 			$ISP->ReqI		= TRUE;
 			$ISP->UDPPort	= (isset($this->udpPort) && $this->udpPort > 0) ? $this->udpPort : 0;
-			$ISP->Flags		= (isset($this->Flags) && $this->Flags > 0) ? $this->Flags : ISF_MSO_COLS | ISF_MCI;
+			$ISP->Flags		= (isset($this->Flags)) ? $this->Flags : ISF_MSO_COLS;
 			$ISP->Prefix	= (isset($this->prefix)) ? ord($this->prefix) : ord('!');
 			$ISP->Interval	= round(1000 / $this->pps);
 			$ISP->Admin		= $this->adminPass;
