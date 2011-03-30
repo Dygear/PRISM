@@ -36,7 +36,6 @@ require_once(ROOTPATH . '/modules/prism_telnet.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_timers.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
-require_once(ROOTPATH . '/modules/prism_database.php');
 
 
 $PRISM = new PHPInSimMod();
@@ -162,7 +161,6 @@ class PHPInSimMod
 		
 		// Initialise handlers (load config files)
 		if (!$this->config->initialise() OR 
-			!$this->database->initialise() OR 
 			!$this->hosts->initialise() OR 
 			!$this->http->initialise() OR 
 			!$this->telnet->initialise() OR 

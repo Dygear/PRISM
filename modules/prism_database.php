@@ -4,28 +4,23 @@
  * @package PRISM
  * @subpackage Database
 */
-class database
+class DatabaseHandler
 {
 	# Hold an instance of the class
-	private static $instance;
+	private $instance;
 	# A private constructor; prevents direct creation of object
-	private function __construct() {}
+	public function __construct() {}
 	# The singleton method
-	public static function initialise($dsn, $startUpStr, $user = NULL, $pass = NULL, $port = NULL)
+	public function initialise($dsn, $startUpStr, $user = NULL, $pass = NULL, $port = NULL)
 	{
-		if (!isset(self::$instance))
-			self::$instance = new PDO($dsn, $startUpStr, $user, $pass, $port);
-		return self::$instance;
+		if (!isset($this->instance))
+			$this->instance = new PDO($dsn, $startUpStr, $user, $pass, $port);
+		return $this;
 	}
 	# Prevent users to clone the instance
 	public function __clone()
 	{
-		trigger_error('Clone is not allowed.', E_USER_ERROR);
-	}
-	# Startup functions
-	public static function startup($dsn, $startUpStr, $user = NULL, $pass = NULL, $port = NULL)
-	{
-		self::$instance = new PDO($dsn, $startUpStr, $user, $pass, $port);
+		trigger_error('Clone is not allowed.', E_USER_WARNING);
 	}
 }
 ?>
