@@ -367,7 +367,7 @@ abstract class Plugins extends Timers
 		{
 			foreach ($players as $plid => $player)
 			{
-				if ($player->PName == $PName)
+				if (strToLower($player->PName) == strToLower($PName))
 					return $player;
 			}
 		}
@@ -380,7 +380,7 @@ abstract class Plugins extends Timers
 		{
 			foreach ($players as $plid => $player)
 			{
-				if ($player->UName == $UName)
+				if (strToLower($player->UName) == strToLower($UName))
 					return $player;
 			}
 		}
@@ -410,7 +410,7 @@ abstract class Plugins extends Timers
 		{
 			foreach ($players as $plid => $player)
 			{
-				if ($player->PName == $PName)
+				if (strToLower($player->PName) == ($PName))
 				{
 					$UCID = $player->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
 					return $this->getClientByUCID($UCID);
@@ -426,7 +426,7 @@ abstract class Plugins extends Timers
 		{
 			foreach ($clients as $ucid => $client)
 			{
-				if ($client->UName == $UName)
+				if (strToLower($client->UName) == strToLower($UName))
 					return $client;
 			}
 		}
