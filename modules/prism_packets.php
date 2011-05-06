@@ -193,18 +193,27 @@ abstract class Struct
 // NOTE : This text file was written with a TAB size equal to 4 spaces.
 
 
-// INSIM VERSION NUMBER (updated for version 0.5X)
+// NOTE : This text file was written with a TAB size equal to 4 spaces.
 // ====================
 
-/* const int INSIM_VERSION = 4; */
-define('INSIM_VERSION', 4);
+/* const int INSIM_VERSION = 5; */
+define('INSIM_VERSION', 5);
 
-// CHANGES in version 0.5Z (compatible so no change to INSIM_VERSION)
+// CHANGES
 // =======
+
+// Version 0.5Z (compatible so no change to INSIM_VERSION)
 
 // NLP / MCI packets are now output at regular intervals
 // CCI_LAG bit added to the CompCar Structure
 
+// Version 0.5Z30 (INSIM_VERSION increased to 5)
+
+// IS_CON (CONtact) reports contact between two cars (if ISF_CON is enabled)
+// IS_MTC (Msg To Connection) now has a variable length (up to 128 characters)
+// IS_MTC can be sent to all (UCID = 255) and sound effect can be specified
+// ISS_SHIFTU_HIGH is no longer used (no distinction between high and low view)
+// FIX : Clutch axis / button was not reported after a change in Controls screen
 
 // TYPES : (all multi-byte types are PC style - lowest byte first)
 // =====
@@ -293,7 +302,8 @@ define('ISF_LOCAL',		4); // bit 2 : guest or single player
 define('ISF_MSO_COLS',	8); // bit 3 : keep colours in MSO text
 define('ISF_NLP',		16);// bit 4 : receive NLP packets
 define('ISF_MCI',		32);// bit 5 : receive MCI packets
-$ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'ISF_LOCAL', ISF_MSO_COLS => 'ISF_MSO_COLS', ISF_NLP => 'ISF_NLP', ISF_MCI => 'ISF_MCI');
+define('ISF_CON',		64);// bit 6 : receive CON packets
+$ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'ISF_LOCAL', ISF_MSO_COLS => 'ISF_MSO_COLS', ISF_NLP => 'ISF_NLP', ISF_MCI => 'ISF_MCI', ISF_CON => 'ISF_CON');
 
 // In most cases you should not set both ISF_NLP and ISF_MCI flags
 // because all IS_NLP information is included in the IS_MCI packet.
@@ -364,7 +374,8 @@ define('ISP_BTC',	46);// 46 - info			: sent when a user clicks a button
 define('ISP_BTT',	47);// 47 - info			: sent after typing into a button
 define('ISP_RIP',	48);// 48 - both ways		: replay information packet
 define('ISP_SSH',	49);// 49 - both ways		: screenshot
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH');
+define('ISP_CON',	50);// 50 - info			: contact (collision report)
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',	0);	//  0 - keep alive		: see "maintaining the connection"
@@ -372,7 +383,7 @@ define('TINY_VER',	1);	//  1 - info request	: get version
 define('TINY_CLOSE',2);	//  2 - inStruction		: close insim
 define('TINY_PING',	3);	//  3 - ping request	: external progam requesting a reply
 define('TINY_REPLY',4);	//  4 - ping reply		: reply to a ping request
-define('TINY_VTC',	5);	//  5 - info			: vote cancelled
+define('TINY_VTC',	5);	//  5 - both ways		: game vote cancel (info or request)
 define('TINY_SCP',	6);	//  6 - info request	: send camera pos
 define('TINY_SST',	7);	//  7 - info request	: send state info
 define('TINY_GTH',	8);	//  8 - info request	: get time in hundredths (i.e. SMALL_RTP)
@@ -558,8 +569,8 @@ define('ISS_GAME',			1);		// in game (or MPR)
 define('ISS_REPLAY',		2);		// in SPR
 define('ISS_PAUSED',		4);		// paused
 define('ISS_SHIFTU',		8);		// SHIFT+U mode
-define('ISS_SHIFTU_HIGH',	16);	// HIGH view
-define('ISS_SHIFTU_FOLLOW',	32);	// following car
+define('ISS_16',	16);	// UNUSED
+define('ISS_SHIFTU_FOLLOW',	32);	// FOLLOW view
 define('ISS_SHIFTU_NO_OPT',	64);	// SHIFT+U buttons hidden
 define('ISS_SHOW_2D',		128);	// showing 2d display
 define('ISS_FRONT_END',		256);	// entry screen
@@ -569,7 +580,7 @@ define('ISS_WINDOWED',		2048);	// LFS is running in a window
 define('ISS_SOUND_MUTE',	4096);	// sound is switched off
 define('ISS_VIEW_OVERRIDE',	8192);	// override user view
 define('ISS_VISIBLE',		16384);	// InSim buttons visible
-$ISS = array(ISS_GAME => 'ISS_GAME', ISS_REPLAY => 'ISS_REPLAY', ISS_PAUSED => 'ISS_PAUSED', ISS_SHIFTU => 'ISS_SHIFTU', ISS_SHIFTU_HIGH => 'ISS_SHIFTU_HIGH', ISS_SHIFTU_FOLLOW => 'ISS_SHIFTU_FOLLOW', ISS_SHIFTU_NO_OPT => 'ISS_SHIFTU_NO_OPT', ISS_SHOW_2D => 'ISS_SHOW_2D', ISS_FRONT_END => 'ISS_FRONT_END', ISS_MULTI => 'ISS_MULTI', ISS_MPSPEEDUP => 'ISS_MPSPEEDUP', ISS_WINDOWED => 'ISS_WINDOWED', ISS_SOUND_MUTE => 'ISS_SOUND_MUTE', ISS_VIEW_OVERRIDE => 'ISS_VIEW_OVERRIDE', ISS_VISIBLE => 'ISS_VISIBLE');
+$ISS = array(ISS_GAME => 'ISS_GAME', ISS_REPLAY => 'ISS_REPLAY', ISS_PAUSED => 'ISS_PAUSED', ISS_SHIFTU => 'ISS_SHIFTU', ISS_16 => 'ISS_16', ISS_SHIFTU_FOLLOW => 'ISS_SHIFTU_FOLLOW', ISS_SHIFTU_NO_OPT => 'ISS_SHIFTU_NO_OPT', ISS_SHOW_2D => 'ISS_SHOW_2D', ISS_FRONT_END => 'ISS_FRONT_END', ISS_MULTI => 'ISS_MULTI', ISS_MPSPEEDUP => 'ISS_MPSPEEDUP', ISS_WINDOWED => 'ISS_WINDOWED', ISS_SOUND_MUTE => 'ISS_SOUND_MUTE', ISS_VIEW_OVERRIDE => 'ISS_VIEW_OVERRIDE', ISS_VISIBLE => 'ISS_VISIBLE');
 
 // To request a StatePack at any time, send this IS_TINY :
 
@@ -580,7 +591,6 @@ $ISS = array(ISS_GAME => 'ISS_GAME', ISS_REPLAY => 'ISS_REPLAY', ISS_PAUSED => '
 
 // These states can be set by a special packet :
 
-// ISS_SHIFTU_FOLLOW	- following car
 // ISS_SHIFTU_NO_OPT	- SHIFT+U buttons hidden
 // ISS_SHOW_2D			- showing 2d display
 // ISS_MPSPEEDUP		- multiplayer speedup option
@@ -762,29 +772,28 @@ class IS_MSL extends Struct		// MSg Local - message to appear on local computer 
 	}
 };
 
-class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a connection or a player
+class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a connection / a player / all
 {
-	const PACK = 'CCxxCCxxa64';
-	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
+	const PACK = 'CCxxCCxxa128';
+	const UNPACK = 'CSize/CType/CReqI/CSound/CUCID/CPLID/CSp2/CSp3/a128Text';
 
-	protected $Size = 72;				# 72
+	protected $Size = 136;				# 8 + TEXT_SIZE (TEXT_SIZE = 4, 8, 12... 128)
 	protected $Type = ISP_MTC;			# ISP_MTC
 	protected $ReqI = 0;				# 0
-	protected $Zero = NULL;
+	protected $Sound = NULL;				# sound effect (see Message Sounds below)
 
-	public $UCID = 0;					# connection's unique id (0 = host)
+	public $UCID = 0;					# connection's unique id (0 = host / 255 = all)
 	public $PLID = 0;					# player's unique id (if zero, use UCID)
 	protected $Sp2 = NULL;
 	protected $Sp3 = NULL;
 
-	public $Msg = '';					# last byte must be zero
-
+	public $Text;						# up to 128 characters of text - last byte must be zero
 
 	public function pack()
 	{
-		if (strLen($this->Msg) > 64)
+		if (strLen($this->Msg) > 127)
 		{
-			foreach(explode("\n", wordwrap($this->Msg, 63, "\n", TRUE)) as $Msg)
+			foreach(explode("\n", wordwrap($this->Msg, 127, "\n", TRUE)) as $Msg)
 				$this->Msg($Msg)->Send();
 		}
 		return parent::pack();
@@ -1376,8 +1385,8 @@ class IS_RES extends Struct // RESult (qualify or confirmed finish)
 // You can send one to LFS before a race start, to specify the starting order.
 // It may be a good idea to avoid conflict by using /start=fixed (LFS setting).
 // Alternatively, you can leave the LFS setting, but make sure you send your IS_REO
-// AFTER you receive the IS_VTA.  LFS does its default grid reordering at the same time
-// as it sends the IS_VTA (VoTe Action) and you can override this by sending an IS_REO.
+// AFTER you receive the SMALL_VTA (VoTe Action).  LFS does its default grid reordering at
+// the same time as it sends the SMALL_VTA and you can override this by sending an IS_REO.
 
 class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 {
@@ -1637,7 +1646,7 @@ class IS_AXO extends Struct // AutoX Object
 
 // To receive IS_NLP or IS_MCI packets at a specified interval :
 
-// 1) Set the Interval field in the IS_ISI (InSimInit) packet (50, 60, 70... 8000 ms)
+// 1) Set the Interval field in the IS_ISI (InSimInit) packet (40, 50, 60... 8000 ms)
 // 2) Set one of the flags ISF_NLP or ISF_MCI in the IS_ISI packet
 
 // If ISF_NLP flag is set, one IS_NLP packet is sent...
@@ -1701,7 +1710,7 @@ class CompCar extends Struct // Car info in 28 bytes - there is an array of thes
 	public $Y;							# Y map (65536 = 1 metre)
 	public $Z;							# Z alt (65536 = 1 metre)
 	public $Speed;						# speed (32768 = 100 m/s)
-	public $Direction;					# direction of car's motion : 0 = world y direction, 32768 = 180 deg
+	public $Direction;					# car's motion if Speed > 0 : 0 = world y direction, 32768 = 180 deg
 	public $Heading;					# direction of forward axis : 0 = world y direction, 32768 = 180 deg
 	public $AngVel;						# signed, rate of change of heading : (16384 = 360 deg/s)
 };
@@ -1752,8 +1761,96 @@ class IS_MCI extends Struct // Multi Car Info - if more than 8 in race then more
 
 // ReqI : 0
 // SubT : SMALL_NLI		(Node Lap Interval)
-// UVal : interval      (0 means stop, otherwise time interval : 50, 60, 70... 8000 ms)
+// UVal : interval		(0 means stop, otherwise time interval : 40, 50, 60... 8000 ms)
 
+// CONTACT - reports contacts between two cars if the closing speed is above 0.25 m/s
+// =======
+
+class CarContact extends Struct	// Info about one car in a contact - two of these in the IS_CON (below)
+{
+	const PACK = 'CCCcCCCCCCccss';
+	const UNPACK = 'CPLID/CInfo/CSp2/cSteer/CThrBrk/CCluHan/CGearSp/CSpeed/CDirection/CHeading/cAccelF/cAccelR/sX/sY';
+
+	public $PLID;
+	public $Info;						# like Info byte in CompCar (CCI_BLUE / CCI_YELLOW / CCI_LAG)
+	public $Sp2;						# spare
+	public $Steer;						# front wheel steer in degrees (right positive)
+
+	public $ThrBrk;						# high 4 bits : throttle    / low 4 bits : brake (0 to 15)
+	public $CluHan;						# high 4 bits : clutch      / low 4 bits : handbrake (0 to 15)
+	public $GearSp;						# high 4 bits : gear (15=R) / low 4 bits : spare
+	public $Speed;						# m/s
+
+	public $Direction;					# car's motion if Speed > 0 : 0 = world y direction, 128 = 180 deg
+	public $Heading;					# direction of forward axis : 0 = world y direction, 128 = 180 deg
+	public $AccelF;						# m/s^2 longitudinal acceleration (forward positive)
+	public $AccelR;						# m/s^2 lateral acceleration (right positive)
+
+	public $X;							# position (1 metre = 16)
+	public $Y;							# position (1 metre = 16)
+
+	public function getPLID()						{ return $this->PLID; }
+	public function getInfO()						{ return $this->Info; }
+
+	public function getWheelAngle()					{ return $this->Steer; }
+
+	public function getThrottle()					{ return $this->ThrBrk >> 4; }
+	public function getBrake()						{ return $this->ThrBrk & 15; }
+	public function getClutch()						{ return $this->CluHan >> 4; }
+	public function getHandbrake()					{ return $this->CluHan & 15; }
+	public function getGear()						{ return (($Gear = $this->GearSp >> 4) == 15) ? 'R' : $Gear; }
+
+	public function getSpeed()						{ return $this->Speed; }
+	public function getDirection()					{ return $this->Direction; }
+	public function getHeading()					{ return $this->Heading; }
+	public function getAccelerationLongitudinal()	{ return $this->AccelF; }
+	public function getAccelerationLateral()		{ return $this->AccelR; }
+	public function getX()							{ return $this->X; }
+	public function getY()							{ return $this->Y; }
+
+	public function bug()
+	{
+		printf("%1$08b (%1$-3d)", $this->GearSp >> 4);
+	}
+};
+
+class IS_CON extends Struct		// CONtact - between two cars (A and B are sorted by PLID)
+{
+	const PACK = 'CCCCvv';
+	const UNPACK = 'CSize/CType/CReqI/CZero/vSpClose/vTime';
+
+	public $Size;						# 40
+	public $Type = ISP_CON;				# ISP_CON
+	public $ReqI;						# 0
+	public $Zero;
+
+	public $SpClose;					# high 4 bits : reserved / low 12 bits : closing speed (10 = 1 m/s)
+	public $Time;						# looping time stamp (hundredths - time since reset - like TINY_GTH)
+
+	public $A = array();
+	public $B = array();
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		$this->A = new CarContact(substr($rawPacket, 8, 16));
+		$this->B = new CarContact(substr($rawPacket, 24, 16));
+
+		return $this;
+	}
+	
+	public function getTime()			{ return $this->Time; }
+#	public function getSpare()			{ return $this->SpClose >> 12; }
+	public function getClosingSpeed()	{ return ($this->SpClose & 0x0fff) / 10; }
+	public function getA()				{ return $this->A; }
+	public function getB()				{ return $this->B; }
+};
 
 // CAR POSITION PACKETS (Initialising OutSim from InSim - See "OutSim" below)
 // ====================
@@ -1814,7 +1911,7 @@ class IS_SCC extends Struct // Set Car Camera - Simplified camera packet (not SH
 	protected $ReqI;					# 0
 	protected $Zero;
 
-	public $ViewPLID;					# UniqueID of player to view
+	public $ViewPLID;					# Unique ID of player to view
 	public $InGameCam;					# InGameCam (as reported in StatePack)
 	protected $Sp2;
 	protected $Sp3;
@@ -1851,21 +1948,18 @@ class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIF
 
 	public $FOV;						# 4-byte float : FOV in degrees
 
-	public $Time;						# Time to get there (0 means instant + reset)
+	public $Time;						# Time in ms to get there (0 means instant)
 	public $Flags;						# ISS state flags (see below)
 };
 
 // The ISS state flags that can be set are :
 
 // ISS_SHIFTU			- in SHIFT+U mode
-// ISS_SHIFTU_HIGH		- HIGH view
-// ISS_SHIFTU_FOLLOW	- following car
+// ISS_SHIFTU_FOLLOW	- FOLLOW view
 // ISS_VIEW_OVERRIDE	- override user view
 
 // On receiving this packet, LFS will set up the camera to match the values in the packet,
 // including switching into or out of SHIFT+U mode depending on the ISS_SHIFTU flag.
-
-// If ISS_SHIFTU is not set, then ViewPLID and InGameCam will be used.
 
 // If ISS_VIEW_OVERRIDE is set, the in-car view Heading Pitch and Roll will be taken
 // from the values in this packet.  Otherwise normal in game control will be used.
@@ -2138,7 +2232,7 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
 // Text in the IS_BTN packet.  If the first character of IS_BTN's Text field is zero, LFS will read
 // the caption up to the second zero.  The visible button text then follows that second zero.
 
-// Text : 0-65-66-0 would display button text "AB" and no caption
+// Text : 65-66-67-0 would display button text "ABC" and no caption
 
 // Text : 0-65-66-67-0-68-69-70-71-0-0-0 would display button text "DEFG" and caption "ABC"
 

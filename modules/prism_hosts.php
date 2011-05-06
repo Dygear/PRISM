@@ -34,7 +34,7 @@ define('STREAM_WRITE_BYTES',	1400);
  * ->initialise()									# (re)loads the config files and (re)connects to the host(s)
  * ->sendPacket($packetClass, $hostId = NULL)		# send a packet to either the last incoming host, or to $hostID
  * ->getHostsInfo()									# retreive an array of information about all the hosts
- * ->getHostById(string $hostId)						# get a host object by its hostID
+ * ->getHostById(string $hostId)					# get a host object by its hostID
  * ->getHostsByIp(string $ip)						# get all hosts with a certain IP
 **/
 class HostHandler extends SectionHandler
@@ -135,6 +135,7 @@ class HostHandler extends SectionHandler
 				$ip				= isset($v['ip']) ? $v['ip'] : '';
 				$port			= isset($v['port']) ? (int) $v['port'] : 0;
 				$udpPort		= isset($v['udpPort']) ? (int) $v['udpPort'] : 0;
+				$flags			= isset($v['flags']) ? (int) $v['flags'] : 72;
 				$pps			= isset($v['pps']) ? (int) $v['pps'] : 3;
 				$adminPass		= isset($v['password']) ? substr($v['password'], 0, 15) : '';
 				$socketType		= isset($v['socketType']) ? (int) $v['socketType'] : SOCKTYPE_TCP;
@@ -174,6 +175,7 @@ class HostHandler extends SectionHandler
 					'ip'			=> $ip,
 					'port'			=> $port,
 					'udpPort'		=> $udpPort,
+					'flags'			=> $flags,
 					'pps'			=> $pps,
 					'adminPass'		=> $adminPass,
 					'prefix'		=> $prefix
@@ -557,6 +559,7 @@ class HostHandler extends SectionHandler
 				'useRelay'		=> $host->isRelay(),
 				'hostname'		=> $host->getHostname(),
 				'udpPort'		=> $host->getUdpPort(),
+				'flags'			=> $host->getFlags(),
 				'isAdmin'		=> $host->isAdmin(),
 				'connStatus'	=> $host->getConnStatus(),
 				'socketType'	=> $host->getSocketType(),
@@ -605,7 +608,7 @@ class InsimConnection
 	private $socketType;
 	
 	private $socket;
-	private $socketMCI;						# secundary, udp socket to listen on, if udpPort > 0
+	private $socketMCI;						# secondary, udp socket to listen on, if udpPort > 0
 											# note that this follows the exact theory of how insim deals with tcp and udp sockets
 											# see InSim.txt in LFS distributions for more info
 	
@@ -632,6 +635,7 @@ class InsimConnection
 	private $ip				= '';			# ip or hostname to connect to
 	private $connectIP		= '';			# the actual ip used to connect
 	private $port			= 0;			# the port
+	private $flags			= 72;			# Defaults to ISF_MSO_COLS (8) & ISF_CON (64) options on.
 	private $udpPort		= 0;			# the secundary udp port to listen on for NLP/MCI packets, in case the main port is tcp
 	private $adminPass		= '';			# adminpass for both relay and direct usage
 	private $specPass		= '';			# specpass for relay usage
@@ -647,6 +651,7 @@ class InsimConnection
 		$this->id			= $icVars['id'];
 		$this->ip			= $icVars['ip'];
 		$this->port			= $icVars['port'];
+		$this->flags		= $icVars['flags'];
 		$this->pps			= $icVars['pps'];
 		$this->adminPass	= $icVars['adminPass'];
 		$this->prefix		= ($icVars['prefix'] == '') ? $PRISM->config->cvars['prefix'] : $icVars['prefix'];
@@ -737,6 +742,11 @@ class InsimConnection
 	{
 		return $this->udpPort;
 	}
+	
+	public function &getFlags()
+	{
+		return $this->flags;
+	}
 
 	public function &getPPS()
 	{
@@ -767,7 +777,7 @@ class InsimConnection
 		$this->closeMCISocket();
 		$this->createMCISocket();
 	}
-	
+		
 	public function &getSendQLen()
 	{
 		return $this->sendQLen;
@@ -863,7 +873,7 @@ class InsimConnection
 			$ISP			= new IS_ISI();
 			$ISP->ReqI		= TRUE;
 			$ISP->UDPPort	= (isset($this->udpPort) && $this->udpPort > 0) ? $this->udpPort : 0;
-			$ISP->Flags		= (isset($this->Flags)) ? $this->Flags : ISF_MSO_COLS;
+			$ISP->Flags		= (isset($this->flags)) ? $this->flags : ISF_MSO_COLS & ISF_CON;
 			$ISP->Prefix	= (isset($this->prefix)) ? ord($this->prefix) : ord('!');
 			$ISP->Interval	= round(1000 / $this->pps);
 			$ISP->Admin		= $this->adminPass;

@@ -3,7 +3,9 @@
 <html dir="ltr" lang="en">
 	<head>
 		<title>PRISM :: Server Status</title>
-		<link rel="stylesheet" href="/style/default.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="resources/style/default.css" type="text/css" media="screen" />
+		<link rel="shortcut icon" href="resources/images/logo/logo-1-black.png" />
+		<link rel="shortcut icon" href="/favicon.png"> 
 	</head>
 	<body>
 		<div class="loginArea">
