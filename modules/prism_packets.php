@@ -960,7 +960,7 @@ class IS_RST extends Struct // Race STart
 	public $RaceLaps;					# 0 if qualifying
 	public $QualMins;					# 0 if race
 	public $NumP;						# number of players in race
-	protected $Spare;
+	public $Timing;						# lap timing (see below)
 
 	public $Track;						# short track name
 	public $Weather;
@@ -973,6 +973,16 @@ class IS_RST extends Struct // Race STart
 	public $Split2;						# node index - split 2
 	public $Split3;						# node index - split 3
 };
+
+// Lap timing info (for Timing byte)
+
+// bits 6 and 7 (Timing & 0xc0) :
+
+// 0x40 : standard timing
+// 0x80 : custom timing
+// 0xc0 : no lap timing
+
+// bits 0 and 1 (Timing & 0x03) : number of checkpoints if lap timing is enabled
 
 // To request an IS_RST packet at any time, send this IS_TINY :
 
@@ -1819,10 +1829,10 @@ class IS_CON extends Struct		// CONtact - between two cars (A and B are sorted b
 	const PACK = 'CCCCvv';
 	const UNPACK = 'CSize/CType/CReqI/CZero/vSpClose/vTime';
 
-	public $Size;						# 40
-	public $Type = ISP_CON;				# ISP_CON
-	public $ReqI;						# 0
-	public $Zero;
+	protected $Size;						# 40
+	protected $Type = ISP_CON;				# ISP_CON
+	protected $ReqI;						# 0
+	protected $Zero;
 
 	public $SpClose;					# high 4 bits : reserved / low 12 bits : closing speed (10 = 1 m/s)
 	public $Time;						# looping time stamp (hundredths - time since reset - like TINY_GTH)
