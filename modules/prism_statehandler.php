@@ -65,9 +65,6 @@ class StateHandler extends PropertyMaster
 		$ISP->SubT(TINY_SCP)->Send();	# Send Camera Pos (ISP_CPP)
 		$ISP->SubT(TINY_SST)->Send();	# Send STate info (ISP_STA)
 		$ISP->SubT(TINY_ISM)->Send();	# Get Multiplayer Info (ISP_ISM)
-		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
-		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
-		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
 		$ISP->SubT(TINY_REO)->Send();	# send an IS_REO (ISP_REO)
 		$ISP->SubT(TINY_RST)->Send();	# send an IS_RST (ISP_RST)
 		$ISP->SubT(TINY_AXI)->Send();	# send an IS_AXI - AutoX Info (ISP_AXI)
@@ -172,6 +169,14 @@ class StateHandler extends PropertyMaster
 	{
 		$this->Host = $ISM->Host;
 		$this->HName = $ISM->HName;
+
+		# Send out some info requests, to make sure we have all of the baseline information.
+		$ISP = new IS_TINY();
+		$ISP->ReqI = 1;
+		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
+		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
+		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
+
 	}
 
 	# IS_RST (17)
