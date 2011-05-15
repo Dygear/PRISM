@@ -427,7 +427,7 @@ abstract class PropertyMaster
 {
 	public function __get($property)
 	{
-		return (isset($this->$property)) ? $this->$property : NULL;
+		return (isset($this->$property)) ? $this->$property : $return = NULL;
 	}
 }
 

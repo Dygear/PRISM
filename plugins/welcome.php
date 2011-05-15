@@ -10,7 +10,7 @@ class welcome extends Plugins
 	public function __construct()
 	{
 		$this->registerPacket('onPrismConnect', ISP_VER);
-#		$this->registerPacket('onClientConnect', ISP_NCN);
+		$this->registerPacket('onClientConnect', ISP_NCN);
 		$this->registerPacket('onChat', ISP_MSO);
 	}
 

@@ -9,6 +9,9 @@ class admin extends Plugins
 
 	public function __construct()
 	{
+		# Exit
+		$this->registerSayCommand('prism exit', 'cmdEnd', 'Shuts down PRISM.', ADMIN_CVAR);
+	
 		# Help
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
 		$this->registerSayCommand('prism help', 'cmdHelp', 'Displays this command list.');
@@ -32,6 +35,11 @@ class admin extends Plugins
 		
 		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessagePlayer', '"Msg" <USERNAME> <Time> - Race Control Messages', ADMIN_RCM);
 		$this->registerSayCommand('prism rcm all', 'cmdRaceControlMessageAll', '"Msg" <Time> - Race Control Messages', ADMIN_RCM);
+	}
+
+	public function cmdExit($cmd, $ucid)
+	{
+		die("PRISM killed by client: {$this->getClientUNameByUCID($ucid)}.");
 	}
 
 	// Race Control Messages
@@ -91,12 +99,12 @@ class admin extends Plugins
 		if (count($argv) == 0)
 		{
 			$MTC = new IS_MTC;
-			$MTC->UCID($ucid)->Msg("$cmd needs a target.")->Send();
+			$MTC->UCID($ucid)->Text("$cmd needs a target.")->Send();
 		}
 		else if ($castingAdmin->UName == $target)
 		{
 			$MTC = new IS_MTC;
-			$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
+			$MTC->UCID($ucid)->Text('Why would you even try to run this on yourself?')->Send();
 		}
 		else if ($this->isImmune($target))
 		{
@@ -124,7 +132,7 @@ class admin extends Plugins
 		if (count($argv) == 0)
 		{
 			$MTC = new IS_MTC;
-			$MTC->UCID($ucid)->Msg("$cmd needs a target.")->Send();
+			$MTC->UCID($ucid)->Text("$cmd needs a target.")->Send();
 		}
 		else
 		{
@@ -133,7 +141,7 @@ class admin extends Plugins
 				if ($castingAdmin->UName == $target)
 				{
 					$MTC = new IS_MTC;
-					$MTC->UCID($ucid)->Msg('Why would you even try to run this on yourself?')->Send();
+					$MTC->UCID($ucid)->Text('Why would you even try to run this on yourself?')->Send();
 				}
 				else if ($this->isImmune($target))
 				{
@@ -156,13 +164,13 @@ class admin extends Plugins
 	{
 		global $PRISM;
 		$MTC = new IS_MTC;
-		$MTC->UCID($ucid);
+		$MTC->Sound(SND_SYSMESSAGE)->UCID($ucid);
 
-		$MTC->Msg('^7COMMAND^8 - DESCRIPTION')->Send();
+		$MTC->Text('^7COMMAND^8 - DESCRIPTION')->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
-				$MTC->Msg("^7{$command}^8 - {$detail['info']}")->Send();
+				$MTC->Text("^7{$command}^8 - {$detail['info']}")->Send();
 		}
 
 		return PLUGIN_CONTINUE;
@@ -176,13 +184,13 @@ class admin extends Plugins
 		$MTC = new IS_MTC;
 		$MTC->UCID($ucid);
 
-		$MTC->Msg('^7NAME ^3VERSION ^8AUTHOR')->Send();
-		$MTC->Msg('DESCRIPTION')->Send();
+		$MTC->Text('^7NAME ^3VERSION ^8AUTHOR')->Send();
+		$MTC->Text('DESCRIPTION')->Send();
 
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
-			$MTC->Msg(sprintf('^7%s ^3%s ^8%s', $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR))->Send();
-			$MTC->Msg($plugin::DESCRIPTION)->Send();
+			$MTC->Text(sprintf('^7%s ^3%s ^8%s', $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR))->Send();
+			$MTC->Text($plugin::DESCRIPTION)->Send();
 		}
 
 		return PLUGIN_CONTINUE;
@@ -192,7 +200,7 @@ class admin extends Plugins
 	public function cmdVersion($cmd, $ucid)
 	{
 		$MTC = new IS_MTC();
-		$MTC->UCID($ucid)->Msg('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
+		$MTC->UCID($ucid)->Text('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
 	}
 
 	// Admins
@@ -201,10 +209,10 @@ class admin extends Plugins
 		global $PRISM;
 
 		$MTC = new IS_MTC;
-		$MTC->UCID($ucid)->Msg('Admins detailed to this server:')->Send();
+		$MTC->UCID($ucid)->Text('Admins detailed to this server:')->Send();
 
 		foreach ($PRISM->admins->getAdminsInfo() as $user => $details)
-			$MTC->Msg("    $user")->Send();
+			$MTC->Text("    $user")->Send();
 
 		return PLUGIN_CONTINUE;
 	}
