@@ -11,7 +11,6 @@ class welcome extends Plugins
 	{
 		$this->registerPacket('onPrismConnect', ISP_VER);
 		$this->registerPacket('onClientConnect', ISP_NCN);
-		$this->registerPacket('onChat', ISP_MSO);
 	}
 
 	public function onPrismConnect(IS_VER $VER)
@@ -22,16 +21,29 @@ class welcome extends Plugins
 
 	public function onClientConnect(IS_NCN $NCN)
 	{
+		if ($NCN->UCID == 0)
+			return;
+		
+		$Title = new Button('poweredBy', Button::$TO_ALL);
+		$Title->Text('This server is powered by');
+		$Title->registerOnClick($this, 'onPoweredByClick');
+		$Title->T(166)->L(29)->W(25)->H(6)->send();
+		
+		$Msg = new Button('prism', Button::$TO_ALL);
+		$Msg->Text('^3PRISM ^8Version ^7'.PHPInSimMod::VERSION.'^8.');
+		$Msg->T(172)->L(29)->W(25)->H(6)->send();
+		/*
 		$BTN = new IS_BTN;
 		$BTN->ClickID(100)->UCID($NCN->UCID)->T(166)->L(29)->W(25)->H(6);
 		$BTN->Text('Welcome to this ^3PRISM ^7Powered^8 Server.')->Send();
 		$BTN->ClickID(101)->T($BTN->T + $BTN->H);
 		$BTN->Text('PRISM Version ^7'.PHPInSimMod::VERSION.'^8.')->Send();
+		*/
 	}
 	
-	public function onChat(IS_MSO $MSO)
+	public function onPoweredByClick(IS_BTC $BTC)
 	{
-		console($MSO->Msg);
+		echo 'Button clicked! ' . $BTC;
 	}
 }
 ?>
