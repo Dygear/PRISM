@@ -7,7 +7,7 @@ class LVS extends Plugins
 	const VERSION = PHPInSimMod::VERSION;
 	const DESCRIPTION = 'Lap Verification System.';
 
-	private $LVS = TRUE;
+	private $LVS = FALSE;
 	private $Path = array();
 	private $Track = '';
 
@@ -43,23 +43,22 @@ class LVS extends Plugins
 		$MTC->Send();
 	}
 	
-	public function onRST(Struct $Packet)
+	public function onTrack(Struct $Packet)
 	{
 		if ($this->Track == $Packet->Track)
 			return;
 		else
 			$this->Track = $Packet->Track;
 
-		$file = "C:/LFS/data/pth/${this->Track}.pth";
+		$file = "../data/pth/{$this->Track}.pth";
 		if (!file_exists($file))
 			return;
 
 		$pth = new pth($file);
+		print_r($pth);
 		$this->Path = array();
 		foreach ($pth->Nodes as $Node)
-		{
-			$this->Path[] = (array) $Node->Center;
-		}
+			$this->Path[] = $Node->toPolyRoad();
 	}
 	
 	public function onMCI(IS_MCI $MCI)
@@ -67,7 +66,15 @@ class LVS extends Plugins
 		if ($this->LVS === FALSE)
 			return;
 
-		if (!$this->isInPoly($MCI->X, $MCI->Y, $this->Path)
+		foreach ($MCI->Info as $Info)
+		{
+			if (!$this->isInPoly($Info->X, $Info->Y, $this->Path[$Info->Node]))
+			{
+				$MTC = new IS_MTC;
+				$MTC->UCID($this->getClientByPLID($Info->PLID)->UCID);
+				$MTC->Text('You are not on the track!')->Send();
+			}
+		}
 	}
 }
 ?>
