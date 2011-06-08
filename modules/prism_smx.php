@@ -5,7 +5,7 @@
  * @subpackage SMX
 */
 
-class SMX
+class smx
 {
 	const HEADER = 'x6LFSSMX/xVersion/xRevision/CVersion/xDimensions/CResolution/xVertex/x4/a32Track/x3GroundColor/x9/lObjects';
 	const COLOR = 'CR/CG/CB';
