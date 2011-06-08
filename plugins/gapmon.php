@@ -54,7 +54,7 @@ class gapmon extends Plugins
 	public function onPLayerLeave(IS_PLL $PLL)
 	{
 		$this->NumPlayers--;
-		unset($this->Players[$NPL->PLID]);
+		unset($this->Players[$PLL->PLID]);
 	}
 }
 ?>
