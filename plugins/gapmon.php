@@ -4,123 +4,59 @@ class gapmon extends Plugins
 	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'Gap Monitor';
 	const AUTHOR = 'NotAnIllusion';
-	const VERSION = '1.0.0';
+	const VERSION = '0.1.0';
 	const DESCRIPTION = 'Gap Monitoring Tool';
 
-	private $race = array();
-	private $BtnX = 100;	# midpoint between buttons, span 15+5 left and right
-	private $BtnY = 175;	# top buttons' vertical position
-	
+	private $NumNodes;	# Total number of nodes in the path;
+	private $Finish;	# Node index for the finish line;
+
+	private $Players = array();
+	private $NumPlayers = 0;
+
 	public function __construct()
 	{
-		$this->registerPacket('onNewPlayer', ISP_NPL);
-		$this->registerPacket('onPlayerLeave', ISP_PLL);
-		$this->registerPacket('onSector', ISP_SPX, ISP_LAP);
-		$this->registerPacket('onNodeLap', ISP_NLP);
-		$this->registerPacket('onRestart', ISP_RST);
-//		$IS_TINY = new IS_TINY();
-//		$IS_TINY->SubT(TINY_NLP)->Send();
+		$this->registerPacket('onUpdate', ISP_NLP, ISP_MCI);
+		$this->registerPacket('onRaceSTart', ISP_RST);
+		$this->registerPacket('onNewPLayer', ISP_NPL);
+		$this->registerPacket('onPLayerLeave', ISP_PLL);
 	}
 
-	public function onNewPlayer(IS_NPL $NPL)
+	public function onUpdate(Struct $Packet)
 	{
-		$this->race[$NPL->ReqI] = array(
-			'position' => 0,
-			'lap' => 0,
-			'etime' => 0,
-			'gapahead' => 0,
-			'gapbehind' => 0,
-			'REMOTE' => TRUE,
-			'FOLLOW' => TRUE,	# If the user wants to use this feature, auto
-		);
-	
-		if(!($NPL->UCID & 6))
-		{
-			$BTN = new IS_BTN();
-			$BTN->ClickID(100)->BStyle(16)->L($this->BtnX-20)->T($this->BtnY)->W(15)->H(5)->Text('0.00')->Send(); # Top Left
-			$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text('0.00')->Send(); # Bottom Left
-			$BTN->ClickID(102)->BStyle(16)->L($this->BtnX+5)->T($this->BtnY)->W(15)->H(5)->Text('0.00')->Send(); # Top Right
-			$BTN->ClickID(103)->BStyle(20)->L($this->BtnX+5)->T($this->BtnY+5)->W(15)->H(5)->Text('0.00')->Send(); # Bottom Right
-		}
-	}
-	
-	public function onPlayerLeave(IS_PLL $PLL)
-	{
-		unset($this->race[$PLL->PLID]);
-		if(isset($this->follow))
-		{
-			if($PLL->PLID == $this->follow)
-			{
-				$this->follow = FALSE;
-				$BFN = new ISP_BFN;
-				$BFN->SubT(1)->Send(BFN_CLEAR);
-			}
-		}
-	}
-	
-	public function onSector(Struct $Sector)
-	{
-		$this->race[$Sector->PLID] = $Sector->ETime;
-		$TINY = new IS_TINY();
-		$TINY->ReqI($Sector->PLID)->SubT(TINY_NLP)->Send();
-	}
-	
-	public function onNodeLap(IS_NLP $NLP)
-	{
-		# If there is less then 2 plays, this is not going to work, so abort the function.
-		if (count($this->race) < 2)
+		# If there is less then 2 players, this is not going to work, so abort the function.
+		if ($this->NumPlayers < 2)
 			return PLUGIN_CONTINUE;
 
-		# If this user does not want the  
-		if($this->follow == FALSE)
-			return PLUGIN_CONTINUE;
-
-		$BTN = new IS_BTN();
-
-		if(($NLP->PLID == $this->follow) && ($this->race[$this->follow]['position'] >= 2))
+		foreach ($Packet->Info as $Info)
 		{
-			# Gap ahead
-			foreach($this->race as $racer)
-			{
-				if($racer['position'] == $this->race[$this->follow]['position'] - 1)
-				{
-					$gap = $this->race[$this->follow]['etime'] - $racer['etime'];
-					$diff = $gap - $this->race[$this->follow]['gapahead'];
-
-					$BTN->ClickID(100)->BStyle(16)->L($this->BtnX-20)->T($this->BtnY)->W(15)->H(5)->Text('+'.number_format($gap / 1000, 2))->Send(); # Top Left
-					if($diff <= 0)
-						$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text(number_format($diff / 1000, 2))->Send(); # Bottom Left
-					else
-						$BTN->ClickID(101)->BStyle(20)->L($this->BtnX-20)->T($this->BtnY+5)->W(15)->H(5)->Text('+'.number_format($diff / 1000, 2))->Send(); # Bottom Left
-
-					$this->race[$this->follow]['gapahead'] = $gap;
-				}
-			}
+			$this->Players[$Info->PLID]->Node = ($Info->Node + $this->NumNodes - $this->Finish) % $this->NumNodes;
+			$this->Players[$Info->PLID]->Lap = $Info->Lap;
+			$this->Players[$Info->PLID]->Position = $Info->Position;
 		}
 		
-		if($this->race[$NLP->PLID]['position'] == $this->race[$this->follow]['position'] + 1)
-		{
-			# Gap behind
-			$gap = $this->race[$NLP->PLID]['etime'] - $this->race[$this->follow]['etime'];
-			$diff = $gap - $this->race[$this->follow]['gapbehind'];
+		usort($this->Players, function ($a, $b) {
+			return $a->Position - $b->Position;
+		});
+	}
 
-			$BTN->ClickID(102)->BStyle(16)->L($this->BtnX+5)->T($this->BtnY)->W(15)->H(5)->Text('+'.number_format($gap / 1000, 2))->Send(); # Top Right
-			if($diff <= 0)
-				$BTN->ClickID(103)->BStyle(20)->L($this->BtnX+5)->T($this->BtnY+5)->W(15)->H(5)->Text(number_format($diff / 1000, 2))->Send(); # Bottom Right
-			else
-				$BTN->ClickID(103)->BStyle(20)->L($this->BtnX+5)->T($this->BtnY+5)->W(15)->H(5)->Text('+'.number_format($diff / 1000, 2))->Send(); # Bottom Right
+	public function onRaceSTart(IS_RST $RST)
+	{
+		$this->NumNodes = $RST->NumNodes;
+		$this->Finish = $RST->Finish;
+	}
 
-			$this->race[$this->follow]['gapbehind'] = $gap;
-		}
+	public function onNewPLayer(IS_NPL $NPL)
+	{
+		$this->NumPlayers++;
+		$NPL->isAI = ($NPL->PType & 2);
+		$this->Players[$NPL->PLID] = $NPL;
+		echo ($NPL->isAI) ? 'New Player is AI' : 'New Player is Human';
 	}
 	
-	public function onRestart(IS_RST $RST)
+	public function onPLayerLeave(IS_PLL $PLL)
 	{
-		$this->race = array();
-		$BNF = new IS_BFN();
-		$BNF->SubT(BFN_DEL_BTN)->Send();
-		$TINY = new IS_TINY();
-		$TINY->ReqI(255)->SubT(TINY_NPL)->Send();
+		$this->NumPlayers--;
+		unset($this->Players[$NPL->PLID]);
 	}
 }
 ?>

@@ -11,7 +11,6 @@ class welcome extends Plugins
 	{
 		$this->registerPacket('onPrismConnect', ISP_VER);
 		$this->registerPacket('onClientConnect', ISP_NCN);
-		$this->registerPacket('onChat', ISP_MSO);
 	}
 
 	public function onPrismConnect(IS_VER $VER)
@@ -23,15 +22,18 @@ class welcome extends Plugins
 	public function onClientConnect(IS_NCN $NCN)
 	{
 		$BTN = new IS_BTN;
-		$BTN->ClickID(100)->UCID($NCN->UCID)->T(166)->L(29)->W(25)->H(6);
+		$BTN->ClickID(100)->UCID($NCN->UCID)->T(IS_Y_MAX - IS_Y_MIN)->L(IS_X_MIN)->W(IS_X_MAX)->H(8);
 		$BTN->Text('Welcome to this ^3PRISM ^7Powered^8 Server.')->Send();
 		$BTN->ClickID(101)->T($BTN->T + $BTN->H);
 		$BTN->Text('PRISM Version ^7'.PHPInSimMod::VERSION.'^8.')->Send();
+		$this->createTimer('tmrClearWelcomeButtons', 15, Timer::CLOSE, array($NCN->UCID));
 	}
-	
-	public function onChat(IS_MSO $MSO)
+	public function tmrClearWelcomeButtons($UCID)
 	{
-		console($MSO->Msg);
+		$BNF = new IS_BFN;
+		$BNF->SubT(BFN_DEL_BTN)->UCID($UCID);
+		$BNF->ClickID(100)->Send();
+		$BNF->ClickID(101)->Send();
 	}
 }
 ?>
