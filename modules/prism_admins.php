@@ -23,7 +23,7 @@ define('ADMIN_KICK',				1024);		# Flag "k", Allows you to kick clients from serv
 define('ADMIN_LEVEL_L',				2048);		# Flag "l", 
 define('ADMIN_TRACK',				4096);		# Flag "m", Allows you to change the track on the server.
 define('ADMIN_LEVEL_N',				8192);		# Flag "n", 
-define('ADMIN_LEVEL_O',				16384);		# Flag "o", 
+define('ADMIN_OBJECT',				16384);		# Flag "o", Allows you to set & remove autox objects in the track.
 define('ADMIN_PENALTIES',			32768);		# Flag "p", Allows you to set a penalty on any client.
 define('ADMIN_RESERVATION',			65536);		# Flag "q", Allows you to join in a reserved slot.
 define('ADMIN_RCM',					131072);	# Flag "r", Allows you to send race control messages.
