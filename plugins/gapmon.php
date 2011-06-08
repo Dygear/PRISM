@@ -48,9 +48,7 @@ class gapmon extends Plugins
 	public function onNewPLayer(IS_NPL $NPL)
 	{
 		$this->NumPlayers++;
-		$NPL->isAI = ($NPL->PType & 2);
 		$this->Players[$NPL->PLID] = $NPL;
-		echo ($NPL->isAI) ? 'New Player is AI' : 'New Player is Human';
 	}
 	
 	public function onPLayerLeave(IS_PLL $PLL)
