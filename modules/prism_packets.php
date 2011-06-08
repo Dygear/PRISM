@@ -1089,6 +1089,10 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
 
 		return $this;
 	}
+
+	public function isFemale() { return ($this->PType & 1); }
+	public function isAI() { return ($this->PType & 2); }
+	public function isRemote(){ return ($this->PType & 4); }
 };
 
 // NOTE : PType bit 0 (female) is not reported on dedicated host as humans are not loaded
