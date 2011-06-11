@@ -43,7 +43,7 @@ class LayoutObject {
 	 * @param colour Colour for chalk and tyre stacks
 	 */
 	public function __construct($dataOrX, $y = null, $z = null, $type = null, $hdng = null, $typeData = null, $colour = null) {
-		if ($y != null)
+		if ($type != null)
 		{
 			$this->x = $dataOrX;
 			$this->y = $y;
@@ -58,7 +58,7 @@ class LayoutObject {
 				$this->setHeading($hdng);
 			}
 			$this->typeData = $typeData;
-			$this->colour = $colout;
+			$this->colour = $colour;
 		}
 		else {
 			$this->initFromBytes($dataOrX);
@@ -84,8 +84,8 @@ class LayoutObject {
 	}
 	
 	public function pack() {
-		$x = $this->x * 16;
-		$y = $this->y * 16;
+		$x = $this->rawX();
+		$y = $this->rawY();
 		$z = $this->z * 4;
 		
 		$dat = $this->dataForType();
@@ -94,6 +94,16 @@ class LayoutObject {
 		$heading = $dat['heading'];
 		
 		return pack(self::$PACK, $x, $y, $z, $flags, $index, $heading);
+	}
+	
+	public function rawX()
+	{
+		return round($this->x * 16);
+	}
+	
+	public function rawY()
+	{
+		return round($this->y * 16);
 	}
 	
 	public function initFromBytes($data) {
@@ -316,9 +326,18 @@ class LayoutObject {
 	{
 		return $this->x;
 	}
+	public function setX($x)
+	{
+		$this->x = $x;
+	}
+	
 	public function y()
 	{
 		return $this->y;
+	}
+	public function setY($y)
+	{
+		$this->y = $y;;
 	}
 	public function z()
 	{
