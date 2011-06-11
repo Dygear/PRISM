@@ -2082,7 +2082,7 @@ class ObjectInfo extends Struct // Info about a single object - explained in the
 class IS_AXM extends Struct // AutoX Multiple objects - variable size
 {
 	const PACK = 'CCCCCCCx';
-	const UNPACK = 'CSize/CType/CReqI/CPLID/CHLVC/xSp1/vTime/x8C';
+	const UNPACK = 'CSize/CType/CReqI/CNumO/CUCID/CPMOAction/CPMOFlags/xSp3';
 
 	protected $Size;					# 8 + NumO * 8
 	protected $Type = ISP_AXM;			# ISP_AXM
