@@ -1928,9 +1928,9 @@ class IS_CON extends Struct // CONtact - between two cars (A and B are sorted by
 	const PACK = 'CCCCvv';
 	const UNPACK = 'CSize/CType/CReqI/CZero/vSpClose/vTime';
 
-	protected $Size;					# 40
+	protected $Size = 40;				# 40
 	protected $Type = ISP_CON;			# ISP_CON
-	protected $ReqI;					# 0
+	protected $ReqI = 0;				# 0
 	protected $Zero;
 
 	public $SpClose;					# high 4 bits : reserved / low 12 bits : closing speed (10 = 1 m/s)
