@@ -1971,7 +1971,7 @@ class CarContOBJ extends Struct // 8 bytes : car in a contact with an object
 	public $Direction;					# car's motion if Speed > 0 : 0 = world y direction, 128 = 180 deg
 	public $Heading;					# direction of forward axis : 0 = world y direction, 128 = 180 deg
 	public $Speed;						# m/s
-	private $Sp3;
+	protected $Sp3;
 
 	public $X;							# position (1 metre = 16)
 	public $Y;							# position (1 metre = 16)
