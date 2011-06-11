@@ -209,11 +209,27 @@ define('INSIM_VERSION', 5);
 
 // Version 0.5Z30 (INSIM_VERSION increased to 5)
 
+// NLP / MCI minimum time interval reduced to 40 ms (was 50 ms)
 // IS_CON (CONtact) reports contact between two cars (if ISF_CON is enabled)
 // IS_MTC (Msg To Connection) now has a variable length (up to 128 characters)
 // IS_MTC can be sent to all (UCID = 255) and sound effect can be specified
 // ISS_SHIFTU_HIGH is no longer used (no distinction between high and low view)
 // FIX : Clutch axis / button was not reported after a change in Controls screen
+
+// Version 0.5Z32
+
+// OG_SHIFT and OG_CTRL bits added to OutGaugePack
+// Lap timing info added to IS_RST (Timing byte)
+// IS_VTC now cancels game votes even if the majority has not been reached
+
+// Version 0.6A1
+
+// IS_OBH reports information about any object hit
+// IS_HLV reports incidents that would violate HLVC
+// IS_PLC sets allowed cars for individual players
+// IS_AXM to add / remove / clear autocross objects
+// IS_ACR to report (attempted) admin commands
+
 
 // TYPES : (all multi-byte types are PC style - lowest byte first)
 // =====
@@ -296,14 +312,18 @@ class IS_ISI extends Struct // InSim Init - packet to initialise the InSim syste
 
 // NOTE 3) Flags field (set the relevant bits to turn on the option) :
 
-define('ISF_RES_0',		1); // bit 0 : spare
-define('ISF_RES_1',		2); // bit 1 : spare
-define('ISF_LOCAL',		4); // bit 2 : guest or single player
-define('ISF_MSO_COLS',	8); // bit 3 : keep colours in MSO text
-define('ISF_NLP',		16);// bit 4 : receive NLP packets
-define('ISF_MCI',		32);// bit 5 : receive MCI packets
-define('ISF_CON',		64);// bit 6 : receive CON packets
-$ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'ISF_LOCAL', ISF_MSO_COLS => 'ISF_MSO_COLS', ISF_NLP => 'ISF_NLP', ISF_MCI => 'ISF_MCI', ISF_CON => 'ISF_CON');
+define('ISF_RES_0',		1);		// bit  0 : spare
+define('ISF_RES_1',		2);		// bit  1 : spare
+define('ISF_LOCAL',		4);		// bit  2 : guest or single player
+define('ISF_MSO_COLS',	8);		// bit  3 : keep colours in MSO text
+define('ISF_NLP',		16);	// bit  4 : receive NLP packets
+define('ISF_MCI',		32);	// bit  5 : receive MCI packets
+define('ISF_CON',		64);	// bit  6 : receive CON packets
+define('ISF_OBH',		128);	// bit  7 : receive OBH packets
+define('ISF_HLV',		256);	// bit  8 : receive HLV packets
+define('ISF_AXM_LOAD',	512);	// bit  9 : receive AXM when loading a layout
+define('ISF_AXM_EDIT',	1024);	// bit 10 : receive AXM when changing objects
+$ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'ISF_LOCAL', ISF_MSO_COLS => 'ISF_MSO_COLS', ISF_NLP => 'ISF_NLP', ISF_MCI => 'ISF_MCI', ISF_CON => 'ISF_CON', ISF_OBH => 'ISF_OBH', ISF_HLV => 'ISF_HLV', ISF_AXM_LOAD => 'ISF_AXM_LOAD', ISF_AXM_EDIT => 'ISF_AXM_EDIT');
 
 // In most cases you should not set both ISF_NLP and ISF_MCI flags
 // because all IS_NLP information is included in the IS_MCI packet.
@@ -375,7 +395,12 @@ define('ISP_BTT',	47);// 47 - info			: sent after typing into a button
 define('ISP_RIP',	48);// 48 - both ways		: replay information packet
 define('ISP_SSH',	49);// 49 - both ways		: screenshot
 define('ISP_CON',	50);// 50 - info			: contact (collision report)
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON');
+define('ISP_OBH',	51);// 51 - info			: contact car + object (collision report)
+define('ISP_HLV',	52);// 52 - info			: report incidents that would violate HLVC
+define('ISP_PLC',	53);// 53 - instruction		: player cars
+define('ISP_AXM',	54);// 54 - both ways		: autocross multiple objects
+define('ISP_ACR',	55);// 55 - info			: admin command report
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',	0);	//  0 - keep alive		: see "maintaining the connection"
@@ -569,7 +594,7 @@ define('ISS_GAME',			1);		// in game (or MPR)
 define('ISS_REPLAY',		2);		// in SPR
 define('ISS_PAUSED',		4);		// paused
 define('ISS_SHIFTU',		8);		// SHIFT+U mode
-define('ISS_16',	16);	// UNUSED
+define('ISS_16',			16);	// UNUSED
 define('ISS_SHIFTU_FOLLOW',	32);	// FOLLOW view
 define('ISS_SHIFTU_NO_OPT',	64);	// SHIFT+U buttons hidden
 define('ISS_SHOW_2D',		128);	// showing 2d display
@@ -697,6 +722,24 @@ class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 	protected $Sp3 = NULL;
 
 	public $Msg;
+};
+
+class IS_ACR extends Struct // Admin Command Report - any user typed an admin command
+{
+	const PACK = 'CCxxCCxxa64';
+	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
+
+	protected $Size = 72;				# 72
+	protected $Type = ISP_ACR;			# ISP_ACR
+	protected $ReqI = 0;				# 0
+	protected $Zero = NULL;
+
+	public $UCID						# connection's unique id (0 = host)
+	public $Admin;						# set if user is an admin
+	public $Result;						# 1 - processed / 2 - rejected / 3 - unknown command
+	public $Sp3;
+
+	public $Text;
 };
 
 // MESSAGES IN (TO LFS)
@@ -914,6 +957,57 @@ class IS_VTN extends Struct		// VoTe Notify
 
 // ReqI : 0
 // SubT : TINY_VTC		(VoTe Cancel)
+
+
+// ALLOWED CARS
+// ============
+
+// You can send a packet to limit the cars that can be used by a given connection
+// The resulting set of selectable cars is a subset of the cars set to be available
+// on the host (by the /cars command)
+
+// For example :
+// Cars = 0          ... no cars can be selected on the specified connection
+// Cars = 0xffffffff ... all the host's available cars can be selected
+
+class IS_PLC extends Struct // PLayer Cars
+{
+	const PACK = 'CCCxCxxxs';
+	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CSp1/CSp2/CSp3/sCars';
+
+	protected $Size = 12;				# 12
+	protected $Type = ISP_PLC;			# ISP_PLC
+	public $ReqI;						# 0
+	protected $Zero = NULL;
+
+	public $UCID;						# connection's unique id (0 = host / 255 = all)
+	protected $Sp1;
+	protected $Sp2;
+	protected $Sp3;
+
+	public $Cars;						# allowed cars - see below
+};
+
+// XF GTI			-       1
+// XR GT			-       2
+// XR GT TURBO		-       4
+// RB4 GT			-       8
+// FXO TURBO		-    0x10
+// LX4				-    0x20
+// LX6				-    0x40
+// MRT5				-    0x80
+// UF 1000			-   0x100
+// RACEABOUT		-   0x200
+// FZ50				-   0x400
+// FORMULA XR		-   0x800
+// XF GTR			-  0x1000
+// UF GTR			-  0x2000
+// FORMULA V8		-  0x4000
+// FXO GTR			-  0x8000
+// XR GTR			- 0x10000
+// FZ50 GTR			- 0x20000
+// BMW SAUBER F1.06	- 0x40000
+// FORMULA BMW FB02	- 0x80000
 
 
 // RACE TRACKING
@@ -1829,14 +1923,14 @@ class CarContact extends Struct	// Info about one car in a contact - two of thes
 	}
 };
 
-class IS_CON extends Struct		// CONtact - between two cars (A and B are sorted by PLID)
+class IS_CON extends Struct // CONtact - between two cars (A and B are sorted by PLID)
 {
 	const PACK = 'CCCCvv';
 	const UNPACK = 'CSize/CType/CReqI/CZero/vSpClose/vTime';
 
-	protected $Size;						# 40
-	protected $Type = ISP_CON;				# ISP_CON
-	protected $ReqI;						# 0
+	protected $Size;					# 40
+	protected $Type = ISP_CON;			# ISP_CON
+	protected $ReqI;					# 0
 	protected $Zero;
 
 	public $SpClose;					# high 4 bits : reserved / low 12 bits : closing speed (10 = 1 m/s)
@@ -1866,6 +1960,197 @@ class IS_CON extends Struct		// CONtact - between two cars (A and B are sorted b
 	public function getA()				{ return $this->A; }
 	public function getB()				{ return $this->B; }
 };
+
+// Set the ISP_OBH flag in the IS_ISI to receive object contact reports
+
+class CarContOBJ extends Struct // 8 bytes : car in a contact with an object
+{
+	const PACK = 'CCCxss';
+	const UNPACK = 'CDirection/CHeading/CSpeed/CSp3/sX/sY';
+
+	public $Direction;					# car's motion if Speed > 0 : 0 = world y direction, 128 = 180 deg
+	public $Heading;					# direction of forward axis : 0 = world y direction, 128 = 180 deg
+	public $Speed;						# m/s
+	private $Sp3;
+
+	public $X;							# position (1 metre = 16)
+	public $Y;							# position (1 metre = 16)
+};
+
+class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an unknown object
+{
+	const PACK = 'CCCCvvx8ssxxCC';
+	const UNPACK = 'CSize/CType/CReqI/CPLID/vSpClose/vTime/x8C/sX/sY/xSp0/xSp1/CIndex/COBHFlags';
+
+	protected $Size = 24;				# 24
+	protected $Type = ISP_OBH;			# ISP_OBH
+	protected $ReqI = NULL;				# 0
+	public $PLID;						# player's unique id
+
+	public $SpClose;					# high 4 bits : reserved / low 12 bits : closing speed (10 = 1 m/s)
+	public $Time;						# looping time stamp (hundredths - time since reset - like TINY_GTH)
+
+	public $C;
+
+	public $X;							# as in ObjectInfo
+	public $Y;							# as in ObjectInfo
+
+	private $Sp0;
+	private	$Sp1;
+	public $Index;						# AXO_x as in ObjectInfo or zero if it is an unknown object
+	public $OBHFlags;					# see below
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		$this->C = new CarContOBJ(substr($rawPacket, 8, 16));
+
+		return $this;
+	}
+};
+
+// OBHFlags byte
+
+define('OBH_LAYOUT',	1);// an added object
+define('OBH_CAN_MOVE',	2);// a movable object
+define('OBH_WAS_MOVING',4);// was moving before this hit
+define('OBH_ON_SPOT',	8);// object in original position
+$OBH = array(OBH_LAYOUT => 'OBH_LAYOUT', OBH_CAN_MOVE => 'OBH_CAN_MOVE', OBH_WAS_MOVING => 'OBH_WAS_MOVING', OBH_ON_SPOT => 'OBH_ON_SPOT');
+
+// Set the ISP_HLV flag in the IS_ISI to receive reports of incidents that would violate HLVC
+
+class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / speeding in pit lane
+{
+	const PACK = 'CCCCCCvx8';
+	const UNPACK = 'CSize/CType/CReqI/CPLID/CHLVC/xSp1/vTime/x8C';
+
+	protected $Size = 16;				# 16
+	protected $Type = ISP_HLV;			# ISP_HLV
+	protected $ReqI = NULL;				# 0
+	public $PLID;						# player's unique id
+
+	public $HLVC;						# 0 : ground / 1 : wall / 4 : speeding
+	private	$Sp1;
+	public $Time;						# looping time stamp (hundredths - time since reset - like TINY_GTH)
+
+	public $C;
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		$this->C = new CarContOBJ(substr($rawPacket, 8, 16));
+
+		return $this;
+	}
+};
+
+
+// AUTOCROSS OBJECTS - reporting / adding / removing
+// =================
+
+// Set the ISF_AXM_LOAD flag in the IS_ISI for info about objects when a layout is loaded.
+// Set the ISF_AXM_EDIT flag in the IS_ISI for info about objects edited by user or InSim.
+
+// You can also add or remove objects by sending IS_AXM packets.
+// Some care must be taken with these - please read the notes below.
+
+class ObjectInfo extends Struct // Info about a single object - explained in the layout file format
+{
+	const PACK = 'sscCCC';
+	const UNPACK = 'sX/sY/cZChar/CFlags/CIndex/CHeading';
+
+	public $X;
+	public $Y;
+	public $Zchar;
+	public $Flags;
+	public $Index;
+	public $Heading;
+};
+
+class IS_AXM extends Struct // AutoX Multiple objects - variable size
+{
+	const PACK = 'CCCCCCCx';
+	const UNPACK = 'CSize/CType/CReqI/CPLID/CHLVC/xSp1/vTime/x8C';
+
+	protected $Size;					# 8 + NumO * 8
+	protected $Type = ISP_AXM;			# ISP_AXM
+	protected $ReqI = NULL;				# 0
+	public $NumO;						# number of objects in this packet
+
+	public $UCID;						# unique id of the connection that sent the packet
+	public $PMOAction;					# see below
+	public $PMOFlags;					# see below
+	private $Sp3;
+
+	public $Info = array();				# info about each object, 0 to 30 of these
+
+	public function unpack($rawPacket)
+	{
+		$pkClass = unpack($this::UNPACK, $rawPacket);
+
+		foreach ($pkClass as $property => $value)
+		{
+			$this->$property = $value;
+		}
+
+		for ($i = 0; $i < $this->NumO; $i++)
+		{
+			$this->Info[$i] = new ObjectInfo(substr($rawPacket, 8 + ($i * 8), 8));
+		}
+
+		return $this;
+	}
+};
+
+// Values for PMOAction byte
+
+define('PMO_LOADING_FILE',	0);// 0 - sent by the layout loading system only
+define('PMO_ADD_OBJECTS',	1);// 1 - adding objects (from InSim or editor)
+define('PMO_DEL_OBJECTS',	2);// 2 - delete objects (from InSim or editor)
+define('PMO_CLEAR_ALL',		3);// 3 - clear all objects (NumO must be zero)
+define('PMO_NUM',			4);
+
+// Info about the PMOFlags byte (only bit 0 is currently used) :
+
+// If PMOFlags bit 0 is set in a PMO_LOADING_FILE packet, LFS has reached the end of
+// a layout file which it is loading.  The added objects will then be optimised.
+
+// Optimised in this case means that static vertex buffers will be created for all
+// objects, to greatly improve the frame rate.  The problem with this is that when
+// there are many objects loaded, optimisation causes a significant glitch which can
+// be long enough to cause a driver who is cornering to lose control and crash.
+
+// PMOFlags bit 0 can also be set in an IS_AXM with PMOAction of PMO_ADD_OBJECTS.
+// This causes all objects to be optimised.  It is important not to set bit 0 in
+// every packet you send to add objects or you will cause severe glitches on the
+// clients computers.  It is ok to have some objects on the track which are not
+// optimised.  So if you have a few objects that are being removed and added
+// occasionally, the best advice is not to request optimisation at all.  Only
+// request optimisation (by setting bit 0) if you have added so many objects
+// that it is needed to improve the frame rate.
+
+// NOTE 1) LFS makes sure that all objects are optimised when the race restarts.
+// NOTE 2) In the 'more' section of SHIFT+U there is info about optimised objects.
+
+// If you are using InSim to send many packets of objects (for example loading an
+// entire layout through InSim) then you must take care of the bandwidth and buffer
+// overflows.  You must not try to send all the objects at once.  It's probably good
+// to use LFS's method of doing this : send the first packet of objects then wait for
+// the corresponding IS_AXM that will be output when the packet is processed.  Then
+// you can send the second packet and again wait for the IS_AXM and so on.
+
 
 // CAR POSITION PACKETS (Initialising OutSim from InSim - See "OutSim" below)
 // ====================
