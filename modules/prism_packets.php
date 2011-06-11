@@ -727,7 +727,7 @@ class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 class IS_ACR extends Struct // Admin Command Report - any user typed an admin command
 {
 	const PACK = 'CCxxCCxxa64';
-	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
+	const UNPACK = 'CSize/CType/xReqI/xZero/CUCID/CAdmin/CResult/xSp3/a64Text';
 
 	protected $Size = 72;				# 72
 	protected $Type = ISP_ACR;			# ISP_ACR
