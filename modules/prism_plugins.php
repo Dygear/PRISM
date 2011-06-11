@@ -209,7 +209,7 @@ abstract class Plugins extends Timers
 			$callback = $this->getCallback($this->sayCommands, $cmdString) AND
 			$callback !== FALSE
 		) {
-			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
+			if ($this->canUserAccessCommand($packet->UCID, $callback))
 				$this->$callback['method']($cmdString, $packet->UCID, $packet);
 			else
 				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
@@ -218,7 +218,7 @@ abstract class Plugins extends Timers
 			$callback = $this->getCallback($this->localCommands, $packet->Msg) AND
 			$callback !== FALSE
 		) {
-			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
+			if ($this->canUserAccessCommand($packet->UCID, $callback))
 				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
 				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
@@ -229,7 +229,7 @@ abstract class Plugins extends Timers
 	{
 		if ($callback = $this->getCallback($this->insimCommands, $packet->Msg) && $callback !== FALSE)
 		{
-			if ($this->canUserAccessCommand($this->getClientByUCID($packet->UCID)->UName, $callback))
+			if ($this->canUserAccessCommand($packet->UCID, $callback))
 				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			else
 				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
@@ -245,11 +245,16 @@ abstract class Plugins extends Timers
 	}
 
 	/** Access Level Related Functions */
-	protected function canUserAccessCommand($username, $command)
+	protected function canUserAccessCommand($UCID, $Cmd)
 	{
+		# Hosts are automatic admins so due to their nature, they have full access.
+		# Commands that have no premission level don't require this check.
+		if ($UCID == 0 OR $command['accessLevel'] == -1)
+			return TRUE;
+
 		global $PRISM;
-		$adminInfo = $PRISM->admins->getAdminInfo($username);
-		return ($command['accessLevel'] == -1 OR $command['accessLevel'] & $adminInfo['accessFlags']) ? TRUE : FALSE;
+		$adminInfo = $PRISM->admins->getAdminInfo($this->getClientByUCID($UCID)->UName);
+		return ($command['accessLevel'] & $adminInfo['accessFlags']) ? TRUE : FALSE;
 	}
 	// Returns true if a user's access level is equal or greater then the required level.
 	protected function checkUserLevel($userLevel, $accessLevel)

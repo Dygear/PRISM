@@ -66,5 +66,21 @@ class Node
 	{
 		$this->Road = (object) unpack(Node::ROAD, substr($RawNode, 32, 8));
 	}
+	public function toPolyLimit()
+	{
+		$XL = $this->Center->X + $this->Limit->Left;
+		$XR = $this->Cetner->X + $this->Limit->Right;
+		$YL = $this->Center->Y + $this->Limit->Left;
+		$YR = $this->Cetner->Y + $this->Limit->Right;
+		return array($XL, $XR, $YL, $YR);
+	}
+	public function toPolyRoad()
+	{
+		$XL = $this->Center->X + $this->Road->Left;
+		$XR = $this->Cetner->X + $this->Road->Right;
+		$YL = $this->Center->Y + $this->Road->Left;
+		$YR = $this->Cetner->Y + $this->Road->Right;
+		return array($XL, $XR, $YL, $YR);
+	}
 }
 ?>

@@ -1,5 +1,5 @@
 <?php
-class gapmon extends Plugins
+class gapMonitor extends Plugins
 {
 	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'Gap Monitor';
