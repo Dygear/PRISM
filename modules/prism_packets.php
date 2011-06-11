@@ -734,7 +734,7 @@ class IS_ACR extends Struct // Admin Command Report - any user typed an admin co
 	protected $ReqI = 0;				# 0
 	protected $Zero = NULL;
 
-	public $UCID						# connection's unique id (0 = host)
+	public $UCID;						# connection's unique id (0 = host)
 	public $Admin;						# set if user is an admin
 	public $Result;						# 1 - processed / 2 - rejected / 3 - unknown command
 	public $Sp3;
