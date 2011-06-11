@@ -737,7 +737,7 @@ class IS_ACR extends Struct // Admin Command Report - any user typed an admin co
 	public $UCID;						# connection's unique id (0 = host)
 	public $Admin;						# set if user is an admin
 	public $Result;						# 1 - processed / 2 - rejected / 3 - unknown command
-	public $Sp3;
+	private $Sp3;
 
 	public $Text;
 };
@@ -2069,7 +2069,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 class ObjectInfo extends Struct // Info about a single object - explained in the layout file format
 {
 	const PACK = 'sscCCC';
-	const UNPACK = 'sX/sY/cZChar/CFlags/CIndex/CHeading';
+	const UNPACK = 'sX/sY/CZchar/CFlags/CIndex/CHeading';
 
 	public $X;
 	public $Y;
@@ -2089,12 +2089,24 @@ class IS_AXM extends Struct // AutoX Multiple objects - variable size
 	protected $ReqI = NULL;				# 0
 	public $NumO;						# number of objects in this packet
 
-	public $UCID;						# unique id of the connection that sent the packet
+	public $UCID = 0;					# unique id of the connection that sent the packet
 	public $PMOAction;					# see below
 	public $PMOFlags;					# see below
 	private $Sp3;
 
 	public $Info = array();				# info about each object, 0 to 30 of these
+
+	public function pack()
+	{
+		$this->NumO = count($this->Info);
+		$this->Size = 8 + ($this->NumO * 8);
+
+		$Info = '';
+		foreach ($this->Info as $ObjectInfo)
+			$Info .= $ObjectInfo->pack();
+
+		return parent::pack() . $Info;
+	}
 
 	public function unpack($rawPacket)
 	{
@@ -2121,6 +2133,7 @@ define('PMO_ADD_OBJECTS',	1);// 1 - adding objects (from InSim or editor)
 define('PMO_DEL_OBJECTS',	2);// 2 - delete objects (from InSim or editor)
 define('PMO_CLEAR_ALL',		3);// 3 - clear all objects (NumO must be zero)
 define('PMO_NUM',			4);
+$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_NUM => 'PMO_NUM');
 
 // Info about the PMOFlags byte (only bit 0 is currently used) :
 
