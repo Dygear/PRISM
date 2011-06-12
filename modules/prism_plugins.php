@@ -245,16 +245,16 @@ abstract class Plugins extends Timers
 	}
 
 	/** Access Level Related Functions */
-	protected function canUserAccessCommand($UCID, $Cmd)
+	protected function canUserAccessCommand($UCID, $cmd)
 	{
 		# Hosts are automatic admins so due to their nature, they have full access.
 		# Commands that have no premission level don't require this check.
-		if ($UCID == 0 OR $command['accessLevel'] == -1)
+		if ($UCID == 0 OR $cmd['accessLevel'] == -1)
 			return TRUE;
 
 		global $PRISM;
 		$adminInfo = $PRISM->admins->getAdminInfo($this->getClientByUCID($UCID)->UName);
-		return ($command['accessLevel'] & $adminInfo['accessFlags']) ? TRUE : FALSE;
+		return ($cmd['accessLevel'] & $adminInfo['accessFlags']) ? TRUE : FALSE;
 	}
 	// Returns true if a user's access level is equal or greater then the required level.
 	protected function checkUserLevel($userLevel, $accessLevel)
