@@ -52,7 +52,7 @@ $PRISM->start();
 */
 class PHPInSimMod
 {
-	const VERSION = '0.3.6';
+	const VERSION = '0.3.7';
 	const ROOTPATH = ROOTPATH;
 
 	/* Run Time Arrays */

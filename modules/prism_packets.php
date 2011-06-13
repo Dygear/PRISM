@@ -2009,7 +2009,7 @@ class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an un
 			$this->$property = $value;
 		}
 
-		$this->C = new CarContOBJ(substr($rawPacket, 8, 16));
+		$this->C = new CarContOBJ(substr($rawPacket, 8, 8));
 
 		return $this;
 	}
@@ -2050,7 +2050,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 			$this->$property = $value;
 		}
 
-		$this->C = new CarContOBJ(substr($rawPacket, 8, 16));
+		$this->C = new CarContOBJ(substr($rawPacket, 8, 8));
 
 		return $this;
 	}
