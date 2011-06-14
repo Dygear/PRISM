@@ -547,10 +547,10 @@ abstract class Plugins extends Timers
 			// forget about these buttons in the buttonmanager as they were removed on client side
 			ButtonManager::clearButtonsForConn($BFN->UCID);
 		}
-		else if ($BFN->SubT == BFN_REQUEST)
+		else if ($BFN->SubT == BFN_REQUEST && method_exists($this, 'onButtonRequest'))
 		{
 			// the plugin should create the buttons for the user.
-			// i.e. not: ButtonManager::buttonsForUser($BFN->UCID);
+			$this->onButtonRequest($BFN->UCID);
 		}
 	}
 	protected function onButtonClick(IS_BTC $BTC)

@@ -972,8 +972,8 @@ class IS_VTN extends Struct		// VoTe Notify
 
 class IS_PLC extends Struct // PLayer Cars
 {
-	const PACK = 'CCCxCxxxs';
-	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CSp1/CSp2/CSp3/sCars';
+	const PACK = 'CCCxCxxxV';
+	const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CSp1/CSp2/CSp3/VCars';
 
 	protected $Size = 12;				# 12
 	protected $Type = ISP_PLC;			# ISP_PLC
