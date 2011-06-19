@@ -38,6 +38,13 @@ class StateHandler extends PropertyMaster
 		ISP_PLL => 'onPlayerLeave',			# To Do. (23)
 		ISP_FIN => 'onPlayerFinished',		# To Do. (34)
 		ISP_RES => 'onPlayerResult',		# To Do. (35)
+		
+		# Buttons
+		ISP_BFN => 'onButtonFunction',
+		ISP_BTC => 'onButtonClick',
+		ISP_BTT => 'onButtonText',
+		
+		# Some generilized Layout management (?)
 	);
 
 	public function dispatchPacket(Struct $Packet)
@@ -305,6 +312,31 @@ class StateHandler extends PropertyMaster
 	public function onPlayerResult(IS_RES $RES)
 	{
 		console(__METHOD__.'(To Do)');
+	}
+	
+	
+	// Button handles
+	# IS_BFN
+	public function onButtonFunction(IS_BFN $BFN)
+	{
+		if ($BFN->SubT == BFN_USER_CLEAR)
+		{
+			// forget about these buttons in the buttonmanager as they were removed on client side
+			ButtonManager::clearButtonsForConn($BFN->UCID);
+		}
+		else if ($BFN->SubT == BFN_REQUEST && method_exists($this, 'onButtonRequest'))
+		{
+			// ?? send to plugins somehow...
+		}
+	}
+	
+	public function onButtonClick(IS_BTC $BTC)
+	{
+		ButtonManager::onButtonClick($BTC);
+	}
+	public function onButtonText(IS_BTT $BTT)
+	{
+		ButtonManager::onButtonText($BTT);
 	}
 }
 

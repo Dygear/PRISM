@@ -1,6 +1,4 @@
 <?php
-require_once('plugins/layout/LayoutObject.php');
-
 class pylons extends Plugins
 {
 	const URL = '..';
@@ -33,7 +31,7 @@ class pylons extends Plugins
 		{
 			$x = $Info->X/65536;
 			$y = $Info->Y/65536;
-			$obj = new LayoutObject($x, $y, $Info->Z/65536, LayoutObject::$OBJ_REAL_OBJECT, 0, 136 + ($Info->PLID % 4), 0);
+			$obj = new LayoutObject($x, $y, $Info->Z/65536, LayoutObject::$OBJ_REAL_OBJECT, 180 + $Info->Heading/32768 * 180, LayoutObject::$AXO_CHALK_AHEAD, ($Info->PLID % 4));
 			
 			// THIS IS BAD! Listen for new added object packet from lfs and use those...
 			$key = $obj->rawX().':'.$obj->rawY();

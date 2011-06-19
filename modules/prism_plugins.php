@@ -170,9 +170,6 @@ abstract class Plugins extends Timers
 
 	/** Properties */
 	public $callbacks = array(
-		ISP_BFN => array('onButtonFunction'),
-		ISP_BTC => array('onButtonClick'),
-		ISP_BTT => array('onButtonText'),
 	);
 	// Callbacks
 	public $consoleCommands = array();
@@ -534,36 +531,6 @@ abstract class Plugins extends Timers
 		# Check the user is defined as an admin on the host current host.
 		$adminInfo = $PRISM->admins->getAdminInfo($username);
 		return ($adminInfo['accessFlags'] & ADMIN_IMMUNITY) ? TRUE : FALSE;
-	}
-
-	/**
-	 * Module to hook the ButtonManager into the packets.
-	 * When converting this to a core feature, add the calls to ButtonManager in the corresponding places
-	*/
-	public function onButtonFunction(IS_BFN $BFN)
-	{
-		if ($BFN->SubT == BFN_USER_CLEAR)
-		{
-			// forget about these buttons in the buttonmanager as they were removed on client side
-			ButtonManager::clearButtonsForConn($BFN->UCID);
-			return PLUGIN_HANDLED;
-		}
-		else if ($BFN->SubT == BFN_REQUEST && method_exists($this, 'onButtonRequest'))
-		{
-			// the plugin should create the buttons for the user.
-			$this->onButtonRequest($BFN->UCID);
-			return PLUGIN_CONTINUE;
-		}
-	}
-	public function onButtonClick(IS_BTC $BTC)
-	{
-		ButtonManager::onButtonClick($BTC);
-		return PLUGIN_HANDLED;
-	}
-	public function onButtonText(IS_BTT $BTT)
-	{
-		ButtonManager::onButtonText($BTC);
-		return PLUGIN_HANDLED;
 	}
 }
 
