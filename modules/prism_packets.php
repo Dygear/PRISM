@@ -2620,7 +2620,7 @@ class IS_BTT extends Struct // BuTton Type - sent back when user types into a te
 	const UNPACK = 'CSize/CType/CReqI/CUCID/CClickID/CInst/CTypeIn/CSp3/a96Text';
 
 	protected $Size = 104;				# 104
-	protected $Type = ISP_BIT;			# ISP_BTT
+	protected $Type = ISP_BTT;			# ISP_BTT
 	public $ReqI;						# ReqI as received in the IS_BTN
 	public $UCID;						# connection that typed into the button (zero if local)
 
