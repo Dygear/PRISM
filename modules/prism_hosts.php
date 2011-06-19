@@ -426,13 +426,13 @@ class HostHandler extends SectionHandler
 				switch ($pH['Type'])
 				{
 					case ISP_TINY:
-						console("${TINY[$pH['SubT']]} Packet from {$hostID}.");
+						console("< ${TINY[$pH['SubT']]} Packet from {$hostID}.");
 					break;
 					case ISP_SMALL:
-						console("${SMALL[$pH['SubT']]} Packet from {$hostID}.");
+						console("< ${SMALL[$pH['SubT']]} Packet from {$hostID}.");
 					break;
 					default:
-						console("${TYPEs[$pH['Type']]} Packet from {$hostID}.");
+						console("< ${TYPEs[$pH['Type']]} Packet from {$hostID}.");
 				}
 			}
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
@@ -543,7 +543,23 @@ class HostHandler extends SectionHandler
 				return FALSE;
 			}
 		}
-
+		
+		global $PRISM, $TYPEs, $TINY, $SMALL;
+		if ($PRISM->config->cvars['debugMode'] & (PRISM_DEBUG_CORE + PRISM_DEBUG_MODULES))
+		{
+			switch ($packetClass->Type)
+			{
+				case ISP_TINY:
+					console("> ${TINY[$packetClass->SubT]} Packet to {$hostId}.");
+				break;
+				case ISP_SMALL:
+					console("> ${SMALL[$packetClass->SubT]} Packet to {$hostId}.");
+				break;
+				default:
+					console("> ${TYPEs[$packetClass->Type]} Packet to {$hostId}.");
+			}
+		}
+		
 		return $host->writePacket($packetClass);
 	}
 	
