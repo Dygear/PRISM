@@ -839,7 +839,6 @@ class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a conne
 			foreach(explode("\n", wordwrap($this->Text, 127, "\n", TRUE)) as $Text)
 				$this->Text($Text)->Send();
 		}
-		var_dump($this->Text);
 		return parent::pack();
 	}
 };
