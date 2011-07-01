@@ -13,7 +13,7 @@ class reorder extends Plugins
 
 	public function __construct()
 	{
-		$this->IS_REO = new IS_REO;
+		$this->IS_REO = IS_REO();
 		$this->registerSayCommand('prism reo', 'cmdREO', "<PName> ... - Set's the grid for the next race.", ADMIN_VOTE);
 		$this->registerPacket('onReorder', ISP_REO);
 		$this->registerPacket('onVoteAction', ISP_TINY);
@@ -41,7 +41,7 @@ class reorder extends Plugins
 		$this->reorder = FALSE;	# As we are copying LFS REO state, we don't need to send this packet on TINY_VTA packet.
 
 		foreach ($REO->PLID as $Pos => $PLID)
-			console(sprintf("Pos: %02d | PLID: %02d | UName: %24s | PName: %24s", $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName));
+			IS_MTC->Text(sprintf("Pos: %02d | PLID: %02d | UName: %24s | PName: %24s", $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName))->Send();
 
 		$this->IS_REO->NumP(count($REO->PLID))->PLID($REO->PLID); # Updates our list.
 
