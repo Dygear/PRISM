@@ -35,8 +35,7 @@ class colorButtons extends Plugins
 		if (!isset($this->BTNs[$ucid]))
 			$this->BTNs[$ucid] = array();
 
-		$BTN = new IS_BTN;
-		$BTN->UCID($ucid)->ClickID(0);
+		$BTN = new IS_BTN()->UCID($ucid)->ClickID(0);
 
 		# Confirm Folder Delete
 		#
@@ -78,8 +77,7 @@ class colorButtons extends Plugins
 		if (!isset($this->BTNs[$ucid]))
 			$this->BTNs[$ucid] = array();
 
-		$BTN = new IS_BTN;
-		$BTN->UCID($ucid)->ClickID(0)->W(10)->H(10);
+		$BTN = new IS_BTN()->UCID($ucid)->ClickID(0)->W(10)->H(10);
 
 		# Grid Items
 		for ($y = 0; $y <= 7; ++$y)
