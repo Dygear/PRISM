@@ -374,6 +374,8 @@ class ClientHandler extends PropertyMaster
 			$PRISM->admins->addAccount('*'.$PRISM->hosts->getCurrentHost(), '', ADMIN_SERVER, $PRISM->hosts->getCurrentHost(), FALSE);
 		else if ($this->Admin == TRUE)
 			$PRISM->admins->addAccount($this->UName, '', ADMIN_ADMIN, $PRISM->hosts->getCurrentHost(), FALSE);
+		
+		$this->PRISM = ($PRISM->admins->adminExists($NCN->UName)) ? $PRISM->admins->getAdminInfo($NCN->UName) : FALSE;
 	}
 
 	public function onRename(IS_CPR $CPR)
@@ -383,8 +385,13 @@ class ClientHandler extends PropertyMaster
 	}
 	
 	// Is
-	public function isAdmin(){ return ($this->UCID == 0 || $this->Admin == 1) ? TRUE : FALSE; }
+	public function isAdmin(){ return ($this->isLFSAdmin() || $this->isPRISMAdmin) ? TRUE : FALSE; }
+	public function isLFSAdmin(){ return ($this->UCID == 0 || $this->Admin == 1) ? TRUE : FALSE; }
+	public function isPRISMAdmin(){ return !!$this->PRISM; }
 	public function isRemote(){ return ($this->Flags == 2) ? TRUE : FALSE; }
+	public function getAccessFlags(){ return $this->PRISM['accessFlags']; }
+	public function getConnection(){ return $this->PRISM['connection']; }
+	public function isTemporary(){ return $this->PRISM['temporary']; }
 }
 
 class PlayerHandler extends PropertyMaster
