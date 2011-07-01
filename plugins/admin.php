@@ -145,11 +145,16 @@ class admin extends Plugins
 		$MTC = new IS_MTC;
 		$MTC->Sound(SND_SYSMESSAGE)->UCID($ucid);
 
+		$requestingClient = $this->getClientByUCID($ucid);
+
 		$MTC->Text('^7COMMAND^8 - DESCRIPTION')->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
-				$MTC->Text("^7{$command}^8 - {$detail['info']}")->Send();
+			{
+				if ($requestingClient->getAccessFlags() & $detail['accessLevel'])
+					$MTC->Text("^7{$command}^8 - {$detail['info']}")->Send();
+			}
 		}
 
 		return PLUGIN_HANDLED;
@@ -168,6 +173,7 @@ class admin extends Plugins
 
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
+			# RED = Unloadable (Not Sane), YELLOW = Loadable (Not Loaded, Sane), GREEN = Loaded. // For Later Use
 			$MTC->Text(sprintf('^7%s ^3%s ^8%s', $plugin::NAME, $plugin::VERSION, $plugin::AUTHOR))->Send();
 			$MTC->Text($plugin::DESCRIPTION)->Send();
 		}
@@ -189,16 +195,17 @@ class admin extends Plugins
 			
 			$PluginsAll = get_dir_structure(PHPInSimMod::ROOTPATH . '/plugins/');
 			$PluginsLoaded = array_keys($PRISM->plugins->getPlugins());
-			$PluginsUnloaded = array_diff($PluginsAll, $PluginsLoaded);
+			$PluginsNotloaded = array_diff($PluginsAll, $PluginsLoaded);
 
-			var_dump($PluginsAvailable, $PluginsLoaded, $PluginsUnloaded);
+			var_dump($PluginsAvailable, $PluginsLoaded, $PluginsNotloaded);
 
-			#foreach ($Plugins)
-			#{
-				# List Plugins Not Loaded But Available (Also check for santity).
-				# Display plugin name as RED if plugin is not sane, GREEN otherwise.
-				#validatePHPFile();
-			#}
+/*			foreach ($PluginsNotloaded as $Plugin)
+			{
+				if (validatePHPFile(PHPInSimMod::ROOTPATH . '/plugins/' . $Plugins . '.php'))
+					#Plugin Is Sane, Color Should be GREEN.
+				else
+					#Plugin Not Sname, Color Should be RED.
+			} */
 		}
 
 		#Load Plugins
@@ -218,18 +225,13 @@ class admin extends Plugins
 			$MTC->Text('Useage: `prism plugins unload <plugin>`')->Send();
 			$MTC->Text('Unloads plugin(s) at runtime.')->Send();
 			
-			$PluginsAll = get_dir_structure(PHPInSimMod::ROOTPATH . '/plugins/');
 			$PluginsLoaded = array_keys($PRISM->plugins->getPlugins());
-			$PluginsUnloaded = array_diff($PluginsAll, $PluginsLoaded);
 
-			var_dump($PluginsAvailable, $PluginsLoaded, $PluginsUnloaded);
-
-			#foreach ($Plugins)
-			#{
-				# List Plugins Not Loaded But Available (Also check for santity).
-				# Display plugin name as RED if plugin is not sane, GREEN otherwise.
-				#validatePHPFile();
-			#}
+/*			$MTC->Text('You can unload any of the following plugins.')->Send();
+			foreach ($PluginsLoaded as $Plugin)
+			{
+				$MTC->Text($Plugin)->Send();
+			} */
 		}
 
 		# Unload Plugin(s)
