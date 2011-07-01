@@ -64,14 +64,21 @@ class StateHandler extends PropertyMaster
 	{
 		global $PRISM;
 		# Send out some info requests
-		$ISP = new IS_TINY();
-		$ISP->ReqI = 1;
+		$ISP = IS_TINY()->ReqI(1);
 		// Request every bit of information we can get.
 		// This becomes our baseline that we use and update as needed.
+		# Get the most about of information as fast as we can.
+		$ISP->SubT(TINY_ISM)->Send();	# Get Multiplayer Info (ISP_ISM)
+		# Get information on the clients & players, and their current race state.
+		# These are redundant because of the above request for an ISM packet.
+		# They must remain in order to avoid an error state in some plugins.
+		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
+		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
+		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
+		# Get information on everything else about the state.
 		$ISP->SubT(TINY_GTH)->Send();	# Get Time in Hundredths (SMALL_RTP)
 		$ISP->SubT(TINY_SCP)->Send();	# Send Camera Pos (ISP_CPP)
 		$ISP->SubT(TINY_SST)->Send();	# Send STate info (ISP_STA)
-		$ISP->SubT(TINY_ISM)->Send();	# Get Multiplayer Info (ISP_ISM)
 		$ISP->SubT(TINY_REO)->Send();	# send an IS_REO (ISP_REO)
 		$ISP->SubT(TINY_RST)->Send();	# send an IS_RST (ISP_RST)
 		$ISP->SubT(TINY_AXI)->Send();	# send an IS_AXI - AutoX Info (ISP_AXI)
@@ -178,8 +185,7 @@ class StateHandler extends PropertyMaster
 		$this->HName = $ISM->HName;
 
 		# Send out some info requests, to make sure we have all of the baseline information.
-		$ISP = new IS_TINY();
-		$ISP->ReqI = 1;
+		$ISP = IS_TINY()->ReqI(1);
 		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
 		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
 		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
