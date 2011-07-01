@@ -1,5 +1,5 @@
 <?php
-class admin extends Plugins
+class autox extends Plugins
 {
 	const URL = 'http://lfsforum.net/forumdisplay.php?f=312';
 	const NAME = 'AutoX';

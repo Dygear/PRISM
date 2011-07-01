@@ -5,7 +5,7 @@ class reorder extends Plugins
 	const NAME = 'Reorder Plugin';
 	const AUTHOR = 'Dygear & misiek08';
 	const VERSION = PHPInSimMod::VERSION;
-	const DESCRIPTION = 'Used as a shell for quickly writing down ideas and seeing how they work.';
+	const DESCRIPTION = 'Reorder Players on the Starting Grid';
 
 	private $PLID = array();
 	private $reorder = FALSE;
@@ -38,18 +38,24 @@ class reorder extends Plugins
 	}
 	public function onReorder(IS_REO $REO)
 	{
-		$this->reorder = FALSE;	# As we are copying LFS REO state, we don't need to send this packet on TINY_VTA packet.
+		$this->reorder = FALSE;	# As we are copying LFS's REO state, we don't need to send this packet on TINY_VTA packet.
 
 		foreach ($REO->PLID as $Pos => $PLID)
-			IS_MTC->Text(sprintf("Pos: %02d | PLID: %02d | UName: %24s | PName: %24s", $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName))->Send();
+		{
+			$Text = sprintf('Pos: %02d | ', $Pos);
+			$Text .= sprintf('PLID: %02d | ', $PLID);
+			$Text .= sprintf('UName: %24s | ', $this->getClientByPLID($PLID)->UName);
+			$Text .= sprintf('PName: %24s', $this->getPlayerByPLID($PLID)->PName);
+			IS_MTC()->Text($Text)->Send();
+		}
 
-		$this->IS_REO->NumP(count($REO->PLID))->PLID($REO->PLID); # Updates our list.
+		$this->IS_REO = $REO; # Updates our list.
 
 		return PLUGIN_CONTINUE;
 	}
 	public function onVoteAction(IS_TINY $TINY)
 	{
-		if ($this->reorder AND $TINY->SubT == SMALL_VTA AND $this->IS_REO instanceof IS_REO)
+		if ($this->reorder AND $TINY->SubT == SMALL_VTA)
 			$this->IS_REO->Send();
 		return PLUGIN_CONTINUE;
 	}

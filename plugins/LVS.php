@@ -21,7 +21,7 @@ class LVS extends Plugins
 
 	public function cmdDebug($cmd, $ucid)
 	{
-		$MTC = new IS_MTC()->UCID($ucid);
+		$MTC = IS_MTC()->UCID($ucid);
 
 		$debug = explode(PHP_EOL, print_r($this, TRUE));
 		foreach ($debug as $line)
@@ -30,7 +30,7 @@ class LVS extends Plugins
 
 	public function cmdLVSToggle($cmd, $ucid)
 	{
-		$MTC = new IS_MTC()->UCID($ucid);
+		$MTC = IS_MTC()->UCID($ucid);
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 2)
 		{
 			$OnOff = strtolower($argv[2]);
@@ -78,11 +78,7 @@ class LVS extends Plugins
 		foreach ($MCI->Info as $Info)
 		{
 			if (!$this->isInPoly($Info->X, $Info->Y, $this->Path[$Info->Node]))
-			{
-				$MTC = new IS_MTC;
-				$MTC->UCID($this->getClientByPLID($Info->PLID)->UCID);
-				$MTC->Text('You are not on the track!')->Send();
-			}
+				IS_MTC()->UCID($this->getClientByPLID($Info->PLID)->UCID)->Text('You are not on the track!')->Send();
 		}
 	}
 }

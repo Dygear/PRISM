@@ -175,7 +175,7 @@ class admin extends Plugins
 	{
 		global $PRISM;
 		
-		$MTC = new IS_MTC()->UCID($ucid);
+		$MTC = IS_MTC()->UCID($ucid);
 		
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
 		{
@@ -206,7 +206,7 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
-		$MTC = new IS_MTC()->UCID($ucid);
+		$MTC = IS_MTC()->UCID($ucid);
 		
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
 		{
