@@ -114,14 +114,15 @@ class AdminHandler extends SectionHandler
 ; z - 
 ;
 ; Format of admin account:
-; [LFS Username]
+; [lfs username]  ; Should always be lowercase.
 ; password = "<password>"
 ; accessFlags = "<Access flags>"
 ; connection = "<host id name>"
 ; realmDigest = "<md5 hash>"	; never change this yourself
 ;
+; NOTE about the username - it should be lower case only.
 ; NOTE about the password - you can write it in plain text.
-; When you then run PRISM, the password will be converted into a safer format.
+; When you then run PRISM, the password will be converted into a safer format & the username will be lowercased.
 ;
 
 ININOTES;
@@ -154,6 +155,13 @@ ININOTES;
 			}
 		}
 
+		# Crazy stuff we have to do to make sure that usernames are lowercase.
+		$tempAdmins = array();
+		foreach ($this->admins as $username => &$details)
+			$tempAdmins[strToLower($username)] = $details;
+
+		$this->admins = $tempAdmins;
+
 		return TRUE;
 	}
 	
@@ -171,6 +179,8 @@ ININOTES;
 
 	public function getAdminInfo(&$username)
 	{
+		$username = strToLower($username);
+
 		if (!isset($this->admins[$username]))
 			return false;
 
@@ -183,6 +193,7 @@ ININOTES;
 	
 	public function getRealmDigest(&$username)
 	{
+		$username = strToLower($username);
 		if (!isset($this->admins[$username]))
 			return false;
 
@@ -191,11 +202,13 @@ ININOTES;
 	
 	public function adminExists(&$username)
 	{
+		$username = strToLower($username);
 		return isset($this->admins[$username]);
 	}
 
 	public function isPasswordCorrect(&$username, &$password)
 	{
+		$username = strToLower($username);
 		global $PRISM;
 		
 		return (
@@ -207,6 +220,8 @@ ININOTES;
 	public function addAccount($username, $password, $accessFlags = 0, $connection = '', $store = true)
 	{
 		global $PRISM;
+
+		$username = strToLower($username);
 		
 		if (isset($this->admins[$username]))
 			return false;
@@ -234,6 +249,7 @@ ININOTES;
 	
 	public function makePermanent($username)
 	{
+		$username = strToLower($username);
 		if (!isset($this->admins[$username]) || 
 			!isset($this->admins[$username]['temporary']) || 
 			!$this->admins[$username]['temporary'])
@@ -247,6 +263,7 @@ ININOTES;
 	
 	public function deleteAccount($username, $store = true)
 	{
+		$username = strToLower($username);
 		if (!isset($this->admins[$username]))
 			return false;
 		
@@ -264,6 +281,7 @@ ININOTES;
 	
 	public function changePassword($username, $password, $store = true)
 	{
+		$username = strToLower($username);
 		global $PRISM;
 		
 		console('Writing new password for '.$username);
@@ -286,6 +304,7 @@ ININOTES;
 	
 	public function setAccessFlags($username, $flags, $store = true)
 	{
+		$username = strToLower($username);
 		if (!isset($this->admins[$username]))
 			return false;
 
@@ -303,6 +322,7 @@ ININOTES;
 	
 	public function addAccessFlags($username, $flags, $store = true)
 	{
+		$username = strToLower($username);
 		if (!isset($this->admins[$username]))
 			return false;
 
@@ -320,6 +340,7 @@ ININOTES;
 	
 	public function revokeAccessFlags($username, $flags, $store = true)
 	{
+		$username = strToLower($username);
 		if (!isset($this->admins[$username]))
 			return false;
 
