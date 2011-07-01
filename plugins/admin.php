@@ -18,20 +18,22 @@ class admin extends Plugins
 		$this->registerSayCommand('prism version', 'cmdVersion', 'Displays the version of PRISM.');
 
 		# Admins
-		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 		$this->registerSayCommand('prism admins list', 'cmdAdminList', 'Displays a list of admins.');
+		$this->registerSayCommand('prism admins', 'cmdAdminList', 'Displays a list of admins.');
 
 		# Plugins
-		$this->registerSayCommand('prism plugins', 'cmdPluginList', 'Displays a list of plugins.');
-		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.');
+		$this->registerSayCommand('prism plugins load', 'cmdPluginLoad', '<plugin> ... - Loads plugin(s) at runtime.', ADMIN_CFG | ADMIN_CVAR);
+		$this->registerSayCommand('prism plugins unload', 'cmdPluginUnload', '<plugin> ... - Unloads plugin(s) at runtime.', ADMIN_CFG | ADMIN_CVAR);
+		$this->registerSayCommand('prism plugins list', 'cmdPluginList', 'Displays a list of plugins.', ADMIN_CFG | ADMIN_CVAR);
+		$this->registerSayCommand('prism plugins', 'cmdPluginList', 'Displays a list of plugins.', ADMIN_CFG | ADMIN_CVAR);
 
 		# Admin Commands
-		$this->registerSayCommand('prism ban', 'cmdAdminBan', ' <target> <time> - Ban Client.', ADMIN_BAN);
+		$this->registerSayCommand('prism ban', 'castLFSCommand', '<time> <targets> - Ban Client.', ADMIN_BAN);
 		$this->registerSayCommand('prism kick', 'castLFSCommand', '<targets> ... - Kick Client.', ADMIN_KICK);
 		$this->registerSayCommand('prism pit', 'castLFSCommand', '<targets> ... - Pit Client.', ADMIN_SPECTATE);
 		$this->registerSayCommand('prism spec', 'castLFSCommand', '<targets> ... - Spectate Client.', ADMIN_SPECTATE);
 
-		$this->registerSayCommand('prism rcon', 'cmdRCON', '"<command>" - Remote Console Commands', ADMIN_CFG + ADMIN_UNIMMUNIZE);
+		$this->registerSayCommand('prism rcon', 'cmdRCON', '"<command>" - Remote Console Commands', ADMIN_CFG | ADMIN_UNIMMUNIZE);
 		
 		$this->registerSayCommand('prism rcm', 'cmdRaceControlMessagePlayer', '"Msg" <USERNAME> <Time> - Race Control Messages', ADMIN_RCM);
 		$this->registerSayCommand('prism rcm all', 'cmdRaceControlMessageAll', '"Msg" <Time> - Race Control Messages', ADMIN_RCM);
@@ -55,6 +57,8 @@ class admin extends Plugins
 		$MST = new IS_MST();
 		$MST->Msg("/rcm {$argv[2]}")->Send();
 		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+
+		return PLUGIN_HANDLED;
 	}
 
 	public function cmdRaceControlMessageAll($cmd, $ucid)
@@ -69,11 +73,12 @@ class admin extends Plugins
 		$MST = new IS_MST();
 		$MST->Msg("/rcm {$argv[2]}")->Send();
 		$MST->Msg("/rcm_all")->Send();
+
+		return PLUGIN_HANDLED;
 	}
 
 	public function tmrClearRCM($args = NULL)
 	{
-		print_r($args);
 		$MST = new IS_MST();
 		$MST->Msg("/rcc_all")->Send();
 		$MST->Msg("/rcc_ply {$argv[3]}")->Send();
@@ -84,79 +89,53 @@ class admin extends Plugins
 		$argv = str_getcsv($cmd, ' ');
 		$MST = new IS_MST();
 		$MST->Msg(array_pop($argv))->Send();
-	}
 
-	public function cmdAdminBan($cmd, $ucid)
-	{
-		# Get the command and it's args.
-		$argv = str_getcsv($cmd, ' ');
-		array_shift($argv); $cmd = array_shift($argv);
-		$target = array_shift($argv); $minutes = array_shift($argv);
-		
-		$castingAdmin = $this->getClientByUCID($ucid);
-		
-		# If we don't have target(s), then we can't do anything.
-		if (count($argv) == 0)
-		{
-			$MTC = new IS_MTC;
-			$MTC->UCID($ucid)->Text("$cmd needs a target.")->Send();
-		}
-		else if ($castingAdmin->UName == $target)
-		{
-			$MTC = new IS_MTC;
-			$MTC->UCID($ucid)->Text('Why would you even try to run this on yourself?')->Send();
-		}
-		else if ($this->isImmune($target))
-		{
-			$MSX = new IS_MSX;
-			$MSX->Msg("Admin {$castingAdmin->UName} tired to kick immune Admin $target.")->Send();
-		}
-		else
-		{
-			$MST = new IS_MST();
-			$MST->Msg("/ban $target $minutes")->Send();
-			$MSX = new IS_MSX;
-			$MSX->Msg("Admin {$castingAdmin->UName} banned $target for $minutes minute(s).");
-		}
+		return PLUGIN_HANDLED;
 	}
 
 	public function castLFSCommand($cmd, $ucid)
 	{
 		# Get the command and it's args.
-		$argv = str_getcsv($cmd, ' ');
-		array_shift($argv); $cmd = array_shift($argv);
+		$argc = count($argv = str_getcsv($cmd, ' '));
 
-		$castingAdmin = $this->getClientByUCID($ucid);
-
-		# If we don't have target(s), then we can't do anything.
-		if (count($argv) == 0)
+		array_shift($argv);
+		$cmd = array_shift($argv);
+		if ($cmd == 'ban')
+			$minutes = array_shift($argv);
+		
+		if (($cmd == 'ban' && $argc < 4) || $argc < 3)
 		{
 			$MTC = new IS_MTC;
-			$MTC->UCID($ucid)->Text("$cmd needs a target.")->Send();
+			$MTC->UCID($ucid)->Text("Useage: `prism {$cmd}" . (($cmd == 'ban') ? ' <time>' : '') . ' <targets> ...`')->Send();
+			return PLUGIN_HANDLED;
 		}
-		else
+		
+		$castingAdmin = $this->getClientByUCID($ucid);
+		
+		# If we don't have target(s), then we can't do anything.
+		foreach ($argv as $target)
 		{
-			foreach ($argv as $target)
+			$target = strToLower($target);
+			if (strToLower($castingAdmin->UName) == $target)
 			{
-				if ($castingAdmin->UName == $target)
-				{
-					$MTC = new IS_MTC;
-					$MTC->UCID($ucid)->Text('Why would you even try to run this on yourself?')->Send();
-				}
-				else if ($this->isImmune($target))
-				{
-					$MSX = new IS_MSX;
-					$MSX->Msg("Admin {$castingAdmin->UName} tired to kick immune Admin $target.")->Send();
-				}
-				else
-				{
-					$MST = new IS_MST();
-					$MST->Msg("/{$cmd} $target")->Send();
-					$MSX = new IS_MSX;
-					$MSX->Msg("Admin {$castingAdmin->UName} {$cmd}ed $target.")->Send();
-				}
+				$MTC = new IS_MTC;
+				$MTC->UCID($ucid)->Text('Why would you even try to run this on yourself?')->Send();
+			}
+			else if ($this->isImmune($target))
+			{
+				$MSX = new IS_MSX;
+				$MSX->Msg("Admin {$castingAdmin->UName} tired to {$cmd} immune Admin $target.")->Send();
+			}
+			else
+			{
+				$MST = new IS_MST();
+				$MST->Msg("/{$cmd} $target")->Send();
+				$MSX = new IS_MSX;
+				$MSX->Msg("Admin {$castingAdmin->UName} {$cmd}'ed $target.")->Send();
 			}
 		}
+		
+		return PLUGIN_HANDLED;
 	}
 
 	// Help
@@ -173,7 +152,7 @@ class admin extends Plugins
 				$MTC->Text("^7{$command}^8 - {$detail['info']}")->Send();
 		}
 
-		return PLUGIN_CONTINUE;
+		return PLUGIN_HANDLED;
 	}
 
 	// Plugins
@@ -193,7 +172,69 @@ class admin extends Plugins
 			$MTC->Text($plugin::DESCRIPTION)->Send();
 		}
 
-		return PLUGIN_CONTINUE;
+		return PLUGIN_HANDLED;
+	}
+	
+	public function cmdPluginLoad($cmd, $ucid)
+	{
+		global $PRISM;
+		
+		$MTC = new IS_MTC;
+		$MTC->UCID($ucid);
+		
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
+		{
+			$MTC->Text('Useage: `prism plugins load <plugin>`')->Send();
+			$MTC->Text('Loads plugin(s) at runtime.')->Send();
+			
+			$PluginsAll = get_dir_structure(PHPInSimMod::ROOTPATH . '/plugins/');
+			$PluginsLoaded = array_keys($PRISM->plugins->getPlugins());
+			$PluginsUnloaded = array_diff($PluginsAll, $PluginsLoaded);
+
+			var_dump($PluginsAvailable, $PluginsLoaded, $PluginsUnloaded);
+
+			#foreach ($Plugins)
+			#{
+				# List Plugins Not Loaded But Available (Also check for santity).
+				# Display plugin name as RED if plugin is not sane, GREEN otherwise.
+				#validatePHPFile();
+			#}
+		}
+
+		#Load Plugins
+		
+		return PLUGIN_HANDLED;
+	}
+
+	public function cmdPluginUnload($cmd, $ucid)
+	{
+		global $PRISM;
+
+		$MTC = new IS_MTC;
+		$MTC->UCID($ucid);
+		
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
+		{
+			$MTC->Text('Useage: `prism plugins unload <plugin>`')->Send();
+			$MTC->Text('Unloads plugin(s) at runtime.')->Send();
+			
+			$PluginsAll = get_dir_structure(PHPInSimMod::ROOTPATH . '/plugins/');
+			$PluginsLoaded = array_keys($PRISM->plugins->getPlugins());
+			$PluginsUnloaded = array_diff($PluginsAll, $PluginsLoaded);
+
+			var_dump($PluginsAvailable, $PluginsLoaded, $PluginsUnloaded);
+
+			#foreach ($Plugins)
+			#{
+				# List Plugins Not Loaded But Available (Also check for santity).
+				# Display plugin name as RED if plugin is not sane, GREEN otherwise.
+				#validatePHPFile();
+			#}
+		}
+
+		# Unload Plugin(s)
+
+		return PLUGIN_HANDLED;
 	}
 
 	// Version
@@ -201,6 +242,8 @@ class admin extends Plugins
 	{
 		$MTC = new IS_MTC();
 		$MTC->UCID($ucid)->Text('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
+		
+		return PLUGIN_HANDLED;
 	}
 
 	// Admins
@@ -214,7 +257,7 @@ class admin extends Plugins
 		foreach ($PRISM->admins->getAdminsInfo() as $user => $details)
 			$MTC->Text("    $user")->Send();
 
-		return PLUGIN_CONTINUE;
+		return PLUGIN_HANDLED;
 	}
 }
 ?>
