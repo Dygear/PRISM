@@ -22,7 +22,7 @@ class reorder extends Plugins
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 2)
 		{
-			$this->clientPrint($UCID, PRINT_CHAT, 'You must give at least one PName.');
+			IS_MTC()->UCID($UCID)->Text('You must give at least one PName.')->Send();
 			return PLUGIN_CONTINUE;
 		}
 
@@ -41,13 +41,7 @@ class reorder extends Plugins
 		$this->reorder = FALSE;	# As we are copying LFS's REO state, we don't need to send this packet on TINY_VTA packet.
 
 		foreach ($REO->PLID as $Pos => $PLID)
-		{
-			$Text = sprintf('Pos: %02d | ', $Pos);
-			$Text .= sprintf('PLID: %02d | ', $PLID);
-			$Text .= sprintf('UName: %24s | ', $this->getClientByPLID($PLID)->UName);
-			$Text .= sprintf('PName: %24s', $this->getPlayerByPLID($PLID)->PName);
-			IS_MTC()->Text($Text)->Send();
-		}
+			IS_MTC()->Text(sprintf('Pos: %02d | PLID: %02d | UName: %24s | PName: %24s', $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName))->Send();
 
 		$this->IS_REO = $REO; # Updates our list.
 
