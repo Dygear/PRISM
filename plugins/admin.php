@@ -54,9 +54,8 @@ class admin extends Plugins
 
 		$argv = $this->raceControlMessage($cmd);
 
-		$MST = new IS_MST();
-		$MST->Msg("/rcm {$argv[2]}")->Send();
-		$MST->Msg("/rcm_ply {$argv[3]}")->Send();
+		IS_MST()->Msg("/rcm {$argv[2]}")->Send();
+		IS_MST()->Msg("/rcm_ply {$argv[3]}")->Send();
 
 		return PLUGIN_HANDLED;
 	}
@@ -70,25 +69,22 @@ class admin extends Plugins
 
 		$argv = $this->raceControlMessage($cmd);
 
-		$MST = new IS_MST();
-		$MST->Msg("/rcm {$argv[2]}")->Send();
-		$MST->Msg("/rcm_all")->Send();
+		IS_MST()->Msg("/rcm {$argv[2]}")->Send();
+		IS_MST()->Msg("/rcm_all")->Send();
 
 		return PLUGIN_HANDLED;
 	}
 
 	public function tmrClearRCM($args = NULL)
 	{
-		$MST = new IS_MST();
-		$MST->Msg("/rcc_all")->Send();
-		$MST->Msg("/rcc_ply {$argv[3]}")->Send();
+		IS_MST()->Msg("/rcc_all")->Send();
+		IS_MST()->Msg("/rcc_ply {$argv[3]}")->Send();
 	}
 
 	public function cmdRCON($cmd, $ucid)
 	{
 		$argv = str_getcsv($cmd, ' ');
-		$MST = new IS_MST();
-		$MST->Msg(array_pop($argv))->Send();
+		IS_MST()->Msg(array_pop($argv))->Send();
 
 		return PLUGIN_HANDLED;
 	}
@@ -105,8 +101,7 @@ class admin extends Plugins
 		
 		if (($cmd == 'ban' && $argc < 4) || $argc < 3)
 		{
-			$MTC = new IS_MTC;
-			$MTC->UCID($ucid)->Text("Useage: `prism {$cmd}" . (($cmd == 'ban') ? ' <time>' : '') . ' <targets> ...`')->Send();
+			IS_MTC()->UCID($ucid)->Text("Useage: `prism {$cmd}" . (($cmd == 'ban') ? ' <time>' : '') . ' <targets> ...`')->Send();
 			return PLUGIN_HANDLED;
 		}
 		
@@ -118,20 +113,16 @@ class admin extends Plugins
 			$target = strToLower($target);
 			if (strToLower($castingAdmin->UName) == $target)
 			{
-				$MTC = new IS_MTC;
-				$MTC->UCID($ucid)->Text('Why would you even try to run this on yourself?')->Send();
+				IS_MTC()->UCID($ucid)->Text('Why would you even try to run this on yourself?')->Send();
 			}
 			else if ($this->isImmune($target))
 			{
-				$MSX = new IS_MSX;
-				$MSX->Msg("Admin {$castingAdmin->UName} tired to {$cmd} immune Admin $target.")->Send();
+				IS_MSX()->Msg("Admin {$castingAdmin->UName} tired to {$cmd} immune Admin $target.")->Send();
 			}
 			else
 			{
-				$MST = new IS_MST();
-				$MST->Msg("/{$cmd} $target")->Send();
-				$MSX = new IS_MSX;
-				$MSX->Msg("Admin {$castingAdmin->UName} {$cmd}'ed $target.")->Send();
+				IS_MST()->Msg("/{$cmd} $target")->Send();
+				IS_MSX()->Msg("Admin {$castingAdmin->UName} {$cmd}'ed $target.")->Send();
 			}
 		}
 		
@@ -142,8 +133,7 @@ class admin extends Plugins
 	public function cmdHelp($cmd, $ucid)
 	{
 		global $PRISM;
-		$MTC = new IS_MTC;
-		$MTC->Sound(SND_SYSMESSAGE)->UCID($ucid);
+		$MTC = IS_MTC()->Sound(SND_SYSMESSAGE)->UCID($ucid);
 
 		$requestingClient = $this->getClientByUCID($ucid);
 
@@ -166,8 +156,7 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
-		$MTC = new IS_MTC;
-		$MTC->UCID($ucid);
+		$MTC = IS_MTC()->UCID($ucid);
 
 		$MTC->Text('^7NAME ^3VERSION ^8AUTHOR')->Send();
 		$MTC->Text('DESCRIPTION')->Send();
@@ -186,8 +175,7 @@ class admin extends Plugins
 	{
 		global $PRISM;
 		
-		$MTC = new IS_MTC;
-		$MTC->UCID($ucid);
+		$MTC = new IS_MTC()->UCID($ucid);
 		
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
 		{
@@ -218,8 +206,7 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
-		$MTC = new IS_MTC;
-		$MTC->UCID($ucid);
+		$MTC = new IS_MTC()->UCID($ucid);
 		
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
 		{
@@ -243,9 +230,7 @@ class admin extends Plugins
 	// Version
 	public function cmdVersion($cmd, $ucid)
 	{
-		$MTC = new IS_MTC();
-		$MTC->UCID($ucid)->Text('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
-		
+		IS_MTC()->UCID($ucid)->Text('PRISM Version ^7' . PHPInSimMod::VERSION)->Send();
 		return PLUGIN_HANDLED;
 	}
 
@@ -254,8 +239,7 @@ class admin extends Plugins
 	{
 		global $PRISM;
 
-		$MTC = new IS_MTC;
-		$MTC->UCID($ucid)->Text('Admins detailed to this server:')->Send();
+		$MTC = IS_MTC()->UCID($ucid)->Text('Admins detailed to this server:')->Send();
 
 		foreach ($PRISM->admins->getAdminsInfo() as $user => $details)
 			$MTC->Text("    $user")->Send();
