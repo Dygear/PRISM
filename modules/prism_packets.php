@@ -12,6 +12,7 @@ abstract class Struct
 	{
 		if ($rawPacket !== NULL)
 			$this->unpack($rawPacket);
+		return $this;
 	}
 	public function __invoke()
 	{
@@ -298,7 +299,7 @@ class IS_ISI extends Struct // InSim Init - packet to initialise the InSim syste
 
 	public $Admin;						# Admin password (if set in LFS)
 	public $IName;						# A short name for your program
-};
+}; function IS_ISI() { return new IS_ISI; }
 
 // NOTE 1) UDPPort field when you connect using UDP :
 
@@ -458,7 +459,7 @@ class IS_TINY extends Struct // General purpose 4 byte packet
 	protected $Type = ISP_TINY;			# always ISP_TINY
 	public $ReqI;						# 0 unless it is an info request or a reply to an info request
 	public $SubT;						# subtype, from TINY_ enumeration (e.g. TINY_RACE_END)
-}
+} function IS_TINY() { return new IS_TINY; }
 
 // IS_SMALL - used for various requests, replies and reports
 
@@ -473,7 +474,7 @@ class IS_SMALL extends Struct // General purpose 8 byte packet
 	public $SubT;						# subtype, from SMALL_ enumeration (e.g. SMALL_SSP)
 
 	public $UVal;						# value (e.g. for SMALL_SSP this would be the OutSim packet rate)
-};
+}; function IS_SMALL() { return new IS_SMALL; }
 
 
 // VERSION REQUEST
@@ -498,7 +499,7 @@ class IS_VER extends Struct // VERsion
 	public $Version;					# LFS version, e.g. 0.3G
 	public $Product;					# Product : DEMO or S1
 	public $InSimVer = INSIM_VERSION;	# InSim Version : increased when InSim packets change
-};
+}; function IS_VER() { return new IS_VER; }
 
 // To request an InSimVersion packet at any time, send this IS_TINY :
 
@@ -582,7 +583,7 @@ class IS_STA extends Struct // STAte
 	public $Track;						# short name for track e.g. FE2R
 	public $Weather;					# 0,1,2...
 	public $Wind;						# 0=off 1=weak 2=strong
-};
+}; function IS_STA() { return new IS_STA; }
 
 // InGameCam is the in game selected camera mode (which is
 // still selected even if LFS is actually in SHIFT+U mode).
@@ -634,7 +635,7 @@ class IS_SFP extends Struct // State Flags Pack
 	public $Flag;						# the state to set
 	public $OffOn;						# 0 = off / 1 = on
 	protected $Sp3;						# spare
-};
+}; function IS_SFP() { return new IS_SFP; }
 
 // Other states must be set by using keypresses or messages (see below)
 
@@ -658,7 +659,7 @@ class IS_MOD extends Struct // MODe : send to LFS to change screen mode
 	public $RR;							# refresh rate - zero for default
 	public $Width;						# 0 means go to window
 	public $Height;						# 0 means go to window
-};
+}; function IS_MOD() { return new IS_MOD; }
 
 // The refresh rate actually selected by LFS will be the highest available rate
 // that is less than or equal to the specified refresh rate.  Refresh rate can
@@ -693,7 +694,7 @@ class IS_MSO extends Struct // MSg Out - system messages and user messages
 	public $TextStart;					# first character of the actual text (after player name)
 
 	public $Msg;
-};
+}; function IS_MSO() { return new IS_MSO; }
 
 // User Values (for UserType byte)
 
@@ -722,7 +723,7 @@ class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 	protected $Sp3 = NULL;
 
 	public $Msg;
-};
+}; function IS_III() { return new IS_III; }
 
 class IS_ACR extends Struct // Admin Command Report - any user typed an admin command
 {
@@ -740,7 +741,7 @@ class IS_ACR extends Struct // Admin Command Report - any user typed an admin co
 	private $Sp3;
 
 	public $Text;
-};
+}; function IS_ACR() { return new IS_ACR; }
 
 // MESSAGES IN (TO LFS)
 // -----------
@@ -767,7 +768,7 @@ class IS_MST extends Struct		// MSg Type - send to LFS to type message or comman
 		}
 		return parent::pack();
 	}
-};
+}; function IS_MST() { return new IS_MST; }
 
 class IS_MSX extends Struct		// MSg eXtended - like MST but longer (not for commands)
 {
@@ -790,7 +791,7 @@ class IS_MSX extends Struct		// MSg eXtended - like MST but longer (not for comm
 		}
 		return parent::pack();
 	}
-};
+}; function IS_MSX() { return new IS_MSX; }
 
 class IS_MSL extends Struct		// MSg Local - message to appear on local computer only
 {
@@ -813,7 +814,7 @@ class IS_MSL extends Struct		// MSg Local - message to appear on local computer 
 		}
 		return parent::pack();
 	}
-};
+}; function IS_MSL() { return new IS_MSL; }
 
 class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a connection / a player / all
 {
@@ -841,7 +842,7 @@ class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a conne
 		}
 		return parent::pack();
 	}
-};
+}; function IS_MTC() { return new IS_MTC; }
 
 // Message Sounds (for Sound byte)
 
@@ -872,7 +873,7 @@ class IS_SCH extends Struct		// Single CHaracter
 	public $Flags;						# bit 0 : SHIFT / bit 1 : CTRL
 	protected $Spare2 = NULL;
 	protected $Spare3 = NULL;
-};
+}; function IS_SCH() { return new IS_SCH; }
 
 
 // MULTIPLAYER NOTIFICATION
@@ -896,7 +897,7 @@ class IS_ISM extends Struct		// InSim Multi
 	protected $Sp3 = NULL;
 
 	public $HName;						# the name of the host joined or started
-};
+}; function IS_ISM() { return new IS_ISM; }
 
 // On ending or leaving a host, LFS will send this IS_TINY :
 
@@ -939,7 +940,7 @@ class IS_VTN extends Struct		// VoTe Notify
 	public $Action;						# VOTE_X (Vote Action as defined above)
 	protected $Spare2;
 	protected $Spare3;
-};
+}; function IS_VTN() { return new IS_VTN; }
 
 // When a vote is cancelled, LFS sends this IS_TINY
 
@@ -985,7 +986,7 @@ class IS_PLC extends Struct // PLayer Cars
 	protected $Sp3;
 
 	public $Cars;						# allowed cars - see below
-};
+}; function IS_PLC() { return new IS_PLC; }
 
 // XF GTI			-       1
 // XR GT			-       2
@@ -1066,7 +1067,7 @@ class IS_RST extends Struct // Race STart
 	public $Split1;						# node index - split 1
 	public $Split2;						# node index - split 2
 	public $Split3;						# node index - split 3
-};
+}; function IS_RST() { return new IS_RST; }
 
 // Lap timing info (for Timing byte)
 
@@ -1100,7 +1101,7 @@ class IS_NCN extends Struct // New ConN
 	public $Total;						# number of connections including host
 	public $Flags;						# bit 2 : remote
 	protected $Sp3;
-};
+}; function IS_NCN() { return new IS_NCN; }
 
 class IS_CNL extends Struct // ConN Leave
 {
@@ -1116,7 +1117,7 @@ class IS_CNL extends Struct // ConN Leave
 	public $Total;						# number of connections including host
 	protected $Sp2;
 	protected $Sp3;
-};
+}; function IS_CNL() { return new IS_CNL; }
 
 class IS_CPR extends Struct // Conn Player Rename
 {
@@ -1130,7 +1131,7 @@ class IS_CPR extends Struct // Conn Player Rename
 
 	public $PName;						# new name
 	public $Plate;						# number plate - NO ZERO AT END!
-};
+}; function IS_CPR() { return new IS_CPR; }
 
 class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, then leaving pits)
 {
@@ -1186,7 +1187,7 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
 	public function isFemale() { return ($this->PType & 1); }
 	public function isAI() { return ($this->PType & 2); }
 	public function isRemote(){ return ($this->PType & 4); }
-};
+}; function IS_NPL() { return new IS_NPL; }
 
 // NOTE : PType bit 0 (female) is not reported on dedicated host as humans are not loaded
 // You can use the driver model byte instead if required (and to force the use of helmets)
@@ -1209,7 +1210,7 @@ class IS_PLP extends Struct // PLayer Pits (go to settings - stays in player lis
 	protected $Type = ISP_PLP;			# ISP_PLP
 	protected $ReqI = NULL;				# 0
 	public $PLID;						# player's unique id
-};
+}; function IS_PLP() { return new IS_PLP; }
 
 class IS_PLL extends Struct // PLayer Leave race (spectate - removed from player list)
 {
@@ -1220,7 +1221,7 @@ class IS_PLL extends Struct // PLayer Leave race (spectate - removed from player
 	protected $Type = ISP_PLL;			# ISP_PLL
 	protected $ReqI = NULL;				# 0
 	public $PLID;						# player's unique id
-};
+}; function IS_PLL() { return new IS_PLL; }
 
 class IS_CRS extends Struct // Car ReSet
 {
@@ -1231,7 +1232,7 @@ class IS_CRS extends Struct // Car ReSet
 	protected $Type = ISP_CRS;			# ISP_CRS
 	protected $ReqI = NULL;				# 0
 	public $PLID;						# player's unique id
-};
+}; function IS_CRS() { return new IS_CRS; }
 
 class IS_LAP extends Struct // LAP time
 {
@@ -1253,7 +1254,7 @@ class IS_LAP extends Struct // LAP time
 	public $Penalty;					# current penalty value (see below)
 	public $NumStops;					# number of pit stops
 	protected $Sp3;
-};
+}; function IS_LAP() { return new IS_LAP; }
 
 class IS_SPX extends Struct // SPlit X time
 {
@@ -1272,7 +1273,7 @@ class IS_SPX extends Struct // SPlit X time
 	public $Penalty;					# current penalty value (see below)
 	public $NumStops;					# number of pit stops
 	protected $Sp3;
-};
+}; function IS_SPX() { return new IS_SPX; }
 
 class IS_PIT extends Struct // PIT stop (stop at pit garage)
 {
@@ -1315,7 +1316,7 @@ class IS_PIT extends Struct // PIT stop (stop at pit garage)
 		return $this;
 	}
 
-};
+}; function IS_PIT() { return new IS_PIT; }
 
 class IS_PSF extends Struct // Pit Stop Finished
 {
@@ -1329,7 +1330,7 @@ class IS_PSF extends Struct // Pit Stop Finished
 
 	public $STime;						# stop time (ms)
 	protected $Spare;
-};
+}; function IS_PSF() { return new IS_PSF; }
 
 class IS_PLA extends Struct // Pit LAne
 {
@@ -1345,7 +1346,7 @@ class IS_PLA extends Struct // Pit LAne
 	protected $Sp1;
 	protected $Sp2;
 	protected $Sp3;
-};
+}; function IS_PLA() { return new IS_PLA; }
 
 // IS_CCH : Camera CHange
 
@@ -1369,7 +1370,7 @@ class IS_CCH extends Struct // Camera CHange
 	protected $Sp1;
 	protected $Sp2;
 	protected $Sp3;
-};
+}; function IS_CCH() { return new IS_CCH; }
 
 class IS_PEN extends Struct // PENalty (given or cleared)
 {
@@ -1385,7 +1386,7 @@ class IS_PEN extends Struct // PENalty (given or cleared)
 	public $NewPen;						# new penalty value (see below)
 	public $Reason;						# penalty reason (see below)
 	protected $Sp3;
-};
+}; function IS_PEN() { return new IS_PEN; }
 
 class IS_TOC extends Struct // Take Over Car
 {
@@ -1401,7 +1402,7 @@ class IS_TOC extends Struct // Take Over Car
 	public $NewUCID;					# new connection's unique id
 	protected $Sp2;
 	protected $Sp3;
-};
+}; function IS_TOC() { return new IS_TOC; }
 
 class IS_FLG extends Struct // FLaG (yellow or blue flag changed)
 {
@@ -1417,7 +1418,7 @@ class IS_FLG extends Struct // FLaG (yellow or blue flag changed)
 	public $Flag;						# 1 = given blue / 2 = causing yellow
 	public $CarBehind;					# unique id of obStructed player
 	protected $Sp3;
-};
+}; function IS_FLG() { return new IS_FLG; }
 
 class IS_PFL extends Struct // Player FLags (help flags changed)
 {
@@ -1431,7 +1432,7 @@ class IS_PFL extends Struct // Player FLags (help flags changed)
 
 	public $Flags;						# player flags (see below)
 	protected $Spare;
-};
+}; function IS_PFL() { return new IS_PFL; }
 
 class IS_FIN extends Struct // FINished race notification (not a final result - use IS_RES)
 {
@@ -1453,7 +1454,7 @@ class IS_FIN extends Struct // FINished race notification (not a final result - 
 
 	public $LapsDone;					# laps completed
 	public $Flags;						# player flags : help settings etc - see below
-};
+}; function IS_FIN() { return new IS_FIN; }
 
 class IS_RES extends Struct // RESult (qualify or confirmed finish)
 {
@@ -1484,7 +1485,7 @@ class IS_RES extends Struct // RESult (qualify or confirmed finish)
 	public $ResultNum;					# finish or qualify pos (0 = win / 255 = not added to table)
 	public $NumRes;						# total number of results (qualify doesn't always add a new one)
 	public $PSeconds;					# penalty time in seconds (already included in race time)
-};
+}; function IS_RES() { return new IS_RES; }
 
 // IS_REO : REOrder - this packet can be sent in either direction
 
@@ -1527,7 +1528,7 @@ class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 
 		return $this;
 	}
-};
+}; function IS_REO() { return new IS_REO; }
 
 // To request an IS_REO packet at any time, send this IS_TINY :
 
@@ -1725,7 +1726,7 @@ class IS_AXI extends Struct  // AutoX Info
 	public $NumO;						# number of objects
 
 	public $LName;						# the name of the layout last loaded (if loaded locally)
-};
+}; function IS_AXI() { return new IS_AXI; }
 
 // On false start or wrong route / restricted area, an IS_PEN packet is sent :
 
@@ -1743,7 +1744,7 @@ class IS_AXO extends Struct // AutoX Object
 	protected $Type = ISP_AXO;			# ISP_AXO
 	protected $ReqI;					# 0
 	public $PLID;						# player's unique id
-};
+}; function IS_AXO() { return new IS_AXO; }
 
 
 // CAR TRACKING - car position info sent at constant intervals
@@ -1799,7 +1800,7 @@ class IS_NLP extends Struct // Node and Lap Packet - variable size
 		return $this;
 	}
 
-};
+}; function IS_NLP() { return new IS_NLP; }
 
 // If ISF_MCI flag is set, a set of IS_MCI packets is sent...
 
@@ -1863,7 +1864,7 @@ class IS_MCI extends Struct // Multi Car Info - if more than 8 in race then more
 
 		return $this;
 	}
-};
+}; function IS_MCI() { return new IS_MCI; }
 
 // You can change the rate of NLP or MCI after initialisation by sending this IS_SMALL :
 
@@ -1958,7 +1959,7 @@ class IS_CON extends Struct // CONtact - between two cars (A and B are sorted by
 	public function getClosingSpeed()	{ return ($this->SpClose & 0x0fff) / 10; }
 	public function getA()				{ return $this->A; }
 	public function getB()				{ return $this->B; }
-};
+}; function IS_CON() { return new IS_CON; }
 
 // Set the ISP_OBH flag in the IS_ISI to receive object contact reports
 
@@ -2012,7 +2013,7 @@ class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an un
 
 		return $this;
 	}
-};
+}; function IS_OBH() { return new IS_OBH; }
 
 // OBHFlags byte
 
@@ -2053,7 +2054,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 
 		return $this;
 	}
-};
+}; function IS_HLV() { return new IS_HLV; }
 
 
 // AUTOCROSS OBJECTS - reporting / adding / removing
@@ -2123,7 +2124,7 @@ class IS_AXM extends Struct // AutoX Multiple objects - variable size
 
 		return $this;
 	}
-};
+}; function IS_AXM() { return new IS_AXM; }
 
 // Values for PMOAction byte
 
@@ -2227,7 +2228,7 @@ class IS_SCC extends Struct // Set Car Camera - Simplified camera packet (not SH
 	public $InGameCam;					# InGameCam (as reported in StatePack)
 	protected $Sp2;
 	protected $Sp3;
-};
+}; function IS_SCC() { return new IS_SCC; }
 
 // NOTE : Set InGameCam or ViewPLID to 255 to leave that option unchanged.
 
@@ -2262,7 +2263,7 @@ class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIF
 
 	public $Time;						# Time in ms to get there (0 means instant)
 	public $Flags;						# ISS state flags (see below)
-};
+}; function IS_CPP() { return new IS_CPP; }
 
 // The ISS state flags that can be set are :
 
@@ -2370,7 +2371,7 @@ class IS_RIP extends Struct // Replay Information Packet
 	public $TTime;						# (hundredths) request : zero / reply : replay length
 
 	public $RName;						# zero or replay name - last byte must be zero
-};
+}; function IS_RIP() { return new IS_RIP; }
 
 // NOTE about RName :
 // In a request, replay RName will be loaded.  If zero then the current replay is used.
@@ -2427,7 +2428,7 @@ class IS_SSH extends Struct // ScreenSHot
 	protected $Sp3;						# 0
 
 	public $BMP;						# name of screenshot file - last byte must be zero
-};
+}; function IS_SSH() { return new IS_SSH; }
 
 // Error codes returned in IS_SSH replies :
 
@@ -2480,7 +2481,7 @@ class IS_BFN extends Struct  // Button FunctioN - delete buttons / receive butto
 	public $ClickID;					# ID of button to delete (if SubT is BFN_DEL_BTN)
 	public $Inst;						# used internally by InSim
 	protected $Sp3;
-};
+}; function IS_BFN() { return new IS_BFN; }
 
 // the fourth byte of IS_BFN packets is one of these
 define('BFN_DEL_BTN',	0);	//  0 - inStruction     : delete one button (must set ClickID)
@@ -2524,7 +2525,7 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
 			$this->Text = subStr($this->Msg, 0, 239);
 		return parent::pack();
 	}
-};
+}; function IS_BTN() { return new IS_BTN; }
 
 // ClickID byte : this value is returned in IS_BTC and IS_BTT packets.
 
@@ -2600,7 +2601,7 @@ class IS_BTC extends Struct // BuTton Click - sent back when user clicks a butto
 	public $Inst;						# used internally by InSim
 	public $CFlags;						# button click flags - see below
 	protected $Sp3;
-};
+}; function IS_BTC() { return new IS_BTC; }
 
 // CFlags byte : click flags
 
@@ -2629,7 +2630,7 @@ class IS_BTT extends Struct // BuTton Type - sent back when user types into a te
 	protected $Sp3;
 
 	public $Text;						# typed text, zero to TypeIn specified in IS_BTN
-};
+}; function IS_BTT() { return new IS_BTT; }
 
 
 // OutSim - MOTION SIMULATOR SUPPORT
@@ -2791,7 +2792,7 @@ class IR_HLR extends Struct // HostList Request
 	protected $Type = IRP_HLR;			# IRP_HLR
 	public $ReqI;
 	protected $Sp0;
-};
+}; function IR_HLR() { return new IR_HLR; }
 
 
 // That will return (multiple) packets containing hostnames and some information about them
@@ -2849,7 +2850,7 @@ class IR_HOS extends Struct // Hostlist (hosts connected to the Relay)
 
 		return $this;
 	}
-};
+}; function IR_HOS() { return new IR_HOS; }
 
 
 // To select a host in the Relay, send this packet :
@@ -2868,7 +2869,7 @@ class IR_SEL extends Struct // Relay select - packet to select a host, so relay 
 	public $Admin;						# Admin password (to gain admin access to host)
 	public $Spec;						# Spectator password (if host requires it)
 
-};
+}; function IR_SEL() { return new IR_SEL; }
 
 
 // To request if we are an admin send:
@@ -2882,7 +2883,7 @@ class IR_ARQ extends Struct // Admin Request
 	protected $Type = IRP_ARQ;			# IRP_ARQ
 	public $ReqI;
 	protected $Sp0;
-};
+}; function IR_ARQ() { return new IR_ARQ; }
 
 
 // Relay will reply to admin status request :
@@ -2896,12 +2897,11 @@ class IR_ARP extends Struct // Admin Response
 	protected $Type = IRP_ARP;			# IRP_ARP
 	public $ReqI;
 	public $Admin;						# 0- no admin; 1- admin
-};
+}; function IR_ARP() { return new IR_ARP; }
 
 
 // If you specify a wrong value, like invalid packet / hostname / adminpass / specpass,
 // the Relay returns an error packet :
-
 class IR_ERR extends Struct
 {
 	const PACK = 'CCCC';
@@ -2911,7 +2911,7 @@ class IR_ERR extends Struct
 	protected $Type = IRP_ERR;			# IRP_ERR
 	public $ReqI;						# As given in RL_SEL, otherwise 0
 	public $ErrNo;						# Error number - see NOTE 2) below
-};
+}; function IR_ERR() { return new IR_ERR; }
 
 // NOTE 2) Error numbers :
 
