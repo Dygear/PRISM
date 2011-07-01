@@ -13,15 +13,24 @@ class LVS extends Plugins
 
 	public function __construct()
 	{
+		$this->registerSayCommand('prism lvs debug', 'cmdDebug', 'Prints Debug Information', ADMIN_ALL);
 		$this->registerSayCommand('prism lvs', 'cmdLVSToggle', '<On|Off> - Turns Lap Verification System On / Off', ADMIN_CVAR + ADMIN_TRACK);
 		$this->registerPacket('onTrack', ISP_STA, ISP_RST);
 		$this->registerPacket('onMCI', ISP_MCI);
 	}
 
+	public function cmdDebug($cmd, $ucid)
+	{
+		$MTC = new IS_MTC()->UCID($ucid);
+
+		$debug = explode(PHP_EOL, print_r($this, TRUE));
+		foreach ($debug as $line)
+			$MTC->Text($line)->Send();
+	}
+
 	public function cmdLVSToggle($cmd, $ucid)
 	{
-		$MTC = new IS_MTC;
-		$MTC->UCID($ucid);
+		$MTC = new IS_MTC()->UCID($ucid);
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 2)
 		{
 			$OnOff = strtolower($argv[2]);
@@ -46,13 +55,13 @@ class LVS extends Plugins
 	public function onTrack(Struct $Packet)
 	{
 		if ($this->Track == $Packet->Track)
-			return;
+			return PLUGIN_CONTINUE;
 		else
 			$this->Track = $Packet->Track;
 
 		$file = "../data/pth/{$this->Track}.pth";
 		if (!file_exists($file))
-			return;
+			return PLUGIN_CONTINUE;
 
 		$pth = new pth($file);
 		print_r($pth);
@@ -64,7 +73,7 @@ class LVS extends Plugins
 	public function onMCI(IS_MCI $MCI)
 	{
 		if ($this->LVS === FALSE)
-			return;
+			return PLUGIN_CONTINUE;
 
 		foreach ($MCI->Info as $Info)
 		{
