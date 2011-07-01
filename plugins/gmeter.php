@@ -19,10 +19,8 @@ class gmeter extends Plugins {
 		$cTime = microtime(TRUE);
 		foreach ($Packet->Info as $CompCar) {
 			# Spawn a new button instance if one is not here.
-			if (!isset($this->BTNs[$CompCar->PLID])) {
-				$this->BTNs[$CompCar->PLID] = new IS_BTN;
-				$this->BTNs[$CompCar->PLID]->T(184)->L(164)->W(10)->H(6)->BStyle(ISB_DARK + ISB_RIGHT + 1)->Send();
-			}
+			if (!isset($this->BTNs[$CompCar->PLID]))
+				$this->BTNs[$CompCar->PLID] = IS_BTN()->T(184)->L(164)->W(10)->H(6)->BStyle(ISB_DARK + ISB_RIGHT + 1)->Send();
 
 			# Speeds
 			$cSpeed = (($CompCar->Speed / 32768) * 100); # Convert to Meters Per Second
