@@ -10,7 +10,7 @@ class admin extends Plugins
 	public function __construct()
 	{
 		# Exit
-		$this->registerSayCommand('prism exit', 'cmdEnd', 'Shuts down PRISM.', ADMIN_CVAR);
+		$this->registerSayCommand('prism exit', 'cmdExit', 'Shuts down PRISM.', ADMIN_ADMIN);
 	
 		# Help
 		$this->registerSayCommand('help', 'cmdHelp', 'Displays this command list.');
@@ -41,7 +41,7 @@ class admin extends Plugins
 
 	public function cmdExit($cmd, $ucid)
 	{
-		die("PRISM killed by client: {$this->getClientUNameByUCID($ucid)}.");
+		die("PRISM killed by client: {$this->getClientByUCID($ucid)->UName}." . PHP_EOL);
 	}
 
 	// Race Control Messages
@@ -152,6 +152,7 @@ class admin extends Plugins
 		{
 			foreach ($details->sayCommands as $command => $detail)
 			{
+				#something is wrong here.
 				if ($requestingClient->getAccessFlags() & $detail['accessLevel'])
 					$MTC->Text("^7{$command}^8 - {$detail['info']}")->Send();
 			}
