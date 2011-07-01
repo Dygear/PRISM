@@ -15,8 +15,7 @@ class welcome extends Plugins
 
 	public function onPrismConnect(IS_VER $VER)
 	{
-		$MSX = new IS_MSX;
-		$MSX->Msg('PRISM Version ^3'.PHPInSimMod::VERSION.'^8 Has Connected.')->Send();
+		IS_MSX()->Msg('PRISM Version ^3'.PHPInSimMod::VERSION.'^8 Has Connected.')->Send();
 	}
 
 	public function onClientConnect(IS_NCN $NCN)
