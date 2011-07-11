@@ -446,31 +446,56 @@ abstract class Plugins extends Timers
 	 * @author PHP version by filur & Dygear
 	 * @coauthor Original code by Brian J. Fox of MetaHTML.
 	 */
-	public function isInPoly($x, $y, array $vertices)
+	public function isInPoly($x, $y, array $polygon)
 	{
-		$lines_crossed = 0;
-		foreach ($vertices as $index => $cVertex)
+		$min_x = -1;
+		$max_x = -1;
+		$min_y = -1;
+		$max_y = -1;
+		$result = 0;
+		
+		$vertices = count($polygon);
+		
+		foreach ($polygon as $point)
 		{
-			if ($index == 0) continue;
-
-			$lVertex =& $vertices[$index - 1];
-
-			$min_x = min($lVertex['x'], $cVertex['x']);
-			$max_x = max($lVertex['x'], $cVertex['x']);
-			$min_y = min($lVertex['y'], $cVertex['y']);
-			$max_y = max($lVertex['y'], $cVertex['y']);
-
+			if ($min_x == -1 || $point['x'] < $min_x)
+				$min_x = $point['x'];
+			if ($min_y == -1 || $point['y'] < $min_y)
+				$min_y = $point['y'];
+			if ($point['x'] > $max_x)
+				$max_x = $point['x'];
+			if ($point['y'] > $max_y)
+				$max_y = $point['y'];
+		}
+		
+		if ($x < $xmin_x || $x > $max_x || $y < $min_y || $y > $max_y)
+			return FALSE;
+		
+		$lines_crossed = 0;
+		
+		for ($i = 1; $polygon[$i] != null; $i++)
+		{
+			$p1 =& $polygon[$i - 1];
+			$p2 =& $polygon[$i];
+			
+			$min_x = min ($p1['x'], $p2['x']);
+			$max_x = max ($p1['x'], $p2['x']);
+			$min_y = min ($p1['y'], $p2['y']);
+			$max_y = max ($p1['y'], $p2['y']);
+			
 			if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
 			{
 				if ($x < $min_x && $y > $min_y && $y < $max_y)
-					++$lines_crossed;
+					$lines_crossed++;
+				
 				continue;
 			}
-
-			$slope = ($lVertex['y'] - $cVertex['y']) / ($lVertex['x'] - $cVertex['x']);
-			if ((($y - ($lVertex['y'] - ($slope * $lVertex['x']))) / $slope) >= $x)
-				++$lines_crossed;
+			
+			$slope = ($p1['y'] - $p2['y']) / ($p1['x'] - $p2['x']);
+			if ((($y - ($p1['y'] - ($slope * $p1['x']))) / $slope) >= $x)
+				$lines_crossed++;
 		}
+		
 		return ($lines_crossed % 2) ? TRUE : FALSE;
 	}
 	protected function isHost(&$username, $hostID = NULL)
