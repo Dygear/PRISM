@@ -77,8 +77,13 @@ class LVS extends Plugins
 
 		foreach ($MCI->Info as $Info)
 		{
-			if (!$this->isInPoly($Info->X, $Info->Y, $this->Path[$Info->Node]))
+			if ($this->OffTrack[$Info->PLID] !== TRUE AND !$this->isInPoly($Info->X, $Info->Y, $this->Path[$Info->Node]))
+			{
+				$this->OffTrack[$Info->PLID] = TRUE; # So we don't spam the client.
 				IS_MTC()->UCID($this->getClientByPLID($Info->PLID)->UCID)->Text('You are not on the track!')->Send();
+			} else if ($this->OffTrack[$Info->PLID]) {
+				$this->OffTrack[$Info->PLID] = FALSE; # Set the car as being on the track once again!
+			}
 		}
 	}
 }
