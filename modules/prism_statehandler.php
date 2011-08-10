@@ -454,9 +454,9 @@ class PlayerHandler extends PropertyMaster
 	}
 
 	// Logic
-	public function isFemale(){ return ($this->Flags & 1) ? TRUE : FALSE; }
-	public function isAI(){ return ($this->Flags & 2) ? TRUE : FALSE; }
-	public function isRemote(){ return ($this->Flags & 4) ? TRUE : FALSE; }
+	public function isFemale(){ return ($this->PType & 1) ? TRUE : FALSE; }
+	public function isAI(){ return ($this->PType & 2) ? TRUE : FALSE; }
+	public function isRemote(){ return ($this->PType & 4) ? TRUE : FALSE; }
 	public function &isInPits(){ return $this->inPits; }
 }
 
