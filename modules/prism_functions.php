@@ -229,4 +229,48 @@ function verifyIP(&$ip)
 	return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
 }
 
+function timeToString($int, $fraction=1000)
+{
+	$seconds = floor($int / $fraction);
+	$fractions = $int - floor($seconds * $fraction);
+	$seconds -= ($hours = floor($seconds / 3600)) * 3600;
+	$seconds -= ($minutes = floor($seconds / 60)) * 60;
+	
+	if ($hours > 0)
+	{
+		return sprintf('%d:%02d:%02d.%0'.(strlen($fraction) - 1).'d', $hours, $minutes, $seconds, $fractions);
+	}
+	else
+	{
+		return sprintf('%d:%02d.%0'.(strlen($fraction) - 1).'d', $minutes, $seconds, $fractions);
+	}
+}
+
+function timeToStr($time, $fraction=1000)
+{
+	return preg_replace('/^(0+:)+/', '', timeToString($time, $fraction));
+}
+
+function sortByKey($key)
+{
+	return function ($left, $right) use ($key)
+	{
+		if ($left[$key] == $right[$key])
+			return 0;
+		else
+			return ($left[$key] < $right[$key]) ? -1 : 1;
+	};
+}
+
+function sortByProperty($property)
+{
+	return function ($left, $right) use ($property)
+	{
+		if ($left->$property == $right->$property)
+			return 0;
+		else
+			return ($left->$property < $right->$property) ? -1 : 1;
+	};
+}
+
 ?>
