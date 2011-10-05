@@ -172,9 +172,11 @@ class PHPInSimMod
 			exit(1);
 		}
 		
+		$pluginsLoaded = $this->plugins->loadPlugins();
+		
 		if ($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
 		{
-			if (($pluginsLoaded = $this->plugins->loadPlugins()) == 0)
+			if ($pluginsLoaded == 0)
 				console('No Plugins Loaded');
 			else if ($pluginsLoaded == 1)
 				console('One Plugin Loaded');
