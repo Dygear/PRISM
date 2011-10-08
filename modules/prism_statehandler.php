@@ -14,30 +14,30 @@ class StateHandler extends PropertyMaster
 	protected $handles = array
 	(
 		# State handles
-#		ISP_ISI => 'onInSimInit',			# To Do. (1)
-		ISP_VER => 'onVersion',				# To Do. (2)
+		ISP_ISI => 'onInSimInit',			# To Do. (1)
+		ISP_VER => 'onVersion',
 		ISP_TINY => 'onTiny',				# To Do. (3)
 		ISP_SMALL => 'onSmall',				# To Do. (4)
-		ISP_STA => 'onStateChange',			# To Do. (5)
-		ISP_CPP => 'onCameraPosisionChange',# To Do. (9)
-		ISP_ISM => 'onMultiPlayerStart',	# To Do. (10)
-		ISP_RST => 'onRaceStart',			# To Do. (17)
-		ISP_REO => 'onReorder',				# To Do. (36)
-		ISP_NLP => 'onNodeLapPlayer',		# To Do. (37)
-		ISP_MCI => 'onMultiCarInfo',		# To Do. (38)
-		ISP_AXI => 'onAutoXInfo',			# To Do. (43)
-		ISP_RIP => 'onReplayInformation',	# To Do. (48)
+		ISP_STA => 'onStateChange',
+		ISP_CPP => 'onCameraPosisionChange',
+		ISP_ISM => 'onMultiPlayerStart',
+		ISP_RST => 'onRaceStart',
+		ISP_REO => 'onReorder',
+		ISP_NLP => 'onNodeLapPlayer',
+		ISP_MCI => 'onMultiCarInfo',
+		ISP_AXI => 'onAutoXInfo',
+		ISP_RIP => 'onReplayInformation',
 		# Client handles
-		ISP_NCN => 'onClientJoin',			# To Do. (18)
-		ISP_CNL => 'onClientLeave',			# To Do. (19)
-		ISP_CPR => 'onClientRename',		# To Do. (20)
-		ISP_TOC => 'onClientTakeOverCar',	# To Do. (31)
+		ISP_NCN => 'onClientJoin',
+		ISP_CNL => 'onClientLeave',
+		ISP_CPR => 'onClientRename',
+		ISP_TOC => 'onClientTakeOverCar',
 		# Player handles
-		ISP_NPL => 'onPlayerJoin',			# To Do. (21)
-		ISP_PLP => 'onPlayerPits',			# To Do. (22)
-		ISP_PLL => 'onPlayerLeave',			# To Do. (23)
-		ISP_FIN => 'onPlayerFinished',		# To Do. (34)
-		ISP_RES => 'onPlayerResult',		# To Do. (35)
+		ISP_NPL => 'onPlayerJoin',
+		ISP_PLP => 'onPlayerPits',
+		ISP_PLL => 'onPlayerLeave',
+		ISP_FIN => 'onPlayerFinished',
+		ISP_RES => 'onPlayerResult',
 		
 		# Buttons
 		ISP_BFN => 'onButtonFunction',
@@ -57,7 +57,7 @@ class StateHandler extends PropertyMaster
 	}
 	// Extrinsic Properties
 	public $clients = array();
-	public $players = array();	# By design there is one here and a refrence to this in the $this->clients->players array.
+	public $players = array();		# By design there is one here and a refrence to this in the $this->clients->players array.
 
 	// Constructor
 	public function __construct()
@@ -101,6 +101,23 @@ class StateHandler extends PropertyMaster
 		return FALSE;
 	}
 
+	# IS_ISI (1)
+	public function onInSimInit(IS_ISI $ISI)
+	{
+		// To Do.
+	}
+
+	# IS_VER (2)
+	protected $Version;			# LFS version, e.g. 0.3G
+	protected $Product;			# Product : DEMO or S1
+	protected $InSimVer;		# InSim Version : increased when InSim packets change
+	public function onVersion(IS_VER $VER)
+	{
+		$this->Version = $VER->Version;
+		$this->Product = $VER->Product;
+		$this->InSimVer = $VER->InSimVer;
+	}
+
 	# IS_TINY (3)
 	public function onTiny(IS_TINY $TINY)
 	{
@@ -113,31 +130,20 @@ class StateHandler extends PropertyMaster
 		// To Do.
 	}
 
-	# IS_VER (2)
-	protected $Version;	# LFS version, e.g. 0.3G
-	protected $Product;	# Product : DEMO or S1
-	protected $InSimVer;	# InSim Version : increased when InSim packets change
-	public function onVersion(IS_VER $VER)
-	{
-		$this->Version = $VER->Version;
-		$this->Product = $VER->Product;
-		$this->InSimVer = $VER->InSimVer;
-	}
-
 	# IS_STA (5)
-	protected $ReplaySpeed;	# 1.0 is normal speed
+	protected $ReplaySpeed;		# 1.0 is normal speed
 	/** This was renamed from Flags to State as to not conflict with other Flags */
 	protected $State;			# ISS state flags
 	protected $InGameCam;		# Which type of camera is selected (see below)
 	protected $ViewPLID;		# Unique ID of viewed player (0 = none)
 	protected $NumP;			# Number of players in race
 	protected $NumConns;		# Number of connections including host
-	protected $NumFinished;	# Number finished or qualified
-	protected $RaceInProg;	# 0 - No race / 1 - Race / 2 - Qualifying
+	protected $NumFinished;		# Number finished or qualified
+	protected $RaceInProg;		# 0 - No race / 1 - Race / 2 - Qualifying
 	protected $QualMins;
 	protected $RaceLaps;
 	protected $Track;			# Short name for track e.g. FE2R
-	protected $Weather;		# 0, 1 or 2.
+	protected $Weather;			# 0, 1 or 2.
 	protected $Wind;			# 0 = Off 1 = Weak 2 = Strong
 	public function onStateChange(IS_STA $STA)
 	{
@@ -158,7 +164,7 @@ class StateHandler extends PropertyMaster
 
 	# IS_CPP (9)
 	protected $Pos;			# Position vector
-	protected $Heading;		# heading - 0 points along Y axis
+	protected $Heading;			# heading - 0 points along Y axis
 	protected $Pitch;			# pitch   - 0 means looking at horizon
 	protected $Roll;			# roll    - 0 means no roll
 	protected $FOV;			# FOV in degrees
@@ -177,8 +183,8 @@ class StateHandler extends PropertyMaster
 	}
 
 	# IS_ISM (10)
-	public $Host;			# 0 = guest / 1 = host
-	public $HName;			# The name of the host joined or started.
+	public $Host;				# 0 = guest / 1 = host
+	public $HName;				# The name of the host joined or started.
 	public function onMultiPlayerStart(IS_ISM $ISM)
 	{
 		$this->Host = $ISM->Host;
@@ -193,12 +199,12 @@ class StateHandler extends PropertyMaster
 	}
 
 	# IS_RST (17)
-	public $Flags;			// race flags (must pit, can reset, etc)
-	public $NumNodes;		// total number of nodes in the path
-	public $Finish;			// node index - finish line
-	public $Split1;			// node index - split 1
-	public $Split2;			// node index - split 2
-	public $Split3;			// node index - split 3
+	public $Flags;				# race flags (must pit, can reset, etc)
+	public $NumNodes;			# total number of nodes in the path
+	public $Finish;			# node index - finish line
+	public $Split1;			# node index - split 1
+	public $Split2;			# node index - split 2
+	public $Split3;			# node index - split 3
 	public function onRaceStart(IS_RST $RST)
 	{
 		$this->RaceLaps = $RST->RaceLaps;
@@ -223,7 +229,7 @@ class StateHandler extends PropertyMaster
 	}
 
 	# IS_NLP (37)
-	protected $Info;	# Car Info For Each Player.
+	protected $Info;		# Car Info For Each Player.
 	public function onNodeLapPlayer(IS_NLP $NLP)
 	{
 		$this->NumP = $NLP->NumP;
@@ -231,7 +237,7 @@ class StateHandler extends PropertyMaster
 	}
 
 	# IS_MCI (38)
-	protected $NumC;	# Number of valid CompCar structs in this packet.
+	protected $NumC;		# Number of valid CompCar structs in this packet.
 	public function onMultiCarInfo(IS_MCI $MCI)
 	{
 		$this->NumC = $MCI->NumC;
@@ -239,7 +245,7 @@ class StateHandler extends PropertyMaster
 	}
 
 	# IS_AXI (43)
-	protected $AXStart;	# Autocross start position
+	protected $AXStart;		# Autocross start position
 	protected $NumCP;		# Number of checkpoints
 	protected $NumO;		# Number of objects
 	protected $LName;		# The name of the layout last loaded (if loaded locally)
@@ -254,8 +260,8 @@ class StateHandler extends PropertyMaster
 	# IS_RIP (48)
 	protected $Error;		# 0 or 1 = OK / other values are listed below
 	protected $MPR;		# 0 = SPR / 1 = MPR
-	protected $Paused;	# Request : pause on arrival / reply : paused state
-	protected $Options;	# Various options - see below
+	protected $Paused;		# Request : pause on arrival / reply : paused state
+	protected $Options;		# Various options - see below
 	protected $CTime;		# (hundredths) request : destination / reply : position
 	protected $TTime;		# (hundredths) request : zero / reply : replay length
 	protected $RName;		# zero or replay name - last byte must be zero
@@ -289,7 +295,7 @@ class StateHandler extends PropertyMaster
 	# IS_TOC (31)
 	public function onClientTakeOverCar(IS_TOC $TOC)
 	{
-		console(__METHOD__.'(To Do)');
+		$this->clients[$TOC->UCID]->onTakeOverCar($TOC);
 	}
 
 	// Player handles
@@ -297,7 +303,7 @@ class StateHandler extends PropertyMaster
 	public function onPlayerJoin(IS_NPL $NPL)
 	{
 		$this->players[$NPL->PLID] = new PlayerHandler($NPL);
-		$this->clients[$NPL->UCID]->players[$NPL->PLID] = &$this->players[$NPL->PLID];
+		$this->clients[$NPL->UCID]->players[$NPL->PLID] = &$this->players[$NPL->PLID]; #Important, &= means that what ever I do in the PlayerHandler class is automaticly reflected within the ClientHandler class.
 	}
 	# IS_PLP (22)
 	public function onPlayerPits(IS_PLP $PLP)
@@ -312,12 +318,12 @@ class StateHandler extends PropertyMaster
 	# IS_FIN (34)
 	public function onPlayerFinished(IS_FIN $FIN)
 	{
-		console(__METHOD__.'(To Do)');
+		$this->players[$FIN->PLID]->onPlayerFinished($FIN);
 	}
 	# IS_RES (35)
 	public function onPlayerResult(IS_RES $RES)
 	{
-		console(__METHOD__.'(To Do)');
+		$this->players[$RES->PLID]->onPlayerResult($RES);
 	}
 	
 	
@@ -353,7 +359,7 @@ class ClientHandler extends PropertyMaster
 		ISP_NCN => '__construct',	# 18
 		ISP_CNL => 'onLeave',		# 19
 		ISP_CPR => 'onRename',		# 20
-		ISP_TOC => 'onTakeOverCar',	# 31
+		ISP_TOC => 'onTakeOverCar',	# 31 To Do.
 	);
 	public $players = array();
 
@@ -384,10 +390,20 @@ class ClientHandler extends PropertyMaster
 		$this->PRISM = ($PRISM->admins->adminExists($NCN->UName)) ? $PRISM->admins->getAdminInfo($NCN->UName) : FALSE;
 	}
 
+	public function onLeave(IS_CNL $CNL)
+	{
+		unset($this);
+	}
+
 	public function onRename(IS_CPR $CPR)
 	{
 		$this->PName = $CPR->PName;
 		$this->Plate = $CPR->Plate;
+	}
+	
+	public function onTakeOverCar(IS_TOC $TOC)
+	{
+		# To Do.
 	}
 	
 	// Is
@@ -403,11 +419,11 @@ class ClientHandler extends PropertyMaster
 class PlayerHandler extends PropertyMaster
 {
 	public static $handles = array(
-#		ISP_NPL => '__construct',
-		ISP_PLL => 'onPlayerLeave',			# To Do.
-		ISP_PLP => 'onPlayerPits',			# To Do.
-		ISP_FIN => 'onPlayerFinished',		# To Do.
-		ISP_RES => 'onPlayerResult',		# To Do.
+		ISP_NPL => '__construct',
+		ISP_PLL => 'onPlayerLeave',
+		ISP_PLP => 'onPlayerPits',
+		ISP_FIN => 'onPlayerFinished',
+		ISP_RES => 'onPlayerResult',
 	);
 
 	// Basicly the IS_NPL Struct.
@@ -448,9 +464,24 @@ class PlayerHandler extends PropertyMaster
 		$this->inPits = FALSE;
 	}
 
-	public function onPitGarage(IS_PLP $PLP)
+	public function onPlayerLeave(IS_PLL $PLL)
+	{
+		unset($this);
+	}
+
+	public function onPlayerPits(IS_PLP $PLP)
 	{
 		$this->inPits = TRUE;
+	}
+
+	public function onPlayerFinished(IS_FIN $FIN)
+	{
+		# To Do.
+	}
+	
+	public function onPlayerResult(IS_RES $RES)
+	{
+		# To Do.
 	}
 
 	// Logic
