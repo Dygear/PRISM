@@ -28,6 +28,7 @@ class Interactive
 				$tmp['hostname']		= self::query('What is the name of the host (case-sensitive)?');
 				$tmp['adminPass']		= self::query('Optional administrator password (or blank)', array(), TRUE);
 				$tmp['specPass']		= '';
+				
 				if (!$tmp['adminPass'])
 					$tmp['specPass']	= self::query('Optional spectator pass then? (or blank)', array(), TRUE);
 			}
@@ -48,11 +49,22 @@ class Interactive
 	
 				$tmp['socketType']		= (self::query('Do you want to connect to the host via TCP or UDP?', array('tcp', 'udp')) == 'udp') ? 2 : 1;
 				$tmp['password']		= self::query('What is the administrator password of the host?', array(), TRUE);
-				$tmp['pps']				= 4;
+				$tmp['pps']			= 4;
 				//$tmp['pps']			= self::query('How many position packets per second do you want to receive?');
 				
 				unset($tmp['useRelay']);
 			}
+
+			$tmp['flags']			= 0;
+			$tmp['flags']			+= (self::query('Are you connecting to dedicated or listen server?', array('yes', 'no')) == 'yes') ? 0 : ISF_LOCAL;
+			$tmp['flags']			+= (self::query('Keep colours in MSO text?', array('yes', 'no')) == 'yes') ? ISF_MSO_COLS : 0;
+			$tmp['flags']			+= (self::query('Receive Node Lap Player (Less Detailed then MCI) packets?', array('yes', 'no')) == 'yes') ? ISF_NLP : 0;
+			$tmp['flags']			+= (self::query('Receive Muli Car Info (Most detailed real time packet) packets?', array('yes', 'no')) == 'yes') ? ISF_MCI : 0;
+			$tmp['flags']			+= (self::query('Receive Contact packets?', array('yes', 'no')) == 'yes') ? ISF_CON : 0;
+			$tmp['flags']			+= (self::query('Receive Object Hit packets?', array('yes', 'no')) == 'yes') ? ISF_OBH : 0;
+			$tmp['flags']			+= (self::query('Receive Hot Lap Verification packets?', array('yes', 'no')) == 'yes') ? ISF_HLV : 0;
+			$tmp['flags']			+= (self::query('Receive Auto X packet when loading and unloading track layouts?', array('yes', 'no')) == 'yes') ? ISF_AXM_LOAD : 0;
+			$tmp['flags']			+= (self::query('Receive Auto X packet when editing track layouts?', array('yes', 'no')) == 'yes') ? ISF_AXM_EDIT : 0;
 
 			// Ask for the alias (hostID) for this connection
 			while (true)
@@ -219,8 +231,10 @@ class Interactive
 		// Ask which Port to listen on
 		while (true)
 		{
-			$vars['port']	= (int) self::query('On which Port should we listen?');
-			
+			$vars['port']		= (int) self::query('On which Port should we listen? (blank means Port 80)', array(), true);
+			if ($vars['port'] == '')
+				$vars['port'] = '80';
+
 			if ($vars['port'] < 1 || $vars['port'] > 65535)
 				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
 			else
@@ -265,7 +279,9 @@ class Interactive
 		// Ask which Port to listen on
 		while (true)
 		{
-			$vars['port']	= (int) self::query('On which Port should we listen?');
+			$vars['port']	= (int) self::query('On which Port should we listen? (blank means Port 23', array(), true);
+			if ($vars['port'] == '')
+				$vars['port'] = '23';
 			
 			if ($vars['port'] < 1 || $vars['port'] > 65535)
 				echo 'Invalid Port number entered. Please try again.'.PHP_EOL;
