@@ -505,6 +505,7 @@ class HostHandler extends SectionHandler
 				
 			case ISP_PLL :
 			case ISP_CNL :
+			case ISP_CPR :
 				$PRISM->plugins->dispatchPacket($packet, $hostID);
 				$this->state[$hostID]->dispatchPacket($packet);
 				break;
