@@ -437,7 +437,6 @@ class HostHandler extends SectionHandler
 			}
 			$packet = new $TYPEs[$pH['Type']]($rawPacket);
 			$this->inspectPacket($packet, $hostID);
-			$PRISM->plugins->dispatchPacket($packet, $hostID);
 		}
 		else
 		{
@@ -450,6 +449,8 @@ class HostHandler extends SectionHandler
 	//
 	private function inspectPacket(Struct &$packet, &$hostID)
 	{
+		global $PRISM;
+
 		$this->curHostID = $hostID;
 		switch($packet->Type)
 		{
@@ -464,7 +465,6 @@ class HostHandler extends SectionHandler
 					// Here we setup the state for the connection.
 					$this->state[$hostID] = new StateHandler($packet);
 				}
-				$this->state[$hostID]->dispatchPacket($packet);
 				break;
 
 			case IRP_ERR :
@@ -502,8 +502,17 @@ class HostHandler extends SectionHandler
 				// Because of the error we close the connection to the relay.
 				$this->hosts[$hostID]->close(true);
 				break;
+				
+			case ISP_PLL :
+			case ISP_CNL :
+				$PRISM->plugins->dispatchPacket($packet, $hostID);
+				$this->state[$hostID]->dispatchPacket($packet);
+				break;
+
 			default:
 				$this->state[$hostID]->dispatchPacket($packet);
+				$PRISM->plugins->dispatchPacket($packet, $hostID);
+				break;
 		}
 	}
 
