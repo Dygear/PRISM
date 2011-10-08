@@ -4,30 +4,45 @@
  * @package PRISM
  * @subpackage SMX
 */
-
-class smx
+// Simple Mesh eXport
+class SMX
 {
-	const HEADER = 'x6LFSSMX/xVersion/xRevision/CVersion/xDimensions/CResolution/xVertex/x4/a32Track/x3GroundColor/x9/lObjects';
+	const HEADER = 'a6LFSSMX/CGameVersion/CGameRevision/CSMXVersion/xDimensions/CResolution/CVertexColors/x4/a32Track/x3GroundColor/x9/lObjects';
 	const COLOR = 'CR/CG/CB';
 
-	public $Version;
+	public $LFSSMX = 'LFSSMX';
+	public $GameVersion = NULL;
+	public $GameRevision = NULL;
+	public $SMXVersion = 0;
+	public $Dimensions = 3;
 	public $Resolution;
+	public $VertexColors = 1;
 	public $Track;
 	public $GroundColor;
 	public $Objects;
+	public $Object = array();
 
 	public function __construct($smxFilePath)
 	{
 		$this->file = file_get_contents($smxFilePath);
-		$this->readHeader($this->file);
-		for ($i = 0, $Objects = $this->Objects, $this->Objects = array(), $offset = 64; $i < $Objects; ++$i)
-			$this->Objects[$i] = $this->readObject($offset);
+
+		if ($this->readHeader($this->file) === TRUE)
+			return; # trigger_error returns (bool) TRUE, so if the return is true, there was an error.
+
+		for ($i = 0, $offset = 64, $i < $this->Objects; ++$i)
+			$this->Object[$i] = $this->readObject($offset);
 		unset($this->file);
+		
+		return $this;
 	}
 	protected function readHeader()
 	{
-		foreach (unpack(SMX::HEADER, substr($this->file, 0, 64)) as $property => $value)
+		if (substr($this->file, 0, 6) !== 'LFSSMX')
+			return trigger_error('This is not an LFS SMX file.', E_USER_ERROR);
+
+		foreach (unpack(SMX::HEADER, substr($this->file, 6, 58)) as $property => $value)
 			$this->$property = $value;
+
 		$this->GroundColor = unpack(SMX::COLOR, substr($this->file, 48, 3));
 	}
 	protected function readObject(&$offset)
@@ -42,10 +57,10 @@ class Object
 	const POINT = 'lX/lY/lZ/lColour';
 	const TRIANGLE = 'vA/vB/vC/x2';
 
-	public $Center;
-	public $Radius;
-	public $Points;
-	public $Triangles;
+	public $Center = array();
+	public $Radius = array();
+	public $Points = array();
+	public $Triangles = array();
 
 	public function __construct(&$offset, $file)
 	{
