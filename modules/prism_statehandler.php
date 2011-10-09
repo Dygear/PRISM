@@ -31,11 +31,11 @@ class StateHandler extends PropertyMaster
 		ISP_NCN => 'onClientJoin',
 		ISP_CNL => 'onClientLeave',
 		ISP_CPR => 'onClientRename',
-		ISP_TOC => 'onClientTakeOverCar',
 		# Player handles
 		ISP_NPL => 'onPlayerJoin',
 		ISP_PLP => 'onPlayerPits',
 		ISP_PLL => 'onPlayerLeave',
+		ISP_TOC => 'onPlayerTakeOverCar',
 		ISP_FIN => 'onPlayerFinished',
 		ISP_RES => 'onPlayerResult',
 		
@@ -293,9 +293,9 @@ class StateHandler extends PropertyMaster
 		$this->clients[$CPR->UCID]->onRename($CPR);
 	}
 	# IS_TOC (31)
-	public function onClientTakeOverCar(IS_TOC $TOC)
+	public function onPlayerTakeOverCar(IS_TOC $TOC)
 	{
-		$this->clients[$TOC->UCID]->onTakeOverCar($TOC);
+		$this->players[$TOC->PLID]->onTakeOverCar($TOC);
 	}
 
 	// Player handles
@@ -359,7 +359,6 @@ class ClientHandler extends PropertyMaster
 		ISP_NCN => '__construct',	# 18
 		ISP_CNL => 'onLeave',		# 19
 		ISP_CPR => 'onRename',		# 20
-		ISP_TOC => 'onTakeOverCar',	# 31 To Do.
 	);
 	public $players = array();
 
@@ -401,11 +400,6 @@ class ClientHandler extends PropertyMaster
 		$this->Plate = $CPR->Plate;
 	}
 	
-	public function onTakeOverCar(IS_TOC $TOC)
-	{
-		# To Do.
-	}
-	
 	// Is
 	public function isAdmin(){ return ($this->isLFSAdmin() || $this->isPRISMAdmin) ? TRUE : FALSE; }
 	public function isLFSAdmin(){ return ($this->UCID == 0 || $this->Admin == 1) ? TRUE : FALSE; }
@@ -424,6 +418,7 @@ class PlayerHandler extends PropertyMaster
 		ISP_PLP => 'onPlayerPits',
 		ISP_FIN => 'onPlayerFinished',
 		ISP_RES => 'onPlayerResult',
+		ISP_TOC => 'onTakeOverCar',
 	);
 
 	// Basicly the IS_NPL Struct.
@@ -472,6 +467,14 @@ class PlayerHandler extends PropertyMaster
 	public function onPlayerPits(IS_PLP $PLP)
 	{
 		$this->inPits = TRUE;
+	}
+
+	public function onTakeOverCar(IS_TOC $TOC)
+	{
+		global $PRISM;
+		
+		$this->UCID = $TOC->NewUCID;
+		$this->PName = $PRISM->hosts->getStateById()->clients[$TOC->NewUCID]->PName;
 	}
 
 	public function onPlayerFinished(IS_FIN $FIN)
