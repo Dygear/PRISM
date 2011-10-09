@@ -818,7 +818,7 @@ class IS_MSL extends Struct		// MSg Local - message to appear on local computer 
 
 class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a connection / a player / all
 {
-	const PACK = 'CCxxCCxxa128';
+	const PACK = 'CCxCCCxxa128';
 	const UNPACK = 'CSize/CType/CReqI/CSound/CUCID/CPLID/CSp2/CSp3/a128Text';
 
 	protected $Size = 136;				# 8 + TEXT_SIZE (TEXT_SIZE = 4, 8, 12... 128)
