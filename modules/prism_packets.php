@@ -1044,8 +1044,8 @@ class IS_PLC extends Struct // PLayer Cars
 
 class IS_RST extends Struct // Race STart
 {
-	const PACK = 'CCCxCCCxa6CCvvvvvv';
-	const UNPACK = 'CSize/CType/CReqI/CZero/CRaceLaps/CQualMins/CNumP/CSpare/a6Track/CWeather/CWind/vFlags/vNumNodes/vFinish/vSplit1/vSplit2/vSplit3';
+	const PACK = 'CCCxCCCCa6CCvvvvvv';
+	const UNPACK = 'CSize/CType/CReqI/CZero/CRaceLaps/CQualMins/CNumP/CTiming/a6Track/CWeather/CWind/vFlags/vNumNodes/vFinish/vSplit1/vSplit2/vSplit3';
 
 	protected $Size = 28;				# 28
 	protected $Type = ISP_RST;			# ISP_RST
