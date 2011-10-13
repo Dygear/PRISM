@@ -99,8 +99,7 @@ class HostHandler extends SectionHandler
 	{
 		global $PRISM;
 		
-		$udpPortBuf = array();		// Duplicate udpPort (NLP/MCI port) value check array. Must have one socket per host to listen on.
-		$outgaugePortBuf = array();		// Duplicate outgaugePort value check array. Must have one socket per host to listen on.
+		$udpPortBuf = array();		// Duplicate udpPort (NLP/MCI or OutGauge port) value check array.
 		
 		foreach ($this->connvars as $hostID => $v)
 		{
@@ -213,14 +212,14 @@ class HostHandler extends SectionHandler
 				
 				if ($ic->getOutgaugePort() > 0)
 				{
-					if (in_array($ic->getOutgaugePort(), $outgaugePortBuf))
+					if (in_array($ic->getOutgaugePort(), $udpPortBuf))
 					{
 						console('Duplicate outgaugePort value found! Every host must have its own unique outgaugePort. Not listening for OutGauge packets from host '.$hostID.'.');
 						$ic->setOutgaugePort(0);
 					}
 					else
 					{
-						$outgaugePortBuf[] = $ic->getOutgaugePort();
+						$udpPortBuf[] = $ic->getOutgaugePort();
 						if (!$ic->createOutgaugeSocket())
 						{
 							console('Not listening for OutGauge packets from host '.$hostID.'.');
