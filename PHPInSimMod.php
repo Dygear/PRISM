@@ -96,7 +96,7 @@ class PHPInSimMod
 	// Pseudo Magic Functions
 	private static function _autoload($className)
 	{
-		require_once(ROOTPATH . "/modules/prism_{$className}.php");
+		require_once(ROOTPATH . "/modules/prism_" . strtolower($className) . ".php");
 	}
 
 	public static function _errorHandler($errno, $errstr, $errfile, $errline, $errcontext)

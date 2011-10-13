@@ -29,6 +29,8 @@ define('SOCKTYPE_UDP',			2);
 define('STREAM_READ_BYTES',		8192);
 define('STREAM_WRITE_BYTES',	1400);
 
+define('OUTGAUGE_PACKET_LEN',   92);
+
 /**
  * HostHandler public functions :
  * ->initialise()									# (re)loads the config files and (re)connects to the host(s)
@@ -98,6 +100,7 @@ class HostHandler extends SectionHandler
 		global $PRISM;
 		
 		$udpPortBuf = array();		// Duplicate udpPort (NLP/MCI port) value check array. Must have one socket per host to listen on.
+		$outgaugePortBuf = array();		// Duplicate outgaugePort value check array. Must have one socket per host to listen on.
 		
 		foreach ($this->connvars as $hostID => $v)
 		{
@@ -135,6 +138,7 @@ class HostHandler extends SectionHandler
 				$ip				= isset($v['ip']) ? $v['ip'] : '';
 				$port			= isset($v['port']) ? (int) $v['port'] : 0;
 				$udpPort		= isset($v['udpPort']) ? (int) $v['udpPort'] : 0;
+				$outgaugePort   = isset($v['outgaugePort']) ? (int) $v['outgaugePort'] : 0;
 				$flags			= isset($v['flags']) ? (int) $v['flags'] : 72;
 				$pps			= isset($v['pps']) ? (int) $v['pps'] : 3;
 				$adminPass		= isset($v['password']) ? substr($v['password'], 0, 15) : '';
@@ -150,9 +154,15 @@ class HostHandler extends SectionHandler
 				}
 				if ($udpPort < 0 || $udpPort > 65535)
 				{
-					console('Invalid port '.$udpPort.' for '.$hostID);
-					console('Host '.$hostID.' will be excluded.');
-					continue;
+					console('Invalid UDP port '.$udpPort.' for '.$hostID);
+					console('Falling back to TCP.');
+					$udpPort = 0;
+				}
+				if ($outgaugePort < 0 || $outgaugePort > 65535)
+				{
+					console('Invalid OutGauge port '.$outgaugePort.' for '.$hostID);
+					console('Outgauge will not work for host '.$hostID.'.');
+					$outgaugePort = 0;
 				}
 				if ($pps < 1 || $pps > 100)
 				{
@@ -175,10 +185,11 @@ class HostHandler extends SectionHandler
 					'ip'			=> $ip,
 					'port'			=> $port,
 					'udpPort'		=> $udpPort,
+					'outgaugePort'	=> $outgaugePort,
 					'flags'			=> $flags,
 					'pps'			=> $pps,
 					'adminPass'		=> $adminPass,
-					'prefix'		=> $prefix
+					'prefix'		=> $prefix,
 				);
 				$ic = new InsimConnection($icVars);
 
@@ -196,6 +207,24 @@ class HostHandler extends SectionHandler
 						{
 							console('Host '.$hostID.' will be excluded.');
 							continue;
+						}
+					}
+				}
+				
+				if ($ic->getOutgaugePort() > 0)
+				{
+					if (in_array($ic->getOutgaugePort(), $outgaugePortBuf))
+					{
+						console('Duplicate outgaugePort value found! Every host must have its own unique outgaugePort. Not listening for OutGauge packets from host '.$hostID.'.');
+						$ic->setOutgaugePort(0);
+					}
+					else
+					{
+						$outgaugePortBuf[] = $ic->getOutgaugePort();
+						if (!$ic->createOutgaugeSocket())
+						{
+							console('Not listening for OutGauge packets from host '.$hostID.'.');
+							$ic->setOutgaugePort(0);
 						}
 					}
 				}
@@ -238,6 +267,10 @@ class HostHandler extends SectionHandler
 			// Treat secundary socketMCI separately. This socket is always open.
 			if ($host->getUdpPort() > 0 && is_resource($host->getSocketMCI()))
 				$sockReads[] = $host->getSocketMCI();
+			
+			// Treat socketOutgauge separately. This socket is always open.
+			if ($host->getOutgaugePort() > 0 && is_resource($host->getSocketOutgauge()))
+				$sockReads[] = $host->getSocketOutgauge();
 		}
 	}
 	
@@ -339,6 +372,24 @@ class HostHandler extends SectionHandler
 				// Only process the packet if it came from the host's IP.
 				if ($host->getConnectIP() == $exp[0])
 					$this->handlePacket($data, $hostID);
+			}
+
+			// Did the host send us something on our outgauge socket? (if we have that active to begin with)
+			if ($host->getOutgaugePort() > 0 && in_array($host->getSocketOutgauge(), $sockReads))
+			{
+				$activity++;
+				
+				$peerInfo = '';
+				$data = $host->readOutgauge($peerInfo);
+				$exp = explode(':', $peerInfo);
+				//console('received '.strlen($data).' bytes on outgauge socket');
+
+				// Only process the packet if it came from the host's IP.
+				if ($host->getConnectIP() == $exp[0])
+				{
+				    //echo "outgauge packet...\n";
+					$this->handleOutgaugePacket($data, $hostID);
+				}
 			}
 		}
 		
@@ -442,6 +493,32 @@ class HostHandler extends SectionHandler
 		{
 			console("Unknown Type Byte of ${pH['Type']}, with reported size of ${pH['Size']} Bytes and actual size of " . strlen($rawPacket) . ' Bytes.');
 		}
+	}
+
+	private function handleOutgaugePacket(&$rawPacket, $hostID)
+	{
+	    // Check packet size (without and with optional ID)
+	    $packetLen = strlen($rawPacket);
+	    if ($packetLen != OUTGAUGE_PACKET_LEN && $packetLen != OUTGAUGE_PACKET_LEN + 4)
+	    {
+	        console('WARNING : outgauge packet of invalid size ('.$packetLen.')');
+	        return;
+	    }
+	    
+	    // Parse packet
+	    if ($packetLen == OUTGAUGE_PACKET_LEN)
+	    {
+	        $packet = unpack('VTime/a4Car/vFlags/CGear/CPLID/fSpeed/fRPM/fTurbo/fEngTemp/fFuel/fOilPressure/fOilTemp/VDashLights/VShowLights/fThrottle/fBrake/fClutch/a16Display1/a16Display2', $rawPacket);
+	        $packet['ID'] = 0;
+	    }
+	    else
+	    {
+	        $packet = unpack('VTime/a4Car/vFlags/CGear/CPLID/fSpeed/fRPM/fTurbo/fEngTemp/fFuel/fOilPressure/fOilTemp/VDashLights/VShowLights/fThrottle/fBrake/fClutch/a16Display1/a16Display2/lID', $rawPacket);
+	    }
+	    //print_r($packet);
+
+	    // Pass to outguage processor
+	    
 	}
 	
 	// inspectPacket is used to act upon certain packets like error messages
@@ -637,6 +714,7 @@ class InsimConnection
 	private $socketMCI;						# secondary, udp socket to listen on, if udpPort > 0
 											# note that this follows the exact theory of how insim deals with tcp and udp sockets
 											# see InSim.txt in LFS distributions for more info
+	private $socketOutgauge;				# separate udp socket to listen on for outgauge packets, if outgaugePort > 0
 	
 	private $connStatus		= CONN_NOTCONNECTED;
 	
@@ -663,6 +741,7 @@ class InsimConnection
 	private $port			= 0;			# the port
 	private $flags			= 72;			# Defaults to ISF_MSO_COLS (8) & ISF_CON (64) options on.
 	private $udpPort		= 0;			# the secundary udp port to listen on for NLP/MCI packets, in case the main port is tcp
+	private $outgaugePort	= 0;			# the outgauge udp port to listen on
 	private $adminPass		= '';			# adminpass for both relay and direct usage
 	private $specPass		= '';			# specpass for relay usage
 	private $pps			= 3;		
@@ -683,6 +762,7 @@ class InsimConnection
 		$this->prefix		= ($icVars['prefix'] == '') ? $PRISM->config->cvars['prefix'] : $icVars['prefix'];
 
 		$this->udpPort		= isset($icVars['udpPort']) ? $icVars['udpPort'] : 0;
+		$this->outgaugePort	= isset($icVars['outgaugePort']) ? $icVars['outgaugePort'] : 0;
 		$this->hostName		= isset($icVars['hostName']) ? $icVars['hostName'] : '';
 		$this->specPass		= isset($icVars['specPass']) ? $icVars['specPass'] : '';
 	}
@@ -692,6 +772,8 @@ class InsimConnection
 		$this->close(TRUE);
 		if ($this->socketMCI)
 			fclose($this->socketMCI);
+		if ($this->socketOutgauge)
+			fclose($this->socketOutgauge);
 	}
 	
 	public function &getSocket()
@@ -702,6 +784,11 @@ class InsimConnection
 	public function &getSocketMCI()
 	{
 		return $this->socketMCI;
+	}
+	
+	public function &getSocketOutgauge()
+	{
+		return $this->socketOutgauge;
 	}
 	
 	public function &getSocketType()
@@ -769,6 +856,11 @@ class InsimConnection
 		return $this->udpPort;
 	}
 	
+	public function &getOutgaugePort()
+	{
+		return $this->outgaugePort;
+	}
+	
 	public function &getFlags()
 	{
 		return $this->flags;
@@ -802,6 +894,16 @@ class InsimConnection
 		// Should we reinit the udp listening socket?
 		$this->closeMCISocket();
 		$this->createMCISocket();
+	}
+	
+	public function setOutgaugePort($outgaugePort)
+	{
+		// Set the new value
+		$this->outgaugePort = $outgaugePort;
+
+		// Should we reinit the udp listening socket?
+		$this->closeOutgaugeSocket();
+		$this->createOutgaugeSocket();
 	}
 		
 	public function &getSendQLen()
@@ -928,6 +1030,8 @@ class InsimConnection
 	public function createMCISocket()
 	{
 		$this->closeMCISocket();
+	    if ($this->udpPort == 0)
+	        return TRUE;
 		
 		$this->socketMCI = @stream_socket_server('udp://0.0.0.0:'.$this->udpPort, $errNo, $errStr, STREAM_SERVER_BIND);
 		if (!$this->socketMCI || $errNo > 0)
@@ -948,6 +1052,33 @@ class InsimConnection
 		if (is_resource($this->socketMCI))
 			fclose($this->socketMCI);
 		$this->socketMCI = NULL;
+	}
+	
+	public function createOutgaugeSocket()
+	{
+	    $this->closeOutgaugeSocket();
+	    if ($this->outgaugePort == 0)
+	        return TRUE;
+		
+		$this->socketOutgauge = @stream_socket_server('udp://0.0.0.0:'.$this->outgaugePort, $errNo, $errStr, STREAM_SERVER_BIND);
+		if (!$this->socketOutgauge || $errNo > 0)
+		{
+			console ('Error opening OutGauge UDP socket to listen on : '.$errStr);
+			$this->socketOutgauge	= NULL;
+			$this->outgaugePort		= 0;
+			return FALSE;
+		}
+		
+		console('Listening for OutGauge packets on UDP port '.$this->outgaugePort);
+		
+		return TRUE;
+	}
+	
+	private function closeOutgaugeSocket()
+	{
+		if (is_resource($this->socketOutgauge))
+			fclose($this->socketOutgauge);
+		$this->socketOutgauge = NULL;
 	}
 	
 	// $permanentClose	- set to TRUE to close this connection once and for all.
@@ -1102,6 +1233,12 @@ class InsimConnection
 	{
 		$this->lastReadTime = time();
 		return stream_socket_recvfrom($this->socketMCI, STREAM_READ_BYTES, 0, $peerInfo);
+	}
+	
+	public function readOutgauge(&$peerInfo)
+	{
+		$this->lastReadTime = time();
+		return stream_socket_recvfrom($this->socketOutgauge, STREAM_READ_BYTES, 0, $peerInfo);
 	}
 	
 	public function appendToBuffer(&$data)
