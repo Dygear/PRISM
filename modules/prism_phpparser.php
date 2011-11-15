@@ -12,20 +12,20 @@ class PHPParser
 	private static $scriptCache = array();
 	private static $sessions = array();
 	
-	public static function parseFile(HttpResponse &$_RESPONSE, $file, array $SERVER, array &$_GET, array &$_POST, array &$_COOKIE, array &$_FILES)
+	public static function parseFile(HttpResponse &$RESPONSE, $file, array $SERVER, array &$GET, array &$POST, array &$COOKIE, array &$FILES)
 	{
 		global $PRISM;
 		
 		// Restore session?
-		if (isset($_COOKIE['PrismSession']) && 
-			isset(self::$sessions[$_COOKIE['PrismSession']]) &&
-			self::$sessions[$_COOKIE['PrismSession']][0] > time() &&
-			self::$sessions[$_COOKIE['PrismSession']][1] == $SERVER['REMOTE_ADDR'])
+		if (isset($COOKIE['PrismSession']) && 
+			isset(self::$sessions[$COOKIE['PrismSession']]) &&
+			self::$sessions[$COOKIE['PrismSession']][0] > time() &&
+			self::$sessions[$COOKIE['PrismSession']][1] == $SERVER['REMOTE_ADDR'])
 		{
-			$_SESSION = self::$sessions[$_COOKIE['PrismSession']][2];
+			$_SESSION = self::$sessions[$COOKIE['PrismSession']][2];
 			
 			// Sessions only last for one request. We rewrite it later on if needed.
-			unset(self::$sessions[$_COOKIE['PrismSession']]);
+			unset(self::$sessions[$COOKIE['PrismSession']]);
 		}
 		
 		// Change working dir to docRoot
@@ -79,11 +79,11 @@ class PHPParser
 		{
 			$sessionID = sha1(createRandomString(128, RAND_BINARY).time());
 			self::$sessions[$sessionID] = array(time() + PRISM_SESSION_TIMEOUT, $SERVER['REMOTE_ADDR'], $_SESSION);
-			$_RESPONSE->setCookie('PrismSession', $sessionID, time() + PRISM_SESSION_TIMEOUT, '/', $SERVER['SERVER_NAME']);
+			$RESPONSE->setCookie('PrismSession', $sessionID, time() + PRISM_SESSION_TIMEOUT, '/', $SERVER['SERVER_NAME']);
 		}
-		else if (isset($_COOKIE['PrismSession']))
+		else if (isset($COOKIE['PrismSession']))
 		{
-			$_RESPONSE->setCookie('PrismSession', '', 0, '/', $SERVER['SERVER_NAME']);
+			$RESPONSE->setCookie('PrismSession', '', 0, '/', $SERVER['SERVER_NAME']);
 		}
 		unset($_SESSION);
 		
@@ -98,7 +98,7 @@ class PHPParser
 			else if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) $encoding = 'gzip';
 			
 			if ($encoding) {
-			    $_RESPONSE->addHeader('Content-Encoding: '.$encoding);
+			    $RESPONSE->addHeader('Content-Encoding: '.$encoding);
 			    return gzencode ($html, 1);
 			} else return $html;
 		}
