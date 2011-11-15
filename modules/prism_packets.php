@@ -1300,12 +1300,7 @@ class IS_PIT extends Struct // PIT stop (stop at pit garage)
 
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+		parent::unpack($rawPacket);
 
 		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
 		{
@@ -1785,12 +1780,7 @@ class IS_NLP extends Struct // Node and Lap Packet - variable size
 
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+		parent::unpack($rawPacket);
 
 		for ($i = 0; $i < $this->NumP; $i++)
 		{
@@ -1850,12 +1840,7 @@ class IS_MCI extends Struct // Multi Car Info - if more than 8 in race then more
 
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+		parent::unpack($rawPacket);
 
 		for ($i = 0; $i < $this->NumC; $i++)
 		{
@@ -1941,12 +1926,7 @@ class IS_CON extends Struct // CONtact - between two cars (A and B are sorted by
 
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+		parent::unpack($rawPacket);
 
 		$this->A = new CarContact(substr($rawPacket, 8, 16));
 		$this->B = new CarContact(substr($rawPacket, 24, 16));
@@ -2002,12 +1982,7 @@ class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an un
 
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+		parent::unpack($rawPacket);
 
 		$this->C = new CarContOBJ(substr($rawPacket, 8, 8));
 
@@ -2043,12 +2018,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+		parent::unpacK($rawPacket);
 
 		$this->C = new CarContOBJ(substr($rawPacket, 8, 8));
 
@@ -2110,12 +2080,7 @@ class IS_AXM extends Struct // AutoX Multiple objects - variable size
 
 	public function unpack($rawPacket)
 	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
-
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+		parent::unpack($rawPacket);
 
 		for ($i = 0; $i < $this->NumO; $i++)
 		{
@@ -2834,14 +2799,11 @@ class IR_HOS extends Struct // Hostlist (hosts connected to the Relay)
 
 	public $Info = array();				# Host info for every host in the Relay. 1 to 6 of these in a IR_HOS
 
-	public function unpack()
-	{
-		$pkClass = unpack($this::UNPACK, $rawPacket);
 
-		foreach ($pkClass as $property => $value)
-		{
-			$this->$property = $value;
-		}
+
+	public function unpack($rawPacket)
+	{
+		parent::unpack($rawPacket);
 
 		for ($i = 0; $i < $this->NumHosts; $i++)
 		{
