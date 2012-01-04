@@ -22,7 +22,7 @@ class PTH
 		$file = file_get_contents($pthFilePath);
 
 		if ($this->unPack($file) === TRUE)
-			return; # trigger_error returns (bool) TRUE, so if the return is true, there was an error.
+			return; # trigger_error returns (bool) TRUE, so if the return is true, then was an error.
 
 		return $this;
 	}
@@ -69,7 +69,7 @@ class Center
 		$this->unPack($rawData);
 	}
 	public function unPack($rawData) {
-		foreach (unpack(self::UNPACK, $rawData) as $property => $value)
+		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
 			$this->$property = $value;
 	}
 }
@@ -82,7 +82,7 @@ class Direction
 		$this->unPack($rawData);
 	}
 	public function unPack($rawData) {
-		foreach (unpack(Center::UNPACK, $rawData) as $property => $value)
+		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
 			$this->$property = $value;
 	}
 }
