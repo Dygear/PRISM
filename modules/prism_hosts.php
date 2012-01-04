@@ -29,8 +29,6 @@ define('SOCKTYPE_UDP',			2);
 define('STREAM_READ_BYTES',		8192);
 define('STREAM_WRITE_BYTES',	1400);
 
-define('OUTGAUGE_PACKET_LEN',   92);
-
 /**
  * HostHandler public functions :
  * ->initialise()									# (re)loads the config files and (re)connects to the host(s)
@@ -496,28 +494,16 @@ class HostHandler extends SectionHandler
 
 	private function handleOutgaugePacket(&$rawPacket, $hostID)
 	{
-	    // Check packet size (without and with optional ID)
-	    $packetLen = strlen($rawPacket);
-	    if ($packetLen != OUTGAUGE_PACKET_LEN && $packetLen != OUTGAUGE_PACKET_LEN + 4)
-	    {
-	        console('WARNING : outgauge packet of invalid size ('.$packetLen.')');
-	        return;
-	    }
-	    
-	    // Parse packet
-	    if ($packetLen == OUTGAUGE_PACKET_LEN)
-	    {
-	        $packet = unpack('VTime/a4Car/vFlags/CGear/CPLID/fSpeed/fRPM/fTurbo/fEngTemp/fFuel/fOilPressure/fOilTemp/VDashLights/VShowLights/fThrottle/fBrake/fClutch/a16Display1/a16Display2', $rawPacket);
-	        $packet['ID'] = 0;
-	    }
-	    else
-	    {
-	        $packet = unpack('VTime/a4Car/vFlags/CGear/CPLID/fSpeed/fRPM/fTurbo/fEngTemp/fFuel/fOilPressure/fOilTemp/VDashLights/VShowLights/fThrottle/fBrake/fClutch/a16Display1/a16Display2/lID', $rawPacket);
-	    }
-	    //print_r($packet);
+		# Check packet size (without and with optional ID)
+		$packetLen = strlen($rawPacket);
+		if ($packetLen != OutGaugePack::LENGTH AND $packetLen != OutGaugePack::LENGTH + 4)
+			return console("WARNING : outgauge packet of invalid size ({$packetLen})");
+	
+		# Parse packet
+		$packet = new OutGaugePack($rawPacket);
 
-	    // Pass to outguage processor
-	    
+		# Pass to outguage processor
+		$this->inspectPacket($packet, $hostID);
 	}
 	
 	// inspectPacket is used to act upon certain packets like error messages
