@@ -685,7 +685,7 @@ class IS_MSO extends Struct // MSg Out - system messages and user messages
 
 	protected $Size = 136;				# 136
 	protected $Type = ISP_MSO;			# ISP_MSO
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = NULL;			# 0
 	protected $Zero = NULL;
 
 	public $UCID = 0;					# connection's unique id (0 = host)
@@ -1304,8 +1304,9 @@ class IS_PIT extends Struct // PIT stop (stop at pit garage)
 
 		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
 		{
-			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
-			unset($pkClass["Tyres{$Tyre}"]);
+			$Property = "Tyres{$Tyre}";
+			$this->Tyres[] = $this->$Property;
+			unset($this->$Property);
 		}
 
 		return $this;
@@ -2614,11 +2615,11 @@ class IS_BTT extends Struct // BuTton Type - sent back when user types into a te
 // OutSim ID 0          :if not zero, adds an identifier to the packet
 
 // Each update sends the following UDP packet :
-
 class OutSimPack extends Struct
 {
-	const PACK = 'Vf3ffff3f3fll';
-	const UNPACK = 'VTime/f3AngVel/fHeading/fPitch/fRoll/f3Accel/f3Vel/l3Pos/lID';
+	const PACK = 'Vf12l3';
+	const UNPACK = 'VTime/f3AngVel/fHeading/fPitch/fRoll/f3Accel/f3Vel/l3Pos';
+	const LENGTH = 64;
 
 	public $Time;						# time in milliseconds (to check order)
 
@@ -2631,6 +2632,16 @@ class OutSimPack extends Struct
 	public $Pos;						# 3 ints   X, Y, Z (1m = 65536)
 
 	public $ID;							# optional - only if OutSim ID is specified
+
+	public function unpack($rawPacket)
+	{
+		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/lID';
+		
+		foreach (unpack($unpack, $rawPacket) as $property => $value)
+			$this->$property = $value;
+
+		return $this;
+	}
 };
 
 // NOTE 1) X and Y axes are on the ground, Z is up.
@@ -2659,8 +2670,9 @@ class OutSimPack extends Struct
 
 class OutGaugePack extends Struct
 {
-	const PACK = 'Va4vCxfffffffVVfffa16a16l';
-	const UNPACK = 'VTime/a4Car/vFlags/CGear/CSpareB/fSpeed/fRPM/fTurbo/fEngTemp/fFuel/fOilPressure/fOilTemp/VDashLights/VShowLights/fThrottle/fBrake/fClutch/a16Display1/a16Display2/lID';
+	const PACK = 'Va4vCxfffffffVVfffa16a16';
+	const UNPACK = 'VTime/a4Car/vFlags/CGear/CSpareB/fSpeed/fRPM/fTurbo/fEngTemp/fFuel/fOilPressure/fOilTemp/VDashLights/VShowLights/fThrottle/fBrake/fClutch/a16Display1/a16Display2';
+	const LENGTH = 92; # Or 96 with ID.
 
 	public $Time;						# time in milliseconds (to check order)
 
@@ -2683,7 +2695,17 @@ class OutGaugePack extends Struct
 	public $Display1;					# Usually Fuel
 	public $Display2;					# Usually Settings
 
-	public $ID;						# optional - only if OutGauge ID is specified
+	public $ID;							# optional - only if OutGauge ID is specified
+	
+	public function unpack($rawPacket)
+	{
+		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/lID';
+		
+		foreach (unpack($unpack, $rawPacket) as $property => $value)
+			$this->$property = $value;
+
+		return $this;
+	}
 };
 
 // OG_x - bits for OutGaugePack Flags
@@ -2918,12 +2940,14 @@ TINY_NONE    // for relay-connection maintenance
 */
 
 /* Start of PRISM PACKET FOOTER */
+define('OSP',	-1);// -1 - info			: OutSimPacket - MOTION SIMULATOR SUPPORT
+define('OGP',	-2);// -2 - info			: OutGauge - EXTERNAL DASHBOARD SUPPORT
+$SPECIAL = array(OSP => 'OutSimPack', OGP => 'OutGaugePack');
 /* Packet Handler Help */
 $TYPEs = $ISP + $IRP;
 foreach ($TYPEs as $Type => $Name)
-{
 	$TYPEs[$Type] = substr_replace($Name, '', 2, 1);
-}
+$TYPEs = $SPECIAL + $TYPEs;
 /* End of PRISM PACKET FOOTER */
 
 ?>
