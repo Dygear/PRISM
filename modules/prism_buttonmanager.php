@@ -225,14 +225,14 @@ class ButtonManager
 	}
 	
 	
-	/*
 	
 	public static function clearButtonsForConn($UCID, $hostId = NULL)
 	{
 		$hostButtons = self::buttonsForHost($hostId);
 		unset($hostButtons[$UCID]);
 	}
-	
+
+	/*
 	public static function clearAllButtons($hostId = NULL)
 	{
 		if ($hostId === NULL)
