@@ -94,8 +94,6 @@ class ButtonManager
 		return false;
 	}
 	
-	
-	
 // removal
 	public static function removeButtonByKey($UCID, $key, $hostId = NULL)
 	{
@@ -255,6 +253,7 @@ class ButtonManager
 		
 		return $hostButtons[$UCID];
 	}
+	*/
 	
 	private static function buttonsForHost($hostId = NULL)
 	{
@@ -272,6 +271,7 @@ class ButtonManager
 		return self::$buttons[$hostId];
 	}
 	
+	/*
 	public static function removeButton(Button $BTN, $hostId = NULL)
 	{
 		if ($hostId === NULL)
@@ -288,17 +288,7 @@ class ButtonManager
 		unset(self::$buttons[$hostId][$BTN->UCID][$BTN->ClickID]);
 	}
 	*/
-		
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 // Area reserving	
 	
 	private static $reservedAreas = array();
