@@ -1122,7 +1122,7 @@ class IS_CNL extends Struct // ConN Leave
 class IS_CPR extends Struct // Conn Player Rename
 {
 	const PACK = 'CCxCa24a8';
-	const UNPACK = 'CSize/CType/CReqI/CUCID/a24PName/a8Plate';
+	const UNPACK = 'CSize/CType/CReqI/CUCID/a24PName/A8Plate';
 
 	protected $Size = 36;				# 36
 	protected $Type = ISP_CPR;			# ISP_CPR
@@ -1136,7 +1136,7 @@ class IS_CPR extends Struct // Conn Player Rename
 class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, then leaving pits)
 {
 	const PACK = 'CCCCCCva24a8a4a16C4CCCClCCxx';
-	const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/a8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/lSpare/CSetF/CNumP/CSp2/CSp3';
+	const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/A8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/lSpare/CSetF/CNumP/CSp2/CSp3';
 
 	protected $Size = 76;				# 76
 	protected $Type = ISP_NPL;			# ISP_NPL
@@ -1455,7 +1455,7 @@ class IS_FIN extends Struct // FINished race notification (not a final result - 
 class IS_RES extends Struct // RESult (qualify or confirmed finish)
 {
 	const PACK = 'CCxCa24a24a8a4VVxCCxvvCCv';
-	const UNPACK = 'CSize/CType/CReqI/CPLID/a24UName/a24PName/a8Plate/a4CName/VTTime/VBTime/CSpA/CNumStops/CConfirm/CSpB/vLapsDone/vFlags/CResultNum/CNumRes/vPSeconds';
+	const UNPACK = 'CSize/CType/CReqI/CPLID/a24UName/a24PName/A8Plate/a4CName/VTTime/VBTime/CSpA/CNumStops/CConfirm/CSpB/vLapsDone/vFlags/CResultNum/CNumRes/vPSeconds';
 
 	protected $Size = 84;				# 84
 	protected $Type = ISP_RES;			# ISP_RES
