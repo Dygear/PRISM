@@ -36,15 +36,25 @@ class Button extends IS_BTN
 		}
 	}
 	
-	public function registerOnClick(Plugins $plugin, $methodName)
+	public function registerOnClick(Plugins $plugin, $methodName, $params = NULL)
 	{
-		$this->onClick = array($plugin, $methodName);
+		$this->onClick = array($plugin, $methodName, $params);
 		$this->BStyle |= ISB_CLICK;
 	}
 	public function click(IS_BTC $BTC)
 	{
-		if (is_array($this->onClick)) {
-			call_user_func($this->onClick, $BTC, $this);
+		if (!is_array($this->onClick))
+			return;
+
+		switch (count($this->onClick))
+		{
+			case 3:
+				call_user_func_array(array($this->onClick[0], $this->onClick[1]), $this->onClick[2]);
+			break;
+			case 2:
+			default:
+				call_user_func($this->onClick, $BTC, $this);
+			break;
 		}
 	}
 	public function registerOnText(Plugins $plugin, $methodName, $maxLength = 95)
