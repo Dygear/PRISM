@@ -308,7 +308,7 @@ class StateHandler extends PropertyMaster
 	# IS_PLP (22)
 	public function onPlayerPits(IS_PLP $PLP)
 	{
-		$this->players[$PLP->PLID]->onPitGarage($PLP);
+		$this->players[$PLP->PLID]->onPlayerPits($PLP);
 	}
 	# IS_PLL (23)
 	public function onPlayerLeave(IS_PLL $PLL)
