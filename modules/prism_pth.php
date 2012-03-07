@@ -8,7 +8,7 @@
 class PTH
 {
 	const PACK = 'a6CCll';
-	const UNPACK = 'a6LFSPTH/CVersion/CRevision/lNumNodes/lFinishLine';
+	const UNPACK = 'a6LFSPTH/CVersion/CRevision/VNumNodes/VFinishLine';
 
 	public $LFSPTH = 'LFSPTH';
 	public $Version = 0;
@@ -43,7 +43,27 @@ class PTH
 		for ($Node = 0; $Node < $this->NumNodes; ++$Node)
 			$this->Nodes[$Node] = new Node(substr($file, 16 + ($Node * 40), 40));
 
+		print_r($this);
+
 		return $this;
+	}
+	public function toPoly($limitRoad)
+	{
+		$toPoly = array();
+		# Left side
+		foreach ($this->Nodes as $ID => $Node) {
+			$toPoly[] = $Node->Center->X + $Node->$limitRoad->Left * cos(atan2($Node->Direction->X, $Node->Direction->Y));
+			$toPoly[] = $Node->Center->Y - $Node->$limitRoad->Left * sin(atan2($Node->Direction->X, $Node->Direction->Y));
+		}
+		# Right side
+		foreach ($this->Nodes as $ID => $Node) {
+			$toPoly[] = $Node->Center->X + $Node->$limitRoad->Right * cos(atan2($Node->Direction->X, $Node->Direction->Y));
+			$toPoly[] = $Node->Center->Y - $Node->$limitRoad->Right * sin(atan2($Node->Direction->X, $Node->Direction->Y));
+		}
+		return $toPoly;
+	}
+	private function point($Node, $limitRoad, $leftRight) {
+		return ;
 	}
 }
 class Node
@@ -56,14 +76,14 @@ class Node
 	public function __construct($RawNode) {
 		$this->Center = new Center(substr($RawNode, 0, 12));
 		$this->Direction = new Direction(substr($RawNode, 12, 12));
-		$this->Limit = new Limit(substr($RawNode, 24, 8), $this);
-		$this->Road = new Road(substr($RawNode, 32, 8), $this);
+		$this->Limit = new Limit(substr($RawNode, 24, 8));
+		$this->Road = new Road(substr($RawNode, 32, 8));
 	}
 }
 class Center
 {
-	const PACK = 'lll';
-	const UNPACK = 'lX/lY/lZ';
+	const PACK = 'VVV';
+	const UNPACK = 'VX/VY/VZ';
 	
 	public function __construct($rawData) {
 		$this->unPack($rawData);
@@ -86,38 +106,26 @@ class Direction
 			$this->$property = $value;
 	}
 }
-class Limit extends PointDetail
+class Limit
 {
 	const PACK = 'ff';
 	const UNPACK = 'fLeft/fRight';
-}
-class Road extends PointDetail
-{
-	const PACK = 'ff';
-	const UNPACK = 'fLeft/fRight';
-}
-abstract class PointDetail
-{
-	protected $parent;
-	
-	public function __construct($rawData, $parent) {
-		$this->unPack($rawData);
-		$this->parent = $parent;
-	}
 
-	public function pointLeft() {
-		$Direction =& $this->parent->Direction;
-		$Center =& $this->parent->Center;
-		$cosTan = cos(atan2($Direction->X, $Direction->Y));
-		$sinTan = sin(atan2($Direction->X, $Direction->Y));
-		return new Point($Center->X + $this->Left * $cosTan, $Center->Y - $this->Left * $sinTan);
+	public function __construct($rawData) {
+		$this->unPack($rawData);
 	}
-	public function pointRight() {
-		$Direction =& $this->parent->Direction;
-		$Center =& $this->parent->Center;
-		$cosTan = cos(atan2($Direction->X, $Direction->Y));
-		$sinTan = sin(atan2($Direction->X, $Direction->Y));
-		return new Point($Center->X + $this->Right * $cosTan, $Center->Y - $this->Right * $sinTan);
+	public function unPack($rawData) {
+		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
+			$this->$property = $value;
+	}
+}
+class Road
+{
+	const PACK = 'ff';
+	const UNPACK = 'fLeft/fRight';
+
+	public function __construct($rawData) {
+		$this->unPack($rawData);
 	}
 	public function unPack($rawData) {
 		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
