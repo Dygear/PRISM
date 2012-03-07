@@ -7,7 +7,7 @@
 // Simple Mesh eXport
 class SMX
 {
-	const HEADER = 'a6LFSSMX/CGameVersion/CGameRevision/CSMXVersion/xDimensions/CResolution/CVertexColors/x4/a32Track/x3GroundColor/x9/lObjects';
+	const HEADER = 'a6LFSSMX/CGameVersion/CGameRevision/CSMXVersion/xDimensions/CResolution/CVertexColors/x4/a32Track/x3GroundColor/x9/VObjects';
 	const COLOR = 'CR/CG/CB';
 
 	public $LFSSMX = 'LFSSMX';
@@ -52,9 +52,9 @@ class SMX
 }
 class Object
 {
-	const CENTER = 'lX/lY/lZ';
-	const OBJECT = 'lRadius/lPoints/lTriangles';
-	const POINT = 'lX/lY/lZ/lColour';
+	const CENTER = 'VX/VY/VZ';
+	const OBJECT = 'VRadius/VPoints/VTriangles';
+	const POINT = 'VX/VY/VZ/VColour';
 	const TRIANGLE = 'vA/vB/vC/x2';
 
 	public $Center = array();
