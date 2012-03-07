@@ -7,7 +7,7 @@
 
 class Interactive
 {
-	public function queryHosts(array &$vars)
+	public static function queryHosts(array &$vars)
 	{
 		echo '***HOST CONNECTIONS SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the host(s) you want to connect to.'.PHP_EOL;
@@ -91,7 +91,7 @@ class Interactive
 		echo PHP_EOL;
 	}
 
-	public function queryPlugins(array &$vars, array &$hostvars)
+	public static function queryPlugins(array &$vars, array &$hostvars)
 	{
 		// Check if plugins dir exists
 		if (!file_exists(ROOTPATH.'/plugins/'))
@@ -201,7 +201,7 @@ class Interactive
 		echo PHP_EOL;
 	}
 	
-	public function queryHttp(array &$vars)
+	public static function queryHttp(array &$vars)
 	{
 		echo '***HTTP SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the http server.'.PHP_EOL;
@@ -249,7 +249,7 @@ class Interactive
 		echo PHP_EOL;
 	}
 	
-	public function queryTelnet(array &$vars)
+	public static function queryTelnet(array &$vars)
 	{
 		echo '***TELNET SETUP***'.PHP_EOL;
 		echo 'You now have the chance to manually enter the details of the telnet server.'.PHP_EOL;
@@ -291,7 +291,7 @@ class Interactive
 		echo PHP_EOL;
 	}
 	
-	public function queryAdmins(array &$vars)
+	public static function queryAdmins(array &$vars)
 	{
 		global $PRISM;
 		
@@ -407,7 +407,7 @@ class Interactive
 	 *	$options	- optional array of answers of which one must be matched.
 	 *	$allowEmpty	- whether to allow an empty input or not.
 	 */
-	public function query($question, array $options = array(), $allowEmpty = false)
+	public static function query($question, array $options = array(), $allowEmpty = false)
 	{
 		$input = '';
 		$numOptions = count($options);
