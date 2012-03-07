@@ -2019,7 +2019,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 
 	public function unpack($rawPacket)
 	{
-		parent::unpacK($rawPacket);
+		parent::unpack($rawPacket);
 
 		$this->C = new CarContOBJ(substr($rawPacket, 8, 8));
 
