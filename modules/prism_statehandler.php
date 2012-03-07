@@ -28,36 +28,109 @@ class StateHandler extends PropertyMaster
 		ISP_AXI => 'onAutoXInfo',
 		ISP_RIP => 'onReplayInformation',
 		# Client handles
-		ISP_NCN => 'onClientJoin',
-		ISP_CNL => 'onClientLeave',
-		ISP_CPR => 'onClientRename',
+		ISP_NCN => 'onClientPacket',
+		ISP_CNL => 'onClientPacket',
+		ISP_CPR => 'onClientPacket',
 		# Player handles
-		ISP_NPL => 'onPlayerJoin',
-		ISP_PLP => 'onPlayerPits',
-		ISP_PLL => 'onPlayerLeave',
-		ISP_TOC => 'onPlayerTakeOverCar',
-		ISP_FIN => 'onPlayerFinished',
-		ISP_RES => 'onPlayerResult',
-		
-		# Buttons
+		ISP_NPL => 'onPlayerPacket',
+		ISP_PLP => 'onPlayerPacket',
+		ISP_PLL => 'onPlayerPacket',
+		ISP_FIN => 'onPlayerPacket',
+		ISP_RES => 'onPlayerPacket',
+		# Client & Player handles
+		ISP_TOC => array(
+					'onClientPacket',
+					'onPlayerPacket'
+				),
+		# Buttons handles
 		ISP_BFN => 'onButtonFunction',
 		ISP_BTC => 'onButtonClick',
 		ISP_BTT => 'onButtonText',
-		
-		# Some generilized Layout management (?)
 	);
 
 	public function dispatchPacket(Struct $Packet)
 	{
 		if (isset($this->handles[$Packet->Type]))
 		{
-			$handle = $this->handles[$Packet->Type];
-			$this->$handle($Packet);
+			if (is_array($this->handles[$Packet->Type]))
+			{
+				foreach ($this->handles[$Packet->Type] as $method)
+					$this->$method($Packet);
+			} else {
+				$handle = $this->handles[$Packet->Type];
+				$this->$handle($Packet);
+			}
 		}
 	}
+
+	// Client handles
+	public function onClientPacket(Struct $Packet)
+	{
+		# Check to make sure we want to handle this type of packet.
+		if (!isset(ClientHandler::$handles[$Packet->Type]))
+			return;
+
+		if ($Packet instanceof IS_NCN)
+			$this->clients[$Packet->UCID] = new ClientHandler($Packet, $this);
+		else
+		{
+			# Check to make sure we have a client.
+			if (!isset($this->clients[$Packet->UCID]))
+				return;
+
+			$this->clients[$Packet->UCID]->{ClientHandler::$handles[$Packet->Type]}($Packet);
+		}
+	}
+
+	// Player handles
+	public function onPlayerPacket(Struct $Packet)
+	{
+		# Check to make sure we want to handle this type of packet.
+		if (!isset(PlayerHandler::$handles[$Packet->Type]))
+			return;
+
+		if ($Packet instanceof IS_NPL)
+		{
+			# Check to see if we already have that player.
+			if (isset($this->players[$Packet->PLID]))
+				return $this->players[$Packet->PLID]->onLeavingPits($Packet);
+
+			$this->players[$Packet->PLID] = new PlayerHandler($Packet, $this);
+			$this->clients[$Packet->UCID]->players[$Packet->PLID] = &$this->players[$Packet->PLID]; #Important, &= means that what ever I do in the PlayerHandler class is automaticly reflected within the ClientHandler class.
+		}
+		else
+		{
+			# Check to make sure we have that player.
+			if (!isset($this->players[$Packet->PLID]))
+				return;
+
+			$this->players[$Packet->PLID]->{PlayerHandler::$handles[$Packet->Type]}($Packet);
+		}
+	}
+	
+	// Button handles
+	# IS_BFN
+	public function onButtonFunction(IS_BFN $BFN)
+	{
+		if ($BFN->SubT == BFN_USER_CLEAR)
+		{
+			// forget about these buttons in the buttonmanager as they were removed on client side
+			ButtonManager::clearButtonsForConn($BFN->UCID);
+		}
+	}
+	public function onButtonClick(IS_BTC $BTC)
+	{
+		ButtonManager::onButtonClick($BTC);
+	}
+	public function onButtonText(IS_BTT $BTT)
+	{
+		ButtonManager::onButtonText($BTT);
+	}
+
+
 	// Extrinsic Properties
 	public $clients = array();
-	public $players = array();		# By design there is one here and a refrence to this in the $this->clients->players array.
+	public $players = array();		# By design there is one here and a refrence to this in the $this->clients[UCID]->players[PLID] array.
 
 	// Constructor
 	public function __construct()
@@ -275,81 +348,6 @@ class StateHandler extends PropertyMaster
 		$this->TTime = $RIP->TTime;
 		$this->RName = $RIP->RName;
 	}
-
-	// Client handles
-	# IS_NCN (18)
-	public function onClientJoin(IS_NCN $NCN)
-	{
-		$this->clients[$NCN->UCID] = new ClientHandler($NCN);
-	}
-	# IS_CNL (19)
-	public function onClientLeave(IS_CNL $CNL)
-	{
-		unset($this->clients[$CNL->UCID]);
-	}
-	# IS_CPR (20)
-	public function onClientRename(IS_CPR $CPR)
-	{
-		$this->clients[$CPR->UCID]->onRename($CPR);
-	}
-	# IS_TOC (31)
-	public function onPlayerTakeOverCar(IS_TOC $TOC)
-	{
-		$this->players[$TOC->PLID]->onTakeOverCar($TOC);
-	}
-
-	// Player handles
-	# IS_NPL (21)
-	public function onPlayerJoin(IS_NPL $NPL)
-	{
-		$this->players[$NPL->PLID] = new PlayerHandler($NPL);
-		$this->clients[$NPL->UCID]->players[$NPL->PLID] = &$this->players[$NPL->PLID]; #Important, &= means that what ever I do in the PlayerHandler class is automaticly reflected within the ClientHandler class.
-	}
-	# IS_PLP (22)
-	public function onPlayerPits(IS_PLP $PLP)
-	{
-		$this->players[$PLP->PLID]->onPlayerPits($PLP);
-	}
-	# IS_PLL (23)
-	public function onPlayerLeave(IS_PLL $PLL)
-	{
-		unset($this->players[$PLL->PLID]); # Should unset it everywhere.
-	}
-	# IS_FIN (34)
-	public function onPlayerFinished(IS_FIN $FIN)
-	{
-		$this->players[$FIN->PLID]->onPlayerFinished($FIN);
-	}
-	# IS_RES (35)
-	public function onPlayerResult(IS_RES $RES)
-	{
-		$this->players[$RES->PLID]->onPlayerResult($RES);
-	}
-	
-	
-	// Button handles
-	# IS_BFN
-	public function onButtonFunction(IS_BFN $BFN)
-	{
-		if ($BFN->SubT == BFN_USER_CLEAR)
-		{
-			// forget about these buttons in the buttonmanager as they were removed on client side
-			ButtonManager::clearButtonsForConn($BFN->UCID);
-		}
-		else if ($BFN->SubT == BFN_REQUEST && method_exists($this, 'onButtonRequest'))
-		{
-			// ?? send to plugins somehow...
-		}
-	}
-	
-	public function onButtonClick(IS_BTC $BTC)
-	{
-		ButtonManager::onButtonClick($BTC);
-	}
-	public function onButtonText(IS_BTT $BTT)
-	{
-		ButtonManager::onButtonText($BTT);
-	}
 }
 
 class ClientHandler extends PropertyMaster
@@ -357,10 +355,20 @@ class ClientHandler extends PropertyMaster
 	public static $handles = array
 	(
 		ISP_NCN => '__construct',	# 18
-		ISP_CNL => 'onLeave',		# 19
+		ISP_CNL => '__destruct',	# 19
 		ISP_CPR => 'onRename',		# 20
+		ISP_TOC => 'onTakeOverCar'	# 31
 	);
 	public $players = array();
+
+	public function dispatchPacket(Struct $Packet)
+	{
+		if (isset($this->handles[$Packet->Type]))
+		{
+			$handle = $this->handles[$Packet->Type];
+			$this->$handle($Packet);
+		}
+	}
 
 	// Baiscly the IS_NCN Struct.
 	protected $UCID;			# Connection's Unique ID (0 = Host)
@@ -371,8 +379,10 @@ class ClientHandler extends PropertyMaster
 	protected $Flags;			# 2 If Client is Remote
 
 	// Construct
-	public function __construct(IS_NCN $NCN)
+	public function __construct(IS_NCN $NCN, StateHandler $parent)
 	{
+		$this->parent = $parent;
+	
 		$this->UCID = $NCN->UCID; # Where this is 0, client should be given the ADMIN_SERVER permission level.
 		$this->UName = $NCN->UName;
 		$this->PName = $NCN->PName;
@@ -389,7 +399,7 @@ class ClientHandler extends PropertyMaster
 		$this->PRISM = ($PRISM->admins->adminExists($NCN->UName)) ? $PRISM->admins->getAdminInfo($NCN->UName) : FALSE;
 	}
 
-	public function onLeave(IS_CNL $CNL)
+	public function __destruct()
 	{
 		unset($this);
 	}
@@ -398,6 +408,14 @@ class ClientHandler extends PropertyMaster
 	{
 		$this->PName = $CPR->PName;
 		$this->Plate = $CPR->Plate;
+	}
+
+	public function onTakeOverCar(IS_TOC $TOC)
+	{
+		# Makes a copy of the orginal, and adds it to the new client.
+		$this->parent->clients[$TOC->NewUCID]->players[$PLID] &= $this->parent->players[$TOC->PLID];
+		# Removes the copy from this class, but should not garbage collect it, because it's copyied in the new class.
+		unset($this->players[$TOC->PLID]);
 	}
 	
 	// Is
@@ -413,12 +431,12 @@ class ClientHandler extends PropertyMaster
 class PlayerHandler extends PropertyMaster
 {
 	public static $handles = array(
-		ISP_NPL => '__construct',
-		ISP_PLL => 'onPlayerLeave',
-		ISP_PLP => 'onPlayerPits',
-		ISP_FIN => 'onPlayerFinished',
-		ISP_RES => 'onPlayerResult',
-		ISP_TOC => 'onTakeOverCar',
+		ISP_NPL => '__construct',	# 21
+		ISP_PLL => '__destruct',	# 23
+		ISP_PLP => 'onPits',		# 22
+		ISP_FIN => 'onFinished',	# 34
+		ISP_RES => 'onResult',		# 35
+		ISP_TOC => 'onTakeOverCar',	# 31
 	);
 
 	// Basicly the IS_NPL Struct.
@@ -440,8 +458,10 @@ class PlayerHandler extends PropertyMaster
 	public $inPits;			# For when a player is in our list, but not on track this is TRUE.
 
 	// Constructor
-	public function __construct(IS_NPL $NPL)
+	public function __construct(IS_NPL $NPL, StateHandler $parent)
 	{
+		$this->parent = $parent;
+	
 		$this->UCID = $NPL->UCID;
 		$this->PType = $NPL->PType;
 		$this->Flags = $NPL->Flags;
@@ -459,32 +479,38 @@ class PlayerHandler extends PropertyMaster
 		$this->inPits = FALSE;
 	}
 
-	public function onPlayerLeave(IS_PLL $PLL)
+	public function __destruct()
 	{
 		unset($this);
 	}
 
-	public function onPlayerPits(IS_PLP $PLP)
+	public function onPits(IS_PLP $PLP)
 	{
 		$this->inPits = TRUE;
+	}
+	
+	# Special case, handled within the parent class's onPlayerPacket method.
+	public function onLeavingPits(IS_NPL $NPL)
+	{
+		$this->inPits = FALSE;
 	}
 
 	public function onTakeOverCar(IS_TOC $TOC)
 	{
-		global $PRISM;
-		
 		$this->UCID = $TOC->NewUCID;
-		$this->PName = $PRISM->hosts->getStateById()->clients[$TOC->NewUCID]->PName;
+		$this->PName = $this->parent->clients[$TOC->NewUCID]->PName;
 	}
 
-	public function onPlayerFinished(IS_FIN $FIN)
+	protected $finished = FALSE;
+	public function onFinished(IS_FIN $FIN)
 	{
-		# To Do.
+		$this->finished = TRUE;
 	}
 	
-	public function onPlayerResult(IS_RES $RES)
+	protected $result = array();
+	public function onResult(IS_RES $RES)
 	{
-		# To Do.
+		$this->result[] = $RES;
 	}
 
 	// Logic
@@ -494,10 +520,6 @@ class PlayerHandler extends PropertyMaster
 	public function &isInPits(){ return $this->inPits; }
 }
 
-class UserHandler
-{
-	// Todo, this is going to be for the user targeting system.
-}
 
 /**
  * Property Master allows for us the retreive read only properties on our classes.
