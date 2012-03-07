@@ -647,8 +647,8 @@ class IS_SFP extends Struct // State Flags Pack
 
 class IS_MOD extends Struct // MODe : send to LFS to change screen mode
 {
-	const PACK = 'CCxxllll';
-	const UNPACK = 'CSize/CType/CReqI/CZero/lBits16/lRR/lWidth/lHeight';
+	const PACK = 'CCxxVVVV';
+	const UNPACK = 'CSize/CType/CReqI/CZero/VBits16/VRR/VWidth/VHeight';
 
 	protected $Size = 20;				# 20
 	protected $Type = ISP_MOD;			# ISP_MOD
@@ -1135,8 +1135,8 @@ class IS_CPR extends Struct // Conn Player Rename
 
 class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, then leaving pits)
 {
-	const PACK = 'CCCCCCva24a8a4a16C4CCCClCCxx';
-	const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/A8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/lSpare/CSetF/CNumP/CSp2/CSp3';
+	const PACK = 'CCCCCCva24a8a4a16C4CCCCVCCxx';
+	const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/A8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/VSpare/CSetF/CNumP/CSp2/CSp3';
 
 	protected $Size = 76;				# 76
 	protected $Type = ISP_NPL;			# ISP_NPL
@@ -1797,8 +1797,8 @@ class IS_NLP extends Struct // Node and Lap Packet - variable size
 
 class CompCar extends Struct // Car info in 28 bytes - there is an array of these in the MCI (below)
 {
-	const PACK = 'vvCCCxlllvvvs';
-	const UNPACK = 'vNode/vLap/CPLID/CPosition/CInfo/CSp3/lX/lY/lZ/vSpeed/vDirection/vHeading/sAngVel';
+	const PACK = 'vvCCCxVVVvvvs';
+	const UNPACK = 'vNode/vLap/CPLID/CPosition/CInfo/CSp3/VX/VY/VZ/vSpeed/vDirection/vHeading/sAngVel';
 
 	public $Node;						# current path node
 	public $Lap;						# current lap
@@ -2617,8 +2617,8 @@ class IS_BTT extends Struct // BuTton Type - sent back when user types into a te
 // Each update sends the following UDP packet :
 class OutSimPack extends Struct
 {
-	const PACK = 'Vf12l3';
-	const UNPACK = 'VTime/f3AngVel/fHeading/fPitch/fRoll/f3Accel/f3Vel/l3Pos';
+	const PACK = 'Vf12V3';
+	const UNPACK = 'VTime/f3AngVel/fHeading/fPitch/fRoll/f3Accel/f3Vel/V3Pos';
 	const LENGTH = 64;
 
 	public $Time;						# time in milliseconds (to check order)
@@ -2635,7 +2635,7 @@ class OutSimPack extends Struct
 
 	public function unpack($rawPacket)
 	{
-		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/lID';
+		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value)
 			$this->$property = $value;
@@ -2699,7 +2699,7 @@ class OutGaugePack extends Struct
 	
 	public function unpack($rawPacket)
 	{
-		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/lID';
+		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value)
 			$this->$property = $value;
