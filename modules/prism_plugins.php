@@ -439,65 +439,6 @@ abstract class Plugins extends Timers
 		return $return;
 	}
 	// Is
-	/**
-	 * @parm $x - A IS_MCI->CompCar->X
-	 * @parm $y - A IS_MCI->CompCar->Y
-	 * @parm $polygon - A array of X, Y points.
-	 * @author PHP version by filur & Dygear
-	 * @coauthor Original code by Brian J. Fox of MetaHTML.
-	 */
-	public function isInPoly($x, $y, array $polygon)
-	{
-		$min_x = -1;
-		$max_x = -1;
-		$min_y = -1;
-		$max_y = -1;
-		$result = 0;
-		
-		$vertices = count($polygon);
-		
-		foreach ($polygon as $point)
-		{
-			if ($min_x == -1 || $point['x'] < $min_x)
-				$min_x = $point['x'];
-			if ($min_y == -1 || $point['y'] < $min_y)
-				$min_y = $point['y'];
-			if ($point['x'] > $max_x)
-				$max_x = $point['x'];
-			if ($point['y'] > $max_y)
-				$max_y = $point['y'];
-		}
-		
-		if ($x < $xmin_x || $x > $max_x || $y < $min_y || $y > $max_y)
-			return FALSE;
-		
-		$lines_crossed = 0;
-		
-		for ($i = 1; $polygon[$i] != null; $i++)
-		{
-			$p1 =& $polygon[$i - 1];
-			$p2 =& $polygon[$i];
-			
-			$min_x = min ($p1['x'], $p2['x']);
-			$max_x = max ($p1['x'], $p2['x']);
-			$min_y = min ($p1['y'], $p2['y']);
-			$max_y = max ($p1['y'], $p2['y']);
-			
-			if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
-			{
-				if ($x < $min_x && $y > $min_y && $y < $max_y)
-					$lines_crossed++;
-				
-				continue;
-			}
-			
-			$slope = ($p1['y'] - $p2['y']) / ($p1['x'] - $p2['x']);
-			if ((($y - ($p1['y'] - ($slope * $p1['x']))) / $slope) >= $x)
-				$lines_crossed++;
-		}
-		
-		return ($lines_crossed % 2) ? TRUE : FALSE;
-	}
 	protected function isHost(&$username, $hostID = NULL)
 	{
 		return ($this->getHostState($this->getHostId($hostID))->clients[0]->UName == $username) ? TRUE : FALSE;

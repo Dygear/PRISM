@@ -16,6 +16,8 @@ class PTH
 	public $NumNodes;
 	public $FinishLine;
 	public $Nodes = array();
+	public $polyRoad = array();
+	public $polyLimit = array();
 
 	public function __construct($pthFilePath)
 	{
@@ -43,25 +45,105 @@ class PTH
 		for ($Node = 0; $Node < $this->NumNodes; ++$Node)
 			$this->Nodes[$Node] = new Node(substr($file, 16 + ($Node * 40), 40));
 
-		print_r($this);
+		$this->polyRoad = $this->toPoly('Road');
+		$this->polyLimit = $this->toPoly('Limit');
 
 		return $this;
 	}
 	public function toPoly($limitRoad)
 	{
 		$toPoly = array();
-		# Left side
-		foreach ($this->Nodes as $ID => $Node) {
-			$toPoly[] = $Node->Center->X + $Node->$limitRoad->Left * cos(atan2($Node->Direction->X, $Node->Direction->Y));
-			$toPoly[] = $Node->Center->Y - $Node->$limitRoad->Left * sin(atan2($Node->Direction->X, $Node->Direction->Y));
-		}
-		# Right side
-		foreach ($this->Nodes as $ID => $Node) {
-			$toPoly[] = $Node->Center->X + $Node->$limitRoad->Right * cos(atan2($Node->Direction->X, $Node->Direction->Y));
-			$toPoly[] = $Node->Center->Y - $Node->$limitRoad->Right * sin(atan2($Node->Direction->X, $Node->Direction->Y));
+		foreach ($this->Nodes as $ID => $Node)
+		{
+			$toPoly[$ID] = array(
+				array( # Left
+					'x' => $Node->Center->X + $Node->$limitRoad->Left * cos(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536,
+					'y' => $Node->Center->Y - $Node->$limitRoad->Left * sin(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536
+				), array ( # Right
+					'x' => $Node->Center->X + $Node->$limitRoad->Right * cos(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536,
+					'y' => $Node->Center->Y - $Node->$limitRoad->Right * sin(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536
+				)
+			);
 		}
 		return $toPoly;
 	}
+	public function isOnRoad($x, $y, $NodeID)
+	{
+		return $this->inPoly($x, $y, $this->polyRoad[$NodeID]);
+	}
+	public function isOnLimit($x, $y, $NodeID)
+	{
+		return $this->inPoly($x, $y, $this->polyLimit[$NodeID]);
+	}
+	/**
+	 * @parm $x - A IS_MCI->CompCar->X
+	 * @parm $y - A IS_MCI->CompCar->Y
+	 * @parm $polygon - A array of X, Y points.
+	 * @author PHP version by filur & Dygear
+	 * @coauthor Original code by Brian J. Fox of MetaHTML.
+	 * @url http://metahtml.cvs.sourceforge.net/viewvc/metahtml/metahtml/utilities/imagemap/imagemap.c?revision=1.1.1.1&view=markup
+	*/
+	public function inPoly($x, $y, array $polygon)
+	{
+		$min_x = NULL;
+		$max_x = NULL;
+		$min_y = NULL;
+		$max_y = NULL;
+		$result = 0;
+		
+		# Count vertices.
+		$vertices = count($polygon);
+		
+		# Get the bounding box.
+		foreach ($polygon as $point)
+		{
+			if ($min_x === NULL || $point['x'] < $min_x)
+				$min_x = $point['x'];
+			if ($min_y === NULL|| $point['y'] < $min_y)
+				$min_y = $point['y'];
+			if ($min_x === NULL || $point['x'] > $max_x)
+				$max_x = $point['x'];
+			if ($min_x === NULL || $point['y'] > $max_y)
+				$max_y = $point['y'];
+		}
+		
+		# If it's outside of the bounding box, there's no chance it's in the poly.
+		if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
+			return FALSE;
+		
+		$lines_crossed = 0;
+		
+		# The point falls within the bounding box. Check adjacent vertices.
+		for ($i = 1; isset($polygon[$i]); $i++)
+		{
+			$p1 =& $polygon[$i - 1];
+			$p2 =& $polygon[$i];
+			
+			$min_x = min ($p1['x'], $p2['x']);
+			$max_x = max ($p1['x'], $p2['x']);
+			$min_y = min ($p1['y'], $p2['y']);
+			$max_y = max ($p1['y'], $p2['y']);
+			
+			# We need to know if the point falls within the rectangle defined by the maximum vertices of the vector.
+			if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
+			{
+				# Not within the rectangle. Great! If it is to the left of the rectangle, and in between the Y coordinates, then it crosses the line.
+				if ($x < $min_x && $y > $min_y && $y < $max_y)
+					$lines_crossed++;
+				
+				continue;
+			}
+			
+			/* Find the intersection of the line ([-inf, Y], [+inf, Y]) and ((p1[x], p1[y]), [p2[x], p2[y]]).  If the location of the intercept is to the right of Xcoord, then the line will be crossed. */
+			$slope = ($p1['y'] - $p2['y']) / ($p1['x'] - $p2['x']);
+			if ((($y - ($p1['y'] - ($slope * $p1['x']))) / $slope) >= $x)
+				$lines_crossed++;
+		}
+		
+		# If that number is even, then $X, $Y is "outside" of the polygon, if odd, then "inside"
+		return ($lines_crossed % 2) ? FALSE : TRUE;
+	}
+
 	private function point($Node, $limitRoad, $leftRight) {
 		return ;
 	}
