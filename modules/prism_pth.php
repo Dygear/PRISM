@@ -53,13 +53,12 @@ class PTH
 	public function toPoly($limitRoad)
 	{
 		$toPoly = array();
-		foreach ($this->Nodes as $ID => $Node)
-		{
+		forEach ($this->Nodes as $ID => $Node) {
 			$toPoly[$ID] = array(
-				array( # Left
+				array(
 					'x' => $Node->Center->X + $Node->$limitRoad->Left * cos(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536,
 					'y' => $Node->Center->Y - $Node->$limitRoad->Left * sin(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536
-				), array ( # Right
+				), array(
 					'x' => $Node->Center->X + $Node->$limitRoad->Right * cos(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536,
 					'y' => $Node->Center->Y - $Node->$limitRoad->Right * sin(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536
 				)
@@ -69,83 +68,55 @@ class PTH
 	}
 	public function isOnRoad($x, $y, $NodeID)
 	{
-		return $this->inPoly($x, $y, $this->polyRoad[$NodeID]);
+		if ($NodeID == $this->NumNodes)
+			return $this->inPoly($x, $y, $this->polyRoad[$NodeID], $this->polyRoad[0]);
+		else
+			return $this->inPoly($x, $y, $this->polyRoad[$NodeID], $this->polyRoad[$NodeID + 1]);
 	}
 	public function isOnLimit($x, $y, $NodeID)
 	{
-		return $this->inPoly($x, $y, $this->polyLimit[$NodeID]);
+		if ($NodeID == $this->NumNodes)
+			return $this->inPoly($x, $y, $this->polyLimit[$NodeID], $this->polyLimit[0]);
+		else
+			return $this->inPoly($x, $y, $this->polyLimit[$NodeID], $this->polyLimit[$NodeID + 1]);
 	}
 	/**
-	 * @parm $x - A IS_MCI->CompCar->X
-	 * @parm $y - A IS_MCI->CompCar->Y
-	 * @parm $polygon - A array of X, Y points.
-	 * @author PHP version by filur & Dygear
-	 * @coauthor Original code by Brian J. Fox of MetaHTML.
-	 * @url http://metahtml.cvs.sourceforge.net/viewvc/metahtml/metahtml/utilities/imagemap/imagemap.c?revision=1.1.1.1&view=markup
+	 * @parm $Xcoord - A IS_MCI->CompCar->X
+	 * @parm $Ycoord - A IS_MCI->CompCar->Y
+	 * @parm $poly1 - A array of X, Y points.
+	 * @parm $poly2 - A array of X, Y points.
+	 * @author avetere
+	 * @url http://www.lfsforum.net/showthread.php?p=1626025
 	*/
-	public function inPoly($x, $y, array $polygon)
+	public function inPoly($x, $y, array $poly1, array $poly2)
 	{
-		$min_x = NULL;
-		$max_x = NULL;
-		$min_y = NULL;
-		$max_y = NULL;
-		$result = 0;
-		
-		# Count vertices.
-		$vertices = count($polygon);
-		
-		# Get the bounding box.
-		foreach ($polygon as $point)
-		{
-			if ($min_x === NULL || $point['x'] < $min_x)
-				$min_x = $point['x'];
-			if ($min_y === NULL|| $point['y'] < $min_y)
-				$min_y = $point['y'];
-			if ($min_x === NULL || $point['x'] > $max_x)
-				$max_x = $point['x'];
-			if ($min_x === NULL || $point['y'] > $max_y)
-				$max_y = $point['y'];
-		}
-		
-		# If it's outside of the bounding box, there's no chance it's in the poly.
-		if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
-			return FALSE;
-		
-		$lines_crossed = 0;
-		
-		# The point falls within the bounding box. Check adjacent vertices.
-		for ($i = 1; isset($polygon[$i]); $i++)
-		{
-			$p1 =& $polygon[$i - 1];
-			$p2 =& $polygon[$i];
-			
-			$min_x = min ($p1['x'], $p2['x']);
-			$max_x = max ($p1['x'], $p2['x']);
-			$min_y = min ($p1['y'], $p2['y']);
-			$max_y = max ($p1['y'], $p2['y']);
-			
-			# We need to know if the point falls within the rectangle defined by the maximum vertices of the vector.
-			if ($x < $min_x || $x > $max_x || $y < $min_y || $y > $max_y)
-			{
-				# Not within the rectangle. Great! If it is to the left of the rectangle, and in between the Y coordinates, then it crosses the line.
-				if ($x < $min_x && $y > $min_y && $y < $max_y)
-					$lines_crossed++;
-				
-				continue;
-			}
-			
-			/* Find the intersection of the line ([-inf, Y], [+inf, Y]) and ((p1[x], p1[y]), [p2[x], p2[y]]).  If the location of the intercept is to the right of Xcoord, then the line will be crossed. */
-			$slope = ($p1['y'] - $p2['y']) / ($p1['x'] - $p2['x']);
-			if ((($y - ($p1['y'] - ($slope * $p1['x']))) / $slope) >= $x)
-				$lines_crossed++;
-		}
-		
-		# If that number is even, then $X, $Y is "outside" of the polygon, if odd, then "inside"
-		return ($lines_crossed % 2) ? FALSE : TRUE;
-	}
+		$x12 = $poly1[1]['x'] - $poly1[0]['x'];
+		$x21 = $poly1[0]['x'] - $poly1[1]['x'];
+		$x13 = $poly2[1]['x'] - $poly1[0]['x'];
+		$x31 = $poly1[0]['x'] - $poly2[1]['x'];
+		$x23 = $poly2[1]['x'] - $poly1[1]['x'];
+		$x41 = $poly1[0]['x'] - $poly2[0]['x'];
+		$x34 = $poly2[0]['x'] - $poly2[1]['x'];
+		$x43 = $poly2[1]['x'] - $poly2[0]['x'];
+		$x1p = $x - $poly1[0]['x'];
+		$x2p = $x - $poly1[1]['x'];
+		$x3p = $x - $poly2[1]['x'];
+		$x4p = $x - $poly2[0]['x'];
 
-	private function point($Node, $limitRoad, $leftRight) {
-		return ;
+		$y12 = $poly1[1]['y'] - $poly1[0]['y'];
+		$y21 = $poly1[0]['y'] - $poly1[1]['y'];
+		$y13 = $poly2[1]['y'] - $poly1[0]['y'];
+		$y31 = $poly1[0]['y'] - $poly2[1]['y'];
+		$y23 = $poly2[1]['y'] - $poly1[1]['y'];
+		$y41 = $poly1[0]['y'] - $poly2[0]['y'];
+		$y34 = $poly2[0]['y'] - $poly2[1]['y'];
+		$y43 = $poly2[1]['y'] - $poly2[0]['y'];
+		$y1p = $y - $poly1[0]['y'];
+		$y2p = $y - $poly1[1]['y'];
+		$y3p = $y - $poly2[1]['y'];
+		$y4p = $y - $poly2[0]['y'];
+
+		return ((($x12*$y13 - $y12*$x13)*($x12*$y1p - $y12*$x1p) >= 0 ) && (($x23*$y21 - $y23*$x21)*($x23*$y2p - $y23*$x2p) >= 0) && (($x34*$y31 - $y34*$x31)*($x34*$y3p - $y34*$x3p) >= 0) && (($x41*$y43 - $y41*$x43)*($x41*$y4p - $y41*$x4p) >= 0)) ? TRUE : FALSE;
 	}
 }
 class Node
