@@ -1118,7 +1118,7 @@ class InsimConnection
 			return $this->writeTCP($packet->pack());
 	}
 	
-	public function writeUDP(&$data)
+	public function writeUDP($data)
 	{
 		$this->lastWriteTime = time();
 		if (($bytes = @fwrite($this->socket, $data)) === FALSE)
