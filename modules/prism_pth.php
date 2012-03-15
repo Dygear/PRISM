@@ -71,9 +71,6 @@ class PTH
             $pd = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrRight + $nodes[$i]->CenterX,
                               -$nodes[$i]->DirX * $nodes[$i]->$lrRight + $nodes[$i]->CenterY);
             
-            $txt = $pa->x.", ".$pa->y." - ".$pb->x.", ".$pb->y." - ".$pc->x.", ".$pc->y." - ".$pd->x.", ".$pd->y."\n";
-            file_put_contents("pth_polies.txt", $txt, FILE_APPEND);
-            
             $nodePolys[] = new Polygon2D(array($pa, $pb, $pd, $pc));
 
             $pa = $pc;
