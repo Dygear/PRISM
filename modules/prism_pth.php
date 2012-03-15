@@ -19,8 +19,6 @@ class PTH
 	public $Nodes = array();
 	public $polyRoad = array();
 	public $polyLimit = array();
-	
-	private $LastNode = 0xFFFFFF;
 
 	public function __construct($pthFilePath)
 	{
@@ -84,19 +82,11 @@ class PTH
     }
 	public function isOnRoad($x, $y, $NodeID)
 	{
-	    if ($this->LastNode == 0xFFFFFF) $this->LastNode = $NodeID;
-	    $res = ($this->polyRoad[$NodeID]->contains(new Point2D($x, $y)) ||
-	            $this->polyRoad[$this->LastNode]->contains(new Point2D($x, $y)));
-	    $this->LastNode = $NodeID;
-	    return $res;
+	    return $this->polyRoad[$NodeID]->contains(new Point2D($x, $y));
 	}
 	public function isOnLimit($x, $y, $NodeID)
 	{
-	    if ($this->LastNode == 0xFFFFFF) $this->LastNode = $NodeID;
-	    $res = ($this->polyLimit[$NodeID]->contains(new Point2D($x, $y)) ||
-	            $this->polyLimit[$this->LastNode]->contains(new Point2D($x, $y)));
-	    $this->LastNode = $NodeID;
-	    return $res;
+	    return $this->polyLimit[$NodeID]->contains(new Point2D($x, $y));
 	}
 }
 class Node
