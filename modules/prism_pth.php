@@ -82,6 +82,9 @@ class PTH
     }
 	public function isOnRoad($x, $y, $NodeID)
 	{
+	    $x /= 65536;
+	    $y /= 65536;
+	    
 	    // Check if point is within the left and right lines of the path
         $p1 = $this->polyRoad[$NodeID]->points[1];
         $p2 = $this->polyRoad[$NodeID]->points[2];
@@ -131,10 +134,9 @@ class Node
 		foreach (unpack(self::UNPACK, $RawNode) as $property => $value)
 			$this->$property = $value;
 
-	    $this->LimitLeft  *= 65536;
-	    $this->LimitRight *= 65536;
-	    $this->DriveLeft  *= 65536;
-	    $this->DriveRight *= 65536;
+	    $this->CenterX /= 65536;
+	    $this->CenterY /= 65536;
+	    $this->CenterZ /= 65536;
 	}
 }
 ?>
