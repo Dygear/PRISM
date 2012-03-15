@@ -1798,7 +1798,7 @@ class IS_NLP extends Struct // Node and Lap Packet - variable size
 class CompCar extends Struct // Car info in 28 bytes - there is an array of these in the MCI (below)
 {
 	const PACK = 'vvCCCxVVVvvvs';
-	const UNPACK = 'vNode/vLap/CPLID/CPosition/CInfo/CSp3/VX/VY/VZ/vSpeed/vDirection/vHeading/sAngVel';
+	const UNPACK = 'vNode/vLap/CPLID/CPosition/CInfo/CSp3/lX/lY/lZ/vSpeed/vDirection/vHeading/sAngVel';
 
 	public $Node;						# current path node
 	public $Lap;						# current lap
