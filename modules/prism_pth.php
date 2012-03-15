@@ -61,15 +61,18 @@ class PTH
         $i = 0;
         $pa = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
                           -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
-        $pb = new Point2D(-$nodes[$i]->DirY * -$nodes[$i]->$lrRight + $nodes[$i]->CenterX,
-                          $nodes[$i]->DirX * -$nodes[$i]->$lrRight + $nodes[$i]->CenterY);
+        $pb = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrRight + $nodes[$i]->CenterX,
+                          -$nodes[$i]->DirX * $nodes[$i]->$lrRight + $nodes[$i]->CenterY);
         
         for ($i = 1; $i < $this->NumNodes; $i++)
         {
             $pc = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
                               -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
-            $pd = new Point2D(-$nodes[$i]->DirY * -$nodes[$i]->$lrRight + $nodes[$i]->CenterX,
-                              $nodes[$i]->DirX * -$nodes[$i]->$lrRight + $nodes[$i]->CenterY);
+            $pd = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrRight + $nodes[$i]->CenterX,
+                              -$nodes[$i]->DirX * $nodes[$i]->$lrRight + $nodes[$i]->CenterY);
+            
+            $txt = $pa->x.", ".$pa->y." - ".$pb->x.", ".$pb->y." - ".$pc->x.", ".$pc->y." - ".$pd->x.", ".$pd->y."\n";
+            file_put_contents("pth_polies.txt", $txt, FILE_APPEND);
             
             $nodePolys[] = new Polygon2D(array($pa, $pb, $pd, $pc));
 
@@ -140,6 +143,7 @@ class Node
 	    $this->CenterX /= 65536;
 	    $this->CenterY /= 65536;
 	    $this->CenterZ /= 65536;
+	    //$this->DirY = -$this->DirY;
 	}
 }
 ?>
