@@ -28,6 +28,11 @@ class Polygon2D
         $this->numPoints    = count($points);
     }
     
+    public function __destruct()
+    {
+        array_splice($this->points, 0, $this->numPoints);
+    }
+    
     public function contains(Point2D $point)
     {
         // Simple check for convex poly

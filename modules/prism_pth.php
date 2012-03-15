@@ -29,6 +29,12 @@ class PTH
 
 		return $this;
 	}
+	public function __destruct()
+	{
+        array_splice($this->Nodes, 0, $this->NumNodes);
+        array_splice($this->polyRoad, 0, $this->NumNodes);
+        array_splice($this->polyLimit, 0, $this->NumNodes);
+	}
 	public function unPack($file)
 	{
 		if (substr($file, 0, 6) != $this->LFSPTH)
