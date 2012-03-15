@@ -82,11 +82,33 @@ class PTH
     }
 	public function isOnRoad($x, $y, $NodeID)
 	{
-	    return $this->polyRoad[$NodeID]->contains(new Point2D($x, $y));
+	    // Check if point is within the left and right lines of the path
+        $p1 = $this->polyRoad[$NodeID]->points[1];
+        $p2 = $this->polyRoad[$NodeID]->points[2];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+        
+        $p1 = $this->polyRoad[$NodeID]->points[3];
+        $p2 = $this->polyRoad[$NodeID]->points[0];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+            
+        return true;
 	}
 	public function isOnLimit($x, $y, $NodeID)
 	{
-	    return $this->polyLimit[$NodeID]->contains(new Point2D($x, $y));
+	    // Check if point is within the left and right lines of the path
+        $p1 = $this->polyLimit[$NodeID]->points[1];
+        $p2 = $this->polyLimit[$NodeID]->points[2];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+        
+        $p1 = $this->polyLimit[$NodeID]->points[3];
+        $p2 = $this->polyLimit[$NodeID]->points[0];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+            
+        return true;
 	}
 }
 class Node
