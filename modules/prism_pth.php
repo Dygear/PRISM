@@ -100,6 +100,9 @@ class PTH
 	}
 	public function isOnLimit($x, $y, $NodeID)
 	{
+	    $x /= 65536;
+	    $y /= 65536;
+	    
 	    // Check if point is within the left and right lines of the path
         $p1 = $this->polyLimit[$NodeID]->points[1];
         $p2 = $this->polyLimit[$NodeID]->points[2];
