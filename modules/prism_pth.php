@@ -59,17 +59,17 @@ class PTH
         $lrRight = $limitRoad.'Right';
 
         $i = 0;
-        $pa = new Point2D($nodes[$i]->CenterX + $nodes[$i]->$lrLeft * cos(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)),
-                          $nodes[$i]->CenterY - $nodes[$i]->$lrLeft * sin(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)));
-        $pb = new Point2D($nodes[$i]->CenterX + $nodes[$i]->$lrRight * cos(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)),
-                          $nodes[$i]->CenterY - $nodes[$i]->$lrRight * sin(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)));
-
+        $pa = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
+                          -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
+        $pb = new Point2D(-$nodes[$i]->DirY * -$nodes[$i]->$lrRight + $nodes[$i]->CenterX,
+                          $nodes[$i]->DirX * -$nodes[$i]->$lrRight + $nodes[$i]->CenterY);
+        
         for ($i = 1; $i < $this->NumNodes; $i++)
         {
-            $pc = new Point2D($nodes[$i]->CenterX + $nodes[$i]->$lrLeft * cos(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)),
-                              $nodes[$i]->CenterY - $nodes[$i]->$lrLeft * sin(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)));
-            $pd = new Point2D($nodes[$i]->CenterX + $nodes[$i]->$lrRight * cos(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)),
-                              $nodes[$i]->CenterY - $nodes[$i]->$lrRight * sin(atan2($nodes[$i]->DirX, $nodes[$i]->DirY)));
+            $pc = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
+                              -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
+            $pd = new Point2D(-$nodes[$i]->DirY * -$nodes[$i]->$lrRight + $nodes[$i]->CenterX,
+                              $nodes[$i]->DirX * -$nodes[$i]->$lrRight + $nodes[$i]->CenterY);
             
             $nodePolys[] = new Polygon2D(array($pa, $pb, $pd, $pc));
 
