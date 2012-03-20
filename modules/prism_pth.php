@@ -4,6 +4,7 @@
  * @package PRISM
  * @subpackage PTH
 */
+require_once(ROOTPATH . '/modules/prism_geometry.php');
 // PaTH
 class PTH
 {
@@ -24,9 +25,15 @@ class PTH
 		$file = file_get_contents($pthFilePath);
 
 		if ($this->unPack($file) === TRUE)
-			return; # trigger_error returns (bool) TRUE, so if the return is true, then was an error.
+			return; # trigger_error returns (bool) TRUE, so if the return is true, there was an error.
 
 		return $this;
+	}
+	public function __destruct()
+	{
+        array_splice($this->Nodes, 0, $this->NumNodes);
+        array_splice($this->polyRoad, 0, $this->NumNodes);
+        array_splice($this->polyLimit, 0, $this->NumNodes);
 	}
 	public function unPack($file)
 	{
@@ -34,155 +41,112 @@ class PTH
 			return trigger_error('Not a LFS PTH file', E_USER_ERROR);
 
 		if (substr($file, 6, 1) != $this->Version)
-			return trigger_error('Not a LFS PTH Verion Is Different Than PTH Paser', E_USER_ERROR);
+			return trigger_error('Not a LFS PTH Version Is Different Than PTH Parser', E_USER_ERROR);
 
 		if (substr($file, 7, 1) != $this->Revision)
-			return trigger_error('Not a LFS PTH Revision Is Different Than PTH Paser', E_USER_ERROR);
+			return trigger_error('Not a LFS PTH Revision Is Different Than PTH Parser', E_USER_ERROR);
 		
 		foreach (unpack(self::UNPACK, substr($file, 0, 16)) as $property => $value)
 			$this->$property = $value;
 
-		for ($Node = 0; $Node < $this->NumNodes; ++$Node)
-			$this->Nodes[$Node] = new Node(substr($file, 16 + ($Node * 40), 40));
+		for ($Node = 0; $Node < $this->NumNodes; $Node++)
+			$this->Nodes[] = new Node(substr($file, 16 + ($Node * 40), 40));
 
-		$this->polyRoad = $this->toPoly('Road');
-		$this->polyLimit = $this->toPoly('Limit');
+        $this->toPoly($this->polyRoad, 'Drive');
+        $this->toPoly($this->polyLimit, 'Limit');
 
 		return $this;
 	}
-	public function toPoly($limitRoad)
-	{
-		$toPoly = array();
-		forEach ($this->Nodes as $ID => $Node) {
-			$toPoly[$ID] = array(
-				array(
-					'x' => $Node->Center->X + $Node->$limitRoad->Left * cos(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536,
-					'y' => $Node->Center->Y - $Node->$limitRoad->Left * sin(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536
-				), array(
-					'x' => $Node->Center->X + $Node->$limitRoad->Right * cos(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536,
-					'y' => $Node->Center->Y - $Node->$limitRoad->Right * sin(atan2($Node->Direction->X, $Node->Direction->Y)) * 65536
-				)
-			);
-		}
-		return $toPoly;
-	}
+    public function toPoly(array &$nodePolys, $limitRoad)
+    {
+        array_splice($nodePolys, 0, count($nodePolys));
+        $nodes =& $this->Nodes;
+        $lrLeft = $limitRoad.'Left';
+        $lrRight = $limitRoad.'Right';
+
+        $i = 0;
+        $pa = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
+                          -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
+        $pb = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrRight + $nodes[$i]->CenterX,
+                          -$nodes[$i]->DirX * $nodes[$i]->$lrRight + $nodes[$i]->CenterY);
+        
+        for ($i = 1; $i < $this->NumNodes; $i++)
+        {
+            $pc = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
+                              -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
+            $pd = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrRight + $nodes[$i]->CenterX,
+                              -$nodes[$i]->DirX * $nodes[$i]->$lrRight + $nodes[$i]->CenterY);
+            
+            $nodePolys[] = new Polygon2D(array($pa, $pb, $pd, $pc));
+
+            $pa = $pc;
+            $pb = $pd;
+        }
+        
+        // Close the path
+        $nodePolys[] = new Polygon2D(array($pa, $pb, $nodePolys[0]->points[1], $nodePolys[0]->points[0]));
+    }
 	public function isOnRoad($x, $y, $NodeID)
 	{
-		if ($NodeID == $this->NumNodes)
-			return $this->inPoly($x, $y, $this->polyRoad[$NodeID], $this->polyRoad[0]);
-		else
-			return $this->inPoly($x, $y, $this->polyRoad[$NodeID], $this->polyRoad[$NodeID + 1]);
+	    $x /= 65536;
+	    $y /= 65536;
+	    
+	    // Check if point is within the left and right lines of the path
+        $p1 = $this->polyRoad[$NodeID]->points[1];
+        $p2 = $this->polyRoad[$NodeID]->points[2];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+        
+        $p1 = $this->polyRoad[$NodeID]->points[3];
+        $p2 = $this->polyRoad[$NodeID]->points[0];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+            
+        return true;
 	}
 	public function isOnLimit($x, $y, $NodeID)
 	{
-		if ($NodeID == $this->NumNodes)
-			return $this->inPoly($x, $y, $this->polyLimit[$NodeID], $this->polyLimit[0]);
-		else
-			return $this->inPoly($x, $y, $this->polyLimit[$NodeID], $this->polyLimit[$NodeID + 1]);
-	}
-	/**
-	 * @parm $Xcoord - A IS_MCI->CompCar->X
-	 * @parm $Ycoord - A IS_MCI->CompCar->Y
-	 * @parm $poly1 - A array of X, Y points.
-	 * @parm $poly2 - A array of X, Y points.
-	 * @author avetere
-	 * @url http://www.lfsforum.net/showthread.php?p=1626025
-	*/
-	public function inPoly($x, $y, array $poly1, array $poly2)
-	{
-		$x12 = $poly1[1]['x'] - $poly1[0]['x'];
-		$x21 = $poly1[0]['x'] - $poly1[1]['x'];
-		$x13 = $poly2[1]['x'] - $poly1[0]['x'];
-		$x31 = $poly1[0]['x'] - $poly2[1]['x'];
-		$x23 = $poly2[1]['x'] - $poly1[1]['x'];
-		$x41 = $poly1[0]['x'] - $poly2[0]['x'];
-		$x34 = $poly2[0]['x'] - $poly2[1]['x'];
-		$x43 = $poly2[1]['x'] - $poly2[0]['x'];
-		$x1p = $x - $poly1[0]['x'];
-		$x2p = $x - $poly1[1]['x'];
-		$x3p = $x - $poly2[1]['x'];
-		$x4p = $x - $poly2[0]['x'];
-
-		$y12 = $poly1[1]['y'] - $poly1[0]['y'];
-		$y21 = $poly1[0]['y'] - $poly1[1]['y'];
-		$y13 = $poly2[1]['y'] - $poly1[0]['y'];
-		$y31 = $poly1[0]['y'] - $poly2[1]['y'];
-		$y23 = $poly2[1]['y'] - $poly1[1]['y'];
-		$y41 = $poly1[0]['y'] - $poly2[0]['y'];
-		$y34 = $poly2[0]['y'] - $poly2[1]['y'];
-		$y43 = $poly2[1]['y'] - $poly2[0]['y'];
-		$y1p = $y - $poly1[0]['y'];
-		$y2p = $y - $poly1[1]['y'];
-		$y3p = $y - $poly2[1]['y'];
-		$y4p = $y - $poly2[0]['y'];
-
-		return ((($x12*$y13 - $y12*$x13)*($x12*$y1p - $y12*$x1p) >= 0 ) && (($x23*$y21 - $y23*$x21)*($x23*$y2p - $y23*$x2p) >= 0) && (($x34*$y31 - $y34*$x31)*($x34*$y3p - $y34*$x3p) >= 0) && (($x41*$y43 - $y41*$x43)*($x41*$y4p - $y41*$x4p) >= 0)) ? TRUE : FALSE;
+	    $x /= 65536;
+	    $y /= 65536;
+	    
+	    // Check if point is within the left and right lines of the path
+        $p1 = $this->polyLimit[$NodeID]->points[1];
+        $p2 = $this->polyLimit[$NodeID]->points[2];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+        
+        $p1 = $this->polyLimit[$NodeID]->points[3];
+        $p2 = $this->polyLimit[$NodeID]->points[0];
+        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+            return false;
+            
+        return true;
 	}
 }
 class Node
 {
-	public $Center;
-	public $Direction;
-	public $Limit;
-	public $Road;
-
-	public function __construct($RawNode) {
-		$this->Center = new Center(substr($RawNode, 0, 12));
-		$this->Direction = new Direction(substr($RawNode, 12, 12));
-		$this->Limit = new Limit(substr($RawNode, 24, 8));
-		$this->Road = new Road(substr($RawNode, 32, 8));
-	}
-}
-class Center
-{
-	const PACK = 'VVV';
-	const UNPACK = 'VX/VY/VZ';
+	const UNPACK = 'lCenterX/lCenterY/lCenterZ/fDirX/fDirY/fDirZ/fLimitLeft/fLimitRight/fDriveLeft/fDriveRight';
 	
-	public function __construct($rawData) {
-		$this->unPack($rawData);
-	}
-	public function unPack($rawData) {
-		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
-			$this->$property = $value;
-	}
-}
-class Direction
-{
-	const PACK = 'fff';
-	const UNPACK = 'fX/fY/fZ';
+	public $CenterX = 0;
+	public $CenterY = 0;
+	public $CenterZ = 0;
+	public $DirX;
+	public $DirY;
+	public $DirZ;
+	public $LimitLeft;
+	public $LimitRight;
+	public $DriveLeft;
+	public $DriveRight;
 
-	public function __construct($rawData) {
-		$this->unPack($rawData);
-	}
-	public function unPack($rawData) {
-		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
+	public function __construct($RawNode)
+	{
+		foreach (unpack(self::UNPACK, $RawNode) as $property => $value)
 			$this->$property = $value;
-	}
-}
-class Limit
-{
-	const PACK = 'ff';
-	const UNPACK = 'fLeft/fRight';
 
-	public function __construct($rawData) {
-		$this->unPack($rawData);
-	}
-	public function unPack($rawData) {
-		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
-			$this->$property = $value;
-	}
-}
-class Road
-{
-	const PACK = 'ff';
-	const UNPACK = 'fLeft/fRight';
-
-	public function __construct($rawData) {
-		$this->unPack($rawData);
-	}
-	public function unPack($rawData) {
-		foreach (unpack($this::UNPACK, $rawData) as $property => $value)
-			$this->$property = $value;
+	    $this->CenterX /= 65536;
+	    $this->CenterY /= 65536;
+	    $this->CenterZ /= 65536;
+	    //$this->DirY = -$this->DirY;
 	}
 }
 ?>

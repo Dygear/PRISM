@@ -7,7 +7,7 @@ class LVS extends Plugins
 	const VERSION = PHPInSimMod::VERSION;
 	const DESCRIPTION = 'Lap Verification System.';
 
-	private $pth = array();
+	private $pth = null;
 	private $lapValidation = array();
 	private $onLap = array();
 	private $onRoad = array();
@@ -32,7 +32,8 @@ class LVS extends Plugins
 			$Track = $STA->Track;
 
 		$this->pth = new pth(ROOTPATH . '/data/pth/' . $Track . '.pth');
-
+		//print_r($this->pth);
+		console("Loaded $Track.pth");
 		return PLUGIN_CONTINUE;
 	}
 	
@@ -78,6 +79,8 @@ class LVS extends Plugins
 	
 	public function onCarInfo(IS_MCI $MCI)
 	{
+	    if (!$this->pth) { return PLUGIN_CONTINUE; }
+	    
 		foreach ($MCI->Info as $CompCar)
 		{
 			if (!isset($this->lapValidation[$CompCar->PLID]))
@@ -91,10 +94,10 @@ class LVS extends Plugins
 			if ($this->onRoad[$CompCar->PLID] == $isRoad)
 				return; # They already know.
 
-			if ($isRoad === TRUE)
-				IS_MTC()->PLID($CompCar->PLID)->Text('You are ^2on^9 the track!')->Send();
-			else
+			if ($this->pth->isOnRoad($CompCar->X, $CompCar->Y, $CompCar->Node) === FALSE)
 				IS_MTC()->PLID($CompCar->PLID)->Text('You are ^1off^9 the track!')->Send();
+			else
+				IS_MTC()->PLID($CompCar->PLID)->Text('You are ^2on^9 the track!')->Send();
 
 			$this->onRoad[$CompCar->PLID] = $isRoad;
 
