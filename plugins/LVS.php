@@ -11,6 +11,7 @@ class LVS extends Plugins
 	private $lapValidation = array();
 	private $onLap = array();
 	private $onRoad = array();
+	private $Track = NULL;
 
 	public function __construct()
 	{
@@ -27,13 +28,12 @@ class LVS extends Plugins
 
 	public function onTrackInfo(IS_STA $STA)
 	{
-		static $Track;
-		if ($Track != $STA->Track)
-			$Track = $STA->Track;
+		if ($this->Track == $STA->Track)
+			return;
 
-		$this->pth = new pth(ROOTPATH . '/data/pth/' . $Track . '.pth');
-		//print_r($this->pth);
-		console("Loaded $Track.pth");
+		$this->Track = $STA->Track;
+		$this->pth = new pth(ROOTPATH . '/data/pth/' . $this->Track . '.pth');
+		console("Loaded {$this->Track}.pth");
 		return PLUGIN_CONTINUE;
 	}
 	
