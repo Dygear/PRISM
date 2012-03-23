@@ -313,7 +313,7 @@ class Msg2Lfs
             else if ($this->UCID > 0)
                 IS_MTC()->UCID($this->UCID)->Text($this->Text)->Sound($this->Sound)->send();
             else
-                IS_MSX()->Text($this->Text)->send();
+                IS_MSX()->Msg($this->Text)->send();
         }
     
     	return $this;
