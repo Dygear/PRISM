@@ -64,7 +64,7 @@ class LVS extends Plugins
 			return PLUGIN_CONTINUE;	# It's already an invalid lap, we don't report it twice.
 
 		$cl = $this->getClientByPLID($HLV->PLID);
-		IS_MSX()->Msg("{$cl->PName}'s Lap is ^1invalid^9!")->Send();
+		Msg2Lfs()->Msg("{$cl->PName}'s Lap is ^1invalid^9!")->Send();
 		
 		$this->lapValidation[$HLV->PLID][$this->onLap[$HLV->PLID]] = FALSE;
 	}
@@ -85,7 +85,7 @@ class LVS extends Plugins
 		{
 			if (!isset($this->lapValidation[$CompCar->PLID]))
 				return PLUGIN_CONTINUE; # In the case where the player has already left.
-
+	    
 			$isRoad = $this->pth->isOnRoad($CompCar->X, $CompCar->Y, $CompCar->Node);
 
 			if (!isset($this->onRoad[$CompCar->PLID]))
@@ -95,16 +95,16 @@ class LVS extends Plugins
 				return; # They already know.
 
 			if ($this->pth->isOnRoad($CompCar->X, $CompCar->Y, $CompCar->Node) === FALSE)
-				IS_MTC()->PLID($CompCar->PLID)->Text('You are ^1off^9 the track!')->Send();
+				Msg2Lfs()->PLID($CompCar->PLID)->Text('You are ^1off^9 the track!')->Send();
 			else
-				IS_MTC()->PLID($CompCar->PLID)->Text('You are ^2on^9 the track!')->Send();
+				Msg2Lfs()->PLID($CompCar->PLID)->Text('You are ^2on^9 the track!')->Send();
 
 			$this->onRoad[$CompCar->PLID] = $isRoad;
 
 			if ($isRoad === TRUE OR $this->lapValidation[$CompCar->PLID][$this->onLap[$CompCar->PLID]] === FALSE)
 				return PLUGIN_CONTINUE;	# It's already an invalid lap, we don't report it twice.
 
-			IS_MSX()->Msg("{$this->getClientByPLID($CompCar->PLID)->PName}'s Lap is ^1invalid^9!")->Send();
+			Msg2Lfs()->Msg("{$this->getClientByPLID($CompCar->PLID)->PName}'s Lap is ^1invalid^9!")->Send();
 
 			$this->lapValidation[$CompCar->PLID][$this->onLap[$CompCar->PLID]] = FALSE;
 		}
@@ -117,9 +117,9 @@ class LVS extends Plugins
 		$plid = (isset($argv[1])) ? $argv[1] : $this->getClientByUCID($ucid)->PLID;
 
 		if ($this->isValid($plid, $argv[2]))
-			IS_MTC()->UCID($ucid)->Text('Lap is valid.')->Send();
+			Msg2Lfs()->UCID($ucid)->Text('Lap is valid.')->Send();
 		else
-			IS_MTC()->UCID($ucid)->Text('Lap is not valid.')->Send();
+			Msg2Lfs()->UCID($ucid)->Text('Lap is not valid.')->Send();
 
 		return PLUGIN_HANDLED;
 	}
@@ -131,7 +131,7 @@ class LVS extends Plugins
 		forEach ($this->onLap as $PLID => $LAP)
 		{
 			$cl = $this->getClientByPLID($PLID);
-			IS_MTC()->UCID($ucid)->Text("{$PLID} : {$cl->UCID} - {$cl->UName} - {$cl->PName}")->Send();
+			Msg2Lfs()->UCID($ucid)->Text("{$PLID} : {$cl->UCID} - {$cl->UName} - {$cl->PName}")->Send();
 		}
 	}
 }

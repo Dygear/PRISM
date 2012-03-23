@@ -252,7 +252,7 @@ class StateHandler extends PropertyMaster
 		$this->InGameCam = $CPP->InGameCam;
 		$this->FOV = $CPP->FOV;
 		$this->Time = $CPP->Time;
-		$this->State = $CPP->Flags;
+		$this->CamState = $CPP->Flags;
 	}
 
 	# IS_ISM (10)

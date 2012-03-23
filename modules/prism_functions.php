@@ -273,4 +273,49 @@ function sortByProperty($property)
 	};
 }
 
+class Msg2Lfs
+{
+    public $PLID;
+    public $UCID;
+    public $Text;
+    
+    public function __construct($text = '')
+    {
+        $this->Text = $text;
+        return $this;
+    }
+    
+	public function &__call($name, $arguments)
+	{
+		if (property_exists(get_class($this), $name))
+			$this->$name = array_shift($arguments);
+		return $this;
+	}
+    
+	public function send($hostId = NULL)
+	{
+	    if ($this->Text == '') { return; }
+	    
+		global $PRISM;
+
+	    // Decide what IS packet to use to send this message
+	    if (($PRISM->hosts->getStateById($hostId)->State & ISS_MULTI) === 0)
+	    {
+	        // Single player
+	        IS_MSL()->Msg($this->Text)->send();
+	    }
+	    else
+	    {
+	        // Multi player
+	        if ($this->UCID > 0)
+	            IS_MTC()->UCID($this->UCID)->Text($this->Text)->send();
+	        else if ($this->PLID > 0)
+	            IS_MTC()->PLID($this->PLID)->Text($this->Text)->send();
+	        else
+	            IS_MSX()->Text($this->Text)->send();
+	    }
+
+		return $this;
+	}
+}; function Msg2Lfs() { return new Msg2Lfs; }
 ?>
