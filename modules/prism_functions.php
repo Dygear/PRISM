@@ -286,7 +286,7 @@ class Msg2Lfs
         return $this;
     }
     
-    public function &__call($name, $arguments)
+    public function &__call($name, array $arguments)
     {
     	if (property_exists(get_class($this), $name))
     		$this->$name = array_shift($arguments);
@@ -308,10 +308,10 @@ class Msg2Lfs
         else
         {
             // Multi player
-            if ($this->UCID > 0)
-                IS_MTC()->UCID($this->UCID)->Text($this->Text)->Sound($this->Sound)->send();
-            else if ($this->PLID > 0)
+            if ($this->PLID > 0)
                 IS_MTC()->PLID($this->PLID)->Text($this->Text)->Sound($this->Sound)->send();
+            else if ($this->UCID > 0)
+                IS_MTC()->UCID($this->UCID)->Text($this->Text)->Sound($this->Sound)->send();
             else
                 IS_MSX()->Text($this->Text)->send();
         }
