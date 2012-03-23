@@ -275,9 +275,10 @@ function sortByProperty($property)
 
 class Msg2Lfs
 {
-    public $PLID;
-    public $UCID;
-    public $Text;
+    public $PLID = 0;
+    public $UCID = 0;
+    public $Text = '';
+    public $Sound = SND_SILENT;
     
     public function __construct($text = '')
     {
@@ -302,15 +303,15 @@ class Msg2Lfs
 	    if (($PRISM->hosts->getStateById($hostId)->State & ISS_MULTI) === 0)
 	    {
 	        // Single player
-	        IS_MSL()->Msg($this->Text)->send();
+	        IS_MSL()->Msg($this->Text)->Sound($this->Sound)->send();
 	    }
 	    else
 	    {
 	        // Multi player
 	        if ($this->UCID > 0)
-	            IS_MTC()->UCID($this->UCID)->Text($this->Text)->send();
+	            IS_MTC()->UCID($this->UCID)->Text($this->Text)->Sound($this->Sound)->send();
 	        else if ($this->PLID > 0)
-	            IS_MTC()->PLID($this->PLID)->Text($this->Text)->send();
+	            IS_MTC()->PLID($this->PLID)->Text($this->Text)->Sound($this->Sound)->send();
 	        else
 	            IS_MSX()->Text($this->Text)->send();
 	    }
