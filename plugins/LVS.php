@@ -84,7 +84,7 @@ class LVS extends Plugins
 		foreach ($MCI->Info as $CompCar)
 		{
 			if (!isset($this->lapValidation[$CompCar->PLID]))
-				return PLUGIN_CONTINUE; # In the case where the player has already left.
+				continue; # In the case where the player has already left.
 
 			$isRoad = $this->pth->isOnRoad($CompCar->X, $CompCar->Y, $CompCar->Node);
 
@@ -92,17 +92,17 @@ class LVS extends Plugins
 				$this->onRoad[$CompCar->PLID] = NULL;
 
 			if ($this->onRoad[$CompCar->PLID] == $isRoad)
-				return; # They already know.
+				continue; # They already know.
 
-			if ($this->pth->isOnRoad($CompCar->X, $CompCar->Y, $CompCar->Node) === FALSE)
+			if ($isRoad === FALSE)
 				IS_MTC()->PLID($CompCar->PLID)->Text('You are ^1off^9 the track!')->Send();
 			else
 				IS_MTC()->PLID($CompCar->PLID)->Text('You are ^2on^9 the track!')->Send();
 
 			$this->onRoad[$CompCar->PLID] = $isRoad;
 
-			if ($isRoad === TRUE OR $this->lapValidation[$CompCar->PLID][$this->onLap[$CompCar->PLID]] === FALSE)
-				return PLUGIN_CONTINUE;	# It's already an invalid lap, we don't report it twice.
+			if ($isRoad === FALSE OR $this->lapValidation[$CompCar->PLID][$this->onLap[$CompCar->PLID]] === FALSE)
+				continue;	# It's already an invalid lap, we don't report it twice.
 
 			IS_MSX()->Msg("{$this->getClientByPLID($CompCar->PLID)->PName}'s Lap is ^1invalid^9!")->Send();
 
