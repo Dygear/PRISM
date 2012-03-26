@@ -7,6 +7,8 @@ class LVS extends Plugins
 	const VERSION = PHPInSimMod::VERSION;
 	const DESCRIPTION = 'Lap Verification System.';
 
+	const PATH = '/data/pth/';
+
 	private $pth = null;
 	private $lapValidation = array();
 	private $onLap = array();
@@ -16,6 +18,7 @@ class LVS extends Plugins
 	public function __construct()
 	{
 		$this->registerPacket('onTrackInfo', ISP_STA);
+		$this->registerPacket('onLoadLayout', ISP_AXI);
 		$this->registerPacket('onNewPlayer', ISP_NPL);
 		$this->registerPacket('onPlayerLeave', ISP_PLL);
 		$this->registerPacket('onNewLap', ISP_LAP);
@@ -31,12 +34,39 @@ class LVS extends Plugins
 		if ($this->Track == $STA->Track)
 			return;
 
-		$this->Track = $STA->Track;
-		$this->pth = new pth(ROOTPATH . '/data/pth/' . $this->Track . '.pth');
+		$this->Track = $STA->Track; # Update Track Short Code
+
+		$path = ROOTPATH . $this::PATH . $this->Track . '.pth';
+
+		if (!file_exists($path))
+			return $this->pth = NULL; # We don't have a PTH file for this track.
+
+		$this->pth = new pth($path);
+
 		console("Loaded {$this->Track}.pth");
+
 		return PLUGIN_CONTINUE;
 	}
-	
+
+	public function onLoadLayout(IS_AXI $AXI)
+	{
+		$trackType = substr($this->Track, -1);
+
+		if ($trackType != 'X' OR $trackType != 'Y')
+			return; # Not a open layout where we need to check for custom pth files.
+
+		$path = ROOTPATH . $this::PATH . $AXI->LName . '.pth';
+
+		if (!file_exists($path))
+			return $this->pth = NULL; # We don't have a PTH file for this track.
+
+		$this->pth = new pth($path);
+
+		console("Loaded {$this->Track}.pth");
+
+		return PLUGIN_CONTINUE;
+	}
+
 	public function onNewPlayer(IS_NPL $NPL)
 	{
 		$this->onLap[$NPL->PLID] = 1;
@@ -79,8 +109,8 @@ class LVS extends Plugins
 	
 	public function onCarInfo(IS_MCI $MCI)
 	{
-	    if (!$this->pth) { return PLUGIN_CONTINUE; }
-	    
+		if (!$this->pth) { return PLUGIN_CONTINUE; }
+
 		foreach ($MCI->Info as $CompCar)
 		{
 			if (!isset($this->lapValidation[$CompCar->PLID]))
