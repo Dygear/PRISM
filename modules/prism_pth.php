@@ -31,9 +31,9 @@ class PTH
 	}
 	public function __destruct()
 	{
-        array_splice($this->Nodes, 0, $this->NumNodes);
-        array_splice($this->polyRoad, 0, $this->NumNodes);
-        array_splice($this->polyLimit, 0, $this->NumNodes);
+		array_splice($this->Nodes, 0, $this->NumNodes);
+		array_splice($this->polyRoad, 0, $this->NumNodes);
+		array_splice($this->polyLimit, 0, $this->NumNodes);
 	}
 	public function unPack($file)
 	{
@@ -45,84 +45,84 @@ class PTH
 
 		if (substr($file, 7, 1) != $this->Revision)
 			return trigger_error('Not a LFS PTH Revision Is Different Than PTH Parser', E_USER_ERROR);
-		
+
 		foreach (unpack(self::UNPACK, substr($file, 0, 16)) as $property => $value)
 			$this->$property = $value;
 
 		for ($Node = 0; $Node < $this->NumNodes; $Node++)
 			$this->Nodes[] = new Node(substr($file, 16 + ($Node * 40), 40));
 
-        $this->toPoly($this->polyRoad, 'Drive');
-        $this->toPoly($this->polyLimit, 'Limit');
+		$this->toPoly($this->polyRoad, 'Road');
+		$this->toPoly($this->polyLimit, 'Limit');
 
 		return $this;
 	}
-    public function toPoly(array &$nodePolys, $limitRoad)
-    {
-        array_splice($nodePolys, 0, count($nodePolys));
-        $nodes =& $this->Nodes;
-        $lrLeft = $limitRoad.'Left';
-        $lrRight = $limitRoad.'Right';
+	public function toPoly(array &$nodePolys, $limitRoad)
+	{
+		array_splice($nodePolys, 0, count($nodePolys));
 
-        $i = 0;
-        $pa = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
-                          -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
-        $pb = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrRight + $nodes[$i]->CenterX,
-                          -$nodes[$i]->DirX * $nodes[$i]->$lrRight + $nodes[$i]->CenterY);
-        
-        for ($i = 1; $i < $this->NumNodes; $i++)
-        {
-            $pc = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrLeft + $nodes[$i]->CenterX,
-                              -$nodes[$i]->DirX * $nodes[$i]->$lrLeft + $nodes[$i]->CenterY);
-            $pd = new Point2D($nodes[$i]->DirY * $nodes[$i]->$lrRight + $nodes[$i]->CenterX,
-                              -$nodes[$i]->DirX * $nodes[$i]->$lrRight + $nodes[$i]->CenterY);
-            
-            $nodePolys[] = new Polygon2D(array($pa, $pb, $pd, $pc));
+		forEach ($this->Nodes as $i => $Nodes)
+		{
+			if ($i == 0)
+			{
+				$pa = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Left + $Nodes->Center->X,
+								 -$Nodes->Direction->X * $Nodes->$limitRoad->Left + $Nodes->Center->Y);
+				$pb = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Right + $Nodes->Center->X,
+								 -$Nodes->Direction->X * $Nodes->$limitRoad->Right + $Nodes->Center->Y);
+			}
 
-            $pa = $pc;
-            $pb = $pd;
-        }
-        
-        // Close the path
-        $nodePolys[] = new Polygon2D(array($pa, $pb, $nodePolys[0]->points[1], $nodePolys[0]->points[0]));
-    }
+			$pc = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Left + $Nodes->Center->X,
+							 -$Nodes->Direction->X * $Nodes->$limitRoad->Left + $Nodes->Center->Y);
+			$pd = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Right + $Nodes->Center->X,
+							 -$Nodes->Direction->X * $Nodes->$limitRoad->Right + $Nodes->Center->Y);
+
+			$nodePolys[] = new Polygon2D(array($pa, $pb, $pd, $pc));
+
+			$pa = $pc;
+			$pb = $pd;
+		}
+
+		// Close the path
+		$nodePolys[] = new Polygon2D(array($pa, $pb, $nodePolys[0]->points[1], $nodePolys[0]->points[0]));
+	}
 	public function isOnRoad($x, $y, $NodeID)
 	{
-	    $x /= 65536;
-	    $y /= 65536;
-	    
-	    // Check if point is within the left and right lines of the path
-        $p1 = $this->polyRoad[$NodeID]->points[1];
-        $p2 = $this->polyRoad[$NodeID]->points[2];
-        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
-            return false;
-        
-        $p1 = $this->polyRoad[$NodeID]->points[3];
-        $p2 = $this->polyRoad[$NodeID]->points[0];
-        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
-            return false;
-            
-        return true;
+		$x /= 65536;
+		$y /= 65536;
+
+		// Check if point is within the left and right lines of the path
+		$p1 = $this->polyRoad[$NodeID]->points[1];
+		$p2 = $this->polyRoad[$NodeID]->points[2];
+		if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+			return false;
+
+		$p1 = $this->polyRoad[$NodeID]->points[3];
+		$p2 = $this->polyRoad[$NodeID]->points[0];
+		if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+			return false;
+
+		return true;
 	}
 	public function isOnLimit($x, $y, $NodeID)
 	{
-	    $x /= 65536;
-	    $y /= 65536;
-	    
-	    // Check if point is within the left and right lines of the path
-        $p1 = $this->polyLimit[$NodeID]->points[1];
-        $p2 = $this->polyLimit[$NodeID]->points[2];
-        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
-            return false;
-        
-        $p1 = $this->polyLimit[$NodeID]->points[3];
-        $p2 = $this->polyLimit[$NodeID]->points[0];
-        if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
-            return false;
-            
-        return true;
+		$x /= 65536;
+		$y /= 65536;
+
+		// Check if point is within the left and right lines of the path
+		$p1 = $this->polyLimit[$NodeID]->points[1];
+		$p2 = $this->polyLimit[$NodeID]->points[2];
+		if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+			return false;
+
+		$p1 = $this->polyLimit[$NodeID]->points[3];
+		$p2 = $this->polyLimit[$NodeID]->points[0];
+		if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
+			return false;
+
+		return true;
 	}
-	public function drawPath ($fileName) {
+	public function drawPath ($fileName)
+	{
 		$im = imagecreatetruecolor(2560, 2560);
 		$bg = imagecolorallocate($im, 254, 254, 254);
 		imagefill($im, 0, 0, $bg);
@@ -135,23 +135,45 @@ class PTH
 		$RightCos = cos (-90 * M_PI / 180);
 		$RightSin = sin (-90 * M_PI / 180);
 
-		$i = $p->NumNodes - 1;
-		$dlx2 = ($p->Nodes[$i]->DirX * $LeftCos - (-$p->Nodes[$i]->DirY) * $LeftSin) * $p->Nodes[$i]->DriveLeft + ($p->Nodes[$i]->CenterX + 1024);
-		$dly2 = ((-$p->Nodes[$i]->DirY) * $LeftCos + $p->Nodes[$i]->DirX * $LeftSin) * $p->Nodes[$i]->DriveLeft + ((-$p->Nodes[$i]->CenterY) + 1024);
-		$drx2 = ($p->Nodes[$i]->DirX * $RightCos - (-$p->Nodes[$i]->DirY) * $RightSin) * -$p->Nodes[$i]->DriveRight + ($p->Nodes[$i]->CenterX + 1024);
-		$dry2 = ((-$p->Nodes[$i]->DirY) * $RightCos + $p->Nodes[$i]->DirX * $RightSin) * -$p->Nodes[$i]->DriveRight + ((-$p->Nodes[$i]->CenterY) + 1024);
+		$Node = end($p->Nodes); # Get's last node.
+		$llx2 = ($Node->Direction->X * $LeftCos - (-$Node->Direction->Y) * $LeftSin) * $Node->Limit->Left + ($Node->Center->X + 1024);
+		$lly2 = ((-$Node->Direction->Y) * $LeftCos + $Node->Direction->X * $LeftSin) * $Node->Limit->Left + ((-$Node->Center->Y) + 1024);
+		$lrx2 = ($Node->Direction->X * $RightCos - (-$Node->Direction->Y) * $RightSin) * -$Node->Limit->Right + ($Node->Center->X + 1024);
+		$lry2 = ((-$Node->Direction->Y) * $RightCos + $Node->Direction->X * $RightSin) * -$Node->Limit->Right + ((-$Node->Center->Y) + 1024);
 
-		$path_col = imagecolorallocatealpha($im, 64, 64, 64, 64);
+		$dlx2 = ($Node->Direction->X * $LeftCos - (-$Node->Direction->Y) * $LeftSin) * $Node->Road->Left + ($Node->Center->X + 1024);
+		$dly2 = ((-$Node->Direction->Y) * $LeftCos + $Node->Direction->X * $LeftSin) * $Node->Road->Left + ((-$Node->Center->Y) + 1024);
+		$drx2 = ($Node->Direction->X * $RightCos - (-$Node->Direction->Y) * $RightSin) * -$Node->Road->Right + ($Node->Center->X + 1024);
+		$dry2 = ((-$Node->Direction->Y) * $RightCos + $Node->Direction->X * $RightSin) * -$Node->Road->Right + ((-$Node->Center->Y) + 1024);
 
-		for ($i = 0; $i < $p->NumNodes; $i++) {
-			$dlx = ($p->Nodes[$i]->DirX * $LeftCos - (-$p->Nodes[$i]->DirY) * $LeftSin) * $p->Nodes[$i]->DriveLeft + ($p->Nodes[$i]->CenterX + 1024);
-			$dly = ((-$p->Nodes[$i]->DirY) * $LeftCos + $p->Nodes[$i]->DirX * $LeftSin) * $p->Nodes[$i]->DriveLeft + ((-$p->Nodes[$i]->CenterY) + 1024);
-			$drx = ($p->Nodes[$i]->DirX * $RightCos - (-$p->Nodes[$i]->DirY) * $RightSin) * -$p->Nodes[$i]->DriveRight + ($p->Nodes[$i]->CenterX + 1024);
-			$dry = ((-$p->Nodes[$i]->DirY) * $RightCos + $p->Nodes[$i]->DirX * $RightSin) * -$p->Nodes[$i]->DriveRight + ((-$p->Nodes[$i]->CenterY) + 1024);
+		$limit_col = imagecolorallocatealpha($im, 8, 128, 16, 64);
+		$drive_col = imagecolorallocatealpha($im, 64, 64, 64, 64);
 
-			$p_array = array ($dlx2, $dly2, $dlx, $dly, $drx, $dry, $drx2, $dry2);
+		reset($p->Nodes);	# Resets our pointer back to the start.
+		forEach ($p->Nodes as $i => $Node)
+		{
+			// Limit
+			$llx = ($Node->Direction->X * $LeftCos - (-$Node->Direction->Y) * $LeftSin) * $Node->Limit->Left + ($Node->Center->X + 1024);
+			$lly = ((-$Node->Direction->Y) * $LeftCos + $Node->Direction->X * $LeftSin) * $Node->Limit->Left + ((-$Node->Center->Y) + 1024);
+			$lrx = ($Node->Direction->X * $RightCos - (-$Node->Direction->Y) * $RightSin) * -$Node->Limit->Right + ($Node->Center->X + 1024);
+			$lry = ((-$Node->Direction->Y) * $RightCos + $Node->Direction->X * $RightSin) * -$Node->Limit->Right + ((-$Node->Center->Y) + 1024);
 
-			imagefilledpolygon($im, $p_array, 4, $path_col);
+			$l_array = array ($llx2, $lly2, $llx, $lly, $lrx, $lry, $lrx2, $lry2);
+			imagefilledpolygon($im, $l_array, 4, $limit_col);
+
+			$llx2 = $llx;
+			$lly2 = $lly;
+			$lrx2 = $lrx;
+			$lry2 = $lry;
+
+			// Drive
+			$dlx = ($Node->Direction->X * $LeftCos - (-$Node->Direction->Y) * $LeftSin) * $Node->Road->Left + ($Node->Center->X + 1024);
+			$dly = ((-$Node->Direction->Y) * $LeftCos + $Node->Direction->X * $LeftSin) * $Node->Road->Left + ((-$Node->Center->Y) + 1024);
+			$drx = ($Node->Direction->X * $RightCos - (-$Node->Direction->Y) * $RightSin) * -$Node->Road->Right + ($Node->Center->X + 1024);
+			$dry = ((-$Node->Direction->Y) * $RightCos + $Node->Direction->X * $RightSin) * -$Node->Road->Right + ((-$Node->Center->Y) + 1024);
+
+			$d_array = array ($dlx2, $dly2, $dlx, $dly, $drx, $dry, $drx2, $dry2);
+			imagefilledpolygon($im, $d_array, 4, $drive_col);
 
 			$dlx2 = $dlx;
 			$dly2 = $dly;
@@ -165,28 +187,68 @@ class PTH
 }
 class Node
 {
-	const UNPACK = 'lCenterX/lCenterY/lCenterZ/fDirX/fDirY/fDirZ/fLimitLeft/fLimitRight/fDriveLeft/fDriveRight';
-	
-	public $CenterX = 0;
-	public $CenterY = 0;
-	public $CenterZ = 0;
-	public $DirX;
-	public $DirY;
-	public $DirZ;
-	public $LimitLeft;
-	public $LimitRight;
-	public $DriveLeft;
-	public $DriveRight;
+	public $Center;
+	public $Direction;
+	public $Limit;
+	public $Road;
 
-	public function __construct($RawNode)
-	{
-		foreach (unpack(self::UNPACK, $RawNode) as $property => $value)
+	public function __construct($RawNode) {
+		$this->Center = new Center(substr($RawNode, 0, 12));
+		$this->Direction = new Direction(substr($RawNode, 12, 12));
+		$this->Limit = new Limit(substr($RawNode, 24, 8));
+		$this->Road = new Road(substr($RawNode, 32, 8));
+	}
+}
+class Center
+{
+	const PACK = 'lll';
+	const UNPACK = 'lX/lY/lZ';
+
+	public function __construct($rawCenter) {
+		$this->unPack($rawCenter);
+	}
+	public function unPack($rawCenter) {
+		foreach (unpack($this::UNPACK, $rawCenter) as $property => $value)
+			$this->$property = $value / 65536;
+	}
+}
+class Direction
+{
+	const PACK = 'fff';
+	const UNPACK = 'fX/fY/fZ';
+
+	public function __construct($rawDirection) {
+		$this->unPack($rawDirection);
+	}
+	public function unPack($rawDirection) {
+		foreach (unpack($this::UNPACK, $rawDirection) as $property => $value)
 			$this->$property = $value;
+	}
+}
+class Limit
+{
+	const PACK = 'ff';
+	const UNPACK = 'fLeft/fRight';
 
-	    $this->CenterX /= 65536;
-	    $this->CenterY /= 65536;
-	    $this->CenterZ /= 65536;
-	    //$this->DirY = -$this->DirY;
+	public function __construct($rawLimit) {
+		$this->unPack($rawLimit);
+	}
+	public function unPack($rawLimit) {
+		foreach (unpack($this::UNPACK, $rawLimit) as $property => $value)
+			$this->$property = $value;
+	}
+}
+class Road
+{
+	const PACK = 'ff';
+	const UNPACK = 'fLeft/fRight';
+
+	public function __construct($rawRoad) {
+		$this->unPack($rawRoad);
+	}
+	public function unPack($rawRoad) {
+		foreach (unpack($this::UNPACK, $rawRoad) as $property => $value)
+			$this->$property = $value;
 	}
 }
 ?>
