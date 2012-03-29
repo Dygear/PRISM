@@ -122,6 +122,44 @@ class PTH
             
         return true;
 	}
+	/*	@arg: $fileName - Filename and Location where to save image.
+	*/
+	function drawPath ($fileName) {
+		$im = imagecreate(2560, 2560);
+		imagealphablending($im, TRUE);
+		$bg = imagecolorallocatealpha($im, 0, 0, 0, 127);
+
+		$p =& $this;
+
+		$LeftCos = cos (90 * M_PI/180);
+		$LeftSin = sin (90 * M_PI/180);
+		$RightCos = cos (-90 * M_PI/180);
+		$RightSin = sin (-90 * M_PI/180);
+
+		$i = $p->NumNodes - 1;
+		$dlx2 = ($p->Nodes[$i]->DirX * $LeftCos - $p->Nodes[$i]->DirY * $LeftSin) * $p->Nodes[$i]->DriveLeft + $p->Nodes[$i]->CentreX;
+		$dly2 = ($p->Nodes[$i]->DirY * $LeftCos + $p->Nodes[$i]->DirX * $LeftSin) * $p->Nodes[$i]->DriveLeft + $p->Nodes[$i]->CentreY;
+		$drx2 = ($p->Nodes[$i]->DirX * $RightCos - $p->Nodes[$i]->DirY * $RightSin) * -$p->Nodes[$i]->DriveRight + $p->Nodes[$i]->CentreX;
+		$dry2 = ($p->Nodes[$i]->DirY * $RightCos + $p->Nodes[$i]->DirX * $RightSin) * -$p->Nodes[$i]->DriveRight + $p->Nodes[$i]->CentreY;
+
+		$path_col = imagecolorallocatealpha ($im, 30, 40, 30, 63);
+		for ($i = 0; $i < $p->NumNodes; $i++) {
+			$dlx = ($p->Nodes[$i]->DirX * $LeftCos - $p->Nodes[$i]->DirY * $LeftSin) * $p->Nodes[$i]->DriveLeft + $p->Nodes[$i]->CentreX;
+			$dly = ($p->Nodes[$i]->DirY * $LeftCos + $p->Nodes[$i]->DirX * $LeftSin) * $p->Nodes[$i]->DriveLeft + $p->Nodes[$i]->CentreY;
+			$drx = ($p->Nodes[$i]->DirX * $RightCos - $p->Nodes[$i]->DirY * $RightSin) * -$p->Nodes[$i]->DriveRight + $p->Nodes[$i]->CentreX;
+			$dry = ($p->Nodes[$i]->DirY * $RightCos + $p->Nodes[$i]->DirX * $RightSin) * -$p->Nodes[$i]->DriveRight + $p->Nodes[$i]->CentreY;
+
+			$p_array = array ($dlx2, $dly2, $dlx, $dly, $drx, $dry, $drx2, $dry2);
+			imagefilledpolygon ($im, $p_array, 4, $path_col);
+
+			$dlx2 = $dlx;
+			$dly2 = $dly;
+			$drx2 = $drx;
+			$dry2 = $dry;
+		}
+		imagepng($im, $fileName);
+		imagedestroy($im);
+	}
 }
 class Node
 {
