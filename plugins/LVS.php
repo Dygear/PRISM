@@ -52,7 +52,7 @@ class LVS extends Plugins
 	{
 		$trackType = substr($this->Track, -1);
 
-		if ($trackType != 'X' OR $trackType != 'Y')
+		if ($trackType == 'X' OR $trackType == 'Y')
 			return; # Not a open layout where we need to check for custom pth files.
 
 		$path = ROOTPATH . $this::PATH . $AXI->LName . '.pth';
