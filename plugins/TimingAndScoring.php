@@ -42,19 +42,17 @@ class TimingAndScoring extends Plugins
 	# On Screen Display
 	public function display($iPLID, $sColor, $iSTime, $iBTime)
 	{
-		# Skip displaying lap out data
-		if ($iSTime >= 3600000)
+		$Player = $this->getPlayerByPLID($iPLID);
+
+		# Skip displaying lap out data & AI.
+		if ($iSTime >= 3600000 OR $Player->isAI())
 			return;
 
-		$Player = $this->getPlayerByPLID($iPLID);
 		$sPName = $Player->PName . '^9';
 		$sTime = $sColor . timeToStr($iSTime) . '^9';
 		$sΔ = ((($sΔ = $iSTime - $iBTime) < 0) ? '^2-' : '^3+') . timeToStr(abs($sΔ)) . '^9';
 
-		IS_MSX()->Msg("{$sPName} : {$sTime} ($sΔ)")->Send();
-
-		if ($Player->isAI() === TRUE)
-			return;
+//		Msg2Lfs()->PLID($iPLID)->Text("{$sPName} : {$sTime} ($sΔ)")->Send();
 
 		$this->OSD($this->getClientByPLID($iPLID)->UCID, $sPName, $sTime, $sΔ);
 	}
@@ -75,7 +73,7 @@ class TimingAndScoring extends Plugins
 		$bΔ->L(40)->T(182)->W(40)->H(8);
 		$bΔ->BStyle |= ISB_DARK + ISB_RIGHT;
 		$bΔ->Text($sΔ)->send();
-
+	
 		$this->createTimer('OSR', 10, Timer::CLOSE, array($iUCID));
 	}
 
