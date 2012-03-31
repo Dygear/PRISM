@@ -38,6 +38,8 @@ class PTH
         array_splice($this->Nodes, 0, $this->NumNodes);
         array_splice($this->polyRoad, 0, $this->NumNodes);
         array_splice($this->polyLimit, 0, $this->NumNodes);
+        $this->polyRoadBlocks = null;
+        $this->polyLimitBlocks = null;
     }
     public function unPack($file)
     {

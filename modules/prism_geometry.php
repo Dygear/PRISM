@@ -95,6 +95,15 @@ class PolyGrid
         }
     }
     
+    public function __destruct()
+    {
+        for ($a = 0; $a < $this->Rows; $a++)
+        {
+            array_splice($this->Grid[$a], 0, $this->Cols);
+        }
+        array_splice($this->Grid, 0, $this->Rows);
+    }
+    
     public function insert(PolyGridData $data)
     {
         $q = array();
@@ -102,7 +111,7 @@ class PolyGrid
         {
             // find block in grid
             $gi = $this->getGridIndexByPoint($point);
-            if (!in_array($data, $this->Grid[$gi[0]][$gi[1]]))
+            if ($gi !== null && !in_array($data, $this->Grid[$gi[0]][$gi[1]]))
             {
                 $this->Grid[$gi[0]][$gi[1]][] = $data;
                 $this->GridCounter[$gi[0]][$gi[1]]++;
