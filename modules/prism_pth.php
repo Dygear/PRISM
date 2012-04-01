@@ -134,13 +134,14 @@ class PTH
             
             // Using regular nodeid to look up a polygon - $NodeID is used absolutely
             // Check if point is within the left and right sides of the polygon
-            $p1 = $this->$limitRoad[$NodeID]->Points[1];
-            $p2 = $this->$limitRoad[$NodeID]->Points[2];
+            $param = $this->$limitRoad;
+            $p1 = $param->Points[1];
+            $p2 = $param->Points[2];
             if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
                 return false;
             
-            $p1 = $this->$limitRoad[$NodeID]->Points[3];
-            $p2 = $this->$limitRoad[$NodeID]->Points[0];
+            $p1 = $param->Points[3];
+            $p2 = $param->Points[0];
             if (($y - $p1->y) * ($p2->x - $p1->x) - ($x - $p1->x) * ($p2->y - $p1->y) < 0)
                 return false;
             
