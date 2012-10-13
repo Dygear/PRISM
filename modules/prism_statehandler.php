@@ -461,7 +461,16 @@ class PlayerHandler extends PropertyMaster
 	public function __construct(IS_NPL $NPL, StateHandler $parent)
 	{
 		$this->parent = $parent;
-	
+		$this->onNPL($NPL);
+	}
+
+	public function __destruct()
+	{
+		unset($this);
+	}
+
+	private function onNPL(IS_NPL $NPL)
+	{
 		$this->UCID = $NPL->UCID;
 		$this->PType = $NPL->PType;
 		$this->Flags = $NPL->Flags;
@@ -479,11 +488,6 @@ class PlayerHandler extends PropertyMaster
 		$this->inPits = FALSE;
 	}
 
-	public function __destruct()
-	{
-		unset($this);
-	}
-
 	public function onPits(IS_PLP $PLP)
 	{
 		$this->inPits = TRUE;
@@ -492,7 +496,7 @@ class PlayerHandler extends PropertyMaster
 	# Special case, handled within the parent class's onPlayerPacket method.
 	public function onLeavingPits(IS_NPL $NPL)
 	{
-		$this->inPits = FALSE;
+		$this->onNPL($NPL);
 	}
 
 	public function onTakeOverCar(IS_TOC $TOC)
