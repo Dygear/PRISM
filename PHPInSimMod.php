@@ -329,15 +329,14 @@ class PHPInSimMod
 		}
 
 		# If there are no timers set or the next timeout is more then a second away, set the Sleep to 1 & uSleep to NULL.
-		if ($sleepTime == NULL OR $sleepTime >= 1)
-		{	# Must have a max delay of a second, otherwise there is no connection maintenance done.
-			$sleep = 1;
-			$uSleep = NULL;
+		if ($sleepTime == NULL || $timeout < $sleepTime)
+		{
+			$sleepTime = $timeout;
 		}
 		else
 		{	# Set the timeout to the delta of now as compared to the next timer.
 			list($sleep, $uSleep) = explode('.', sprintf('%1.6f', $timeNow - $sleepTime));
-			if (($sleep >= 1 AND $uSleep >= 1) OR $uSleep >= 1000000)
+			if (($sleep >= 1 && $uSleep >= 1) || $uSleep >= 1000000)
 			{
 				$sleep = 1;
 				$uSleep = NULL;
