@@ -1,0 +1,24 @@
+{"ts":1363201766707,"silentsave":true,"restoring":false,"patch":[[{"diffs":[[1,"<?php\n/**\n * PHPInSimMod - Database Module\n * @package PRISM\n * @subpackage Database\n*/\nclass DatabaseHandler\n{\n\t# Hold an instance of the class\n\tprivate $instance;\n\t# A private constructor; prevents direct creation of object\n\tpublic function __construct() {}\n\t# The singleton method\n\tpublic function initialise($dsn, $startUpStr, $user = NULL, $pass = NULL, $port = NULL)\n\t{\n\t\tif (!isset($this->instance))\n\t\t\t$this->instance = new PDO($dsn, $startUpStr, $user, $pass, $port);\n\t\treturn $this;\n\t}\n\t# Prevent users to clone the instance\n\tpublic function __clone()\n\t{\n\t\ttrigger_error('Clone is not allowed.', E_USER_WARNING);\n\t}\n}\n?>\n"]],"start1":0,"start2":0,"length1":0,"length2":631}]],"length":631}
+{"contributors":[],"silentsave":true,"ts":1363201705115,"patch":[[{"diffs":[[0,"base\n*/\n"],[1,"\n"],[0,"class Da"]],"start1":80,"start2":80,"length1":16,"length2":17}]],"length":632,"saved":false}
+{"ts":1363201709496,"patch":[[{"diffs":[[0,"ase\n*/\n\n"],[1,"\n"],[0,"class Da"]],"start1":81,"start2":81,"length1":16,"length2":17}]],"length":633,"saved":false}
+{"ts":1363201710918,"patch":[[{"diffs":[[0,"ase\n*/\n\n"],[1,"name"],[0,"\nclass D"]],"start1":81,"start2":81,"length1":16,"length2":20}]],"length":637,"saved":false}
+{"ts":1363201712636,"patch":[[{"diffs":[[0,"*/\n\nname"],[1,"space PR"],[0,"\nclass D"]],"start1":85,"start2":85,"length1":16,"length2":24}]],"length":645,"saved":false}
+{"ts":1363201714116,"patch":[[{"diffs":[[0,"space PR"],[1,"I"],[0,"\nclass D"]],"start1":93,"start2":93,"length1":16,"length2":17}]],"length":646,"saved":false}
+{"ts":1363201715520,"patch":[[{"diffs":[[0,"pace PRI"],[1,"SM\\"],[0,"\nclass D"]],"start1":94,"start2":94,"length1":16,"length2":19}]],"length":649,"saved":false}
+{"ts":1363201717445,"patch":[[{"diffs":[[0,"e PRISM\\"],[1,"Module\\Da"],[0,"\nclass D"]],"start1":97,"start2":97,"length1":16,"length2":25}]],"length":658,"saved":false}
+{"ts":1363201719720,"patch":[[{"diffs":[[0,"odule\\Da"],[1,"tabase;"],[0,"\nclass D"]],"start1":106,"start2":106,"length1":16,"length2":23}]],"length":665,"saved":false}
+{"ts":1363201722798,"patch":[[{"diffs":[[0,"tabase;\n"],[1,"\n"],[0,"class Da"]],"start1":114,"start2":114,"length1":16,"length2":17}]],"length":666,"saved":false}
+{"contributors":[],"silentsave":false,"ts":1363207509667,"patch":[[{"diffs":[[0,"base\n*/\n"],[1,"\nnamespace PRISM\\Module;\n\n"],[0,"class Da"]],"start1":80,"start2":80,"length1":16,"length2":42}]],"length":657,"saved":false}
+{"contributors":[],"silentsave":true,"ts":1363273736398,"patch":[[{"diffs":[[0,"eHandler"],[1," extends "],[0,"\n{\n\t# Ho"]],"start1":127,"start2":127,"length1":16,"length2":25}]],"length":666,"saved":false}
+{"ts":1363273740709,"patch":[[{"diffs":[[0,"xtends \n"],[1,"\n"],[0,"{\n\t# Hol"]],"start1":137,"start2":137,"length1":16,"length2":17}]],"length":667,"saved":false}
+{"ts":1363273742275,"patch":[[{"diffs":[[0,"extends "],[-1,"\n"],[1,"\\PR"],[0,"\n{\n\t# Ho"]],"start1":136,"start2":136,"length1":17,"length2":19}]],"length":669,"saved":false}
+{"ts":1363273743639,"patch":[[{"diffs":[[0,"ends \\PR"],[1,"ISM\\M"],[0,"\n{\n\t# Ho"]],"start1":139,"start2":139,"length1":16,"length2":21}]],"length":674,"saved":false}
+{"ts":1363273747526,"patch":[[{"diffs":[[0,"\\PRISM\\M"],[1,"od"],[0,"\n{\n\t# Ho"]],"start1":144,"start2":144,"length1":16,"length2":18}]],"length":676,"saved":false}
+{"ts":1363273749751,"patch":[[{"diffs":[[0,"RISM\\Mod"],[1,"u"],[0,"\n{\n\t# Ho"]],"start1":146,"start2":146,"length1":16,"length2":17}]],"length":677,"saved":false}
+{"ts":1363273751168,"patch":[[{"diffs":[[0,"ISM\\Modu"],[1,"le;"],[0,"\n{\n\t# Ho"]],"start1":147,"start2":147,"length1":16,"length2":19}]],"length":680,"saved":false}
+{"ts":1363273757583,"patch":[[{"diffs":[[0,"M\\Module"],[-1,";"],[0,"\n{\n\t# Ho"]],"start1":149,"start2":149,"length1":17,"length2":16}]],"length":679,"saved":false}
+{"ts":1363273775759,"patch":[[{"diffs":[[0,"dler"],[-1," extends \\PRISM\\Module"],[0,"\n{\n\t"]],"start1":131,"start2":131,"length1":30,"length2":8}]],"length":657,"saved":false}
+{"ts":1363274057104,"patch":[[{"diffs":[[0,"}\n}\n"],[-1,"?>\n"]],"start1":650,"start2":650,"length1":7,"length2":4}]],"length":654,"saved":false}
+{"contributors":[],"silentsave":true,"ts":1363304386603,"patch":[[{"diffs":[[0,"stance))"],[1," {"],[0,"\n\t\t\t$thi"]],"start1":424,"start2":424,"length1":16,"length2":18}]],"length":656,"saved":false}
+{"ts":1363304388385,"patch":[[{"diffs":[[0,"$port);\n"],[1,"            \n"],[0,"\t\treturn"]],"start1":497,"start2":497,"length1":16,"length2":29}]],"length":669,"saved":false}
+{"ts":1363304389699,"patch":[[{"diffs":[[0,"t);\n"],[-1,"            "],[1,"\t\t}"],[0,"\n\t\tr"]],"start1":501,"start2":501,"length1":20,"length2":11}]],"length":660,"saved":false}
