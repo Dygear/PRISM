@@ -1,0 +1,2 @@
+Weird Naming Conventions Are No Longer Necessary, Fix that.
+Continue To Separate Classes into SINGLE FILES.

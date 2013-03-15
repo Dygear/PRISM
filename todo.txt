@@ -3,13 +3,13 @@ All Modules
 		* There should be a static or peusdo read only array containing packets that are requested by the module.
 			Packets that only go to one method can be defined as just the method name.
 			Packets that need to go to more then one module should be made into an array of methods.
-			Packets that need to go to a sub modules method should be moved into mulilevel array of methods.
-	* All modules must define the following consts; NAME, AUTHOR, VERSION & DESCRIPTION.
+			Packets that need to go to a sub modules method should be moved into multidimensional array of methods.
+	Done * All modules must define the following consts; NAME, AUTHOR, VERSION & DESCRIPTION. (Extend an Abstract Class)
 		* NAME is the short name of the module.
 		* AUTHOR is the person, or team who made the module.
 		* VERSION is the version string of the module.
-		* DESCRIPTION is a very short sentance about the module.
-	* All non-core modules must be loadable and unloadable at runtime.
+		* DESCRIPTION is a very short sentence about the module.
+	* All non-core modules must be loadable and unloadable at runtime. (Dependency Injection) [Are these Plugins?]
 		* By not defining an __wakeup() & __sleep() method you will make your module immuteable.
 
 Packets Module
@@ -31,3 +31,8 @@ Plugins Module
 	* Admin function levels handled outside of end-user plugins.
 		= Access Denied Callback for the Plugins?
 	* Hooks for any stream (Eg. PRISM Console [STDIN], Telnet Console [TELNET], WWW Access [HTTP].)
+
+Proposals - zenware
+    PEAR Package?
+    Change all the Initialize functions to "init"?
+    Better Documentation?

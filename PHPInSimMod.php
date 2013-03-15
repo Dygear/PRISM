@@ -7,6 +7,8 @@
 
 /* Defines */
 // PRISM
+namespace PRISM;
+
 define('PRISM_DEBUG_CORE',		1);			# Shows Debug Messages From the Core
 define('PRISM_DEBUG_SOCKETS',	2);			# Shows Debug Messages From the Sockets Module
 define('PRISM_DEBUG_MODULES',	4);			# Shows Debug Messages From the all Modules
