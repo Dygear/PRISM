@@ -4,7 +4,7 @@
  * @package PRISM
  * @subpackage Telnet
 */
-
+# Almost PSR
 namespace PRISM\Module\Telnet;
 
 class TSAdminSection extends TSSection
@@ -35,51 +35,43 @@ class TSAdminSection extends TSSection
 	// Toggle through 'add admin' and all t he existing admin accounts (and select)
 	public function handleKey($key)
 	{
-		if ($this->subSection->getActive())
-		{
-			if ($this->subSection->handleKey($key))
+		if ($this->subSection->getActive()) {
+			if ($this->subSection->handleKey($key)) {
 				return true;
+			}
 		}
 		
 		$newItem = null;
 		
-		switch($key)
-		{
+		switch ($key) {
 			case KEY_CURUP :
 				$newItem = $this->previousItem();
 				break;
-			
 			case KEY_CURDOWN :
 				$newItem = $this->nextItem();
 				break;
-			
 			case KEY_CURRIGHT :
 				$this->selectItem();
 				break;
-			
 			case KEY_ESCAPE :
 			case KEY_CURLEFT :
 				$this->deSelectItem();
 				break;
-			
 			default :
 				return false;
 		}
 		
 		// Draw the new content screen
-		if ($newItem !== null)
-		{
+		if ($newItem !== null) {
 			// Remove sub section from drawing list
-			if ($this->subSection !== null)
+			if ($this->subSection !== null) {
 				$this->remove($this->subSection);
+			}
 			
 			// Create new sub section - either to add or edit an admin
-			if ($newItem->getId() == 'adminAdd')
-			{
+			if ($newItem->getId() == 'adminAdd') {
 				$this->subSection = new TSAdminContentSection($this, TS_AACTION_ADD, 59, 21, '', $this->getTType());
-			}
-			else
-			{
+			} else {
 				$this->subSection = new TSAdminContentSection($this, TS_AACTION_EDIT, 59, 21, $newItem->getText(), $this->getTType());
 			}
 			
@@ -104,8 +96,8 @@ class TSAdminSection extends TSSection
 		$admins = $PRISM->admins->getAdminsInfo();
 		
 		$line = 5;
-		foreach ($admins as $username => $details)
-		{
+        
+		foreach ($admins as $username => $details) {
 			$textArea = new TSTextArea(2, $line, 15, 1);
 			$textArea->setId('a'.($line - 5));
 			$textArea->setText($username);
@@ -139,8 +131,9 @@ class TSAdminSection extends TSSection
 	protected function deSelectItem()
 	{
 		// Change focus (set actives)
-		if ($this->getActive() == true)
+		if ($this->getActive() == true) {
 			return;
+		}
 		
 //		console('Selecting item '.$this->subSection->getId().' ('.$this->subSection->getUsername().')');
 		
@@ -152,8 +145,8 @@ class TSAdminSection extends TSSection
 	protected function setInputMode()
 	{
 		$object = $this->getCurObject();
-		switch ($object->getId())
-		{
+        
+		switch ($object->getId()) {
 			default :
 				$this->setInputCallback(null);
 				break;
@@ -181,13 +174,10 @@ class TSAdminContentSection extends TSSection
 		$this->setId('adminsContent');
 		$this->setBorder(TS_BORDER_REGULAR);
 		
-		if ($username)
-		{
+		if ($username) {
 			$this->setUsername($username);
 			$this->setCaption('Edit admin '.$this->username);
-		}
-		else
-		{
+		} else {
 			$this->setCaption('Add new administrator');
 		}
 
@@ -201,36 +191,30 @@ class TSAdminContentSection extends TSSection
 	
 	public function handleKey($key)
 	{
-		switch ($key)
-		{
+		switch ($key) {
 			case KEY_SHIFTTAB :
 			case KEY_CURUP :
 				$newItem = $this->previousItem();
 				$this->setInputMode();
 				break;
-			
 			case KEY_TAB :
 			case KEY_CURDOWN :
 				$newItem = $this->nextItem();
 				$this->setInputMode();
 				break;
-			
 			case KEY_CURRIGHT :
 				break;
-			
 			case KEY_ENTER :
-				switch ($this->getCurObject()->getId())
-				{
+				switch ($this->getCurObject()->getId()) {
 					case 'adminSave' :
 						$this->adminSave();
 						break;
-					
 					case 'adminDelete' :
 						$this->adminDelete();
 						break;
 				}
+                
 				break;
-
 			default :
 				return false;
 		}
@@ -241,8 +225,8 @@ class TSAdminContentSection extends TSSection
 	protected function setInputMode()
 	{
 		$object = $this->getCurObject();
-		switch ($object->getId())
-		{
+        
+		switch ($object->getId()) {
 			case 'adminUsername' :
 				$this->setInputCallback(
 					$this, 
@@ -252,12 +236,10 @@ class TSAdminContentSection extends TSSection
 					$object->getText(), 
 					23
 				);
-//				console('Setting username line edit callback');
+				# console('Setting username line edit callback');
 				break;
-			
 			case 'adminPassword' :
-				if ($this->actionType == TS_AACTION_ADD)
-				{
+				if ($this->actionType == TS_AACTION_ADD) {
 					$this->setInputCallback(
 						$this, 
 						'handleAdminInput', 
@@ -266,9 +248,7 @@ class TSAdminContentSection extends TSSection
 						$object->getText(), 
 						24
 					);
-				}
-				else
-				{
+				} else {
 					$this->setInputCallback(
 						$this, 
 						'handleAdminInput', 
@@ -280,10 +260,8 @@ class TSAdminContentSection extends TSSection
 				}
 //				console('Setting password line edit callback');
 				break;
-			
 			case 'adminFlags' :
-				if ($this->actionType == TS_AACTION_ADD)
-				{
+				if ($this->actionType == TS_AACTION_ADD) {
 					$this->setInputCallback(
 						$this, 
 						'handleAdminInput', 
@@ -292,9 +270,7 @@ class TSAdminContentSection extends TSSection
 						$object->getText(), 
 						26
 					);
-				}
-				else
-				{
+				} else {
 					$this->setInputCallback(
 						$this, 
 						'handleAdminInput', 
@@ -306,7 +282,6 @@ class TSAdminContentSection extends TSSection
 				}
 //				console('Setting flags line edit callback');
 				break;
-			
 			default :
 				$this->setInputCallback(null);
 //				console('Setting key edit callback');
@@ -322,8 +297,7 @@ class TSAdminContentSection extends TSSection
 	
 	private function createAdminContent()
 	{
-		if ($this->actionType == TS_AACTION_ADD)
-		{
+		if ($this->actionType == TS_AACTION_ADD) {
 			// New username
 			$textArea = new TSTextInput(30, 5, 30, 3);
 			$textArea->setId('adminUsername');
@@ -365,9 +339,7 @@ class TSAdminContentSection extends TSSection
 			$textArea->setOptions(TS_OPT_ISSELECTABLE);
 			$textArea->setBorder(TS_BORDER_REGULAR);
 			$this->add($textArea);
-		}
-		else
-		{
+		} else {
 			// New password
 			$textArea = new TSTextInput(30, 5, 30, 3);
 			$textArea->setId('adminPassword');
@@ -431,18 +403,19 @@ class TSAdminContentSection extends TSSection
 		$flags		= $this->getObjectById('adminFlags')->getText();
 		
 		// Save admin
-		if ($PRISM->admins->adminExists($username))
-		{
+		if ($PRISM->admins->adminExists($username)) {
 			// Update admin
-			if ($password != '')
+			if ($password != '') {
 				$PRISM->admins->changePassword($username, $password);
+			}
+            
 			$PRISM->admins->setAccessFlags($username, flagsToInteger($flags));
-		}
-		else
-		{
+		} else {
 			// New admin
-			if ($username == '' || $password == '')
+			if ($username == '' || $password == '') {
 				return;
+			}
+            
 			$PRISM->admins->addAccount($username, $password, flagsToInteger($flags));
 			$PRISM->admins->setAccessFlags($username, flagsToInteger($flags));
 		}
@@ -456,8 +429,9 @@ class TSAdminContentSection extends TSSection
 	{
 		global $PRISM;
 		
-		if ($this->username)
+		if ($this->username) {
 			$PRISM->admins->deleteAccount($this->username);
+		}
 		
 		$this->parentSection->redrawMenu();
 

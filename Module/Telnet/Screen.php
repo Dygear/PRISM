@@ -4,7 +4,7 @@
  * @package PRISM
  * @subpackage Telnet
 */
-
+# Almost PSR
 namespace PRISM\Module\Telnet;
 
 // Screen object options
@@ -79,16 +79,22 @@ abstract class ScreenObject
 	public function setX($x)
 	{
 		$x = (int) $x;
-		if ($x < 0)
+        
+		if ($x < 0) {
 			$x = 0;
+		}
+        
 		$this->x = $x;
 	}
 	
 	public function setY($y)
 	{
 		$y = (int) $y;
-		if ($y < 0)
+        
+		if ($y < 0) {
 			$y = 0;
+		}
+        
 		$this->y = $y;
 	}
 	
@@ -126,8 +132,11 @@ abstract class ScreenObject
 	public function setWidth($cols)
 	{
 		$cols = (int) $cols;
-		if ($cols < 0)
+        
+		if ($cols < 0) {
 			$cols = 0;
+		}
+        
 		$this->cols			= $cols;
 		$this->screenCache	= '';
 	}
@@ -135,8 +144,11 @@ abstract class ScreenObject
 	public function setHeight($lines)
 	{
 		$lines = (int) $lines;
-		if ($lines < 0)
+        
+		if ($lines < 0) {
 			$lines = 0;
+		}
+        
 		$this->lines		= $lines;
 		$this->screenCache	= '';
 	}
@@ -169,8 +181,11 @@ abstract class ScreenObject
 	public function setBorder($border)
 	{
 		$border = (int) $border;
-		if ($border < 0 || $border > TS_BORDER_NUMTYPES)
+        
+		if ($border < 0 || $border > TS_BORDER_NUMTYPES) {
 			$border = 0;
+		}
+        
 		$this->border = $border;
 		$this->screenCache	= '';
 	}
@@ -183,8 +198,11 @@ abstract class ScreenObject
 	public function setMargin($margin)
 	{
 		$margin = (int) $margin;
-		if ($margin < 0)
+        
+		if ($margin < 0) {
 			$margin = 0;
+		}
+        
 		$this->margin = $margin;
 		$this->screenCache	= '';
 	}
@@ -218,31 +236,35 @@ abstract class ScreenObject
 	
 	public function toggleSelected()
 	{
-		if ($this->options & TS_OPT_ISSELECTABLE)
-		{
-			if ($this->options & TS_OPT_ISSELECTED)
+		if ($this->options & TS_OPT_ISSELECTABLE) {
+			if ($this->options & TS_OPT_ISSELECTED) {
 				$this->options &= ~TS_OPT_ISSELECTED;
-			else
+			} else {
 				$this->options |= TS_OPT_ISSELECTED;
+			}
+            
 			$this->screenCache = '';
 		}
 	}
 	
 	public function setSelected($selected)
 	{
-		if ($selected)
+		if ($selected) {
 			$this->options |= TS_OPT_ISSELECTED;
-		else
+		} else {
 			$this->options &= ~TS_OPT_ISSELECTED;
+		}
+        
 		$this->screenCache = '';
 	}
 	
 	public function setBold($bold)
 	{
-		if ($bold)
+		if ($bold) {
 			$this->options |= TS_OPT_BOLD;
-		else
+		} else {
 			$this->options &= ~TS_OPT_BOLD;
+		}
 	}
 	
 	public function clearCache()
@@ -255,44 +277,42 @@ abstract class ScreenObject
 		$screenBuf = '';
 
 		// Draw own style (backgroud? border?)
-		if ($this->getBorder() > TS_BORDER_NONE)
-		{
+		if ($this->getBorder() > TS_BORDER_NONE) {
 			// Initialise border helper object
 			$bHelp = new ScreenBorderHelper($this->getTType());
 			$screenBuf .= $bHelp->start();
 
 			// Draw border stuff
 			$line = 0;
-			while ($line < $this->getRealHeight())
-			{
+            
+			while ($line < $this->getRealHeight()) {
 				// Move to new line (if not on line 0)
-				if ($line > 0)
-				{
+				if ($line > 0) {
 					$screenBuf .= KEY_ESCAPE.'['.$this->realWidth.'D'.KEY_ESCAPE.'[1B';
 				}
 
 				// First and last line
-				if ($line == 0 || $line == $this->getRealHeight() - 1)
-				{
+				if ($line == 0 || $line == $this->getRealHeight() - 1) {
 					$pos = 0;
-					while ($pos < $this->realWidth)
-					{
-						if ($line == 0 && $pos == 0)
+                    
+					while ($pos < $this->realWidth) {
+						if ($line == 0 && $pos == 0) {
 							$screenBuf .= $bHelp->getChar(TC_BORDER_TOPLEFT);
-						else if ($line == 0 && $pos == $this->realWidth-1)
+						} else if ($line == 0 && $pos == $this->realWidth-1) {
 							$screenBuf .= $bHelp->getChar(TC_BORDER_TOPRIGHT);
-						else if ($line == $this->getRealHeight() - 1 && $pos == 0)
+						} else if ($line == $this->getRealHeight() - 1 && $pos == 0) {
 							$screenBuf .= $bHelp->getChar(TC_BORDER_BOTTOMLEFT);
-						else if ($line == $this->getRealHeight() - 1 && $pos == $this->realWidth-1)
+						} else if ($line == $this->getRealHeight() - 1 && $pos == $this->realWidth-1) {
 							$screenBuf .= $bHelp->getChar(TC_BORDER_BOTTOMRIGHT);
-						else
+						} else {
 							$screenBuf .= $bHelp->getChar(TC_BORDER_HORILINE);
+						}
+                        
 						$pos++;
 					}
 
 					// Caption on border?
-					if ($line == 0 && $this->getCaption() != '')
-					{
+					if ($line == 0 && $this->getCaption() != '') {
 						$screenBuf .= $bHelp->end();
 
 						$cLen = strlen($this->getCaption());
@@ -304,9 +324,7 @@ abstract class ScreenObject
 
 						$screenBuf .= $bHelp->start();
 					}
-				}
-				else
-				{
+				} else {
 					// Place border only on first and last char
 					$screenBuf .= $bHelp->getChar(TC_BORDER_VERTLINE);
 					$screenBuf .= KEY_ESCAPE.'['.($this->realWidth - 2).'C';
@@ -319,15 +337,14 @@ abstract class ScreenObject
 			// Always end border helper (because we may have to reset charset).
 			$screenBuf .= $bHelp->end();
 			unset($bHelp);
-		}
-		else
+		} else {
 		// Caption without border?
-		if ($this->getCaption() != '')
-		{
-			$cLen = strlen($this->getCaption());
-			$captionX = floor(($this->realWidth - $cLen) / 2);
-			$screenBuf .= str_pad('', $captionX, ' ');
-			$screenBuf .= str_pad($this->getCaption(), $this->realWidth - $captionX, ' ');
+    		if ($this->getCaption() != '') {
+    			$cLen = strlen($this->getCaption());
+    			$captionX = floor(($this->realWidth - $cLen) / 2);
+    			$screenBuf .= str_pad('', $captionX, ' ');
+    			$screenBuf .= str_pad($this->getCaption(), $this->realWidth - $captionX, ' ');
+    		}
 		}
 		
 		return $screenBuf;
@@ -348,10 +365,8 @@ abstract class ScreenContainer extends ScreenObject
 	
 	public function remove(ScreenObject $object)
 	{
-		foreach ($this->screenObjects as $index => $ob)
-		{
-			if ($object === $ob)
-			{
+		foreach ($this->screenObjects as $index => $ob) {
+			if ($object === $ob) {
 				unset($this->screenObjects[$index]);
 				break;
 			}
@@ -365,10 +380,8 @@ abstract class ScreenContainer extends ScreenObject
 
 	public function removeById($objectId)
 	{
-		foreach ($this->screenObjects as $index => $ob)
-		{
-			if ($objectId == $ob->getId())
-			{
+		foreach ($this->screenObjects as $index => $ob) {
+			if ($objectId == $ob->getId()) {
 				unset($this->screenObjects[$index]);
 				break;
 			}
@@ -377,20 +390,21 @@ abstract class ScreenContainer extends ScreenObject
 
 	public function getObjectById($objectId)
 	{
-		foreach ($this->screenObjects as $index => $ob)
-		{
-			if ($objectId == $ob->getId())
-			{
+		foreach ($this->screenObjects as $index => $ob) {
+			if ($objectId == $ob->getId()) {
 				return $ob;
 			}
 		}
+
 		return null;
 	}
 	
 	public function getObjectByIndex($index)
 	{
-		if (isset($this->screenObjects[$index]))
+		if (isset($this->screenObjects[$index])) {
 			return $this->screenObjects[$index];
+		}
+        
 		return null;
 	}
 	
@@ -405,18 +419,17 @@ abstract class ScreenContainer extends ScreenObject
 		$this->realWidth = $this->getWidth();
 		$this->realHeight = $this->getHeight();
 		
-		foreach ($this->screenObjects as $object)
-		{
-			if (!$object->isVisible())
+		foreach ($this->screenObjects as $object) {
+			if (!$object->isVisible()) {
 				continue;
+			}
 			
 			// Draw the object and place it on its x and y
 			$screenBuf .= KEY_ESCAPE.'['.$object->getY().';'.$object->getX().'H';
 			$screenBuf .= $object->draw();
 		}
 		
-		if ($this->getBorder())
-		{
+		if ($this->getBorder()) {
 			$screenBuf .= KEY_ESCAPE.'['.$this->getY().';'.$this->getX().'H';
 			$screenBuf .= $this->drawBorder();
 		}
@@ -426,11 +439,13 @@ abstract class ScreenContainer extends ScreenObject
 	
 	public function updateTTypes($ttype)
 	{
-		foreach ($this->screenObjects as $object)
-		{
+		foreach ($this->screenObjects as $object) {
 			$object->setTType($ttype);
-			if (is_subclass_of($object, 'ScreenContainer'))
+            
+			if (is_subclass_of($object, 'ScreenContainer')) {
 				$object->updateTTypes($ttype);
+			}
+            
 			$object->clearCache();
 		}
 	}
@@ -472,43 +487,50 @@ abstract class TelnetScreen extends ScreenContainer
 		$firstTime = ($this->winSize === null) ? true : false;
 		$this->winSize = array($width, $height);
 		$this->setSize($width, $height);
-		if (!$firstTime)
+        
+		if (!$firstTime) {
 			$this->redraw();
+		}
 	}
 		
 	protected function setCursorProperties($properties = 0)
 	{
 		$this->cursorProperties = $properties;
 		
-		if ($this->getTType() == TELNET_TTYPE_XTERM)
-		{
-			if ($this->cursorProperties & TELNET_CURSOR_HIDE)
+		if ($this->getTType() == TELNET_TTYPE_XTERM) {
+			if ($this->cursorProperties & TELNET_CURSOR_HIDE) {
 				$this->screenBuf .= KEY_ESCAPE.'[?25l';
-			else
+			} else {
 				$this->screenBuf .= KEY_ESCAPE.'[?25h';
+			}
 		}
 	}
 
 	protected function screenClear($goHome = false)
 	{
 		$this->screenBuf .= VT100_ED2;
-		if ($goHome)
+        
+		if ($goHome) {
 			$this->screenBuf .= VT100_CURSORHOME;
+		}
 	}
 	
 	protected function flush()
 	{
-		if ($this->screenBuf)
+		if ($this->screenBuf) {
 			$this->write($this->screenBuf);
+		}
+        
 		$this->screenBuf = '';
 	}
 	
 	public function setPostCurPos(array $curPos)
 	{
-		if (!isset($curPos[0]))
+		if (!isset($curPos[0])) {
 			$this->postCurPos = null;
-		else
+		} else {
 			$this->postCurPos = $curPos;
+		}
 	}
 	
 	protected function redraw()
@@ -520,15 +542,13 @@ abstract class TelnetScreen extends ScreenContainer
 		$this->screenBuf .= $this->draw();
 		
 		// Park cursor?
-		if ($this->postCurPos !== null)
-		{
+		if ($this->postCurPos !== null) {
 			$this->screenBuf .= KEY_ESCAPE.'['.$this->postCurPos[1].';'.$this->postCurPos[0].'H';
-		}
-		else
-		{
-			if (($this->modeState & TELNET_MODE_LINEEDIT) == 0 && $this->getTType() != TELNET_TTYPE_XTERM)
+		} else {
+			if (($this->modeState & TELNET_MODE_LINEEDIT) == 0 && $this->getTType() != TELNET_TTYPE_XTERM) {
 				$this->screenBuf .= KEY_ESCAPE.'[0;'.($this->getWidth() - 1).'H';
-//				$this->screenBuf .= KEY_ESCAPE.'['.$this->winSize[1].';'.$this->winSize[0].'H';
+                #$this->screenBuf .= KEY_ESCAPE.'['.$this->winSize[1].';'.$this->winSize[0].'H';
+			}			
 		}
 		
 		// Flush buffer to client
@@ -538,8 +558,10 @@ abstract class TelnetScreen extends ScreenContainer
 	protected function clearObjects($clearScreen = false)
 	{
 		$this->screenObjects = array();
-		if ($clearScreen)
+        
+		if ($clearScreen) {
 			$this->screenClear(true);
+		}
 	}
 }
 
@@ -566,8 +588,9 @@ class TSTextArea extends ScreenObject
 	
 	public function draw()
 	{
-		if ($this->screenCache != '')
+		if ($this->screenCache != '') {
 			return $this->screenCache;
+		}
 		
 		$screenBuf = '';
 		$screenMargin = 0;
@@ -575,8 +598,7 @@ class TSTextArea extends ScreenObject
 		$this->realWidth = 0;
 		$this->realHeight = 0;
 
-		if ($this->getBorder() || $this->getCaption())
-		{
+		if ($this->getBorder() || $this->getCaption()) {
 			// Increase screenMargin by one, to indicate this object will be surrounded by one 'pixel'
 			$screenMargin++;
 			
@@ -588,106 +610,113 @@ class TSTextArea extends ScreenObject
 		}
 
 		$style = '';
-		if (($this->getOptions() & TS_OPT_ISEDITABLE) == 0 && ($this->getOptions() & TS_OPT_HASBACKGROUND || $this->getOptions() & TS_OPT_ISSELECTED))
+        
+		if (($this->getOptions() & TS_OPT_ISEDITABLE) == 0 && ($this->getOptions() & TS_OPT_HASBACKGROUND || $this->getOptions() & TS_OPT_ISSELECTED)) {
 			$style .= VT100_STYLE_REVERSE;
-		if ($this->getOptions() & TS_OPT_BOLD)
+		}
+        
+		if ($this->getOptions() & TS_OPT_BOLD) {
 			$style .= VT100_STYLE_BOLD;
+		}
 
 		$screenBuf .= $style;
 
 		// Draw content (text)
-		foreach ($this->prepareTags() as $word)
-		{
+		foreach ($this->prepareTags() as $word) {
 			$wLen = strlen($word[0]);
 			
 			// If regular word, check for line wrapping and such
-			if ($word[1] == 0)
-			{
+			if ($word[1] == 0) {
 				// Skip space at start of line (after line wrap)?
-				if ($pos <= $screenMargin && $word[0] == '')
+				if ($pos <= $screenMargin && $word[0] == '') {
 					continue;
+				}
 	
 				// Line wrap?
-				if ($pos + $wLen > $this->getWidth() - $screenMargin || $word[0] == KEY_ENTER)
-				{
+				if ($pos + $wLen > $this->getWidth() - $screenMargin || $word[0] == KEY_ENTER) {
 					// Padding until the end of cols
-					while ($pos < $this->getWidth() - $screenMargin)
-					{
+					while ($pos < $this->getWidth() - $screenMargin) {
 						$screenBuf .= ' ';
 						$pos++;
-						if ($pos > $this->realWidth)
+                        
+						if ($pos > $this->realWidth) {
 							$this->realWidth = $pos;
+						}
 					}
 					
 					// Stop if we've ran out of space (include screenMargin to check for bottom border
-					if (++$this->realHeight == $this->getHeight())
+					if (++$this->realHeight == $this->getHeight()) {
 						break;
+					}
 					
 					// Line wrap
 					$screenBuf .= KEY_ESCAPE.'['.$pos.'D'.KEY_ESCAPE.'[1B';
 					$pos = 0;
 					
-					if ($word[0] == KEY_ENTER || $word[0] == ' ')
+					if ($word[0] == KEY_ENTER || $word[0] == ' ') {
 						continue;
+					}
 				}
 
 				// compensate for (left)margin?
 				if ($pos == 0 && $screenMargin > 0) {
 					$screenBuf .= KEY_ESCAPE.'['.$screenMargin.'C';
 					$pos += $screenMargin;
-					if ($pos > $this->realWidth)
+                    
+					if ($pos > $this->realWidth) {
 						$this->realWidth = $pos;
+					}
 				}
 				
 				$pos += $wLen;
 				$screenBuf .= $word[0];
 
-				if ($pos > $this->realWidth)
+				if ($pos > $this->realWidth) {
 					$this->realWidth = $pos;
-			}
-			else
-			{
+				}
+			} else {
 				// Add style tag (not a word)
 				$screenBuf .= $word[0];
 
 				// Reactivate background after a style reset?
-				if ($word[0] == VT100_STYLE_RESET)
+				if ($word[0] == VT100_STYLE_RESET) {
 					$screenBuf .= $style;
+				}
 			}
 		}
 		
 		// Padding until the end of cols
-		while ($pos < $this->getWidth() - $screenMargin)
-		{
+		while ($pos < $this->getWidth() - $screenMargin) {
 			$screenBuf .= ' ';
 			$pos++;
-			if ($pos > $this->realWidth)
+            
+			if ($pos > $this->realWidth) {
 				$this->realWidth = $pos;
+			}
 		}
 
 		// Turn off background?
-		if ($style != '')
+		if ($style != '') {
 			$screenBuf .= VT100_STYLE_RESET;
+		}
 
 		// Still have to count the last line we drew
 		$this->realHeight++;
 
 		// If there's a border, increase realWidth by one (to include right border)
-		if ($this->getBorder())
-		{
+		if ($this->getBorder()) {
 			$this->realWidth++;
 		}
 
 		// If we have to draw a border or caption, do so here
-		if ($this->getBorder() || $this->getCaption())
-		{
+		if ($this->getBorder() || $this->getCaption()) {
 			// Compesate realHeight
-			if ($this->getBorder())
+			if ($this->getBorder()) {
 				$this->realHeight += 1;
+			}
 
 			$screenBuf .= KEY_ESCAPE.'['.($this->realWidth - 1).'D'.KEY_ESCAPE.'['.($this->realHeight - 2).'A';
 			$screenBuf .= $this->drawBorder();
-			
 		}
 
 		//console('object width : '.$this->realWidth.' | object height : '.$this->realHeight);
@@ -702,62 +731,61 @@ class TSTextArea extends ScreenObject
 		$words = explode(' ', $this->text);
 		$out = array();
 
-		foreach ($words as $word)
-		{
+		foreach ($words as $word) {
 			$matches = array();
-			if (preg_match_all('/'.KEY_ESCAPE.'\[(\d*)m/', $word, $matches, PREG_OFFSET_CAPTURE))
-			{
+            
+			if (preg_match_all('/'.KEY_ESCAPE.'\[(\d*)m/', $word, $matches, PREG_OFFSET_CAPTURE)) {
 				$cutOffset = 0;
-				foreach ($matches[0] as $match)
-				{
+                
+				foreach ($matches[0] as $match) {
 					$mLen = strlen($match[0]);
 					$match[1] -= $cutOffset;
 					
 					// Do we have chars BEFORE this tag? (that means regular chars)
-					if ($match[1] > 0)
-					{
+					if ($match[1] > 0) {
 						// Split those regular chars into its own array entry
 						$exp = explode(KEY_ENTER, substr($word, 0, $match[1]));
-						foreach ($exp as $i => $e)
-						{
-							if ($i > 0)
+						
+                        foreach ($exp as $i => $e) {
+							if ($i > 0) {
 								$out[] = array(KEY_ENTER, 0);
+							}
+                            
 							$out[] = array($e, 0);
 						}
 						
 						// Then the tag
 						$out[] = array($match[0], 1);
-
 						$word = substr($word, $match[1] + $mLen);
 						$cutOffset += $match[1] + $mLen;
-					}
-					else
-					{
+					} else {
 						$out[] = array($match[0], 1);
 						$word = substr($word, $mLen);
 						$cutOffset += $mLen;
 					}
 				}
+                
 				// Are there still regular chars after all the tags?
-				if ($word != '')
-				{
+				if ($word != '') {
 					$exp = explode(KEY_ENTER, $word);
-					foreach ($exp as $i => $e)
-					{
-						if ($i > 0)
+                    
+					foreach ($exp as $i => $e) {
+						if ($i > 0) {
 							$out[] = array(KEY_ENTER, 0);
+						}
+                        
 						$out[] = array($e, 0);
 					}
 				}
-			}
-			else
-			{
+			} else {
 				// Regular word
 				$exp = explode(KEY_ENTER, $word);
-				foreach ($exp as $i => $e)
-				{
-					if ($i > 0)
+                
+				foreach ($exp as $i => $e) {
+					if ($i > 0) {
 						$out[] = array(KEY_ENTER, 0);
+					}
+                    
 					$out[] = array($e, 0);
 				}
 			}
@@ -765,8 +793,8 @@ class TSTextArea extends ScreenObject
 			// Add the space between words to $out (it was stripped in the explode())
 			$out[] = array(' ', 0);
 		}
+
 		array_pop($out);
-		
 		return $out;
 	}
 }
@@ -797,12 +825,13 @@ class TSHLine extends ScreenObject
 	public function draw()
 	{
 		$bHelp = new ScreenBorderHelper($this->getTType());
-		
 		$screenBuf = $bHelp->start();
-		for ($a=0; $a<$this->getWidth(); $a++)
+        
+		for ($a=0; $a<$this->getWidth(); $a++) {
 			$screenBuf .= $bHelp->getChar(TC_BORDER_HORILINE);
+		}
+        
 		$screenBuf .= $bHelp->end();
-		
 		return $screenBuf;
 	}
 }
@@ -818,15 +847,14 @@ class TSVLine extends ScreenObject
 	public function draw()
 	{
 		$bHelp = new ScreenBorderHelper($this->getTType());
-		
 		$screenBuf = $bHelp->start();
-		for ($a=0; $a<$this->getHeight(); $a++)
-		{
+        
+		for ($a=0; $a<$this->getHeight(); $a++) {
 			$screenBuf .= $bHelp->getChar(TC_BORDER_VERTLINE);
 			$screenBuf .= KEY_ESCAPE.'[B'.KEY_ESCAPE.'[D';
 		}
+        
 		$screenBuf .= $bHelp->end();
-		
 		return $screenBuf;
 	}
 }
@@ -859,35 +887,30 @@ abstract class TSSection extends ScreenContainer
 	{
 		$this->curItem = -1;
 		
-		if ($hard)
-		{
-			
+		if ($hard) {
+			# Nothing Happens in this function, why is it even here... - zenware
 		}
 	}
 	
 	protected function setInputCallback($class, $func = null, $editMode = 0, array $curPos = array(0, 0), $defaultText = '', $maxLength = 23)
 	{
-		if (get_class($this->parentSection) == 'PrismTelnet')
-		{
-			if ($class === null)
-			{
+		if (get_class($this->parentSection) == 'PrismTelnet') {
+			if ($class === null) {
 				$this->parentSection->registerInputCallback($this->parentSection, 'handleKey');
 				$this->parentSection->setPostCurPos(array());
-			}
-			else
-			{
+			} else {
 				$this->parentSection->registerInputCallback($class, $func, $editMode);
 				$this->parentSection->setLineBuffer($defaultText);
 				$this->parentSection->setInputBufferMaxLen($maxLength);
-				if ($editMode)
+                
+				if ($editMode) {
 					$this->parentSection->setPostCurPos($curPos);
-				else
+				} else {
 					$this->parentSection->setPostCurPos(array());
+				}
 			}
 //			console('Recursive : found final parent');
-		}
-		else
-		{
+		} else {
 			$this->parentSection->setInputCallback($class, $func, $editMode, $curPos, $defaultText, $maxLength);
 //			console('Recursive : continuing up');
 		}
@@ -895,12 +918,9 @@ abstract class TSSection extends ScreenContainer
 	
 	protected function getLine()
 	{
-		if (get_class($this->parentSection) == 'PrismTelnet')
-		{
+		if (get_class($this->parentSection) == 'PrismTelnet') {
 			return $this->parentSection->getLine(true);
-		}
-		else
-		{
+		} else {
 			return $this->parentSection->getLine();
 		}
 	}
@@ -908,17 +928,16 @@ abstract class TSSection extends ScreenContainer
 	public function setActive($active)
 	{
 		$this->active = (boolean) $active;
-		if ($this->getCurObject() === null)
+        
+		if ($this->getCurObject() === null) {
 			return;
+		}
 		
-		if ($active)
-		{
+		if ($active) {
 			$this->getCurObject()->setSelected(true);
 //			console('ACTIVATING '.$this->getCurObject()->getId());
 			$this->setInputMode();
-		}
-		else
-		{
+		} else {
 			$this->getCurObject()->setSelected(false);
 			$this->setInputCallback(null);
 //			console('DE-ACTIVATING'.$this->getCurObject()->getId());
@@ -932,8 +951,10 @@ abstract class TSSection extends ScreenContainer
 	
 	protected function getCurObject()
 	{
-		if ($this->curItem == -1)
+		if ($this->curItem == -1) {
 			return $this->nextItem(true);
+		}
+        
 		return $this->getObjectByIndex($this->curItem);
 	}
 	
@@ -942,29 +963,23 @@ abstract class TSSection extends ScreenContainer
 		// find selected object
 		$old = null;
 		$a = ($this->curItem < 0) ? 0 : $this->curItem;
-		while ($object = $this->getObjectByIndex($a))
-		{
-			if ($old === null)
-			{
-				if ($first && $object->getOptions() & TS_OPT_ISSELECTABLE)
-				{
+        
+		while ($object = $this->getObjectByIndex($a)) {
+			if ($old === null) {
+				if ($first && $object->getOptions() & TS_OPT_ISSELECTABLE) {
 					return $object;
 				}
 				
-				if ($object->getOptions() & TS_OPT_ISSELECTED)
-				{
+				if ($object->getOptions() & TS_OPT_ISSELECTED) {
 					$old = $object;
 				}
-			}
-			else
-			{
-				if ($object->getOptions() & TS_OPT_ISSELECTABLE)
-				{
+			} else {
+				if ($object->getOptions() & TS_OPT_ISSELECTABLE) {
 					// Input TextArea lost focus 'the good way' - we need to grab linebufer and store it in old object
-					if ($old->getOptions() & TS_OPT_ISEDITABLE)
-					{
+					if ($old->getOptions() & TS_OPT_ISEDITABLE) {
 						$old->setText($this->getLine());
 					}
+                    
 					$old->toggleSelected();
 					$object->toggleSelected();
 					$this->curItem = $a;
@@ -982,24 +997,19 @@ abstract class TSSection extends ScreenContainer
 	{
 		$old = null;
 		$a = ($this->curItem < 0) ? ($this->getNumObjects() -1) : $this->curItem;
-		while ($object = $this->getObjectByIndex($a))
-		{
-			if ($old === null)
-			{
-				if ($object->getOptions() & TS_OPT_ISSELECTED)
-				{
+        
+		while ($object = $this->getObjectByIndex($a)) {
+			if ($old === null) {
+				if ($object->getOptions() & TS_OPT_ISSELECTED) {
 					$old = $object;
 				}
-			}
-			else
-			{
-				if ($object->getOptions() & TS_OPT_ISSELECTABLE)
-				{
+			} else {
+				if ($object->getOptions() & TS_OPT_ISSELECTABLE) {
 					// Input TextArea lost focus 'the good way' - we need to grab linebufer and store it in old object
-					if ($old->getOptions() & TS_OPT_ISEDITABLE)
-					{
+					if ($old->getOptions() & TS_OPT_ISEDITABLE) {
 						$old->setText($this->getLine());
 					}
+                    
 					$old->toggleSelected();
 					$object->toggleSelected();
 					$this->curItem = $a;
@@ -1037,16 +1047,18 @@ class ScreenBorderHelper
 	
 	public function start()
 	{
-		if ($this->ttype == TELNET_TTYPE_XTERM)
+		if ($this->ttype == TELNET_TTYPE_XTERM) {
 			return VT100_STYLE_RESET.VT100_USG0_LINE;
+		}
 
 		return '';
 	}
 	
 	public function end()
 	{
-		if ($this->ttype == TELNET_TTYPE_XTERM)
+		if ($this->ttype == TELNET_TTYPE_XTERM) {
 			return VT100_STYLE_RESET.VT100_USG0;
+		}
 
 		return '';
 	}
@@ -1056,52 +1068,65 @@ class ScreenBorderHelper
 		switch($type)
 		{
 			case TC_BORDER_TOPLEFT :
-				if ($this->ttype == TELNET_TTYPE_XTERM)
+				if ($this->ttype == TELNET_TTYPE_XTERM) {
 					return chr(108);
-				else if ($this->ttype == TELNET_TTYPE_ANSI)
+				} else if ($this->ttype == TELNET_TTYPE_ANSI) {
 					return chr(218);
-				else
+				} else {
 					return '/';
-
+				}
+                
+                break;
 			case TC_BORDER_TOPRIGHT :
-				if ($this->ttype == TELNET_TTYPE_XTERM)
+				if ($this->ttype == TELNET_TTYPE_XTERM) {
 					return chr(107);
-				else if ($this->ttype == TELNET_TTYPE_ANSI)
+				} else if ($this->ttype == TELNET_TTYPE_ANSI) {
 					return chr(191);
-				else
+				} else {
 					return '\\';
-
+				}
+                
+                break;
 			case TC_BORDER_BOTTOMLEFT :
-				if ($this->ttype == TELNET_TTYPE_XTERM)
+				if ($this->ttype == TELNET_TTYPE_XTERM) {
 					return chr(109);
-				else if ($this->ttype == TELNET_TTYPE_ANSI)
+				} else if ($this->ttype == TELNET_TTYPE_ANSI) {
 					return chr(192);
-				else
+				} else {
 					return '\\';
-
+				}
+                
+                break;
 			case TC_BORDER_BOTTOMRIGHT :
-				if ($this->ttype == TELNET_TTYPE_XTERM)
+				if ($this->ttype == TELNET_TTYPE_XTERM) {
 					return chr(106);
-				else if ($this->ttype == TELNET_TTYPE_ANSI)
+				} else if ($this->ttype == TELNET_TTYPE_ANSI) {
 					return chr(217);
-				else
+				} else {
 					return '/';
-
-			case TC_BORDER_HORILINE :
-				if ($this->ttype == TELNET_TTYPE_XTERM)
+				}
+                
+                break;
+            case TC_BORDER_HORILINE :
+				if ($this->ttype == TELNET_TTYPE_XTERM) {
 					return chr(113);
-				else if ($this->ttype == TELNET_TTYPE_ANSI)
+				} else if ($this->ttype == TELNET_TTYPE_ANSI) {
 					return chr(196);
-				else
+				} else {
 					return '-';
-
+				}
+                
+                break;
 			case TC_BORDER_VERTLINE :
-				if ($this->ttype == TELNET_TTYPE_XTERM)
+				if ($this->ttype == TELNET_TTYPE_XTERM) {
 					return chr(120);
-				else if ($this->ttype == TELNET_TTYPE_ANSI)
+				} else if ($this->ttype == TELNET_TTYPE_ANSI) {
 					return chr(179);
-				else
+				} else {
 					return '|';
+				}
+                
+                break;
 		}
 		
 		return '*';

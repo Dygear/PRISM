@@ -4,7 +4,7 @@
  * @package PRISM
  * @subpackage Telnet
 */
-
+# Almost PSR
 namespace PRISM\Module\Telnet;
 
 class TSHostSection extends TSSection
@@ -27,16 +27,13 @@ class TSHostSection extends TSSection
 	
 	public function handleKey($key)
 	{
-		switch($key)
-		{
+		switch ($key) {
 			case KEY_CURUP :
 				$this->previousItem();
 				break;
-			
 			case KEY_CURDOWN :
 				$this->nextItem();
 				break;
-			
 			default :
 				return false;
 		}
@@ -46,14 +43,14 @@ class TSHostSection extends TSSection
 
 	protected function selectItem()
 	{
-		
+		# Why...
 	}
 
 	protected function setInputMode()
 	{
 		$object = $this->getCurObject();
-		switch ($object->getId())
-		{
+        
+		switch ($object->getId()) {
 			default :
 				$this->setInputCallback(null);
 				break;
