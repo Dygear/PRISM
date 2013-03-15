@@ -1,9 +1,0 @@
-configs/hosts.ini
-configs/admins.ini
-configs/cvars.ini
-configs/plugins.ini
-configs/http.ini
-configs/telnet.ini
-logs/*
-Thumbs.db
-Desktop.ini
