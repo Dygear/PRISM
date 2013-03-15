@@ -1,9 +1,5 @@
 <?php
-/**
- * PHPInSimMod - CRON Module
- * @package PRISM
- * @subpackage CRON
-*/
+
 namespace PRISM\Module;
 
 /**
@@ -104,7 +100,6 @@ class Cron
 		
 		$value = (preg_match('/\*\/(\d+)/', $value, $match)) ? range(0, $rangemax, $match[1]) : preg_split('/\s*,\s*/', $value, -1, PREG_SPLIT_NO_EMPTY);
 		$value = $this->zeroPadArray($value, $digits);
-		
 		return '('.join($value, '|').')';
 	}
 	

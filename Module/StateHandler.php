@@ -1,16 +1,10 @@
 <?php
-/**
- * PHPInSimMod - State Module
- * @package PRISM
- * @subpackage State
- * @subpackage Users
- * @subpackage Clients
- * @subpackage Players
-*/
-# Almost PSR
+
 namespace PRISM\Module;
 
-class StateHandler extends PropertyMaster
+use PRISM\Module\PropertyMaster;
+
+class StateHandler extends \PRISM\Module\PropertyMaster
 {
 	// Intrinsic Handles
 	protected $handles = array
@@ -187,6 +181,7 @@ class StateHandler extends PropertyMaster
 	protected $Version;			# LFS version, e.g. 0.3G
 	protected $Product;			# Product : DEMO or S1
 	protected $InSimVer;		# InSim Version : increased when InSim packets change
+    
 	public function onVersion(IS_VER $VER)
 	{
 		$this->Version = $VER->Version;
@@ -221,6 +216,7 @@ class StateHandler extends PropertyMaster
 	protected $Track;			# Short name for track e.g. FE2R
 	protected $Weather;			# 0, 1 or 2.
 	protected $Wind;			# 0 = Off 1 = Weak 2 = Strong
+    
 	public function onStateChange(IS_STA $STA)
 	{
 		$this->ReplaySpeed = $STA->ReplaySpeed;
@@ -245,6 +241,7 @@ class StateHandler extends PropertyMaster
 	protected $Roll;			# roll    - 0 means no roll
 	protected $FOV;			# FOV in degrees
 	protected $Time;			# Time to get there (0 means instant + reset)
+    
 	public function onCameraPosisionChange(IS_CPP $CPP)
 	{
 		$this->Pos = $CPP->Pos;
@@ -261,6 +258,7 @@ class StateHandler extends PropertyMaster
 	# IS_ISM (10)
 	public $Host;				# 0 = guest / 1 = host
 	public $HName;				# The name of the host joined or started.
+    
 	public function onMultiPlayerStart(IS_ISM $ISM)
 	{
 		$this->Host = $ISM->Host;
@@ -281,6 +279,7 @@ class StateHandler extends PropertyMaster
 	public $Split1;			# node index - split 1
 	public $Split2;			# node index - split 2
 	public $Split3;			# node index - split 3
+    
 	public function onRaceStart(IS_RST $RST)
 	{
 		$this->RaceLaps = $RST->RaceLaps;
@@ -306,6 +305,7 @@ class StateHandler extends PropertyMaster
 
 	# IS_NLP (37)
 	protected $Info;		# Car Info For Each Player.
+    
 	public function onNodeLapPlayer(IS_NLP $NLP)
 	{
 		$this->NumP = $NLP->NumP;
@@ -314,6 +314,7 @@ class StateHandler extends PropertyMaster
 
 	# IS_MCI (38)
 	protected $NumC;		# Number of valid CompCar structs in this packet.
+    
 	public function onMultiCarInfo(IS_MCI $MCI)
 	{
 		$this->NumC = $MCI->NumC;
@@ -325,6 +326,7 @@ class StateHandler extends PropertyMaster
 	protected $NumCP;		# Number of checkpoints
 	protected $NumO;		# Number of objects
 	protected $LName;		# The name of the layout last loaded (if loaded locally)
+    
 	public function onAutoXInfo(IS_AXI $AXI)
 	{
 		$this->AXStart = $AXI->AXStart;
@@ -341,6 +343,7 @@ class StateHandler extends PropertyMaster
 	protected $CTime;		# (hundredths) request : destination / reply : position
 	protected $TTime;		# (hundredths) request : zero / reply : replay length
 	protected $RName;		# zero or replay name - last byte must be zero
+    
 	public function onReplayInformation(IS_RIP $RIP)
 	{
 		$this->Error = $RIP->Error;
@@ -350,192 +353,5 @@ class StateHandler extends PropertyMaster
 		$this->CTime = $RIP->CTime;
 		$this->TTime = $RIP->TTime;
 		$this->RName = $RIP->RName;
-	}
-}
-
-class ClientHandler extends PropertyMaster
-{
-	public static $handles = array
-	(
-		ISP_NCN => '__construct',	# 18
-		ISP_CNL => '__destruct',	# 19
-		ISP_CPR => 'onRename',		# 20
-		ISP_TOC => 'onTakeOverCar'	# 31
-	);
-	public $players = array();
-
-	public function dispatchPacket(Struct $Packet)
-	{
-		if (isset($this->handles[$Packet->Type])) {
-			$handle = $this->handles[$Packet->Type];
-			$this->$handle($Packet);
-		}
-	}
-
-	// Baiscly the IS_NCN Struct.
-	protected $UCID;			# Connection's Unique ID (0 = Host)
-	protected $UName;			# UserName
-	protected $PName;			# PlayerName
-	protected $Admin;			# TRUE If Client is Admin.
-	protected $Total;			# Number of Connections Including Host
-	protected $Flags;			# 2 If Client is Remote
-
-	// Construct
-	public function __construct(IS_NCN $NCN, StateHandler $parent)
-	{
-		$this->parent = $parent;
-	
-		$this->UCID = $NCN->UCID; # Where this is 0, client should be given the ADMIN_SERVER permission level.
-		$this->UName = $NCN->UName;
-		$this->PName = $NCN->PName;
-		$this->Admin = $NCN->Admin;	# Where this is 1, client should be given the ADMIN_ADMIN permission level.
-		$this->Total = $NCN->Total;
-		$this->Flags = $NCN->Flags;
-
-		global $PRISM;
-        
-		if ($this->UCID == 0) {
-			$PRISM->admins->addAccount('*'.$PRISM->hosts->getCurrentHost(), '', ADMIN_SERVER, $PRISM->hosts->getCurrentHost(), false);
-		} else if ($this->Admin == true) {
-			$PRISM->admins->addAccount($this->UName, '', ADMIN_ADMIN, $PRISM->hosts->getCurrentHost(), false);
-		}
-		
-		$this->PRISM = ($PRISM->admins->adminExists($NCN->UName)) ? $PRISM->admins->getAdminInfo($NCN->UName) : false;
-	}
-
-	public function __destruct()
-	{
-		unset($this);
-	}
-
-	public function onRename(IS_CPR $CPR)
-	{
-		$this->PName = $CPR->PName;
-		$this->Plate = $CPR->Plate;
-	}
-
-	public function onTakeOverCar(IS_TOC $TOC)
-	{
-		# Makes a copy of the orginal, and adds it to the new client.
-		$this->parent->clients[$TOC->NewUCID]->players[$TOC->PLID] &= $this->parent->players[$TOC->PLID];
-		# Removes the copy from this class, but should not garbage collect it, because it's copyied in the new class.
-		unset($this->players[$TOC->PLID]);
-	}
-	
-	// Is
-	public function isAdmin(){ return ($this->isLFSAdmin() || $this->isPRISMAdmin) ? TRUE : FALSE; }
-	public function isLFSAdmin(){ return ($this->UCID == 0 || $this->Admin == 1) ? TRUE : FALSE; }
-	public function isPRISMAdmin(){ return !!$this->PRISM; }
-	public function isRemote(){ return ($this->Flags == 2) ? TRUE : FALSE; }
-	public function getAccessFlags(){ return $this->PRISM['accessFlags']; }
-	public function getConnection(){ return $this->PRISM['connection']; }
-	public function isTemporary(){ return $this->PRISM['temporary']; }
-}
-
-class PlayerHandler extends PropertyMaster
-{
-	public static $handles = array(
-		ISP_NPL => '__construct',	# 21
-		ISP_PLL => '__destruct',	# 23
-		ISP_PLP => 'onPits',		# 22
-		ISP_FIN => 'onFinished',	# 34
-		ISP_RES => 'onResult',		# 35
-		ISP_TOC => 'onTakeOverCar',	# 31
-	);
-
-	// Basicly the IS_NPL Struct.
-	protected $UCID;			# Connection's Unique ID
-	protected $PType;			# Bit 0 : female / bit 1 : AI / bit 2 : remote
-	protected $Flags;			# Player flags
-	protected $PName;			# Nickname
-	protected $Plate;			# Number plate - NO ZERO AT END!
-	protected $CName;			# Car name
-	protected $SName;			# Skin name - MAX_CAR_TEX_NAME
-	protected $Tyres;			# Compounds
-	protected $HMass;			# Added mass (kg)
-	protected $HTRes;			# Intake restriction
-	protected $Model;			# Driver model
-	protected $Pass;			# Passengers byte
-	protected $SetF;			# Setup flags (see below)
-	protected $NumP;			# Number in race (same when leaving pits, 1 more if new)
-	# Addon informaiton
-	public $inPits;			# For when a player is in our list, but not on track this is TRUE.
-
-	// Constructor
-	public function __construct(IS_NPL $NPL, StateHandler $parent)
-	{
-		$this->parent = $parent;
-		$this->onNPL($NPL);
-	}
-
-	public function __destruct()
-	{
-		unset($this);
-	}
-
-	private function onNPL(IS_NPL $NPL)
-	{
-		$this->UCID = $NPL->UCID;
-		$this->PType = $NPL->PType;
-		$this->Flags = $NPL->Flags;
-		$this->PName = $NPL->PName;
-		$this->Plate = $NPL->Plate;
-		$this->CName = $NPL->CName;
-		$this->SName = $NPL->SName;
-		$this->Tyres = $NPL->Tyres;
-		$this->HMass = $NPL->H_Mass;
-		$this->HTRes = $NPL->H_TRes;
-		$this->Model = $NPL->Model;
-		$this->Pass = $NPL->Pass;
-		$this->SetF = $NPL->SetF;
-		$this->NumP = $NPL->NumP;
-		$this->inPits = FALSE;
-	}
-
-	public function onPits(IS_PLP $PLP)
-	{
-		$this->inPits = TRUE;
-	}
-	
-	# Special case, handled within the parent class's onPlayerPacket method.
-	public function onLeavingPits(IS_NPL $NPL)
-	{
-		$this->onNPL($NPL);
-	}
-
-	public function onTakeOverCar(IS_TOC $TOC)
-	{
-		$this->UCID = $TOC->NewUCID;
-		$this->PName = $this->parent->clients[$TOC->NewUCID]->PName;
-	}
-
-	protected $finished = FALSE;
-	public function onFinished(IS_FIN $FIN)
-	{
-		$this->finished = TRUE;
-	}
-	
-	protected $result = array();
-	public function onResult(IS_RES $RES)
-	{
-		$this->result[] = $RES;
-	}
-
-	// Logic
-	public function isFemale(){ return ($this->PType & 1) ? TRUE : FALSE; }
-	public function isAI(){ return ($this->PType & 2) ? TRUE : FALSE; }
-	public function isRemote(){ return ($this->PType & 4) ? TRUE : FALSE; }
-	public function &isInPits(){ return $this->inPits; }
-}
-
-
-/**
- * Property Master allows for us the retreive read only properties on our classes.
-*/
-abstract class PropertyMaster
-{
-	public function __get($property)
-	{
-		return (isset($this->$property)) ? $this->$property : $return = NULL;
 	}
 }

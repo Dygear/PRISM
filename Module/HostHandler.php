@@ -1,15 +1,9 @@
 <?php
-/**
- * PHPInSimMod - Connections Module
- * @package PRISM
- * @subpackage Connections
-*/
-# Almost PSR
+
 namespace PRISM\Module;
 
 use PRISM\Module\SectionHandler;
 use PRISM\Module\InsimConnection;
-//require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
 
 /**
  * If your package needs to define global variables, their names should start

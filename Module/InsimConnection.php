@@ -1,5 +1,5 @@
 <?php
-# Almost PSR
+
 namespace PRISM\Module;
 
 class InsimConnection

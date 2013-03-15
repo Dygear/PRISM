@@ -1,14 +1,8 @@
 <?php
-/**
- * PHPInSimMod - SMX Module
- * @package PRISM
- * @subpackage SMX
-*/
-# Almost PSR
+
 namespace PRISM\Module;
 
-// Simple Mesh eXport
-class SimpleMeshExport //SMX
+class SimpleMeshExport
 {
 	const HEADER = 'a6LFSSMX/CGameVersion/CGameRevision/CSMXVersion/xDimensions/CResolution/CVertexColors/x4/a32Track/x3GroundColor/x9/VObjects';
 	const COLOR = 'CR/CG/CB';

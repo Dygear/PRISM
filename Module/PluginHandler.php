@@ -1,10 +1,5 @@
 <?php
-/**
- * PHPInSimMod - Plugin Module
- * @package PRISM
- * @subpackage Plugin
-*/
-# Almost PSR
+
 namespace PRISM\Module;
 
 define('PRINT_CHAT',		(1 << 0));		# 1
@@ -527,6 +522,7 @@ abstract class Plugins extends Timers
 	protected function isImmune(&$username)
 	{
 		global $PRISM;
+        
 		# Check the user is defined as an admin.
 		if (!$PRISM->admins->adminExists($username)) {
 			return false;

@@ -9,10 +9,6 @@ namespace PRISM\Module;
 
 use PRISM\Module\SectionHandler;
 
-# Almost Completely PSR
-
-//Test
-//require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
 
 // Admin Flags
 define('ADMIN_NONE',				0);			# No flags.

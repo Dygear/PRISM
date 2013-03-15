@@ -1,11 +1,5 @@
 <?php
-/**
- * PHPInSimMod - Time Module
- * @package PRISM
- * @subpackage Time
- * @copyright the AMX Mod X Development Team & The PRISM Devlopment Team.
-*/
-# Almost PSR
+
 namespace PRISM\Module;
 
 class Time

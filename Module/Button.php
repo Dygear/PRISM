@@ -5,8 +5,6 @@
  
 namespace PRISM\Module;
 
-# Close to PSR-2
-
 class Button extends IS_BTN
 {
 	private $key;

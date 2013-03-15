@@ -1,10 +1,5 @@
 <?php
-/**
- * PHPInSimMod - Interactive Module
- * @package PRISM
- * @subpackage Interactive
-*/
-# Almost PSR
+
 namespace PRISM\Module;
 
 class Interactive

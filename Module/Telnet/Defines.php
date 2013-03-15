@@ -4,7 +4,7 @@
  * @package PRISM
  * @subpackage Telnet
 */
-
+# I feel that thsi is just wrong...
 namespace PRISM\Module\Telnet;
 
 // IAC ACTION OPTION (3 bytes)

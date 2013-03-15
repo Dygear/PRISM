@@ -1,9 +1,6 @@
 <?php
-/**
- * PHPInSimMod - INILoader Module
- * @package PRISM
- * @subpackage INILonader
-*/
+
+namespace PRISM\Module;
 
 /**
  * protected IniLoader methods (to be extended by other classes, like the section handlers)
@@ -13,9 +10,6 @@
  * ->appendSection($section, array &$values)
  * ->removeSection($section)
 */
-# Almost PSR
-namespace PRISM\Module;
-
 abstract class IniLoader
 {
 	protected $iniFile = '';

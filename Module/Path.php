@@ -1,16 +1,9 @@
 <?php
-/**
- * PHPInSimMod - PTH Module
- * @package PRISM
- * @subpackage PTH
-*/
-# Almost PSR
-namespace PRISM\Module\PTH;
+
+namespace PRISM\Module;
 
 use PRISM\Module\Geometry;
-//require_once(ROOTPATH . '/modules/prism_geometry.php');
 
-// PaTH - Namespaces are for the purpose of avoiding naming conflicts. Yey
 class Path
 {
 	const PACK = 'a6CCll';
@@ -35,12 +28,14 @@ class Path
 
 		return $this;
 	}
+    
 	public function __destruct()
 	{
 		array_splice($this->Nodes, 0, $this->NumNodes);
 		array_splice($this->polyRoad, 0, $this->NumNodes);
 		array_splice($this->polyLimit, 0, $this->NumNodes);
 	}
+    
 	public function unPack($file)
 	{
 		if (substr($file, 0, 6) != $this->LFSPTH) {
@@ -68,6 +63,7 @@ class Path
 
 		return $this;
 	}
+    
 	public function toPoly(array &$nodePolys, $limitRoad)
 	{
 		array_splice($nodePolys, 0, count($nodePolys));
@@ -94,6 +90,7 @@ class Path
 		// Close the path
 		$nodePolys[] = new Polygon2D(array($pa, $pb, $nodePolys[0]->points[1], $nodePolys[0]->points[0]));
 	}
+    
 	public function isOnRoad($x, $y, $NodeID)
 	{
 		$x /= 65536;
@@ -116,6 +113,7 @@ class Path
 
 		return true;
 	}
+    
 	public function isOnLimit($x, $y, $NodeID)
 	{
 		$x /= 65536;
@@ -138,6 +136,7 @@ class Path
 
 		return true;
 	}
+    
 	public function drawPath ($fileName)
 	{
 		$im = imagecreatetruecolor(2560, 2560);
@@ -201,80 +200,5 @@ class Path
 
 		imagepng($im, $fileName);
 		imagedestroy($im);
-	}
-}
-
-class Node
-{
-	public $Center;
-	public $Direction;
-	public $Limit;
-	public $Road;
-
-	public function __construct($RawNode) {
-		$this->Center = new Center(substr($RawNode, 0, 12));
-		$this->Direction = new Direction(substr($RawNode, 12, 12));
-		$this->Limit = new Limit(substr($RawNode, 24, 8));
-		$this->Road = new Road(substr($RawNode, 32, 8));
-	}
-}
-
-class Center
-{
-	const PACK = 'lll';
-	const UNPACK = 'lX/lY/lZ';
-
-	public function __construct($rawCenter) {
-		$this->unPack($rawCenter);
-	}
-    
-	public function unPack($rawCenter) {
-		foreach (unpack($this::UNPACK, $rawCenter) as $property => $value)
-			$this->$property = $value / 65536;
-	}
-}
-
-class Direction
-{
-	const PACK = 'fff';
-	const UNPACK = 'fX/fY/fZ';
-
-	public function __construct($rawDirection) {
-		$this->unPack($rawDirection);
-	}
-    
-	public function unPack($rawDirection) {
-		foreach (unpack($this::UNPACK, $rawDirection) as $property => $value)
-			$this->$property = $value;
-	}
-}
-
-class Limit
-{
-	const PACK = 'ff';
-	const UNPACK = 'fLeft/fRight';
-
-	public function __construct($rawLimit) {
-		$this->unPack($rawLimit);
-	}
-    
-	public function unPack($rawLimit) {
-		foreach (unpack($this::UNPACK, $rawLimit) as $property => $value)
-			$this->$property = $value;
-	}
-}
-
-class Road
-{
-	const PACK = 'ff';
-	const UNPACK = 'fLeft/fRight';
-
-	public function __construct($rawRoad) {
-		$this->unPack($rawRoad);
-	}
-    
-	public function unPack($rawRoad) {
-		foreach (unpack($this::UNPACK, $rawRoad) as $property => $value)
-			$this->$property = $value;
 	}
 }
