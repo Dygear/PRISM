@@ -1,15 +1,16 @@
 <?php
-/* PHPInSimMod
-*
-* by the PHPInSimMod Development Team.
-*
-*/
 
-/* Defines */
-// PRISM
 namespace PRISM;
 
-use PRISM\Module\Functions;
+require 'Module/SplClassLoader.php';
+
+use Module\ConfigHandler,
+    Module\StateHandler,
+    Module\Http\Handler,
+    Module\Timers,
+    Module\PluginHandler,
+    Module\AdminHandler,
+    Module\Functions;
 
 define('PRISM_DEBUG_CORE',		1);			# Shows Debug Messages From the Core
 define('PRISM_DEBUG_SOCKETS',	2);			# Shows Debug Messages From the Sockets Module
@@ -27,7 +28,7 @@ define('PLUGIN_STOP',			2);			# Plugin stops timer from triggering again in the 
 error_reporting(E_ALL);
 ini_set('display_errors',		'true');
 
-/*define('ROOTPATH', dirname(realpath(__FILE__)));
+define('ROOTPATH', dirname(realpath(__FILE__)));
 
 // the REQUIRED modules for PRISM.
 /*
@@ -82,8 +83,9 @@ class PHPInSimMod
 	// Real Magic Functions
 	public function __construct()
 	{
-		// This reregisters our autoload magic function into the class.
-		spl_autoload_register(__CLASS__ . '::_autoload');
+		$classLoader = new \PRISM\Module\SplClassLoader('Module', ROOTPATH);
+        $classLoader->register();
+        
 		set_error_handler(__CLASS__ . '::_errorHandler', E_ALL | E_STRICT);
 		
 		// Windows OS check
@@ -91,16 +93,16 @@ class PHPInSimMod
 			$this->isWindows = true;
 		}
 		
-		$this->config	= new \PRISM\Module\ConfigHandler();
-		$this->hosts	= new \PRISM\Module\HostHandler();
-		$this->plugins	= new \PRISM\Module\PluginHandler();
-		$this->http		= new \PRISM\Module\Http\Handler();
-		$this->telnet	= new \PRISM\Module\Telnet\Handler();
-		$this->admins	= new \PRISM\Module\AdminHandler();
+		$this->config	= new \Module\ConfigHandler();
+		$this->hosts	= new \Module\HostHandler();
+		$this->plugins	= new \Module\PluginHandler();
+		$this->http		= new \Module\Http\Handler();
+		$this->telnet	= new \Module\Telnet\Handler();
+		$this->admins	= new \Module\AdminHandler();
 	}
 
 	// Pseudo Magic Functions
-	private static function _autoload($className)
+	/*private static function _autoload($className)
 	{
 		$className = ltrim($className, '\\');
         $fileName  = '';
@@ -115,7 +117,7 @@ class PHPInSimMod
         $fileName .= str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
     
         require $fileName;
-	}
+	}*/
 
 	public static function _errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
 	{
@@ -155,7 +157,7 @@ class PHPInSimMod
 			if ($call['function'] == 'main') break;
 			if ($index > 0 AND isset($call['file']) AND isset($call['line']))
 			{
-				console("\t".$index.' :: '.$call['function'].' in '.$call['file'].':'.$call['line']);
+				Module\Functions\console("\t".$index.' :: '.$call['function'].' in '.$call['file'].':'.$call['line']);
 			}
 		}
 
@@ -241,15 +243,13 @@ class PHPInSimMod
 			$numReady = @stream_select($sockReads, $sockWrites, $socketExcept, $this->sleep, $this->uSleep);
 			
 			// Keep looping until you've handled all activities on the sockets.
-			while($numReady > 0)
-			{
+			while($numReady > 0) {
 				$numReady -= $this->hosts->checkTraffic($sockReads, $sockWrites);
 				$numReady -= $this->http->checkTraffic($sockReads, $sockWrites);
 				$numReady -= $this->telnet->checkTraffic($sockReads, $sockWrites);
 				
 				// KB input
-				if (in_array (STDIN, $sockReads))
-				{
+				if (in_array (STDIN, $sockReads)) {
 					$numReady--;
 					$kbInput = trim(fread (STDIN, STREAM_READ_BYTES));
 					
@@ -257,14 +257,11 @@ class PHPInSimMod
 					$exp = explode (' ', $kbInput);
 	
 					// Process the command (the first char or word of the line)
-					switch ($exp[0])
-					{
+					switch ($exp[0]) {
 						case 'c':
-							console(sprintf('%32s - %64s', 'COMMAND', 'DESCRIPTOIN'));
-							foreach ($this->plugins->getPlugins() as $plugin => $details)
-							{
-								foreach ($details->sayCommands as $command => $detail)
-								{
+							\PRISM\Module\Functions\console(sprintf('%32s - %64s', 'COMMAND', 'DESCRIPTOIN'));
+							foreach ($this->plugins->getPlugins() as $plugin => $details) {
+								foreach ($details->sayCommands as $command => $detail) {
 									console(sprintf('%32s - %64s', $command, $detail['info']));
 								}
 							}
