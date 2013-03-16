@@ -125,7 +125,7 @@ class Handler extends \PRISM\Module\SectionHandler; # I may be doing this wrong.
 		}
 	}
 	
-	public function initialise()
+	public function init()
 	{
 		global $PRISM;
 		

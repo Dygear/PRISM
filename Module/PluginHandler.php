@@ -17,7 +17,7 @@ class PluginHandler extends SectionHandler
 		$this->iniFile = 'plugins.ini';
 	}
 	
-	public function initialise()
+	public function init()
 	{
 		global $PRISM;
 		

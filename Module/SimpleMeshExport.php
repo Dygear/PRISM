@@ -55,7 +55,7 @@ class SimpleMeshExport
 	}
 }
 
-class Object
+class Object # Idk how the hell I'm going to split this out...
 {
 	const CENTER = 'VX/VY/VZ';
 	const OBJECT = 'VRadius/VPoints/VTriangles';

@@ -4,7 +4,7 @@ All Modules
 			Packets that only go to one method can be defined as just the method name.
 			Packets that need to go to more then one module should be made into an array of methods.
 			Packets that need to go to a sub modules method should be moved into multidimensional array of methods.
-	Done * All modules must define the following consts; NAME, AUTHOR, VERSION & DESCRIPTION. (Extend an Abstract Class)
+	(* All modules must define the following consts; NAME, AUTHOR, VERSION & DESCRIPTION. (Extend an Abstract Class)
 		* NAME is the short name of the module.
 		* AUTHOR is the person, or team who made the module.
 		* VERSION is the version string of the module.

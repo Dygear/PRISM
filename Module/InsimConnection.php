@@ -562,24 +562,22 @@ class InsimConnection
 			return false;
 		
 		$sizebyte = ord($this->streamBuf[0]);
-		if ($sizebyte == 0)
-		{
+        
+		if ($sizebyte == 0) {
 			return false;
-		}
-		else if ($this->streamBufLen < $sizebyte)
-		{
+		} else if ($this->streamBufLen < $sizebyte) {
 			//console('Split packet ...');
 			return false;
 		}
-		
-		// We should have a whole packet in the buffer now
-		$packet					= substr($this->streamBuf, 0, $sizebyte);
+        
+        // We should have a whole packet in the buffer now
+    	$packet					= substr($this->streamBuf, 0, $sizebyte);
 		$packetType				= ord($packet[1]);
-	
+
 		// Cleanup streamBuffer
 		$this->streamBuf		= substr($this->streamBuf, $sizebyte);
 		$this->streamBufLen		= strlen($this->streamBuf);
-		
+
 		return $packet;
 	}
 }

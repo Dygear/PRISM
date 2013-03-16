@@ -2,6 +2,8 @@
 
 namespace PRISM\Module;
 
+use Module\Functions;
+
 /**
  * protected IniLoader methods (to be extended by other classes, like the section handlers)
  * ->loadIniFile(array &$target, $parseSections = TRUE)
@@ -12,7 +14,7 @@ namespace PRISM\Module;
 */
 abstract class IniLoader
 {
-	protected $iniFile = '';
+    protected $iniFile = '';
 	
 	protected function loadIniFile(array &$target, $parseSections = true)
 	{

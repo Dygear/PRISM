@@ -2,8 +2,8 @@
 
 namespace PRISM\Module;
 
-use PRISM\Module\SectionHandler;
-use PRISM\Module\InsimConnection;
+use Module\SectionHandler;
+use Module\InsimConnection;
 
 /**
  * If your package needs to define global variables, their names should start
@@ -35,7 +35,7 @@ define('STREAM_WRITE_BYTES',	1400);
 
 /**
  * HostHandler public functions :
- * ->initialise()									# (re)loads the config files and (re)connects to the host(s)
+ * ->init()									# (re)loads the config files and (re)connects to the host(s)
  * ->sendPacket($packetClass, $hostId = NULL)		# send a packet to either the last incoming host, or to $hostID
  * ->getHostsInfo()									# retreive an array of information about all the hosts
  * ->getHostById(string $hostId)					# get a host object by its hostID
@@ -60,7 +60,7 @@ class HostHandler extends SectionHandler
 		$this->iniFile = 'hosts.ini';
 	}
 	
-	public function initialise()
+	public function init()
 	{
 		global $PRISM;
 		

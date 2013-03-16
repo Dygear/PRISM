@@ -4,7 +4,7 @@ namespace PRISM\Module;
 
 use Module\SectionHandler;
 
-class ConfigHandler extends \Module\SectionHandler
+class ConfigHandler extends SectionHandler
 {
 	public $cvars	= array
 		(

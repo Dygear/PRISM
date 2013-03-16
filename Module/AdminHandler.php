@@ -7,7 +7,7 @@
 
 namespace PRISM\Module;
 
-use PRISM\Module\SectionHandler;
+use Module\SectionHandler;
 
 
 // Admin Flags
@@ -66,7 +66,7 @@ class AdminHandler extends SectionHandler
 		$this->iniFile = 'admins.ini';
 	}
 	
-	public function initialise()
+	public function init()
 	{
 		global $PRISM;
 		
@@ -162,7 +162,7 @@ ININOTES;
 
 		$this->admins = $tempAdmins;
 
-		return TRUE;
+		return true;
 	}
 	
 	public function &getAdminsInfo()

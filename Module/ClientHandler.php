@@ -2,9 +2,9 @@
 
 namespace PRISM\Module;
 
-use PRISM\Module\PropertyMaster;
+use Module\PropertyMaster;
 
-class ClientHandler extends \PRISM\Module\PropertyMaster
+class ClientHandler extends PropertyMaster
 {
     public static $handles = array
 	(
