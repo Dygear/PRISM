@@ -2,10 +2,11 @@
 
 namespace PRISM\Module;
 
-use PRISM\Module\IniLoader;
+use Module\IniLoader;
 
-abstract class SectionHandler extends IniLoader
+require 'IniLoader.php';
+
+abstract class SectionHandler extends \Module\IniLoader
 {
-	abstract public function initialise();
+	abstract public function init();
 }
-

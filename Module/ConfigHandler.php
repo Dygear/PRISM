@@ -1,18 +1,10 @@
 <?php
-/**
- * PHPInSimMod - Config Module
- * @package PRISM
- * @subpackage Config
-*/
-
-# Nearly PSR
 
 namespace PRISM\Module;
 
-use PRISM\Module\SectionHandler;
-//require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
+use Module\SectionHandler;
 
-class ConfigHandler extends SectionHandler
+class ConfigHandler extends \Module\SectionHandler
 {
 	public $cvars	= array
 		(
@@ -35,7 +27,7 @@ class ConfigHandler extends SectionHandler
 		$this->iniFile = 'cvars.ini';
 	}
 	
-	public function initialise()
+	public function init()
 	{
 		global $PRISM;
 		
