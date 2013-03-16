@@ -9,6 +9,8 @@
 // PRISM
 namespace PRISM;
 
+use PRISM\Module\Functions;
+
 define('PRISM_DEBUG_CORE',		1);			# Shows Debug Messages From the Core
 define('PRISM_DEBUG_SOCKETS',	2);			# Shows Debug Messages From the Sockets Module
 define('PRISM_DEBUG_MODULES',	4);			# Shows Debug Messages From the all Modules
@@ -23,11 +25,12 @@ define('PLUGIN_HANDLED',		1);			# Plugin halts continued operation. Plugins foll
 define('PLUGIN_STOP',			2);			# Plugin stops timer from triggering again in the future.
 
 error_reporting(E_ALL);
-ini_set('display_errors',		'TRUE');
+ini_set('display_errors',		'true');
 
-define('ROOTPATH', dirname(realpath(__FILE__)));
+/*define('ROOTPATH', dirname(realpath(__FILE__)));
 
 // the REQUIRED modules for PRISM.
+/*
 require_once(ROOTPATH . '/modules/prism_functions.php');
 require_once(ROOTPATH . '/modules/prism_config.php');
 require_once(ROOTPATH . '/modules/prism_packets.php');
@@ -38,10 +41,10 @@ require_once(ROOTPATH . '/modules/prism_telnet.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_timers.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
-
+*/
 
 $PRISM = new PHPInSimMod();
-$PRISM->initialise($argc, $argv);
+$PRISM->init($argc, $argv);
 $PRISM->start();
 
 /**
@@ -59,22 +62,22 @@ class PHPInSimMod
 	const ROOTPATH = ROOTPATH;
 
 	/* Run Time Arrays */
-	public $config				= NULL;
-	public $hosts				= NULL;
-	public $http				= NULL;
-	public $telnet				= NULL;
-	public $plugins				= NULL;
-	public $admins				= NULL;
+	public $config				= null;
+	public $hosts				= null;
+	public $http				= null;
+	public $telnet				= null;
+	public $plugins				= null;
+	public $admins				= null;
 
 	# Time outs
-	private $sleep				= NULL;
-	private $uSleep				= NULL;
+	private $sleep				= null;
+	private $uSleep				= null;
 	
 	private $nextMaintenance	= 0;
-	public $isWindows			= FALSE;
+	public $isWindows			= false;
 
-	// Main while loop will run as long as this is set to TRUE.
-	private $isRunning			= FALSE;
+	// Main while loop will run as long as this is set to true.
+	private $isRunning			= false;
 
 	// Real Magic Functions
 	public function __construct()
@@ -84,35 +87,48 @@ class PHPInSimMod
 		set_error_handler(__CLASS__ . '::_errorHandler', E_ALL | E_STRICT);
 		
 		// Windows OS check
-		if (preg_match('/^win/i', PHP_OS))
-			$this->isWindows = TRUE;
+		if (preg_match('/^win/i', PHP_OS)) {
+			$this->isWindows = true;
+		}
 		
-		$this->config	= new ConfigHandler();
-		$this->hosts	= new HostHandler();
-		$this->plugins	= new PluginHandler();
-		$this->http		= new HttpHandler();
-		$this->telnet	= new TelnetHandler();
-		$this->admins	= new AdminHandler();
+		$this->config	= new \PRISM\Module\ConfigHandler();
+		$this->hosts	= new \PRISM\Module\HostHandler();
+		$this->plugins	= new \PRISM\Module\PluginHandler();
+		$this->http		= new \PRISM\Module\Http\Handler();
+		$this->telnet	= new \PRISM\Module\Telnet\Handler();
+		$this->admins	= new \PRISM\Module\AdminHandler();
 	}
 
 	// Pseudo Magic Functions
 	private static function _autoload($className)
 	{
-		require_once(ROOTPATH . "/modules/prism_" . strtolower($className) . ".php");
+		$className = ltrim($className, '\\');
+        $fileName  = '';
+        $namespace = '';
+        
+        if ($lastNsPos = strrpos($className, '\\')) {
+            $namespace = substr($className, 0, $lastNsPos);
+            $className = substr($className, $lastNsPos + 1);
+            $fileName  = str_replace('\\', DIRECTORY_SEPARATOR, $namespace) . DIRECTORY_SEPARATOR;
+        }
+        
+        $fileName .= str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
+    
+        require $fileName;
 	}
 
 	public static function _errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
 	{
 		# This error code is not included in error_reporting
-		if (!(error_reporting() & $errno))
+		if (!(error_reporting() & $errno)) {
 			return;
+		}
 
-		switch ($errno)
-		{
+		switch ($errno) {
 			case E_ERROR:
 			case E_USER_ERROR:
 					echo 'PHP ERROR:'.PHP_EOL;
-					$andExit = TRUE;
+					$andExit = true;
 				break;
 			case E_WARNING:
 			case E_USER_WARNING:
@@ -133,6 +149,7 @@ class PHPInSimMod
 		echo "\t$errstr in $errfile on line $errline".PHP_EOL;
 
 		$trace = debug_backtrace();
+        
 		foreach ($trace as $index => $call)
 		{
 			if ($call['function'] == 'main') break;
@@ -142,20 +159,19 @@ class PHPInSimMod
 			}
 		}
 
-		if (isset($andExit) AND $andExit == TRUE)
+		if (isset($andExit) AND $andExit == true)
 			exit(1);
 
 		# Don't execute PHP internal error handler
-		return TRUE;
+		return true;
 	}
 
-	public function initialise($argc, $argv)
+	public function init($argc, $argv)
 	{
 		// Set the timezone
-		if (isset($this->config->cvars['defaultTimeZone']))
+		if (isset($this->config->cvars['defaultTimeZone'])) {
 			date_default_timezone_set($this->config->cvars['defaultTimeZone']);
-		else
-		{
+		} else {
 			# I know, I'm using error suppression, but I swear it's appropriate!
 			$timeZoneGuess = @date_default_timezone_get();
 			date_default_timezone_set($timeZoneGuess);
@@ -163,12 +179,12 @@ class PHPInSimMod
 		}
 		
 		// Initialise handlers (load config files)
-		if (!$this->config->initialise() OR 
-			!$this->hosts->initialise() OR 
-			!$this->http->initialise() OR 
-			!$this->telnet->initialise() OR 
-			!$this->admins->initialise() OR 
-			!$this->plugins->initialise())
+		if (!$this->config->init() OR 
+			!$this->hosts->init() OR 
+			!$this->http->init() OR 
+			!$this->telnet->init() OR 
+			!$this->admins->init() OR 
+			!$this->plugins->init())
 		{
 			console('Fatal error encountered. Exiting...');
 			exit(1);
@@ -176,23 +192,24 @@ class PHPInSimMod
 		
 		$pluginsLoaded = $this->plugins->loadPlugins();
 		
-		if ($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-		{
-			if ($pluginsLoaded == 0)
+		if ($this->config->cvars['debugMode'] & PRISM_DEBUG_CORE) {
+			if ($pluginsLoaded == 0) {
 				console('No Plugins Loaded');
-			else if ($pluginsLoaded == 1)
+			} else if ($pluginsLoaded == 1) {
 				console('One Plugin Loaded');
-			else
+			} else {
 				console("{$pluginsLoaded} Plugins Loaded.");
+			}
 		}
 	}
 		
 	public function start()
 	{
-		if ($this->isRunning)
+		if ($this->isRunning) {
 			return;
+		}
 
-		$this->isRunning = TRUE;
+		$this->isRunning = true;
 		$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 
 		$this->main();
@@ -200,8 +217,7 @@ class PHPInSimMod
 
 	private function main()
 	{
-		while ($this->isRunning === TRUE)
-		{
+		while ($this->isRunning === true) {
 			// Setup our listen arrays
 			$sockReads = $sockWrites = $socketExcept = array();
 			
@@ -266,7 +282,7 @@ class PHPInSimMod
 						
 						case 'I':
 							console('RE-INITIALISING PRISM...');
-							$this->initialise(NULL, NULL);
+							$this->init(null, null);
 							break;
 						
 						case 'p':
@@ -278,7 +294,7 @@ class PHPInSimMod
 							break;
 						
 						case 'x':
-							$this->isRunning = FALSE;
+							$this->isRunning = false;
 							break;
 						
 						case 'w':
@@ -309,7 +325,7 @@ class PHPInSimMod
 				continue;
 			$this->nextMaintenance = time () + MAINTENANCE_INTERVAL;
 			if (!$this->hosts->maintenance())
-				$this->isRunning = FALSE;
+				$this->isRunning = false;
 			$this->http->maintenance();
 			PHPParser::cleanSessions();
 						
@@ -319,9 +335,9 @@ class PHPInSimMod
 	private function updateSelectTimeOut(&$sleep, &$uSleep)
 	{
 		$sleep = 1;
-		$uSleep = NULL;
+		$uSleep = null;
 
-		$sleepTime = NULL;
+		$sleepTime = null;
 		foreach ($this->plugins->getPlugins() as $plugin => $object)
 		{
 			$timeout = $object->executeTimers();
@@ -330,8 +346,8 @@ class PHPInSimMod
 				$sleepTime = $timeout;
 		}
 
-		# If there are no timers set or the next timeout is more then a second away, set the Sleep to 1 & uSleep to NULL.
-		if ($sleepTime == NULL || $timeout < $sleepTime)
+		# If there are no timers set or the next timeout is more then a second away, set the Sleep to 1 & uSleep to null.
+		if ($sleepTime == null || $timeout < $sleepTime)
 		{
 			$sleepTime = $timeout;
 		}
@@ -341,7 +357,7 @@ class PHPInSimMod
 			if (($sleep >= 1 && $uSleep >= 1) || $uSleep >= 1000000)
 			{
 				$sleep = 1;
-				$uSleep = NULL;
+				$uSleep = null;
 			}
 		}
 	}
@@ -351,5 +367,3 @@ class PHPInSimMod
 		console('Safe shutdown: ' . date($this->config->cvars['logFormat']));
 	}
 }
-
-?>
