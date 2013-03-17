@@ -1,9 +1,5 @@
 <?php
-/**
- * PHPInSimMod - Geometry Module
- * @package PRISM
- * @subpackage Geometry
-*/
+
 namespace PRISM\Module\Geometry;
 
 class Polygon

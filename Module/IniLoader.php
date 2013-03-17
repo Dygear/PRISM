@@ -4,6 +4,8 @@ namespace PRISM\Module;
 
 use Module\Functions;
 
+echo 'test';
+
 /**
  * protected IniLoader methods (to be extended by other classes, like the section handlers)
  * ->loadIniFile(array &$target, $parseSections = TRUE)

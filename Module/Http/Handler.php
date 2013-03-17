@@ -1,9 +1,9 @@
 <?php
 
-namespace PRISM\Module;
+namespace PRISM\Module\Http;
 
-use PRISM\Module\SectionHandler;
-use PRISM\Module\PhpParser;
+use PRISM\Module\SectionHandler,
+    PRISM\Module\PhpParser;
 
 define('HTTP_AUTH_REALM', 'Prism administration');	// Token used for http auth & digest
 define('HTTP_KEEP_ALIVE', 10);						// Keep-alive timeout in seconds
@@ -13,7 +13,7 @@ define('HTTP_MAX_CONN', 1024);						// Max number of simultaneous http connectio
 													// Experimentation showed it's best to keep this pretty high.
 													// FD_SETSIZE is usually 1024; the max connections allowed on a socket.
 
-class Handler extends \PRISM\Module\SectionHandler; # I may be doing this wrong... - zenware
+class Handler extends \Module\SectionHandler
 {
 	private $httpSock		= NULL;
 	private $httpClients	= array();

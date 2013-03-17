@@ -1,19 +1,20 @@
 <?php
 
-namespace PRISM\Module;
+namespace PRISM\Module\Telnet;
 
-use PRISM\Module\Telnet\Defines;
-use PRISM\Module\Telnet\Server;
-use PRISM\Module\Telnet\Admins;
-use PRISM\Module\Telnet\Hosts;
-use PRISM\Module\Telnet\Plugins;
+use PRISM\Module\Telnet\Defines,
+    PRISM\Module\Telnet\Server,
+    PRISM\Module\Telnet\Admins,
+    PRISM\Module\Telnet\Hosts,
+    PRISM\Module\Telnet\Plugins,
+    PRISM\Module\SectionHandler;
 
 define('TELNET_NOT_LOGGED_IN', 0);
 define('TELNET_ASKED_USERNAME', 1);
 define('TELNET_ASKED_PASSWORD', 2);
 define('TELNET_LOGGED_IN', 3);
 
-class Telnet extends \PRISM\Module\SectionHandler
+class Telnet extends \Module\SectionHandler
 {
 	private $telnetSock		= null;
 	private $clients		= array();
