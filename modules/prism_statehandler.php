@@ -50,12 +50,11 @@ class StateHandler extends PropertyMaster
 
 	public function dispatchPacket(Struct $Packet)
 	{
-		if (isset($this->handles[$Packet->Type]))
-		{
-			if (is_array($this->handles[$Packet->Type]))
-			{
-				foreach ($this->handles[$Packet->Type] as $method)
+		if (isset($this->handles[$Packet->Type])) {
+			if (is_array($this->handles[$Packet->Type])) {
+				foreach ($this->handles[$Packet->Type] as $method) {
 					$this->$method($Packet);
+				}
 			} else {
 				$handle = $this->handles[$Packet->Type];
 				$this->$handle($Packet);
@@ -67,16 +66,17 @@ class StateHandler extends PropertyMaster
 	public function onClientPacket(Struct $Packet)
 	{
 		# Check to make sure we want to handle this type of packet.
-		if (!isset(ClientHandler::$handles[$Packet->Type]))
+		if (!isset(ClientHandler::$handles[$Packet->Type])) {
 			return;
+		}
 
-		if ($Packet instanceof IS_NCN)
+		if ($Packet instanceof IS_NCN) {
 			$this->clients[$Packet->UCID] = new ClientHandler($Packet, $this);
-		else
-		{
+		} else {
 			# Check to make sure we have a client.
-			if (!isset($this->clients[$Packet->UCID]))
+			if (!isset($this->clients[$Packet->UCID])) {
 				return;
+			}
 
 			$this->clients[$Packet->UCID]->{ClientHandler::$handles[$Packet->Type]}($Packet);
 		}
@@ -86,23 +86,23 @@ class StateHandler extends PropertyMaster
 	public function onPlayerPacket(Struct $Packet)
 	{
 		# Check to make sure we want to handle this type of packet.
-		if (!isset(PlayerHandler::$handles[$Packet->Type]))
+		if (!isset(PlayerHandler::$handles[$Packet->Type])) {
 			return;
+		}
 
-		if ($Packet instanceof IS_NPL)
-		{
+		if ($Packet instanceof IS_NPL) {
 			# Check to see if we already have that player.
-			if (isset($this->players[$Packet->PLID]))
+			if (isset($this->players[$Packet->PLID])) {
 				return $this->players[$Packet->PLID]->onLeavingPits($Packet);
+			}
 
 			$this->players[$Packet->PLID] = new PlayerHandler($Packet, $this);
 			$this->clients[$Packet->UCID]->players[$Packet->PLID] = &$this->players[$Packet->PLID]; #Important, &= means that what ever I do in the PlayerHandler class is automaticly reflected within the ClientHandler class.
-		}
-		else
-		{
+		} else {
 			# Check to make sure we have that player.
-			if (!isset($this->players[$Packet->PLID]))
+			if (!isset($this->players[$Packet->PLID])) {
 				return;
+			}
 
 			$this->players[$Packet->PLID]->{PlayerHandler::$handles[$Packet->Type]}($Packet);
 		}
@@ -112,16 +112,17 @@ class StateHandler extends PropertyMaster
 	# IS_BFN
 	public function onButtonFunction(IS_BFN $BFN)
 	{
-		if ($BFN->SubT == BFN_USER_CLEAR)
-		{
+		if ($BFN->SubT == BFN_USER_CLEAR) {
 			// forget about these buttons in the buttonmanager as they were removed on client side
 			ButtonManager::clearButtonsForConn($BFN->UCID);
 		}
 	}
+    
 	public function onButtonClick(IS_BTC $BTC)
 	{
 		ButtonManager::onButtonClick($BTC);
 	}
+    
 	public function onButtonText(IS_BTT $BTT)
 	{
 		ButtonManager::onButtonText($BTT);
@@ -156,8 +157,7 @@ class StateHandler extends PropertyMaster
 		$ISP->SubT(TINY_RST)->Send();	# send an IS_RST (ISP_RST)
 		$ISP->SubT(TINY_AXI)->Send();	# send an IS_AXI - AutoX Info (ISP_AXI)
 
-		if (!$PRISM->hosts->getHostById()->isRelay())
-		{
+		if (!$PRISM->hosts->getHostById()->isRelay()) {
 			$ISP->SubT(TINY_NLP)->Send();	# send an IS_NLP (ISP_NLP)
 			$ISP->SubT(TINY_MCI)->Send();	# send an IS_MCI (ISP_MCI)
 			$ISP->SubT(TINY_RIP)->Send();	# send an IS_RIP - Replay Information Packet (ISP_RIP)
@@ -168,10 +168,11 @@ class StateHandler extends PropertyMaster
 	public function packetHandler(Struct $Packet)
 	{
 		$handler &= $this->handles[$Packet->Type];
-		if (isset($handler))
+		if (isset($handler)) {
 			$handler($Packet);
+		}
 
-		return FALSE;
+		return false;
 	}
 
 	# IS_ISI (1)
@@ -363,8 +364,7 @@ class ClientHandler extends PropertyMaster
 
 	public function dispatchPacket(Struct $Packet)
 	{
-		if (isset($this->handles[$Packet->Type]))
-		{
+		if (isset($this->handles[$Packet->Type])) {
 			$handle = $this->handles[$Packet->Type];
 			$this->$handle($Packet);
 		}
@@ -391,12 +391,14 @@ class ClientHandler extends PropertyMaster
 		$this->Flags = $NCN->Flags;
 
 		global $PRISM;
-		if ($this->UCID == 0)
-			$PRISM->admins->addAccount('*'.$PRISM->hosts->getCurrentHost(), '', ADMIN_SERVER, $PRISM->hosts->getCurrentHost(), FALSE);
-		else if ($this->Admin == TRUE)
-			$PRISM->admins->addAccount($this->UName, '', ADMIN_ADMIN, $PRISM->hosts->getCurrentHost(), FALSE);
+        
+		if ($this->UCID == 0) {
+			$PRISM->admins->addAccount('*'.$PRISM->hosts->getCurrentHost(), '', ADMIN_SERVER, $PRISM->hosts->getCurrentHost(), false);
+		} else if ($this->Admin == true) {
+			$PRISM->admins->addAccount($this->UName, '', ADMIN_ADMIN, $PRISM->hosts->getCurrentHost(), false);
+		}
 		
-		$this->PRISM = ($PRISM->admins->adminExists($NCN->UName)) ? $PRISM->admins->getAdminInfo($NCN->UName) : FALSE;
+		$this->PRISM = ($PRISM->admins->adminExists($NCN->UName)) ? $PRISM->admins->getAdminInfo($NCN->UName) : false;
 	}
 
 	public function __destruct()
@@ -535,5 +537,3 @@ abstract class PropertyMaster
 		return (isset($this->$property)) ? $this->$property : $return = NULL;
 	}
 }
-
-?>

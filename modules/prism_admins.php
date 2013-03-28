@@ -69,13 +69,11 @@ class AdminHandler extends SectionHandler
 		
 		$this->admins = array();
 		
-		if ($this->loadIniFile($this->admins))
-		{
-			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+		if ($this->loadIniFile($this->admins)) {
+			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE) {
 				console('Loaded '.$this->iniFile);
-		}
-		else
-		{
+			}
+		} else {
 			# We ask the client to manually input the user details here.
 			require_once(ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryAdmins($this->admins);
@@ -126,16 +124,16 @@ class AdminHandler extends SectionHandler
 ;
 
 ININOTES;
-			if ($this->createIniFile('Admins Configuration File', $this->admins, $extraInfo))
+			if ($this->createIniFile('Admins Configuration File', $this->admins, $extraInfo)) {
 				console('Generated config/'.$this->iniFile);
+			}
 		}
 		
 		// Read account vars to verify / maybe generate password hashes
 		foreach ($this->admins as $username => &$details)
 		{
 			// Convert password?
-			if (strlen($details['password']) != 40)
-			{
+			if (strlen($details['password']) != 40) {
 				$details['realmDigest'] = md5($username.':'.HTTP_AUTH_REALM.':'.$details['password']);
 				$details['password'] = sha1($details['password'].$PRISM->config->cvars['secToken']);
 				
@@ -145,20 +143,19 @@ ININOTES;
 			}
 			
 			// Convert flags?
-			if (!is_numeric($details['accessFlags']))
-			{
+			if (!is_numeric($details['accessFlags'])) {
 				$details['accessFlags'] = flagsToInteger($details['accessFlags']);
-			}
-			else
-			{
+			} else {
 				$this->rewriteLine($username, 'accessFlags', flagsToString($details['accessFlags']));
 			}
 		}
 
 		# Crazy stuff we have to do to make sure that usernames are lowercase.
 		$tempAdmins = array();
-		foreach ($this->admins as $username => &$details)
+        
+		foreach ($this->admins as $username => &$details) {
 			$tempAdmins[strToLower($username)] = $details;
+		}
 
 		$this->admins = $tempAdmins;
 
@@ -168,12 +165,15 @@ ININOTES;
 	public function &getAdminsInfo()
 	{
 		$info = array();
-		foreach ($this->admins as $user => $details)
+        
+		foreach ($this->admins as $user => $details) {
 			$info[$user] = array(
 				'accessFlags' => $details['accessFlags'],
 				'connection' => $details['connection'],
 				'temporary' => isset($details['temporary']) ? $details['temporary'] : false,
 			);
+		}
+        
 		return $info;
 	}
 
@@ -181,8 +181,9 @@ ININOTES;
 	{
 		$username = strToLower($username);
 
-		if (!isset($this->admins[$username]))
+		if (!isset($this->admins[$username])) {
 			return false;
+		}
 
 		return array(
 			'accessFlags' => $this->admins[$username]['accessFlags'],
@@ -194,8 +195,10 @@ ININOTES;
 	public function getRealmDigest(&$username)
 	{
 		$username = strToLower($username);
-		if (!isset($this->admins[$username]))
+        
+		if (!isset($this->admins[$username])) {
 			return false;
+		}
 
 		return $this->admins[$username]['realmDigest'];
 	}
@@ -223,8 +226,9 @@ ININOTES;
 
 		$username = strToLower($username);
 		
-		if (isset($this->admins[$username]))
+		if (isset($this->admins[$username])) {
 			return false;
+		}
 		
 		// Add new user to $this->admins
 		$this->admins[$username] = array(
@@ -235,12 +239,9 @@ ININOTES;
 		);
 		
 		// Add new user section to admin.ini
-		if ($store)
-		{
+		if ($store)	{
 			$this->appendSection($username, $this->admins[$username]);
-		}
-		else
-		{
+		} else {
 			$this->admins[$username]['temporary'] = true;
 		}
 
@@ -250,10 +251,10 @@ ININOTES;
 	public function makePermanent($username)
 	{
 		$username = strToLower($username);
-		if (!isset($this->admins[$username]) || 
-			!isset($this->admins[$username]['temporary']) || 
-			!$this->admins[$username]['temporary'])
+        
+		if (!isset($this->admins[$username]) || !isset($this->admins[$username]['temporary']) || !$this->admins[$username]['temporary']) {
 			return false;
+		}
 		
 		unset($this->admins[$username]['temporary']);
 		$this->appendSection($username, $this->admins[$username]);
@@ -264,15 +265,16 @@ ININOTES;
 	public function deleteAccount($username, $store = true)
 	{
 		$username = strToLower($username);
-		if (!isset($this->admins[$username]))
+        
+		if (!isset($this->admins[$username])) {
 			return false;
+		}
 		
 		// Remove the account from $this->admins
 		unset($this->admins[$username]);
 
 		// Remove user's section from admin.ini
-		if ($store)
-		{
+		if ($store) {
 			$this->removeSection($username);
 		}
 
@@ -285,16 +287,17 @@ ININOTES;
 		global $PRISM;
 		
 		console('Writing new password for '.$username);
-		if (!isset($this->admins[$username]))
+        
+		if (!isset($this->admins[$username])) {
 			return false;
+		}
 
 		// Update the password in $this->admins
 		$this->admins[$username]['realmDigest'] = md5($username.':'.HTTP_AUTH_REALM.':'.$password);
 		$this->admins[$username]['password'] = sha1($password.$PRISM->config->cvars['secToken']);
 
 		// Rewrite password and realmDigest lines for user in admins.ini
-		if ($store)
-		{
+		if ($store) {
 			$this->rewriteLine($username, 'password', $this->admins[$username]['password']);
 			$this->rewriteLine($username, 'realmDigest', $this->admins[$username]['realmDigest']);
 		}
@@ -305,15 +308,16 @@ ININOTES;
 	public function setAccessFlags($username, $flags, $store = true)
 	{
 		$username = strToLower($username);
-		if (!isset($this->admins[$username]))
+        
+		if (!isset($this->admins[$username])) {
 			return false;
+		}
 
 		// Set the permissions
 		$this->admins[$username]['accessFlags'] = $flags;
 
 		// Rewrite accessFlags line for user in admins.ini
-		if ($store)
-		{
+		if ($store) {
 			$this->rewriteLine($username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
 		}
 
@@ -323,15 +327,16 @@ ININOTES;
 	public function addAccessFlags($username, $flags, $store = true)
 	{
 		$username = strToLower($username);
-		if (!isset($this->admins[$username]))
+        
+		if (!isset($this->admins[$username])) {
 			return false;
+		}
 
 		// Add the permissions
 		$this->admins[$username]['accessFlags'] |= $flags;
 
 		// Rewrite accessFlags line for user in admins.ini
-		if ($store)
-		{
+		if ($store) {
 			$this->rewriteLine($username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
 		}
 
@@ -341,20 +346,19 @@ ININOTES;
 	public function revokeAccessFlags($username, $flags, $store = true)
 	{
 		$username = strToLower($username);
-		if (!isset($this->admins[$username]))
+        
+		if (!isset($this->admins[$username])) {
 			return false;
+		}
 
 		// Revoke the permissions
 		$this->admins[$username]['accessFlags'] &= ~$flags;
 
 		// Rewrite accessFlags line for user in admins.ini
-		if ($store)
-		{
+		if ($store) {
 			$this->rewriteLine($username, 'accessFlags', flagsToString($this->admins[$username]['accessFlags']));
 		}
 		
 		return true;
 	}
 }
-
-?>
