@@ -1,4 +1,4 @@
-![PRISM Logo](../blob/master/www-docs/resources/images/logo/text-1-black.png?raw=true)
+![PRISM Logo](../master/www-docs/resources/images/logo/text-1-black.png?raw=true)
 
 PHPInSimMod (PRISM) is alpha software, and should not be used by anyone
 who is not brave, or does not know what effect this software may
