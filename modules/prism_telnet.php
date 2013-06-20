@@ -44,13 +44,11 @@ class TelnetHandler extends SectionHandler
 			'port' => 0,
 		);
 
-		if ($this->loadIniFile($this->telnetVars, false))
-		{
-			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
+		if ($this->loadIniFile($this->telnetVars, false)) {
+			if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE) {
 				console('Loaded '.$this->iniFile);
-		}
-		else
-		{
+			}
+		} else {
 			# We ask the client to manually input the connection details here.
 			require_once(ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryTelnet($this->telnetVars);
@@ -66,13 +64,15 @@ class TelnetHandler extends SectionHandler
 ;
 
 ININOTES;
-			if ($this->createIniFile('Telnet Configuration (remote console)', array('telnet' => &$this->telnetVars), $extraInfo))
+			if ($this->createIniFile('Telnet Configuration (remote console)', array('telnet' => &$this->telnetVars), $extraInfo)) {
 				console('Generated config/'.$this->iniFile);
+			}
 		}
 		
 		// Setup telnet socket to listen on
-		if (!$this->setupListenSocket())
+		if (!$this->setupListenSocket()) {
 			return false;
+		}
 		
 		return true;
 	}
@@ -81,32 +81,31 @@ ININOTES;
 	{
 		$this->close(false);
 		
-		if ($this->telnetVars['ip'] != '' && $this->telnetVars['port'] > 0)
-		{
+		if ($this->telnetVars['ip'] != '' && $this->telnetVars['port'] > 0) {
 			$this->telnetSock = @stream_socket_server('tcp://'.$this->telnetVars['ip'].':'.$this->telnetVars['port'], $errNo, $errStr);
-			if (!is_resource($this->telnetSock) || $this->telnetSock === FALSE || $errNo)
-			{
+            
+			if (!is_resource($this->telnetSock) || $this->telnetSock === FALSE || $errNo) {
 				console('Error opening telnet socket : '.$errStr.' ('.$errNo.')');
 				return false;
-			}
-			else
-			{
+			} else {
 				console('Listening for telnet input on '.$this->telnetVars['ip'].':'.$this->telnetVars['port']);
 			}
 		}
+        
 		return true;
 	}
 
 	private function close($all)
 	{
-		if (is_resource($this->telnetSock))
+		if (is_resource($this->telnetSock)) {
 			fclose($this->telnetSock);
+		}
 		
-		if (!$all)
+		if (!$all) {
 			return;
+		}
 		
-		for ($k=0; $k<$this->numClients; $k++)
-		{
+		for ($k=0; $k<$this->numClients; $k++) {
 			array_splice($this->clients, $k, 1);
 			$k--;
 			$this->numClients--;
@@ -116,18 +115,18 @@ ININOTES;
 	public function getSelectableSockets(array &$sockReads, array &$sockWrites)
 	{
 		// Add http sockets to sockReads
-		if (is_resource($this->telnetSock))
+		if (is_resource($this->telnetSock)) {
 			$sockReads[] = $this->telnetSock;
+		}
 
-		for ($k=0; $k<$this->numClients; $k++)
-		{
-			if (is_resource($this->clients[$k]->getSocket()))
-			{
+		for ($k=0; $k<$this->numClients; $k++) {
+			if (is_resource($this->clients[$k]->getSocket())) {
 				$sockReads[] = $this->clients[$k]->getSocket();
 				
 				// If write buffer was full, we must check to see when we can write again
-				if ($this->clients[$k]->getSendQLen() > 0)
+				if ($this->clients[$k]->getSendQLen() > 0) {
 					$sockWrites[] = $this->clients[$k]->getSocket();
+				}
 			}
 		}
 	}
@@ -137,15 +136,14 @@ ININOTES;
 		$activity = 0;
 
 		// telnetSock input (incoming telnet connection)
-		if (in_array($this->telnetSock, $sockReads))
-		{
+		if (in_array($this->telnetSock, $sockReads)) {
 			$activity++;
 			
 			// Accept the new connection
 			$peerInfo = '';
-			$sock = @stream_socket_accept ($this->telnetSock, NULL, $peerInfo);
-			if (is_resource($sock))
-			{
+			$sock = @stream_socket_accept ($this->telnetSock, null, $peerInfo);
+            
+			if (is_resource($sock)) {
 				//stream_set_blocking ($sock, 0);
 				
 				// Add new connection to clients array
@@ -160,27 +158,26 @@ ININOTES;
 		// telnet clients input
 		for ($k=0; $k<$this->numClients; $k++) {
 			// Recover from a full write buffer?
-			if ($this->clients[$k]->getSendQLen() > 0 &&
-				in_array($this->clients[$k]->getSocket(), $sockWrites))
-			{
+			if ($this->clients[$k]->getSendQLen() > 0 && in_array($this->clients[$k]->getSocket(), $sockWrites)) {
 				$activity++;
 				
 				// Flush the sendQ (bit by bit, not all at once - that could block the whole app)
-				if ($this->clients[$k]->getSendQLen() > 0)
+				if ($this->clients[$k]->getSendQLen() > 0) {
 					$this->clients[$k]->flushSendQ();
+				}
 			}
 			
 			// Did we receive something from a httpClient?
-			if (!in_array($this->clients[$k]->getSocket(), $sockReads))
+			if (!in_array($this->clients[$k]->getSocket(), $sockReads)) {
 				continue;
+			}
 
 			$activity++;
 			
 			$data = $this->clients[$k]->read($data);
 			
 			// Did the client hang up?
-			if ($data == '')
-			{
+			if ($data == '') {
 				console('Closed telnet client (client initiated) '.$this->clients[$k]->getRemoteIP().':'.$this->clients[$k]->getRemotePort());
 				array_splice ($this->clients, $k, 1);
 				$k--;
@@ -191,8 +188,7 @@ ININOTES;
 			$this->clients[$k]->addInputToBuffer($data);
 			$this->clients[$k]->processInput();
 
-			if ($this->clients[$k]->getMustClose())
-			{
+			if ($this->clients[$k]->getMustClose()) {
 				$this->clients[$k]->__destruct();
 				console('Closed telnet client (client ctrl-c) '.$this->clients[$k]->getRemoteIP().':'.$this->clients[$k]->getRemotePort());
 				array_splice ($this->clients, $k, 1);
@@ -259,8 +255,7 @@ class PrismTelnet extends TelnetServer
 		$this->clearObjects(true);
 		
 		// Clean up the sections
-		if ($this->adminSection)
-		{
+		if ($this->adminSection) {
 			$this->adminSection->__destruct();
 			$this->hostSection->__destruct();
 			$this->pluginSection->__destruct();
@@ -272,8 +267,7 @@ class PrismTelnet extends TelnetServer
 
 	protected function doLogin($line)
 	{
-		switch($this->getLoginState())
-		{
+		switch($this->getLoginState()) {
 			case TELNET_NOT_LOGGED_IN :
 				// Send error notice and ask for username
 				$msg .= "\r\nPlease login with your Prism account details.\r\n";
@@ -283,25 +277,22 @@ class PrismTelnet extends TelnetServer
 				$this->loginState = TELNET_ASKED_USERNAME;
 				
 				break;
-			
 			case TELNET_ASKED_USERNAME :
-				if ($line == '')
-				{
+				if ($line == '') {
 					$this->write("\r\nUsername : ");
 					break;
 				}
+                
 				$this->username = $line;
 				$this->write("\r\nPassword : ");
 				$this->loginState = TELNET_ASKED_PASSWORD;
 				$this->setEchoChar('*');
 				
 				break;
-			
 			case TELNET_ASKED_PASSWORD :
 				$this->setEchoChar(null);
 				
-				if ($this->verifyLogin($line))
-				{
+				if ($this->verifyLogin($line)) {
 					$this->loginState = TELNET_LOGGED_IN;
 
 					$this->writeBuf("\r\nLogin successful\r\n");
@@ -313,9 +304,7 @@ class PrismTelnet extends TelnetServer
 					
 					// Now setup the screen
 					$this->setupMenu();
-				}
-				else
-				{
+				} else {
 					$msg = "\r\nIncorrect login. Please try again.\r\n";
 					$msg .= "Username : ";
 					$this->username = '';
@@ -369,13 +358,13 @@ class PrismTelnet extends TelnetServer
 	
 	private function selectSection($section)
 	{
-		if ($this->curSection == $section)
+		if ($this->curSection == $section) {
 			return true;
+		}
 		
 
 		// Make the section active
-		switch($section)
-		{
+		switch ($section) {
 			case 'admins' :
 				$this->section->setVisible(false);
 				$this->section = $this->adminSection;
@@ -392,8 +381,7 @@ class PrismTelnet extends TelnetServer
 				break;
 				
 			default :
-				return false;
-				
+				return false;	
 		}
 
 		$this->section->setVisible(true);
@@ -412,168 +400,133 @@ class PrismTelnet extends TelnetServer
 	*/
 	protected function handleKey($key)
 	{
-		if (($tl = $this->getObjectById('testline')) === null)
-		{
+		if (($tl = $this->getObjectById('testline')) === null) {
 			$tl = new TSTextArea(1, $this->winSize[1], $this->winSize[0], 1);
 			$tl->setId('testline');
 			$this->add($tl);
 		}
 		
 		// Handle section specific keys
-		if ($this->section && $this->section->handleKey($key))
-		{
+		if ($this->section && $this->section->handleKey($key)) {
 			$this->redraw();
 			return;
 		}
 		
 		// Default key actions
-		switch ($key)
-		{
+		switch ($key) {
 			case 'A' :
 				$this->selectSection('admins');
 				break;
-			
 			case 'H' :
 				$this->selectSection('hosts');
 				break;
-			
 			case 'P' :
 				$this->selectSection('plugins');
 				break;
-			
 			case 'x' :
 				$this->shutdown();
 				return;
-			
 			case KEY_ENTER :
 				$tl->setText('Enter');
 				break;
-			
 			case KEY_CURLEFT :
 				$tl->setText('Cursor left');
 				break;
-			
 			case KEY_CURRIGHT :
 				$tl->setText('Cursor right');
 				break;
-			
 			case KEY_CURUP :
 				$tl->setText('Cursor up');
 				break;
-			
 			case KEY_CURDOWN :
 				$tl->setText('Cursor down');
 				break;
-			
 			case KEY_CURLEFT_CTRL :
 				$tl->setText('CTRL-Cursor left');
 				break;
-			
 			case KEY_CURRIGHT_CTRL :
 				$tl->setText('CTRL-Cursor right');
 				break;
-			
 			case KEY_CURUP_CTRL :
 				$tl->setText('CTRL-Cursor up');
 				break;
-			
 			case KEY_CURDOWN_CTRL :
 				$tl->setText('CTRL-Cursor down');
 				break;
-			
 			case KEY_HOME :
 				$tl->setText('Home key');
 				break;
-			
 			case KEY_END :
 				$tl->setText('End key');
 				break;
-			
 			case KEY_PAGEUP :
 				$tl->setText('Page up');
 				break;
-			
 			case KEY_PAGEDOWN :
 				$tl->setText('Page down');
 				break;
-			
 			case KEY_INSERT :
 				$tl->setText('Insert');
 				break;
-			
 			case KEY_BS :
 				$tl->setText('Backspace');
 				break;
-			
 			case KEY_TAB :
 				$tl->setText('TAB key');
 				break;
-			
 			case KEY_SHIFTTAB :
 				$tl->setText('SHIFT-TAB key');
 				break;
-			
 			case KEY_DELETE :
 				$tl->setText('Delete key');
 				break;
-			
 			case KEY_ESCAPE :
 				$tl->setText('Escape key');
 				break;
-			
 			case KEY_F1 :
 				$tl->setText('F1 key');
 				break;
-			
 			case KEY_F2 :
 				$tl->setText('F2 key');
 				break;
-			
 			case KEY_F3 :
 				$tl->setText('F3 key');
 				break;
-			
 			case KEY_F4 :
 				$tl->setText('F4 key');
 				break;
-			
 			case KEY_F5 :
 				$tl->setText('F5 key');
 				break;
-			
 			case KEY_F6 :
 				$tl->setText('F6 key');
 				break;
-			
 			case KEY_F7 :
 				$tl->setText('F7 key');
 				break;
-			
 			case KEY_F8 :
 				// Toggle ttypes
 				$this->setTType($this->getTType() + 1);
-				if ($this->getTType() == TELNET_TTYPE_NUM)
+                
+				if ($this->getTType() == TELNET_TTYPE_NUM) {
 					$this->setTType(0);
+				}
+                
 				$this->updateTTypes($this->getTType());
 				$tl->setText('Toggling ttype ('.$this->getTType().')');
 				break;
-			
 			case KEY_F9 :
 				$tl->setText('F9 key');
 				break;
-			
 			case KEY_F10 :
 				$tl->setText('F10 key');
 				break;
-			
 			case KEY_F11 :
 				$tl->setText('F11 key');
 				break;
-			
 			case KEY_F12 :
 				$tl->setText('F12 key');
 				break;
-			
 			default :
 				$tl->setText($key.' pressed');
 				break;
@@ -623,18 +576,17 @@ class MenuBar extends ScreenContainer
 	public function selectSection($section)
 	{
 		$a = 0;
-		while ($object = $this->getObjectByIndex($a))
-		{
-			if ($object->getId() == $section)
-			{
+        
+		while ($object = $this->getObjectByIndex($a)) {
+			if ($object->getId() == $section) {
 				if (($object->getOptions() & TS_OPT_ISSELECTED) == 0)
 					$object->toggleSelected();
-			}
-			else
-			{
-				if (($object->getOptions() & TS_OPT_ISSELECTED) > 0)
+			} else {
+				if (($object->getOptions() & TS_OPT_ISSELECTED) > 0) {
 					$object->toggleSelected();
+				}
 			}
+            
 			$a++;
 		}
 	}

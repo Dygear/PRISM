@@ -17,11 +17,7 @@ class PHPParser
 		global $PRISM;
 		
 		// Restore session?
-		if (isset($COOKIE['PrismSession']) && 
-			isset(self::$sessions[$COOKIE['PrismSession']]) &&
-			self::$sessions[$COOKIE['PrismSession']][0] > time() &&
-			self::$sessions[$COOKIE['PrismSession']][1] == $SERVER['REMOTE_ADDR'])
-		{
+		if (isset($COOKIE['PrismSession']) && isset(self::$sessions[$COOKIE['PrismSession']]) && self::$sessions[$COOKIE['PrismSession']][0] > time() && self::$sessions[$COOKIE['PrismSession']][1] == $SERVER['REMOTE_ADDR']) {
 			$_SESSION = self::$sessions[$COOKIE['PrismSession']][2];
 			
 			// Sessions only last for one request. We rewrite it later on if needed.
@@ -36,20 +32,15 @@ class PHPParser
 		clearstatcache();
 
 		// Run script from cache?
-		if (isset(self::$scriptCache[$prismScriptNameHash]) &&
-			self::$scriptCache[$prismScriptNameHash][0] == $prismScriptMTime)
-		{
+		if (isset(self::$scriptCache[$prismScriptNameHash]) && self::$scriptCache[$prismScriptNameHash][0] == $prismScriptMTime) {
 			ob_start();
 			eval(self::$scriptCache[$prismScriptNameHash][1]);
 			$html = ob_get_contents();
 			ob_end_clean();
-		}
-		else
-		{
+		} else {
 			// Validate the php file
 			$parseResult = validatePHPFile($PRISM->http->getDocRoot().$file);
-			if ($parseResult[0])
-			{
+			if ($parseResult[0]) {
 				// Run the script from disk
 				$prismPhpScript = preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', file_get_contents($PRISM->http->getDocRoot().$file));
 				ob_start();
@@ -59,9 +50,7 @@ class PHPParser
 
 				// Cache the php file
 				self::$scriptCache[$prismScriptNameHash] = array($prismScriptMTime, $prismPhpScript);
-			}
-			else
-			{
+			} else {
 				$eol = "\r\n";
 				$html = '<html>'.$eol;
 				$html .= '<head><title>Error parsing page</title></head>'.$eol;
@@ -75,45 +64,48 @@ class PHPParser
 		}
 
 		// Should we store the session?
-		if (isset($_SESSION) && $_SESSION != '')
-		{
+		if (isset($_SESSION) && $_SESSION != '') {
 			$sessionID = sha1(createRandomString(128, RAND_BINARY).time());
 			self::$sessions[$sessionID] = array(time() + PRISM_SESSION_TIMEOUT, $SERVER['REMOTE_ADDR'], $_SESSION);
 			$RESPONSE->setCookie('PrismSession', $sessionID, time() + PRISM_SESSION_TIMEOUT, '/', $SERVER['SERVER_NAME']);
-		}
-		else if (isset($COOKIE['PrismSession']))
-		{
+		} else if (isset($COOKIE['PrismSession'])) {
 			$RESPONSE->setCookie('PrismSession', '', 0, '/', $SERVER['SERVER_NAME']);
 		}
+        
 		unset($_SESSION);
 		
 		// Restore the working dir
 		chdir(ROOTPATH);
 
 		// Use compression?
-		if ($html != '' && isset($SERVER['HTTP_ACCEPT_ENCODING']))
-		{
+		if ($html != '' && isset($SERVER['HTTP_ACCEPT_ENCODING'])) {
 			$encoding = '';
-			if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) $encoding = 'x-gzip';
-			else if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) $encoding = 'gzip';
+            
+			if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) {
+                $encoding = 'x-gzip';
+			} else if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) {
+                $encoding = 'gzip';
+			} else {
+    		    # Nothing...   
+			}
 			
 			if ($encoding) {
 			    $RESPONSE->addHeader('Content-Encoding: '.$encoding);
 			    return gzencode ($html, 1);
-			} else return $html;
-		}
-		else
+			} else {
+                return $html;
+			}
+		} else {
 			return $html;
+		}
 	}
 	
 	public static function cleanSessions()
 	{
-		foreach (self::$sessions as $k => $v)
-		{
-			if ($v[0] < time())
+		foreach (self::$sessions as $k => $v) {
+			if ($v[0] < time()) {
 				unset(self::$sessions[$k]);
+			}
 		}
 	}
 }
-
-?>

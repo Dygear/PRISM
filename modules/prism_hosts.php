@@ -55,11 +55,11 @@ class HostHandler extends SectionHandler
 	{
 		$this->iniFile = 'hosts.ini';
 	}
-	
+
 	public function initialise()
 	{
 		global $PRISM;
-		
+
 		if ($this->loadIniFile($this->connvars))
 		{
 			foreach ($this->connvars as $hostID => $v)
@@ -78,7 +78,7 @@ class HostHandler extends SectionHandler
 			# We ask the client to manually input the connection details here.
 			require_once(ROOTPATH . '/modules/prism_interactive.php');
 			Interactive::queryHosts($this->connvars);
-			
+
 			# Then build a connections.ini file based on these details provided.
 			if ($this->createIniFile('InSim Connection Hosts', $this->connvars))
 				console('Generated config/'.$this->iniFile);
@@ -89,16 +89,16 @@ class HostHandler extends SectionHandler
 
 		// Populate $this->hosts array from the connections.ini variables we've just read
 		$this->populateHostsFromVars();
-		
+
 		return true;
 	}
 
 	private function populateHostsFromVars()
 	{
 		global $PRISM;
-		
+
 		$udpPortBuf = array();		// Duplicate udpPort (NLP/MCI or OutGauge port) value check array.
-		
+
 		foreach ($this->connvars as $hostID => $v)
 		{
 			if (isset($v['useRelay']) && $v['useRelay'] > 0)
@@ -114,7 +114,7 @@ class HostHandler extends SectionHandler
 					continue;
 
 				$icVars = array (
-					'connType'		=> CONNTYPE_RELAY, 
+					'connType'		=> CONNTYPE_RELAY,
 					'socketType'	=> SOCKTYPE_TCP,
 					'id' 			=> $hostID,
 					'ip'			=> $PRISM->config->cvars['relayIP'],
@@ -124,9 +124,9 @@ class HostHandler extends SectionHandler
 					'specPass'		=> $specPass,
 					'prefix'		=> $prefix,
 					'pps'			=> $PRISM->config->cvars['relayPPS'],
-				);				
+				);
 				$ic = new InsimConnection($icVars);
-				
+
 				$this->hosts[$hostID] = $ic;
 			}
 			else
@@ -141,7 +141,7 @@ class HostHandler extends SectionHandler
 				$adminPass		= isset($v['password']) ? substr($v['password'], 0, 15) : '';
 				$socketType		= isset($v['socketType']) ? (int) $v['socketType'] : SOCKTYPE_TCP;
 				$prefix			= isset($v['prefix']) ? substr($v['prefix'], 0, 1) : '';
-				
+
 				// Some value checking
 				if ($port < 1 || $port > 65535)
 				{
@@ -173,10 +173,10 @@ class HostHandler extends SectionHandler
 					console('Host '.$hostID.' will be excluded.');
 					continue;
 				}
-				
+
 				// Create new ic object
 				$icVars = array (
-					'connType'		=> CONNTYPE_HOST, 
+					'connType'		=> CONNTYPE_HOST,
 					'socketType'	=> $socketType,
 					'id'			=> $hostID,
 					'ip'			=> $ip,
@@ -207,7 +207,7 @@ class HostHandler extends SectionHandler
 						}
 					}
 				}
-				
+
 				if ($ic->getOutgaugePort() > 0)
 				{
 					if (in_array($ic->getOutgaugePort(), $udpPortBuf))
@@ -230,7 +230,7 @@ class HostHandler extends SectionHandler
 			}
 		}
 	}
-	
+
 	public function getSelectableSockets(array &$sockReads, array &$sockWrites)
 	{
 		foreach ($this->hosts as $hostID => $host)
@@ -238,7 +238,7 @@ class HostHandler extends SectionHandler
 			if ($host->getConnStatus() >= CONN_CONNECTED)
 			{
 					$sockReads[] = $host->getSocket();
-					
+
 					// If the host is lagged, we must check to see when we can write again
 					if ($host->getSendQLen() > 0)
 						$sockWrites[] = $host->getSocket();
@@ -260,32 +260,32 @@ class HostHandler extends SectionHandler
 					}
 				}
 			}
-			
+
 			// Treat secundary socketMCI separately. This socket is always open.
 			if ($host->getUdpPort() > 0 && is_resource($host->getSocketMCI()))
 				$sockReads[] = $host->getSocketMCI();
-			
+
 			// Treat socketOutgauge separately. This socket is always open.
 			if ($host->getOutgaugePort() > 0 && is_resource($host->getSocketOutgauge()))
 				$sockReads[] = $host->getSocketOutgauge();
 		}
 	}
-	
+
 	public function checkTraffic(array &$sockReads, array &$sockWrites)
 	{
 		global $PRISM;
-		
+
 		$activity = 0;
-		
+
 		// Host traffic
 		foreach($this->hosts as $hostID => $host)
 		{
 			// Finalise a tcp connection?
-			if ($host->getConnStatus() == CONN_CONNECTING && 
+			if ($host->getConnStatus() == CONN_CONNECTING &&
 				in_array($host->getSocket(), $sockWrites))
 			{
 				$activity++;
-				
+
 				// Check if remote replied negatively
 				# Error suppressed, because of the underlying CRT (C Run Time) producing an error on Windows.
 				$r = array($host->getSocket());
@@ -306,12 +306,12 @@ class HostHandler extends SectionHandler
 			}
 
 			// Recover a lagged host?
-			if ($host->getConnStatus() >= CONN_CONNECTED && 
+			if ($host->getConnStatus() >= CONN_CONNECTED &&
 				$host->getSendQLen() > 0 &&
 				in_array($host->getSocket(), $sockWrites))
 			{
 				$activity++;
-				
+
 				// Flush the sendQ and handle possible overload again
 				$host->flushSendQ();
 			}
@@ -321,11 +321,11 @@ class HostHandler extends SectionHandler
 			{
 				$activity++;
 				$data = $packet = '';
-				
+
 				// Incoming traffic from a host
 				$peerInfo = '';
 				$data = $host->read($peerInfo);
-				
+
 				if (!$data)
 				{
 					$host->close();
@@ -348,7 +348,7 @@ class HostHandler extends SectionHandler
 							$packet = $host->findNextPacket();
 							if (!$packet)
 								break;
-							
+
 							// Handle the packet here
 							$this->handlePacket($packet, $hostID);
 						}
@@ -360,7 +360,7 @@ class HostHandler extends SectionHandler
 			if ($host->getUdpPort() > 0 && in_array($host->getSocketMCI(), $sockReads))
 			{
 				$activity++;
-				
+
 				$peerInfo = '';
 				$data = $host->readMCI($peerInfo);
 				$exp = explode(':', $peerInfo);
@@ -375,7 +375,7 @@ class HostHandler extends SectionHandler
 			if ($host->getOutgaugePort() > 0 && in_array($host->getSocketOutgauge(), $sockReads))
 			{
 				$activity++;
-				
+
 				$peerInfo = '';
 				$data = $host->readOutgauge($peerInfo);
 				$exp = explode(':', $peerInfo);
@@ -389,10 +389,10 @@ class HostHandler extends SectionHandler
 				}
 			}
 		}
-		
+
 		return $activity;
 	}
-	
+
 	public function maintenance()
 	{
 		// InSim Connection maintenance
@@ -417,14 +417,14 @@ class HostHandler extends SectionHandler
 				}
 				continue;
 			}
-			
+
 			// Does the connection appear to be dead? (LFS host not sending anything for more than HOST_TIMEOUT seconds
 			if ($host->getLastReadTime() < time () - HOST_TIMEOUT)
 			{
 				console('Host '.$host->getIP().':'.$host->getPort().' timed out');
 				$host->close();
 			}
-			
+
 			// Do we need to keep the connection alive with a ping?
 			if ($host->getLastWriteTime() < time () - KEEPALIVE_TIME)
 			{
@@ -433,7 +433,7 @@ class HostHandler extends SectionHandler
 				$host->writePacket($ISP);
 			}
 		}
-		
+
 		// Are all hosts dead?
 		if ($c == $d)
 		{
@@ -446,25 +446,25 @@ class HostHandler extends SectionHandler
 	private function handlePacket(&$rawPacket, &$hostID)
 	{
 		global $PRISM, $TYPEs, $TINY, $SMALL;
-		
+
 		// Check packet size
 		if ((strlen($rawPacket) % 4) > 0)
 		{
 			// Packet size is not a multiple of 4
 			console('WARNING : packet with invalid size ('.strlen($rawPacket).') from '.$hostID);
-			
+
 			// Let's clear the buffer to be sure, because remaining data cannot be trusted at this point.
 			$this->hosts[$hostID]->clearBuffer();
-			
+
 			// Do we want to do anything else at this point?
 			// Count errors? Disconnect host?
 			// My preference would go towards counting the amount of times this error occurs and hang up after perhaps 3 errors.
-			
+
 			return;
 		}
 
 		$this->curHostId = $hostID; # To make sure we always know what host we are talking to, makeing the sendPacket function useful everywhere.
-		
+
 		# Parse Packet Header
 		$pH = unpack('CSize/CType/CReqI/CSubT', $rawPacket);
 		if (isset($TYPEs[$pH['Type']]))
@@ -496,16 +496,18 @@ class HostHandler extends SectionHandler
 	{
 		# Check packet size (without and with optional ID)
 		$packetLen = strlen($rawPacket);
-		if ($packetLen != OutGaugePack::LENGTH AND $packetLen != OutGaugePack::LENGTH + 4)
+
+		if ($packetLen != OutGaugePack::LENGTH AND $packetLen != OutGaugePack::LENGTH + 4) {
 			return console("WARNING : outgauge packet of invalid size ({$packetLen})");
-	
+		}
+
 		# Parse packet
 		$packet = new OutGaugePack($rawPacket);
 
 		# Pass to outguage processor
 		$this->inspectPacket($packet, $hostID);
 	}
-	
+
 	// inspectPacket is used to act upon certain packets like error messages
 	// We need these packets for proper basic PRISM connection functionality
 	//
@@ -518,8 +520,7 @@ class HostHandler extends SectionHandler
 		{
 			case ISP_VER :
 				// When receiving ISP_VER we can conclude that we now have a working insim connection.
-				if ($this->hosts[$hostID]->getConnStatus() != CONN_VERIFIED)
-				{
+				if ($this->hosts[$hostID]->getConnStatus() != CONN_VERIFIED) {
 					// Because we can receive more than one ISP_VER, we only set this the first time
 					$this->hosts[$hostID]->setConnStatus(CONN_VERIFIED);
 					$this->hosts[$hostID]->setConnTime(time());
@@ -527,6 +528,7 @@ class HostHandler extends SectionHandler
 					// Here we setup the state for the connection.
 					$this->state[$hostID] = new StateHandler($packet);
 				}
+                $PRISM->plugins->dispatchPacket($packet, $hostID);
 				break;
 
 			case IRP_ERR :
@@ -560,11 +562,11 @@ class HostHandler extends SectionHandler
 						console('Unknown error received from relay ('.$packet->ErrNo.')');
 						break;
 				}
-				
+
 				// Because of the error we close the connection to the relay.
 				$this->hosts[$hostID]->close(true);
 				break;
-				
+
 			case ISP_PLL :
 			case ISP_CNL :
 			case ISP_CPR :
@@ -583,9 +585,9 @@ class HostHandler extends SectionHandler
 	{
 		if ($hostId === NULL)
 			$hostId = $this->curHostID;
-		
+
 		$host = $this->hosts[$hostId];
-		
+
 		if ($host->isRelay())
 		{
 			if (!$host->isAdmin() &&
@@ -615,7 +617,7 @@ class HostHandler extends SectionHandler
 				return FALSE;
 			}
 		}
-		
+
 		global $PRISM, $TYPEs, $TINY, $SMALL;
 		if ($PRISM->config->cvars['debugMode'] & (PRISM_DEBUG_CORE + PRISM_DEBUG_MODULES))
 		{
@@ -631,10 +633,10 @@ class HostHandler extends SectionHandler
 					console("> ${TYPEs[$packetClass->Type]} Packet to {$hostId}.");
 			}
 		}
-		
+
 		return $host->writePacket($packetClass);
 	}
-	
+
 	public function &getHostsInfo()
 	{
 		$info = array();
@@ -655,7 +657,7 @@ class HostHandler extends SectionHandler
 		}
 		return $info;
 	}
-	
+
 	public function getHostById($hostId = NULL)
 	{
 		if ($hostId == NULL)
@@ -666,7 +668,7 @@ class HostHandler extends SectionHandler
 
 		return NULL;
 	}
-	
+
 	public function getHostsByIp($ip)
 	{
 		$hosts = array();
@@ -694,26 +696,26 @@ class InsimConnection
 {
 	private $connType;
 	private $socketType;
-	
+
 	private $socket;
 	private $socketMCI;						# secondary, udp socket to listen on, if udpPort > 0
 											# note that this follows the exact theory of how insim deals with tcp and udp sockets
 											# see InSim.txt in LFS distributions for more info
 	private $socketOutgauge;				# separate udp socket to listen on for outgauge packets, if outgaugePort > 0
-	
+
 	private $connStatus		= CONN_NOTCONNECTED;
-	
+
 	// Counters and timers
 	private $mustConnect	= 0;
 	private $connTries		= 0;
 	private $connTime		= 0;
 	private $lastReadTime	= 0;
 	private $lastWriteTime	= 0;
-	
+
 	// TCP stream buffer
 	private $streamBuf		= '';
 	private $streamBufLen	= 0;
-	
+
 	// send queue used in emergency cases (if host appears lagged or overflown with packets)
 	private $sendQ			= '';
 	private $sendQLen		= 0;
@@ -729,13 +731,13 @@ class InsimConnection
 	private $outgaugePort	= 0;			# the outgauge udp port to listen on
 	private $adminPass		= '';			# adminpass for both relay and direct usage
 	private $specPass		= '';			# specpass for relay usage
-	private $pps			= 3;		
+	private $pps			= 3;
 	private $hostName		= '';			# the hostname. Can be populated by user in case of relay.
 
 	public function __construct(array &$icVars)
 	{
     global $PRISM;
-    
+
 		$this->connType		= ($icVars['connType'] == CONNTYPE_RELAY) ? CONNTYPE_RELAY : CONNTYPE_HOST;
 		$this->socketType	= ($icVars['socketType'] == SOCKTYPE_UDP) ? SOCKTYPE_UDP : SOCKTYPE_TCP;
 		$this->id			= $icVars['id'];
@@ -751,7 +753,7 @@ class InsimConnection
 		$this->hostName		= isset($icVars['hostName']) ? $icVars['hostName'] : '';
 		$this->specPass		= isset($icVars['specPass']) ? $icVars['specPass'] : '';
 	}
-	
+
 	public function __destruct()
 	{
 		$this->close(TRUE);
@@ -760,47 +762,47 @@ class InsimConnection
 		if ($this->socketOutgauge)
 			fclose($this->socketOutgauge);
 	}
-	
+
 	public function &getSocket()
 	{
 		return $this->socket;
 	}
-	
+
 	public function &getSocketMCI()
 	{
 		return $this->socketMCI;
 	}
-	
+
 	public function &getSocketOutgauge()
 	{
 		return $this->socketOutgauge;
 	}
-	
+
 	public function &getSocketType()
 	{
 		return $this->socketType;
 	}
-	
+
 	public function &getConnStatus()
 	{
 		return $this->connStatus;
 	}
-	
+
 	public function setConnStatus($connStatus)
 	{
 		$this->connStatus = $connStatus;
 	}
-	
+
 	public function &getMustConnect()
 	{
 		return $this->mustConnect;
 	}
-	
+
 	public function setConnTries($connTries)
 	{
 		$this->connTries = $connTries;
 	}
-	
+
 	public function setConnTime($connTime)
 	{
 		$this->connTime = $connTime;
@@ -810,42 +812,42 @@ class InsimConnection
 	{
 		return $this->connTime;
 	}
-	
+
 	public function &getLastReadTime()
 	{
 		return $this->lastReadTime;
 	}
-	
+
 	public function &getLastWriteTime()
 	{
 		return $this->lastWriteTime;
 	}
-	
+
 	public function &getConnectIP()
 	{
 		return $this->connectIP;
 	}
-	
+
 	public function &getIP()
 	{
 		return $this->ip;
 	}
-	
+
 	public function &getPort()
 	{
 		return $this->port;
 	}
-	
+
 	public function &getUdpPort()
 	{
 		return $this->udpPort;
 	}
-	
+
 	public function &getOutgaugePort()
 	{
 		return $this->outgaugePort;
 	}
-	
+
 	public function &getFlags()
 	{
 		return $this->flags;
@@ -860,17 +862,17 @@ class InsimConnection
 	{
 		return ($this->adminPass != '') ? TRUE : FALSE;
 	}
-	
+
 	public function isRelay()
 	{
 		return ($this->connType == CONNTYPE_RELAY) ? TRUE : FALSE;
 	}
-	
+
 	public function &getHostname()
 	{
 		return $this->hostName;
 	}
-	
+
 	public function setUdpPort($udpPort)
 	{
 		// Set the new value
@@ -880,7 +882,7 @@ class InsimConnection
 		$this->closeMCISocket();
 		$this->createMCISocket();
 	}
-	
+
 	public function setOutgaugePort($outgaugePort)
 	{
 		// Set the new value
@@ -890,17 +892,17 @@ class InsimConnection
 		$this->closeOutgaugeSocket();
 		$this->createOutgaugeSocket();
 	}
-		
+
 	public function &getSendQLen()
 	{
 		return $this->sendQLen;
 	}
-	
+
 	public function connect()
 	{
 		// If we're already connected, then we'll assume this is a forced reconnect, so we'll close
 		$this->close(FALSE, TRUE);
-		
+
 		// Figure out the proper IP address. We do this every time we connect in case of dynamic IP addresses.
 		$this->connectIP = getIP($this->ip);
 		if (!$this->connectIP)
@@ -911,15 +913,15 @@ class InsimConnection
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
 			return FALSE;
 		}
-		
+
 		if ($this->socketType == SOCKTYPE_UDP)
 			$this->connectUDP();
 		else
 			$this->connectTCP();
-		
+
 		return true;
 	}
-	
+
 	public function connectUDP()
 	{
 		// Create UDP socket
@@ -932,27 +934,27 @@ class InsimConnection
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
 			return FALSE;
 		}
-		
+
 		// We set the connection time here, so we can track how long we're trying to connect
 		$this->connTime = time();
-	
+
 		console('Connecting to '.$this->ip.':'.$this->port.' ... #'.($this->connTries + 1));
 		$this->connectFinish();
 		$this->lastReadTime = time() - HOST_TIMEOUT + 10;
-		
-		return TRUE;		
+
+		return TRUE;
 	}
-	
+
 	public function connectTCP()
 	{
 		// If we're already connected, then we'll assume this is a forced reconnect, so we'll close
 		$this->close(FALSE, TRUE);
-	
+
 		// Here we create the socket and initiate the connection. This is done asynchronously.
-		$this->socket = @stream_socket_client('tcp://'.$this->connectIP.':'.$this->port, 
-												$sockErrNo, 
-												$sockErrStr, 
-												CONN_TIMEOUT, 
+		$this->socket = @stream_socket_client('tcp://'.$this->connectIP.':'.$this->port,
+												$sockErrNo,
+												$sockErrStr,
+												CONN_TIMEOUT,
 												STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT);
 		if ($this->socket === FALSE || $sockErrNo)
 		{
@@ -962,24 +964,24 @@ class InsimConnection
 			$this->mustConnect	= -1;					// Something completely failed - we will no longer try this connection
 			return FALSE;
 		}
-		
+
 		// Set socket status to 'SYN sent'
 		$this->connStatus = CONN_CONNECTING;
 		// We set the connection time here, so we can track how long we're trying to connect
 		$this->connTime = time();
-		
+
 		stream_set_blocking($this->socket, 0);
-		
+
 		console('Connecting to '.$this->ip.':'.$this->port.' ... #'.($this->connTries + 1));
-		
-		return TRUE;		
+
+		return TRUE;
 	}
-	
+
 	public function connectFinish()
 	{
 		// Here we finalise the connection cycle. Send an init packet to start the insim stream and while at it, detect if the socket is real.
 		$this->connStatus	= CONN_CONNECTED;
-		
+
 		if ($this->connType == CONNTYPE_HOST)
 		{
 			// Send IS_ISI packet
@@ -1008,16 +1010,16 @@ class InsimConnection
 			// I'm not sure what we connected to. Shouldn't be possible. Permanently close.
 			$this->close(TRUE);
 		}
-		
+
 		console('Connected to '.$this->ip.':'.$this->port);
 	}
-	
+
 	public function createMCISocket()
 	{
 		$this->closeMCISocket();
 	    if ($this->udpPort == 0)
 	        return TRUE;
-		
+
 		$this->socketMCI = @stream_socket_server('udp://0.0.0.0:'.$this->udpPort, $errNo, $errStr, STREAM_SERVER_BIND);
 		if (!$this->socketMCI || $errNo > 0)
 		{
@@ -1026,25 +1028,25 @@ class InsimConnection
 			$this->udpPort		= 0;
 			return FALSE;
 		}
-		
+
 		console('Listening for NLP/MCI on secundary UDP port '.$this->udpPort);
-		
+
 		return TRUE;
 	}
-	
+
 	private function closeMCISocket()
 	{
 		if (is_resource($this->socketMCI))
 			fclose($this->socketMCI);
 		$this->socketMCI = NULL;
 	}
-	
+
 	public function createOutgaugeSocket()
 	{
 	    $this->closeOutgaugeSocket();
 	    if ($this->outgaugePort == 0)
 	        return TRUE;
-		
+
 		$this->socketOutgauge = @stream_socket_server('udp://0.0.0.0:'.$this->outgaugePort, $errNo, $errStr, STREAM_SERVER_BIND);
 		if (!$this->socketOutgauge || $errNo > 0)
 		{
@@ -1053,19 +1055,19 @@ class InsimConnection
 			$this->outgaugePort		= 0;
 			return FALSE;
 		}
-		
+
 		console('Listening for OutGauge packets on UDP port '.$this->outgaugePort);
-		
+
 		return TRUE;
 	}
-	
+
 	private function closeOutgaugeSocket()
 	{
 		if (is_resource($this->socketOutgauge))
 			fclose($this->socketOutgauge);
 		$this->socketOutgauge = NULL;
 	}
-	
+
 	// $permanentClose	- set to TRUE to close this connection once and for all.
 	// $quick			- set to TRUE to bypass the reconnection mechanism. If TRUE this disconnect would not count towards the reconnection counter.
 	//
@@ -1080,11 +1082,11 @@ class InsimConnection
 				$ISP->SubT	= TINY_CLOSE;
 				$this->writePacket($ISP);
 			}
-	
+
 			fclose($this->socket);
 			console('Closed connection to '.$this->ip.':'.$this->port);
 		}
-		
+
 		// (re)set some variables.
 		$this->socket			= NULL;
 		$this->connStatus		= CONN_NOTCONNECTED;
@@ -1092,10 +1094,10 @@ class InsimConnection
 		$this->lastWriteTime	= 0;
 		$this->clearBuffer();
 		$this->sendQReset();
-		
+
 		if ($quick)
 			return;
-		
+
 		if (!$permanentClose)
 		{
 			if (++$this->connTries < HOST_RECONN_TRIES)
@@ -1109,7 +1111,7 @@ class InsimConnection
 		else
 			$this->mustConnect = -1;
 	}
-	
+
 	public function writePacket(Struct &$packet)
 	{
 		if ($this->socketType	== SOCKTYPE_UDP)
@@ -1117,7 +1119,7 @@ class InsimConnection
 		else
 			return $this->writeTCP($packet->pack());
 	}
-	
+
 	public function writeUDP($data)
 	{
 		$this->lastWriteTime = time();
@@ -1125,14 +1127,14 @@ class InsimConnection
 			console('UDP: Error sending packet through socket.');
 		return $bytes;
 	}
-	
+
 	public function writeTCP($data, $sendQPacket = FALSE)
 	{
 		$bytes = 0;
-		
+
 		if ($this->connStatus < CONN_CONNECTED)
 			return $bytes;
-	
+
 		if ($sendQPacket == TRUE)
 		{
 			// This packet came from the sendQ. We just try to send this and don't bother too much about error checking.
@@ -1148,7 +1150,7 @@ class InsimConnection
 				if (($bytes = @fwrite($this->socket, $data)) === FALSE)
 					console('TCP: Error sending packet through socket.');
 				$this->lastWriteTime = time();
-		
+
 				if (!$bytes || $bytes != strlen($data))
 				{
 					$this->addPacketToSendQ (substr($data, $bytes));
@@ -1160,10 +1162,10 @@ class InsimConnection
 				$this->addPacketToSendQ ($data);
 			}
 		}
-	
+
 		return $bytes;
 	}
-	
+
 	private function addPacketToSendQ($data)
 	{
 		$this->sendQ .= $data;
@@ -1174,7 +1176,7 @@ class InsimConnection
 	{
 		// Send chunk of data
 		$bytes = $this->writeTCP(substr($this->sendQ, 0, $this->sendWindow), TRUE);
-		
+
 		// Dynamic window sizing
 		if ($bytes == $this->sendWindow)
 			$this->sendWindow += STREAM_WRITE_BYTES;
@@ -1200,49 +1202,49 @@ class InsimConnection
 			$this->lastWriteTime	= time();
 		//console('Bytes sent : '.$bytes.' - Bytes left : '.$this->sendQLen.' - '.$this->ip);
 	}
-	
+
 	private function sendQReset()
 	{
 		$this->sendQ			= '';
 		$this->sendQLen			= 0;
 		$this->lastActivity		= time();
 	}
-			
+
 	public function read(&$peerInfo)
 	{
 		$this->lastReadTime = time();
 		return stream_socket_recvfrom($this->socket, STREAM_READ_BYTES, 0, $peerInfo);
 	}
-	
+
 	public function readMCI(&$peerInfo)
 	{
 		$this->lastReadTime = time();
 		return stream_socket_recvfrom($this->socketMCI, STREAM_READ_BYTES, 0, $peerInfo);
 	}
-	
+
 	public function readOutgauge(&$peerInfo)
 	{
 		$this->lastReadTime = time();
 		return stream_socket_recvfrom($this->socketOutgauge, STREAM_READ_BYTES, 0, $peerInfo);
 	}
-	
+
 	public function appendToBuffer(&$data)
 	{
 		$this->streamBuf	.= $data;
 		$this->streamBufLen	= strlen ($this->streamBuf);
 	}
-	
+
 	public function clearBuffer()
 	{
 		$this->streamBuf	= '';
 		$this->streamBufLen	= 0;
 	}
-	
+
 	public function findNextPacket()
 	{
 		if ($this->streamBufLen == 0)
 			return FALSE;
-		
+
 		$sizebyte = ord($this->streamBuf[0]);
 		if ($sizebyte == 0)
 		{
@@ -1253,15 +1255,15 @@ class InsimConnection
 			//console('Split packet ...');
 			return FALSE;
 		}
-		
+
 		// We should have a whole packet in the buffer now
 		$packet					= substr($this->streamBuf, 0, $sizebyte);
 		$packetType				= ord($packet[1]);
-	
+
 		// Cleanup streamBuffer
 		$this->streamBuf		= substr($this->streamBuf, $sizebyte);
 		$this->streamBufLen		= strlen($this->streamBuf);
-		
+
 		return $packet;
 	}
 }
