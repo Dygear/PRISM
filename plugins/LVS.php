@@ -165,4 +165,3 @@ class LVS extends Plugins
 		}
 	}
 }
-?>
