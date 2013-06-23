@@ -59,7 +59,7 @@
 			<tbody>
 				<tr>
 					<th>Command</th>
-					<th>Descriptoin</th>
+					<th>Description</th>
 				</tr>
 <?php
 	forEach ($PRISM->plugins->getPlugins() as $plugin => $details):
@@ -81,7 +81,7 @@
 					<th>Name</th>
 					<th>Version</th>
 					<th>Author</th>
-					<th>Descriptiom</th>
+					<th>Description</th>
 				</tr>
 <?php	forEach ($PRISM->plugins->getPlugins() as $plugin => $details):	?>
 				<tr>
