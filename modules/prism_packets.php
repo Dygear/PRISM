@@ -8,102 +8,116 @@
 /* Start of PRISM PACKET HEADER */
 abstract class Struct
 {
-	public function __conStruct($rawPacket = NULL)
+	public function __conStruct($rawPacket = null)
 	{
-		if ($rawPacket !== NULL)
+		if ($rawPacket !== null) {
 			$this->unpack($rawPacket);
+		}
+        
 		return $this;
 	}
+    
 	public function __invoke()
 	{
 		$argv = func_get_args();
 		$argi = 0;
 		$argc = count($argv);
-		foreach ($this as $property => $value)
-		{
+        
+		foreach ($this as $property => $value) {
 			$RP = new ReflectionProperty(get_class($this), $property);
-			if ($RP->isPublic())
+            
+			if ($RP->isPublic()) {
 				$object->$property = $argv[$argi++];
-			if ($argc == $argi)
+			}
+            
+			if ($argc == $argi) {
 				continue;
+			}
 		}
 	}
+    
 	public function __toString()
 	{
 		return $this->printPacketDetails();
 	}
+    
 	// Magic Methods (Object Overloading)
 	public function &__get($name)
 	{
-		$return = FALSE;
-		if (!property_exists(get_class($this), $name))
+		$return = false;
+        
+		if (!property_exists(get_class($this), $name)) {
 			return $return;
-		else
+		} else {
 			return $this->$name;
+		}
 	}
+    
 	public function &__call($name, $arguments)
 	{
-		if (property_exists(get_class($this), $name))
+		if (property_exists(get_class($this), $name)) {
 			$this->$name = array_shift($arguments);
+		}
+        
 		return $this;
 	}
+    
 	public function __isset($name)
 	{
 		return isset($this->$name);
 	}
+    
 	public function __unset($name)
 	{
-		if (isset($this->$name))
-			$this->$name = NULL;
+		if (isset($this->$name)) {
+			$this->$name = null;
+		}
 	}
+    
 	// Normal Methods
-	public function send($hostId = NULL)
+	public function send($hostId = null)
 	{
 		global $PRISM;
 		$PRISM->hosts->sendPacket($this, $hostId);
 		return $this;
 	}
+    
 	public function printPacketDetails($pre = '')
 	{
 		global $TYPEs;
 		$packFormat = $this->parsePackFormat();
 		$propertyNumber = -1;
 		$str = $pre . get_class($this) . ' {' . PHP_EOL;
-		foreach ($this as $property => $value)
-		{
+        
+		foreach ($this as $property => $value) {
 			$pkFnkFormat = $packFormat[++$propertyNumber];
-			if (gettype($this->$property) == 'array')
-			{
+            
+			if (gettype($this->$property) == 'array') {
 				$str .= "{$pre}\tArray\t{$property}\t= {" . PHP_EOL;
-				foreach ($this->$property as $k => $v)
-				{
-					if ($v instanceof Struct)
-					{
+                
+				foreach ($this->$property as $k => $v) {
+					if ($v instanceof Struct) {
 						$str .= $pre . $v->printPacketDetails($pre . "\t\t\t") . PHP_EOL;
-					}
-					else
-					{
+					} else {
 						$str .= "{$pre}\t\t\t{$k}\t{$v}" . PHP_EOL;
 					}
 				}
+                
 				$str .= "{$pre}\t}" . PHP_EOL;
 				break;
-			}
-			elseif ($property == 'Type')
-			{
+			} elseif ($property == 'Type') {
 				$str .= "{$pre}\t{$pkFnkFormat}\t{$property}\t= {$TYPEs[$this->Type]} ({$this->$property})" . PHP_EOL;
-			}
-			else
-			{
+			} else {
 				$str .= "{$pre}\t{$pkFnkFormat}\t{$property}\t= {$this->$property}" . PHP_EOL;
 			}
 		}
+        
 		return "{$str}{$pre}}" . PHP_EOL;
 	}
+    
 	public function unpack($rawPacket)
 	{
-		foreach (unpack($this::UNPACK, $rawPacket) as $property => $value)
-		{
+		foreach (unpack($this::UNPACK, $rawPacket) as $property => $value) {
 			$this->$property = $value;
 		}
 
@@ -114,65 +128,76 @@ abstract class Struct
 		$return = '';
 		$packFormat = $this->parsePackFormat();
 		$propertyNumber = -1;
-		foreach ($this as $property => $value)
-		{
+        
+		foreach ($this as $property => $value) {
 			$pkFnkFormat = $packFormat[++$propertyNumber];
-			if ($pkFnkFormat == 'x')
-				$return .= pack('C', 0); # NULL & 0 are the same thing in Binary (00000000) and Hex (x00), so NULL == 0.
-			else if (is_array($pkFnkFormat))
-			{
+			
+            if ($pkFnkFormat == 'x') {
+				$return .= pack('C', 0); # null & 0 are the same thing in Binary (00000000) and Hex (x00), so null == 0.
+			} elseif (is_array($pkFnkFormat)) {
 				list($type, $elements) = $pkFnkFormat;
-				if (($j = count($value)) > $elements)
+                
+				if (($j = count($value)) > $elements) {
 					$j = $elements;
-				for ($i = 0; $i < $j; ++$i, --$j)
-				{
+				}
+                
+				for ($i = 0; $i < $j; ++$i, --$j) {
 					var_dump($value, $type, $elements, $i, $j, $value[$i]);
 					$return .= pack($type, $value[$i]);
 				}
-				if ($j > 0);
+                
+				if ($j > 0) {
 					$return .= pack("x{$j}");	# Fills the rest of the space with null data.
-			}
-			else
+				}
+			} else {
 				$return .= pack($pkFnkFormat, $value);
+			}
 		}
+        
 		return $return;
 	}
+    
 	public function parseUnpackFormat()
 	{
 		$return = array();
-		foreach (explode('/', $this::UNPACK) as $element)
-		{
+        
+		foreach (explode('/', $this::UNPACK) as $element) {
 			for ($i = 1; is_numeric($element{$i}); ++$i) {}
+            
 			$dataType = substr($element, 0, $i);
 			$dataName = substr($element, $i);
 			$return[$dataName] = $dataType;
 		}
+        
 		return $return;
 	}
+    
 	public function parsePackFormat()
 	{
 		$format = $this::PACK; # It does not like using $this::PACK directly.
 		$elements = array();
-		for ($i = 0, $j = 1, $k = strLen($format); $i < $k; ++$i, ++$j) # i = Current Character; j = Look ahead for numbers.
-		{
+
+        for ($i = 0, $j = 1, $k = strLen($format); $i < $k; ++$i, ++$j) # i = Current Character; j = Look ahead for numbers. {
 			# Is current is string and next is no number
-			if (is_string($format{$i}) && !isset($format[$j]) || !is_numeric($format[$j]))
+			if (is_string($format{$i}) && !isset($format[$j]) || !is_numeric($format[$j])) {
 				$elements[] = $format{$i};
-			else
-			{
-				while (isset($format{$j}) && is_numeric($format{$j}))
+			} else {
+				while (isset($format{$j}) && is_numeric($format{$j})) {
 					++$j;	# Will be the last number of the current element.
+				}
 
 				$number = substr($format, $i + 1, $j - ($i + 1));
 
-				if ($format{$i} == 'a' || $format{$i} == 'A') # In these cases it's a string type where dealing with.
+				if ($format{$i} == 'a' || $format{$i} == 'A') { # In these cases it's a string type where dealing with.
 					$elements[] = $format{$i}.$number;
-				else # In these cases, we should get an array.
+				} else { # In these cases, we should get an array.
 					$elements[] = array($format{$i}, $number);
+				}
 
 				$i = $j - 1; # Movies the pointer to the end of this element.
 			}
 		}
+        
 		return $elements;
 	}
 }
@@ -280,6 +305,8 @@ define('INSIM_VERSION', 5);
 // TCP : Connect to LFS using a TCP connection, then send this packet :
 // UDP : No connection required, just send this packet to LFS :
 
+#What is the long name of this class?
+
 class IS_ISI extends Struct // InSim Init - packet to initialise the InSim system
 {
 	const PACK = 'CCCxvvxCva16a16';
@@ -288,12 +315,12 @@ class IS_ISI extends Struct // InSim Init - packet to initialise the InSim syste
 	protected $Size = 44;				# 44
 	protected $Type = ISP_ISI;			# always ISP_ISI
 	public $ReqI;						# If non-zero LFS will send an IS_VER packet
-	protected $Zero = NULL;				# 0
+	protected $Zero = null;				# 0
 
 	public $UDPPort;					# Port for UDP replies from LFS (0 to 65535)
 	public $Flags;						# Bit flags for options (see below)
 
-	protected $Sp0 = NULL;				# 0
+	protected $Sp0 = null;				# 0
 	public $Prefix;						# Special host message prefix character
 	public $Interval;					# Time in ms between NLP or MCI (0 = none)
 
@@ -685,8 +712,8 @@ class IS_MSO extends Struct // MSg Out - system messages and user messages
 
 	protected $Size = 136;				# 136
 	protected $Type = ISP_MSO;			# ISP_MSO
-	protected $ReqI = NULL;			# 0
-	protected $Zero = NULL;
+	protected $ReqI = null;			# 0
+	protected $Zero = null;
 
 	public $UCID = 0;					# connection's unique id (0 = host)
 	public $PLID = 0;					# player's unique id (if zero, use UCID)
@@ -715,12 +742,12 @@ class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 	protected $Size = 72;				# 72
 	protected $Type = ISP_III;			# ISP_III
 	protected $ReqI = 0;				# 0
-	protected $Zero = NULL;
+	protected $Zero = null;
 
 	public $UCID = 0;					# connection's unique id (0 = host)
 	public $PLID = 0;					# player's unique id (if zero, use UCID)
-	protected $Sp2 = NULL;
-	protected $Sp3 = NULL;
+	protected $Sp2 = null;
+	protected $Sp3 = null;
 
 	public $Msg;
 }; function IS_III() { return new IS_III; }
@@ -733,7 +760,7 @@ class IS_ACR extends Struct // Admin Command Report - any user typed an admin co
 	protected $Size = 72;				# 72
 	protected $Type = ISP_ACR;			# ISP_ACR
 	protected $ReqI = 0;				# 0
-	protected $Zero = NULL;
+	protected $Zero = null;
 
 	public $UCID;						# connection's unique id (0 = host)
 	public $Admin;						# set if user is an admin
@@ -754,18 +781,20 @@ class IS_MST extends Struct		// MSg Type - send to LFS to type message or comman
 	protected $Size = 68;				# 68
 	protected $Type = ISP_MST;			# ISP_MST
 	protected $ReqI = 0;				# 0
-	protected $Zero = NULL;
+	protected $Zero = null;
 
 	public $Msg;						# last byte must be zero
 
 	public function pack()
 	{
-		if (strLen($this->Msg) > 63)
-		{
-			foreach(explode("\n", wordwrap($this->Msg, 63, "\n", TRUE)) as $Msg)
+		if (strLen($this->Msg) > 63) {
+			foreach(explode("\n", wordwrap($this->Msg, 63, "\n", true)) as $Msg) {
 				$this->Msg($Msg)->Send();
+			}
+            
 			return;
 		}
+        
 		return parent::pack();
 	}
 }; function IS_MST() { return new IS_MST; }
@@ -778,17 +807,18 @@ class IS_MSX extends Struct		// MSg eXtended - like MST but longer (not for comm
 	protected $Size = 100;				# 100
 	protected $Type = ISP_MSX;			# ISP_MSX
 	protected $ReqI = 0;				# 0
-	protected $Zero = NULL;
+	protected $Zero = null;
 
 	public $Msg;						# last byte must be zero
 
 	public function pack()
 	{
-		if (strLen($this->Msg) > 95)
-		{
-			foreach(explode("\n", wordwrap($this->Msg, 95, "\n", TRUE)) as $Msg)
+		if (strLen($this->Msg) > 95) {
+			foreach(explode("\n", wordwrap($this->Msg, 95, "\n", true)) as $Msg) {
 				$this->Msg($Msg)->Send();
+			}
 		}
+        
 		return parent::pack();
 	}
 }; function IS_MSX() { return new IS_MSX; }
@@ -807,11 +837,12 @@ class IS_MSL extends Struct		// MSg Local - message to appear on local computer 
 
 	public function pack()
 	{
-		if (strLen($this->Msg) > 127)
-		{
-			foreach(explode("\n", wordwrap($this->Msg, 127, "\n", TRUE)) as $Msg)
+		if (strLen($this->Msg) > 127){
+			foreach(explode("\n", wordwrap($this->Msg, 127, "\n", true)) as $Msg) {
 				$this->Msg($Msg)->Send();
+			}
 		}
+        
 		return parent::pack();
 	}
 }; function IS_MSL() { return new IS_MSL; }
@@ -824,22 +855,23 @@ class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a conne
 	protected $Size = 136;				# 8 + TEXT_SIZE (TEXT_SIZE = 4, 8, 12... 128)
 	protected $Type = ISP_MTC;			# ISP_MTC
 	protected $ReqI = 0;				# 0
-	public $Sound = NULL;				# sound effect (see Message Sounds below)
+	public $Sound = null;				# sound effect (see Message Sounds below)
 
 	public $UCID = 0;					# connection's unique id (0 = host / 255 = all)
 	public $PLID = 0;					# player's unique id (if zero, use UCID)
-	protected $Sp2 = NULL;
-	protected $Sp3 = NULL;
+	protected $Sp2 = null;
+	protected $Sp3 = null;
 
 	public $Text;						# up to 128 characters of text - last byte must be zero
 
 	public function pack()
 	{
-		if (strLen($this->Text) > 127)
-		{
-			foreach(explode("\n", wordwrap($this->Text, 127, "\n", TRUE)) as $Text)
+		if (strLen($this->Text) > 127) {
+			foreach(explode("\n", wordwrap($this->Text, 127, "\n", true)) as $Text) {
 				$this->Text($Text)->Send();
+			}
 		}
+        
 		return parent::pack();
 	}
 }; function IS_MTC() { return new IS_MTC; }
@@ -867,12 +899,12 @@ class IS_SCH extends Struct		// Single CHaracter
 	protected $Size = 8;				# 8
 	protected $Type = ISP_SCH;			# ISP_SCH
 	protected $ReqI = 0;				# 0
-	protected $Zero = NULL;
+	protected $Zero = null;
 
 	public $CharB;						# key to press
 	public $Flags;						# bit 0 : SHIFT / bit 1 : CTRL
-	protected $Spare2 = NULL;
-	protected $Spare3 = NULL;
+	protected $Spare2 = null;
+	protected $Spare3 = null;
 }; function IS_SCH() { return new IS_SCH; }
 
 
@@ -889,12 +921,12 @@ class IS_ISM extends Struct		// InSim Multi
 	protected $Size = 40;				# 40
 	protected $Type = ISP_ISM;			# ISP_ISM
 	protected $ReqI = 0;				# usually 0 / or if a reply : ReqI as received in the TINY_ISM
-	protected $Zero = NULL;
+	protected $Zero = null;
 
 	public $Host;						# 0 = guest / 1 = host
-	protected $Sp1 = NULL;
-	protected $Sp2 = NULL;
-	protected $Sp3 = NULL;
+	protected $Sp1 = null;
+	protected $Sp2 = null;
+	protected $Sp3 = null;
 
 	public $HName;						# the name of the host joined or started
 }; function IS_ISM() { return new IS_ISM; }
@@ -978,7 +1010,7 @@ class IS_PLC extends Struct // PLayer Cars
 	protected $Size = 12;				# 12
 	protected $Type = ISP_PLC;			# ISP_PLC
 	public $ReqI;						# 0
-	protected $Zero = NULL;
+	protected $Zero = null;
 
 	public $UCID;						# connection's unique id (0 = host / 255 = all)
 	protected $Sp1;
@@ -1049,8 +1081,8 @@ class IS_RST extends Struct // Race STart
 
 	protected $Size = 28;				# 28
 	protected $Type = ISP_RST;			# ISP_RST
-	public $ReqI = TRUE;				# 0 unless this is a reply to an TINY_RST request
-	protected $Zero = NULL;
+	public $ReqI = true;				# 0 unless this is a reply to an TINY_RST request
+	protected $Zero = null;
 
 	public $RaceLaps;					# 0 if qualifying
 	public $QualMins;					# 0 if race
@@ -1091,7 +1123,7 @@ class IS_NCN extends Struct // New ConN
 
 	protected $Size = 56;				# 56
 	protected $Type = ISP_NCN;			# ISP_NCN
-	public $ReqI = NULL;				# 0 unless this is a reply to a TINY_NCN request
+	public $ReqI = null;				# 0 unless this is a reply to a TINY_NCN request
 	public $UCID;						# new connection's unique id (0 = host)
 
 	public $UName;						# username
@@ -1126,7 +1158,7 @@ class IS_CPR extends Struct // Conn Player Rename
 
 	protected $Size = 36;				# 36
 	protected $Type = ISP_CPR;			# ISP_CPR
-	public $ReqI = NULL;				# 0
+	public $ReqI = null;				# 0
 	public $UCID;						# unique id of the connection
 
 	public $PName;						# new name
@@ -1170,14 +1202,12 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
 
-		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
-		{
+		for ($Tyre = 1; $Tyre <= 4; ++$Tyre) {
 			$pkClass['Tyres'][] = $pkClass["Tyres{$Tyre}"];
 			unset($pkClass["Tyres{$Tyre}"]);
 		}
 
-		foreach ($pkClass as $property => $value)
-		{
+		foreach ($pkClass as $property => $value) {
 			$this->$property = $value;
 		}
 
@@ -1208,7 +1238,7 @@ class IS_PLP extends Struct // PLayer Pits (go to settings - stays in player lis
 
 	protected $Size = 4;				# 4
 	protected $Type = ISP_PLP;			# ISP_PLP
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $PLID;						# player's unique id
 }; function IS_PLP() { return new IS_PLP; }
 
@@ -1219,7 +1249,7 @@ class IS_PLL extends Struct // PLayer Leave race (spectate - removed from player
 
 	protected $Size = 4;				# 4
 	protected $Type = ISP_PLL;			# ISP_PLL
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $PLID;						# player's unique id
 }; function IS_PLL() { return new IS_PLL; }
 
@@ -1230,7 +1260,7 @@ class IS_CRS extends Struct // Car ReSet
 
 	protected $Size = 4;				# 4
 	protected $Type = ISP_CRS;			# ISP_CRS
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $PLID;						# player's unique id
 }; function IS_CRS() { return new IS_CRS; }
 
@@ -1263,7 +1293,7 @@ class IS_SPX extends Struct // SPlit X time
 
 	protected $Size = 16;				# 16
 	protected $Type = ISP_SPX;			# ISP_SPX
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $PLID;						# player's unique id
 
 	public $STime;						# split time (ms)
@@ -1282,7 +1312,7 @@ class IS_PIT extends Struct // PIT stop (stop at pit garage)
 
 	protected $Size = 24;				# 24
 	protected $Type = ISP_PIT;			# ISP_PIT
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $PLID;						# player's unique id
 
 	public $LapsDone;					# laps completed
@@ -1302,8 +1332,7 @@ class IS_PIT extends Struct // PIT stop (stop at pit garage)
 	{
 		parent::unpack($rawPacket);
 
-		for ($Tyre = 1; $Tyre <= 4; ++$Tyre)
-		{
+		for ($Tyre = 1; $Tyre <= 4; ++$Tyre) {
 			$Property = "Tyres{$Tyre}";
 			$this->Tyres[] = $this->$Property;
 			unset($this->$Property);
@@ -1508,12 +1537,12 @@ class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 	public function unpack($rawPacket)
 	{
 		$pkClass = unpack($this::UNPACK, $rawPacket);
-
 		$pkClass['PLID'] = array();
-		for ($Pos = 1; $Pos <= 32; ++$Pos)
-		{
-			if ($pkClass["PLID{$Pos}"] != 0)
+        
+		for ($Pos = 1; $Pos <= 32; ++$Pos) {
+			if ($pkClass["PLID{$Pos}"] != 0) {
 				$pkClass['PLID'][$Pos] = $pkClass["PLID{$Pos}"];
+			}
 			unset($pkClass["PLID{$Pos}"]);
 		}
 
@@ -1783,8 +1812,7 @@ class IS_NLP extends Struct // Node and Lap Packet - variable size
 	{
 		parent::unpack($rawPacket);
 
-		for ($i = 0; $i < $this->NumP; $i++)
-		{
+		for ($i = 0; $i < $this->NumP; $i++) {
 			$this->Info[$i] = new NodeLap(substr($rawPacket, 4 + ($i * 6), 6));
 		}
 
@@ -1843,8 +1871,7 @@ class IS_MCI extends Struct // Multi Car Info - if more than 8 in race then more
 	{
 		parent::unpack($rawPacket);
 
-		for ($i = 0; $i < $this->NumC; $i++)
-		{
+		for ($i = 0; $i < $this->NumC; $i++) {
 			$this->Info[$i] = new CompCar(substr($rawPacket, 4 + ($i * 28), 28));
 		}
 
@@ -1965,7 +1992,7 @@ class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an un
 
 	protected $Size = 24;				# 24
 	protected $Type = ISP_OBH;			# ISP_OBH
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $PLID;						# player's unique id
 
 	public $SpClose;					# high 4 bits : reserved / low 12 bits : closing speed (10 = 1 m/s)
@@ -2008,7 +2035,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 
 	protected $Size = 16;				# 16
 	protected $Type = ISP_HLV;			# ISP_HLV
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $PLID;						# player's unique id
 
 	public $HLVC;						# 0 : ground / 1 : wall / 4 : speeding
@@ -2057,7 +2084,7 @@ class IS_AXM extends Struct // AutoX Multiple objects - variable size
 
 	protected $Size;					# 8 + NumO * 8
 	protected $Type = ISP_AXM;			# ISP_AXM
-	protected $ReqI = NULL;				# 0
+	protected $ReqI = null;				# 0
 	public $NumO;						# number of objects in this packet
 
 	public $UCID = 0;					# unique id of the connection that sent the packet
@@ -2073,8 +2100,10 @@ class IS_AXM extends Struct // AutoX Multiple objects - variable size
 		$this->Size = 8 + ($this->NumO * 8);
 
 		$Info = '';
-		foreach ($this->Info as $ObjectInfo)
+        
+		foreach ($this->Info as $ObjectInfo) {
 			$Info .= $ObjectInfo->pack();
+		}
 
 		return parent::pack() . $Info;
 	}
@@ -2083,8 +2112,7 @@ class IS_AXM extends Struct // AutoX Multiple objects - variable size
 	{
 		parent::unpack($rawPacket);
 
-		for ($i = 0; $i < $this->NumO; $i++)
-		{
+		for ($i = 0; $i < $this->NumO; $i++) {
 			$this->Info[$i] = new ObjectInfo(substr($rawPacket, 8 + ($i * 8), 8));
 		}
 
@@ -2474,9 +2502,9 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
 	public $UCID = 255;					# connection to display the button (0 = local / 255 = all)
 
 	public $ClickID = 0;				# button ID (0 to 239)
-	public $Inst = NULL;				# some extra flags - see below
-	public $BStyle = NULL;				# button style flags - see below
-	public $TypeIn = NULL;				# max chars to type in - see below
+	public $Inst = null;				# some extra flags - see below
+	public $BStyle = null;				# button style flags - see below
+	public $TypeIn = null;				# max chars to type in - see below
 
 	public $L = IS_X_MIN;				# left   : 0 - 200
 	public $T = IS_Y_MIN;				# top    : 0 - 200
@@ -2487,8 +2515,10 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
 
 	public function pack()
 	{
-		if (strLen($this->Text) > 239)
+		if (strLen($this->Text) > 239) {
 			$this->Text = subStr($this->Msg, 0, 239);
+		}
+        
 		return parent::pack();
 	}
 }; function IS_BTN() { return new IS_BTN; }
@@ -2637,8 +2667,9 @@ class OutSimPack extends Struct
 	{
 		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
-		foreach (unpack($unpack, $rawPacket) as $property => $value)
+		foreach (unpack($unpack, $rawPacket) as $property => $value) {
 			$this->$property = $value;
+		}
 
 		return $this;
 	}
@@ -2701,8 +2732,9 @@ class OutGaugePack extends Struct
 	{
 		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
-		foreach (unpack($unpack, $rawPacket) as $property => $value)
+		foreach (unpack($unpack, $rawPacket) as $property => $value) {
 			$this->$property = $value;
+		}
 
 		return $this;
 	}
@@ -2827,8 +2859,7 @@ class IR_HOS extends Struct // Hostlist (hosts connected to the Relay)
 	{
 		parent::unpack($rawPacket);
 
-		for ($i = 0; $i < $this->NumHosts; $i++)
-		{
+		for ($i = 0; $i < $this->NumHosts; $i++) {
 			$this->Info[$i] = new HInfo(substr($rawPacket, 4 + ($i * 40), 40));
 		}
 
@@ -2945,9 +2976,8 @@ define('OGP',	-2);// -2 - info			: OutGauge - EXTERNAL DASHBOARD SUPPORT
 $SPECIAL = array(OSP => 'OutSimPack', OGP => 'OutGaugePack');
 /* Packet Handler Help */
 $TYPEs = $ISP + $IRP;
-foreach ($TYPEs as $Type => $Name)
+foreach ($TYPEs as $Type => $Name) {
 	$TYPEs[$Type] = substr_replace($Name, '', 2, 1);
+}
 $TYPEs = $SPECIAL + $TYPEs;
 /* End of PRISM PACKET FOOTER */
-
-?>

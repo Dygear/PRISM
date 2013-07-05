@@ -9,5 +9,3 @@ class PlayerHandler extends HostHandler
 {
 
 }
-
-?>
