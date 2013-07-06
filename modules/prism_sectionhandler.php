@@ -11,5 +11,3 @@ abstract class SectionHandler extends IniLoader
 {
 	abstract public function initialise();
 }
-
-?>
