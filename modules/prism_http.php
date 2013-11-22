@@ -258,7 +258,7 @@ ININOTES;
 		$logPath = pathinfo($this->logFile);
 		if (!isset($logPath['filename']) || $logPath['filename'] == '' || !file_exists($logPath['dirname']))
 		{
-			console('The path to your log folder does not exist : '.$logPath);
+			console('The path to your log folder does not exist : '.$logPath['dirname']);
 			return false;
 		}
 		else if (is_dir($this->logFile))
