@@ -177,18 +177,23 @@ abstract class Struct
 		$format = $this::PACK; # It does not like using $this::PACK directly.
 		$elements = array();
 
-        for ($i = 0, $j = 1, $k = strLen($format); $i < $k; ++$i, ++$j) # i = Current Character; j = Look ahead for numbers. {
-			# Is current is string and next is no number
-			if (is_string($format{$i}) && !isset($format[$j]) || !is_numeric($format[$j])) {
+		for ($i = 0, $j = 1, $k = strLen($format); $i < $k; ++$i, ++$j)
+		{	# i = Current Character; j = Look ahead for numbers.
+			if (is_string($format{$i}) && !isset($format[$j]) || !is_numeric($format[$j]))
+			{
 				$elements[] = $format{$i};
-			} else {
-				while (isset($format{$j}) && is_numeric($format{$j})) {
+			}
+			else
+			{
+				while (isset($format{$j}) && is_numeric($format{$j}))
+				{
 					++$j;	# Will be the last number of the current element.
 				}
 
 				$number = substr($format, $i + 1, $j - ($i + 1));
 
-				if ($format{$i} == 'a' || $format{$i} == 'A') { # In these cases it's a string type where dealing with.
+				if ($format{$i} == 'a' || $format{$i} == 'A')
+				{	# In these cases it's a string type where dealing with.
 					$elements[] = $format{$i}.$number;
 				} else { # In these cases, we should get an array.
 					$elements[] = array($format{$i}, $number);
