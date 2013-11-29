@@ -38,10 +38,12 @@ class LVS extends Plugins
 
 		$path = ROOTPATH . $this::PATH . $this->Track . '.pth';
 
+		console($path);
+
 		if (!file_exists($path))
 			return $this->pth = NULL; # We don't have a PTH file for this track.
 
-		$this->pth = new pth($path);
+		$this->pth = new PTH($path);
 
 		console("Loaded {$this->Track}.pth");
 
@@ -50,6 +52,9 @@ class LVS extends Plugins
 
 	public function onLoadLayout(IS_AXI $AXI)
 	{
+		if ($AXI->LName == '')
+			return;
+
 		$trackType = substr($this->Track, -1);
 
 		if ($trackType == 'X' OR $trackType == 'Y')
@@ -60,7 +65,7 @@ class LVS extends Plugins
 		if (!file_exists($path))
 			return $this->pth = NULL; # We don't have a PTH file for this track.
 
-		$this->pth = new pth($path);
+		$this->pth = new PTH($path);
 
 		console("Loaded {$this->Track}.pth");
 
