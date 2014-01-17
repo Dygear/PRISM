@@ -1577,25 +1577,25 @@ $PITLANE = array(PITLANE_EXIT => 'PITLANE_EXIT', PITLANE_ENTER => 'PITLANE_ENTER
 
 // Pit Work Flags
 
-define('PSE_NOTHING',	(1 << 1));	// bit 0 (1)
-define('PSE_STOP',		(1 << 2));	// bit 1 (2)
-define('PSE_FR_DAM',	(1 << 3));	// bit 2 (4)
-define('PSE_FR_WHL',	(1 << 4));	// etc...
-define('PSE_LE_FR_DAM',	(1 << 6));
-define('PSE_LE_FR_WHL',	(1 << 7));
-define('PSE_RI_FR_DAM', (1 << 8));
-define('PSE_RI_FR_WHL',	(1 << 9));
-define('PSE_RE_DAM',	(1 << 10));
-define('PSE_RE_WHL',	(1 << 11));
-define('PSE_LE_RE_DAM',	(1 << 12));
-define('PSE_LE_RE_WHL',	(1 << 13));
-define('PSE_RI_RE_DAM',	(1 << 14));
-define('PSE_RI_RE_WHL',	(1 << 15));
-define('PSE_BODY_MINOR',(1 << 16));
-define('PSE_BODY_MAJOR',(1 << 17));
-define('PSE_SETUP',		(1 << 18));
-define('PSE_REFUEL',	(1 << 19));
-define('PSE_NUM',		20);
+define('PSE_NOTHING',		(1 << 0)); // bit 0 (1)
+define('PSE_STOP',			(1 << 1)); // bit 1 (2)
+define('PSE_FR_DAM',		(1 << 2)); // bit 2 (4)
+define('PSE_FR_WHL',		(1 << 3)); // etc...
+define('PSE_LE_FR_DAM',		(1 << 4));
+define('PSE_LE_FR_WHL',		(1 << 5));
+define('PSE_RI_FR_DAM',		(1 << 6));
+define('PSE_RI_FR_WHL',		(1 << 7));
+define('PSE_RE_DAM',		(1 << 8));
+define('PSE_RE_WHL',		(1 << 9));
+define('PSE_LE_RE_DAM',		(1 << 10));
+define('PSE_LE_RE_WHL',		(1 << 11));
+define('PSE_RI_RE_DAM',		(1 << 12));
+define('PSE_RI_RE_WHL',		(1 << 13));
+define('PSE_BODY_MINOR',	(1 << 14));
+define('PSE_BODY_MAJOR',	(1 << 15));
+define('PSE_SETUP',			(1 << 16));
+define('PSE_REFUEL',		(1 << 17));
+define('PSE_NUM',			20);
 $PSE = array(PSE_NOTHING => 'PSE_NOTHING', PSE_STOP => 'PSE_STOP', PSE_FR_DAM => 'PSE_FR_DAM', PSE_FR_WHL => 'PSE_FR_WHL', PSE_LE_FR_DAM => 'PSE_LE_FR_DAM', PSE_LE_FR_WHL => 'PSE_LE_FR_WHL', PSE_RI_FR_DAM => 'PSE_RI_FR_DAM', PSE_RI_FR_WHL => 'PSE_RI_FR_WHL', PSE_RE_DAM => 'PSE_RE_DAM', PSE_RE_WHL => 'PSE_RE_WHL', PSE_LE_RE_DAM => 'PSE_LE_RE_DAM', PSE_LE_RE_WHL => 'PSE_LE_RE_WHL', PSE_RI_RE_DAM => 'PSE_RI_RE_DAM', PSE_RI_RE_WHL => 'PSE_RI_RE_WHL', PSE_BODY_MINOR => 'PSE_BODY_MINOR', PSE_BODY_MAJOR => 'PSE_BODY_MAJOR', PSE_SETUP => 'PSE_SETUP', PSE_REFUEL => 'PSE_REFUEL', PSE_NUM => 'PSE_NUM');
 
 // View identifiers
