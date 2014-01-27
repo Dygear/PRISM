@@ -68,7 +68,7 @@ class Timers
 					unset($this->timers["$name"]);
 					$this->createTimer($timer->getCallback(), $timer->getInterval(), $timer->getFlags(), $timer->getArgs());
 				} else {
-					$timer->setTimeStamp(microtime(TRUE) + (float)$timer->getInterval());
+					$timer->setTimeStamp($timerTS + (float)$timer->getInterval());
 				}
 				
 			}
