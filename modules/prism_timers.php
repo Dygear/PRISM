@@ -9,7 +9,7 @@ class Timers
 	{
 		# Uniqe Timer ID based on time in microseconds prepended by a random number
 		$name = uniqid(mt_rand(), true);
-		$this->createNamedTimer($name, $this, $callback, $interval, $flags, $args);
+		$this->createNamedTimer($name, $callback, $interval, $flags, $args);
 	}
 
 	// Create a timer with a name so that it can be removed on demand
