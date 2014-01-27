@@ -119,8 +119,8 @@ abstract class Struct
 	{
 		foreach (unpack($this::UNPACK, $rawPacket) as $property => $value) {
 			if(is_string($value)) {
-                $value = trim($value);
-            }
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -1217,8 +1217,8 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
 
 		foreach ($pkClass as $property => $value) {
 			if(is_string($value)) {
-                $value = trim($value);
-            }
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -1559,8 +1559,8 @@ class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 
 		foreach ($pkClass as $property => $value) {
 			if(is_string($value)) {
-                $value = trim($value);
-            }
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -2682,8 +2682,8 @@ class OutSimPack extends Struct
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value) {
 			if(is_string($value)) {
-                $value = trim($value);
-            }
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -2750,8 +2750,8 @@ class OutGaugePack extends Struct
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value) {
 			if(is_string($value)) {
-                $value = trim($value);
-            }
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
