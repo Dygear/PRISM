@@ -118,6 +118,9 @@ abstract class Struct
 	public function unpack($rawPacket)
 	{
 		foreach (unpack($this::UNPACK, $rawPacket) as $property => $value) {
+			if(is_string($value)) {
+                $value = trim($value);
+            }
 			$this->$property = $value;
 		}
 
@@ -1213,6 +1216,9 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
 		}
 
 		foreach ($pkClass as $property => $value) {
+			if(is_string($value)) {
+                $value = trim($value);
+            }
 			$this->$property = $value;
 		}
 
@@ -1551,8 +1557,10 @@ class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 			unset($pkClass["PLID{$Pos}"]);
 		}
 
-		foreach ($pkClass as $property => $value)
-		{
+		foreach ($pkClass as $property => $value) {
+			if(is_string($value)) {
+                $value = trim($value);
+            }
 			$this->$property = $value;
 		}
 
@@ -2673,6 +2681,9 @@ class OutSimPack extends Struct
 		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value) {
+			if(is_string($value)) {
+                $value = trim($value);
+            }
 			$this->$property = $value;
 		}
 
@@ -2738,6 +2749,9 @@ class OutGaugePack extends Struct
 		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value) {
+			if(is_string($value)) {
+                $value = trim($value);
+            }
 			$this->$property = $value;
 		}
 
