@@ -1025,26 +1025,27 @@ class IS_PLC extends Struct // PLayer Cars
 	public $Cars;						# allowed cars - see below
 }; function IS_PLC() { return new IS_PLC; }
 
-// XF GTI			-       1
-// XR GT			-       2
-// XR GT TURBO		-       4
-// RB4 GT			-       8
-// FXO TURBO		-    0x10
-// LX4				-    0x20
-// LX6				-    0x40
-// MRT5				-    0x80
-// UF 1000			-   0x100
-// RACEABOUT		-   0x200
-// FZ50				-   0x400
-// FORMULA XR		-   0x800
-// XF GTR			-  0x1000
-// UF GTR			-  0x2000
-// FORMULA V8		-  0x4000
-// FXO GTR			-  0x8000
-// XR GTR			- 0x10000
-// FZ50 GTR			- 0x20000
-// BMW SAUBER F1.06	- 0x40000
-// FORMULA BMW FB02	- 0x80000
+define('PLC_UF1',	'0x100');
+define('PLC_XFG',	'1');
+define('PLC_XRG',	'2');
+define('PLC_LX4',	'0x20');
+define('PLC_LX6',	'0x40');
+define('PLC_RB4',	'8');
+define('PLC_FXO',	 '0x10');
+define('PLC_XRT',	'4');
+define('PLC_RAC',	'0x200');
+define('PLC_FZ5',	'0x400');
+define('PLC_VWS',	'0');
+define('PLC_UFR',	'0x2000');
+define('PLC_XFR',	'0x1000');
+define('PLC_FXR',	'0x8000');
+define('PLC_XRR',	'0x10000');
+define('PLC_FZR',	'0x20000');
+define('PLC_MRT',	'0x80');
+define('PLC_FBM',	'0x80000');
+define('PLC_FOX',	'0x800');
+define('PLC_FO8',	'0x4000');
+define('PLC_BF1',	'0x40000');
 
 
 // RACE TRACKING
