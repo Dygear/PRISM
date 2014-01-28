@@ -255,7 +255,8 @@ abstract class Plugins extends Timers
 		}
 
 		global $PRISM;
-		$adminInfo = $PRISM->admins->getAdminInfo($this->getClientByUCID($UCID)->UName);
+		$UName = $this->getClientByUCID($UCID)->UName;
+		$adminInfo = $PRISM->admins->getAdminInfo($UName);
 		return ($cmd['accessLevel'] & $adminInfo['accessFlags']) ? true : false;
 	}
     
