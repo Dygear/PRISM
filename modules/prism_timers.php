@@ -7,30 +7,16 @@ class Timers
 	// Registers a callback method.
 	protected function createTimer($callback, $interval = 1.0, $flags = Timer::CLOSE, $args = array())
 	{
-		# This will be the time when this timer is to trigger
-		$timestamp = microtime(TRUE) + $interval;
-		
-		# Check to make sure that another timer with same timestamp doesn't exist
-		if (isset($this->timers["$timestamp"]))
-		{
-			$this->createTimer($callback, $interval, $flags, $args);
-		}
-		else
-		{
-			# Adds our timer to the array.
-			$this->timers["$timestamp"] = new Timer(null, $this, $callback, $interval, $flags, $args);
-		}
-	}  
+		# Uniqe Timer ID based on time in microseconds prepended by a random number
+		$name = uniqid(mt_rand(), true);
+		$this->createNamedTimer($name, $callback, $interval, $flags, $args);
+	}
+
+	// Create a timer with a name so that it can be removed on demand
 	protected function createNamedTimer($name, $callback, $interval = 1.0, $flags = Timer::CLOSE, $args = array())
 	{
 		# Adds our timer to the array.
-		$this->timers["$name"] = new Timer($name, $this, $callback, $interval, $flags, $args);
-	}
-
-	// Sort the array to make sure the next timer (smallest float) is on the top of the list.
-	protected function sortTimers()
-	{
-		return ksort($this->timers);
+		$this->timers["$name"] = new Timer($this, $callback, $interval, $flags, $args);
 	}
 
 	// UnRegisters a callback method.
@@ -45,8 +31,6 @@ class Timers
 	{
 		if (empty($this->timers))
 			return $this->timeout = NULL; # As we don't have any timers to check, we skip the rest of this function.
-
-		$this->sortTimers();
 
 		$timeNow = microtime(TRUE);
 		$timestamp = null;
@@ -64,13 +48,12 @@ class Timers
 
 			# Here we execute expired timers.
 			if ($timer->execute() != PLUGIN_STOP AND $timer->getFlags() != Timer::CLOSE) {
-				if($timer->getName() == null) {
-					unset($this->timers["$name"]);
-					$this->createTimer($timer->getCallback(), $timer->getInterval(), $timer->getFlags(), $timer->getArgs());
-				} else {
-					$timer->setTimeStamp($timerTS + (float)$timer->getInterval());
-				}
-				
+				# Update Timer TimeStamp
+				$timer->setTimeStamp($timerTS + (float)$timer->getInterval());
+			}
+			else
+			{
+				unset($this->timers["$name"]);
 			}
 		}
 
@@ -89,7 +72,6 @@ class Timer
 	const REPEAT = 1; /** Timer will repeat until it returns PLUGIN_STOP. */
 	const FOREVER = -1; /** Timer will repeat forever, or until the callback function returns PLUGIN_STOP */
 
-	protected $name;
 	protected $parent;
 	protected $args;
 	protected $timestamp;
@@ -97,9 +79,8 @@ class Timer
 	protected $flags;
 	protected $interval;
 
-	public function __construct($name, &$parent, $callback, $interval = 1.0, $flags = Timer::CLOSE, $args = array())
+	public function __construct(&$parent, $callback, $interval = 1.0, $flags = Timer::CLOSE, $args = array())
 	{
-		$this->name = $name;
 		$this->parent =& $parent;
 		$this->setCallback($callback);
 		$this->setTimeStamp(microtime(TRUE) + (float)$interval);
@@ -107,8 +88,6 @@ class Timer
 		$this->setFlags($flags);
 		$this->setArgs($args);
 	}
-
-	public function getName()			{ return $this->name; }
 
 	public function setArgs(array $args)	{ $this->args = $args; }
 	public function getArgs()				{ return $this->args; }
