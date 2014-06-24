@@ -43,7 +43,7 @@ class Timers
 				continue; # If we are not past this timestamp, we go no further for this timer.
 			
 			# decide next timeout timestamp
-			if ($timestamp = null || $timerTS > $timestamp)
+			if ($timestamp == null || $timerTS > $timestamp)
 				$timestamp = $timerTS;
 
 			# Here we execute expired timers.
