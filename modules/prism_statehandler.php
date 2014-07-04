@@ -410,9 +410,9 @@ class ClientHandler extends PropertyMaster
 	public function onTakeOverCar(IS_TOC $TOC)
 	{
 		# Makes a copy of the orginal, and adds it to the new client.
-		$this->parent->clients[$TOC->NewUCID]->players[$TOC->PLID] &= $this->parent->players[$TOC->PLID];
+		$this->parent->clients[$TOC->NewUCID]->players[$TOC->PLID] = $this->parent->clients[$TOC->OldUCID]->players[$TOC->PLID];
 		# Removes the copy from this class, but should not garbage collect it, because it's copyied in the new class.
-		unset($this->players[$TOC->PLID]);
+		unset($this->parent->clients[$TOC->OldUCID]->players[$TOC->PLID]);
 	}
 	
 	// Is
