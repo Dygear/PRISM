@@ -1051,6 +1051,48 @@ define('PLC_FO8',	'0x4000');
 define('PLC_BF1',	'0x40000');
 
 
+// HANDICAPS
+// =========
+
+// You can send a packet to add mass and restrict the intake on each car model
+// The same restriction applies to all drivers using a particular car model
+// This can be useful for creating multi class hosts
+
+class CarHCP extends Struct // Car handicaps in 2 bytes - there is an array of these in the HCP (below)
+{
+	const PACK = 'CC';
+	const UNPACK = 'CH_Mass/CH_TRes';
+
+	public	$H_Mass;					# 0 to 200 - added mass (kg)
+	public	$H_TRes;					# 0 to  50 - intake restriction
+};
+
+
+class IS_HCP extends Struct // HandiCaPs
+{
+	const PACK = 'CCCx';
+	const UNPACK = 'CSize/CType/CReqI/CZero';
+
+	protected $Size = 68;				# 68
+	protected $Type = ISP_HCP;			# ISP_HCP
+	public $ReqI;						# 0
+	protected $Zero = null;
+
+	public $Info = array();				# H_Mass and H_TRes for each car : XF GTI = 0 / XR GT = 1 etc
+
+	public function unpack($rawPacket)
+	{
+		parent::unpack($rawPacket);
+
+		for ($i = 0; $i < 32; ++$i) {
+			$this->Info[$i] = new CarHCP(substr($rawPacket, 4 + ($i * 2), 2));
+		}
+
+		return $this;
+	}
+}; function IS_HCP() { return new IS_HCP; }
+
+
 // RACE TRACKING
 // =============
 
