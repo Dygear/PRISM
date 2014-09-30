@@ -51,10 +51,12 @@ $PRISM->start();
  * @author morpha (Constantin Köpplinger) <morpha@xigmo.net>
  * @author Victor (Victor van Vlaardingen) <vic@lfs.net>
  * @author GeForz (Kai Lochbaum)
+ * @author T3charmy (Macgyver Hoferkamp)
+ * @author zenware (Jay Looney)
 */
 class PHPInSimMod
 {
-    const VERSION = '0.4.4';
+    const VERSION = '0.4.5.5';
     const ROOTPATH = ROOTPATH;
 
     /* Run Time Arrays */

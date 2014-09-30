@@ -118,6 +118,9 @@ abstract class Struct
 	public function unpack($rawPacket)
 	{
 		foreach (unpack($this::UNPACK, $rawPacket) as $property => $value) {
+			if(is_string($value)) {
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -433,7 +436,8 @@ define('ISP_HLV',	52);// 52 - info			: report incidents that would violate HLVC
 define('ISP_PLC',	53);// 53 - instruction		: player cars
 define('ISP_AXM',	54);// 54 - both ways		: autocross multiple objects
 define('ISP_ACR',	55);// 55 - info			: admin command report
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR');
+define('ISP_HCP',	56);// 56 - instruction		: car handicaps
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',	0);	//  0 - keep alive		: see "maintaining the connection"
@@ -1025,26 +1029,69 @@ class IS_PLC extends Struct // PLayer Cars
 	public $Cars;						# allowed cars - see below
 }; function IS_PLC() { return new IS_PLC; }
 
-// XF GTI			-       1
-// XR GT			-       2
-// XR GT TURBO		-       4
-// RB4 GT			-       8
-// FXO TURBO		-    0x10
-// LX4				-    0x20
-// LX6				-    0x40
-// MRT5				-    0x80
-// UF 1000			-   0x100
-// RACEABOUT		-   0x200
-// FZ50				-   0x400
-// FORMULA XR		-   0x800
-// XF GTR			-  0x1000
-// UF GTR			-  0x2000
-// FORMULA V8		-  0x4000
-// FXO GTR			-  0x8000
-// XR GTR			- 0x10000
-// FZ50 GTR			- 0x20000
-// BMW SAUBER F1.06	- 0x40000
-// FORMULA BMW FB02	- 0x80000
+define('PLC_UF1',	'0x100');
+define('PLC_XFG',	'1');
+define('PLC_XRG',	'2');
+define('PLC_LX4',	'0x20');
+define('PLC_LX6',	'0x40');
+define('PLC_RB4',	'8');
+define('PLC_FXO',	 '0x10');
+define('PLC_XRT',	'4');
+define('PLC_RAC',	'0x200');
+define('PLC_FZ5',	'0x400');
+define('PLC_VWS',	'0');
+define('PLC_UFR',	'0x2000');
+define('PLC_XFR',	'0x1000');
+define('PLC_FXR',	'0x8000');
+define('PLC_XRR',	'0x10000');
+define('PLC_FZR',	'0x20000');
+define('PLC_MRT',	'0x80');
+define('PLC_FBM',	'0x80000');
+define('PLC_FOX',	'0x800');
+define('PLC_FO8',	'0x4000');
+define('PLC_BF1',	'0x40000');
+
+
+// HANDICAPS
+// =========
+
+// You can send a packet to add mass and restrict the intake on each car model
+// The same restriction applies to all drivers using a particular car model
+// This can be useful for creating multi class hosts
+
+class CarHCP extends Struct // Car handicaps in 2 bytes - there is an array of these in the HCP (below)
+{
+	const PACK = 'CC';
+	const UNPACK = 'CH_Mass/CH_TRes';
+
+	public	$H_Mass;					# 0 to 200 - added mass (kg)
+	public	$H_TRes;					# 0 to  50 - intake restriction
+};
+
+
+class IS_HCP extends Struct // HandiCaPs
+{
+	const PACK = 'CCCx';
+	const UNPACK = 'CSize/CType/CReqI/CZero';
+
+	protected $Size = 68;				# 68
+	protected $Type = ISP_HCP;			# ISP_HCP
+	public $ReqI;						# 0
+	protected $Zero = null;
+
+	public $Info = array();				# H_Mass and H_TRes for each car : XF GTI = 0 / XR GT = 1 etc
+
+	public function unpack($rawPacket)
+	{
+		parent::unpack($rawPacket);
+
+		for ($i = 0; $i < 32; ++$i) {
+			$this->Info[$i] = new CarHCP(substr($rawPacket, 4 + ($i * 2), 2));
+		}
+
+		return $this;
+	}
+}; function IS_HCP() { return new IS_HCP; }
 
 
 // RACE TRACKING
@@ -1213,6 +1260,9 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
 		}
 
 		foreach ($pkClass as $property => $value) {
+			if(is_string($value)) {
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -1551,8 +1601,10 @@ class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 			unset($pkClass["PLID{$Pos}"]);
 		}
 
-		foreach ($pkClass as $property => $value)
-		{
+		foreach ($pkClass as $property => $value) {
+			if(is_string($value)) {
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -2673,6 +2725,9 @@ class OutSimPack extends Struct
 		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value) {
+			if(is_string($value)) {
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 
@@ -2738,6 +2793,9 @@ class OutGaugePack extends Struct
 		$unpack = (strlen($rawPacket) == self::LENGTH) ? $this::UNPACK : $this::UNPACK . '/VID';
 		
 		foreach (unpack($unpack, $rawPacket) as $property => $value) {
+			if(is_string($value)) {
+				$value = trim($value);
+			}
 			$this->$property = $value;
 		}
 

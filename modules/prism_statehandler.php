@@ -144,12 +144,7 @@ class StateHandler extends PropertyMaster
 		# Get the most about of information as fast as we can.
 		$ISP->SubT(TINY_ISM)->Send();	# Get Multiplayer Info (ISP_ISM)
 		# Get information on the clients & players, and their current race state.
-		# These are redundant because of the above request for an ISM packet.
-		# They must remain in order to avoid an error state in some plugins.
 		$ISP->SubT(TINY_SST)->Send();	# Send STate info (ISP_STA)
-		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
-		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
-		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
 		# Get information on everything else about the state.
 		$ISP->SubT(TINY_GTH)->Send();	# Get Time in Hundredths (SMALL_RTP)
 		$ISP->SubT(TINY_SCP)->Send();	# Send Camera Pos (ISP_CPP)
@@ -415,9 +410,9 @@ class ClientHandler extends PropertyMaster
 	public function onTakeOverCar(IS_TOC $TOC)
 	{
 		# Makes a copy of the orginal, and adds it to the new client.
-		$this->parent->clients[$TOC->NewUCID]->players[$TOC->PLID] &= $this->parent->players[$TOC->PLID];
+		$this->parent->clients[$TOC->NewUCID]->players[$TOC->PLID] = $this->parent->clients[$TOC->OldUCID]->players[$TOC->PLID];
 		# Removes the copy from this class, but should not garbage collect it, because it's copyied in the new class.
-		unset($this->players[$TOC->PLID]);
+		unset($this->parent->clients[$TOC->OldUCID]->players[$TOC->PLID]);
 	}
 	
 	// Is

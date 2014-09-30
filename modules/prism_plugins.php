@@ -210,13 +210,13 @@ abstract class Plugins extends Timers
 	// This is the yang to the registerSayCommand & registerLocalCommand function's Yin.
 	public function handleCmd(IS_MSO $packet)
 	{
-		if ($packet->UserType == MSO_PREFIX && $cmdString = substr($packet->Msg, $packet->TextStart + 1) && $callback = $this->getCallback($this->sayCommands, $cmdString) && $callback !== false) {
+		if ($packet->UserType == MSO_PREFIX && ($cmdString = substr($packet->Msg, $packet->TextStart + 1)) && ($callback = $this->getCallback($this->sayCommands, $cmdString)) && $callback !== false) {
 			if ($this->canUserAccessCommand($packet->UCID, $callback)) {
 				$this->$callback['method']($cmdString, $packet->UCID, $packet);
 			} else {
 				console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
 			}
-		} else if ($packet->UserType == MSO_O && $callback = $this->getCallback($this->localCommands, $packet->Msg) && $callback !== false) {
+		} else if ($packet->UserType == MSO_O && ($callback = $this->getCallback($this->localCommands, $packet->Msg)) && $callback !== false) {
 			if ($this->canUserAccessCommand($packet->UCID, $callback)) {
 				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			} else {
@@ -228,7 +228,7 @@ abstract class Plugins extends Timers
 	// This is the yang to the registerInsimCommand function's Yin.
 	public function handleInsimCmd(IS_III $packet)
 	{
-		if ($callback = $this->getCallback($this->insimCommands, $packet->Msg) && $callback !== false) {
+		if (($callback = $this->getCallback($this->insimCommands, $packet->Msg)) && $callback !== false) {
 			if ($this->canUserAccessCommand($packet->UCID, $callback)) {
 				$this->$callback['method']($packet->Msg, $packet->UCID, $packet);
 			} else {
@@ -240,7 +240,7 @@ abstract class Plugins extends Timers
 	// This is the yang to the registerConsoleCommand function's Yin.
 	public function handleConsoleCmd($string)
 	{
-		if ($callback = $this->getCallback($this->consoleCommands, $string) && $callback !== false) {
+		if (($callback = $this->getCallback($this->consoleCommands, $string)) && $callback !== false) {
 			$this->$callback['method']($string, null);
 		}
 	}
@@ -255,7 +255,8 @@ abstract class Plugins extends Timers
 		}
 
 		global $PRISM;
-		$adminInfo = $PRISM->admins->getAdminInfo($this->getClientByUCID($UCID)->UName);
+		$UName = $this->getClientByUCID($UCID)->UName;
+		$adminInfo = $PRISM->admins->getAdminInfo($UName);
 		return ($cmd['accessLevel'] & $adminInfo['accessFlags']) ? true : false;
 	}
     
