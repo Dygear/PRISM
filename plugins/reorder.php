@@ -41,7 +41,7 @@ class reorder extends Plugins
 		$this->reorder = FALSE;	# As we are copying LFS's REO state, we don't need to send this packet on TINY_VTA packet.
 
 		foreach ($REO->PLID as $Pos => $PLID)
-			IS_MTC()->Text(sprintf('Pos: %02d | PLID: %02d | UName: %24s | PName: %24s', $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName))->Send();
+			IS_MTC()->Text(sprintf('Pos: %02d | PLID: %02d | UName: %s | PName: %s', $Pos, $PLID, $this->getClientByPLID($PLID)->UName, $this->getPlayerByPLID($PLID)->PName))->Send();
 
 		$this->IS_REO = $REO; # Updates our list.
 

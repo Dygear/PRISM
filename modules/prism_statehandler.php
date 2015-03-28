@@ -145,6 +145,9 @@ class StateHandler extends PropertyMaster
 		$ISP->SubT(TINY_ISM)->Send();	# Get Multiplayer Info (ISP_ISM)
 		# Get information on the clients & players, and their current race state.
 		$ISP->SubT(TINY_SST)->Send();	# Send STate info (ISP_STA)
+		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
+		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
+		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
 		# Get information on everything else about the state.
 		$ISP->SubT(TINY_GTH)->Send();	# Get Time in Hundredths (SMALL_RTP)
 		$ISP->SubT(TINY_SCP)->Send();	# Send Camera Pos (ISP_CPP)
@@ -256,14 +259,24 @@ class StateHandler extends PropertyMaster
 	public $HName;				# The name of the host joined or started.
 	public function onMultiPlayerStart(IS_ISM $ISM)
 	{
+        $firstrun = false;
+        if(!isset($this->HName)) {
+            # We check this to see if this has been run before
+            # if it has, we'll also run the IS_TINY to prevent issues with plugins
+            # This might not be needed, but for now until I determine for sure
+            # Adding this as a safety
+            $firstrun = true;
+        }
 		$this->Host = $ISM->Host;
 		$this->HName = $ISM->HName;
 
-		# Send out some info requests, to make sure we have all of the baseline information.
-		$ISP = IS_TINY()->ReqI(1);
-		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
-		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
-		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
+        if($firstrun == false) {
+            # Send out some info requests, to make sure we have all of the baseline information.
+            $ISP = IS_TINY()->ReqI(1);
+            $ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
+            $ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
+            $ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
+        }
 
 	}
 
