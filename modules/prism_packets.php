@@ -878,6 +878,7 @@ class IS_MTC extends Struct		// Msg To Connection - hosts only - send to a conne
 		if (strLen($this->Text) > 127) {
 			foreach(explode("\n", wordwrap($this->Text, 127, "\n", true)) as $Text) {
 				$this->Text($Text)->Send();
+                $this->Text(''); # Prevents the last segment of the word wrap from sending twice
 			}
 		}
         
