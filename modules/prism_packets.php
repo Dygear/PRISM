@@ -799,6 +799,7 @@ class IS_MST extends Struct		// MSg Type - send to LFS to type message or comman
 		if (strLen($this->Msg) > 63) {
 			foreach(explode("\n", wordwrap($this->Msg, 63, "\n", true)) as $Msg) {
 				$this->Msg($Msg)->Send();
+                $this->Msg('');
 			}
             
 			return;
@@ -825,6 +826,7 @@ class IS_MSX extends Struct		// MSg eXtended - like MST but longer (not for comm
 		if (strLen($this->Msg) > 95) {
 			foreach(explode("\n", wordwrap($this->Msg, 95, "\n", true)) as $Msg) {
 				$this->Msg($Msg)->Send();
+                $this->Msg('');
 			}
 		}
         
@@ -849,6 +851,7 @@ class IS_MSL extends Struct		// MSg Local - message to appear on local computer 
 		if (strLen($this->Msg) > 127){
 			foreach(explode("\n", wordwrap($this->Msg, 127, "\n", true)) as $Msg) {
 				$this->Msg($Msg)->Send();
+                $this->Msg('');
 			}
 		}
         
