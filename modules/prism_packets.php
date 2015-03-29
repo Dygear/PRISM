@@ -1089,7 +1089,7 @@ class IS_HCP extends Struct // HandiCaPs
 	{
 		parent::unpack($rawPacket);
 
-		for ($i = 0; $i < 32; ++$i) {
+		for ($i = 0; $i < 40; ++$i) {
 			$this->Info[$i] = new CarHCP(substr($rawPacket, 4 + ($i * 2), 2));
 		}
 
@@ -1598,7 +1598,7 @@ class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 		$pkClass = unpack($this::UNPACK, $rawPacket);
 		$pkClass['PLID'] = array();
         
-		for ($Pos = 1; $Pos <= 32; ++$Pos) {
+		for ($Pos = 1; $Pos <= 40; ++$Pos) {
 			if ($pkClass["PLID{$Pos}"] != 0) {
 				$pkClass['PLID'][$Pos] = $pkClass["PLID{$Pos}"];
 			}
