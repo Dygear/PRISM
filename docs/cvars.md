@@ -1,36 +1,41 @@
-[b]CVARs[/b]
-CVARs are [b]c[/b]onsole [b]var[/b]iables. They store string, float, or numerical values. These values can be changed via the console or .cfg files, and sometimes even persist across server sessions.
+# CVARs
+CVARs are **c**onsole **var**iables. They store string, float, or numerical values. These values can be changed via the console or .cfg files, and sometimes even persist across server sessions.
 
-[b]Introduction[/b]
+## Introduction
 CVARs are accessed through functions. There are two ways to obtain a CVARs; You can either create a new CVAR, or find an existing one. If you create a CVAR that already exists, it will automatically re-use the old one.
 
-[b]Finding CVARs[/b]
+## Finding CVARs
 Finding CVARs is very simple. For example, let's say you want to use pMsgsPerSecond from antiflood.php.
 
-[php]class example extends Plugins {
+```php
+class example extends Plugins {
 	private $pMsgsPerSecond;
- 
+
 	public function __construct() {
 		$this->pMsgsPerSecond = $this->findCVAR('pMsgsPerSecond');
 	}
-}[/php]
+}
+```
 
-[i]Note: Plugins::findCVAR() will return INVALID_HANDLE if the ConVar is not found. Keep this in mind if you are trying to read ConVars from other plugins.[/i]
+*Note: Plugins::findCVAR() will return INVALID_HANDLE if the ConVar is not found. Keep this in mind if you are trying to read ConVars from other plugins.*
 
-[b]Creating CVARs[/b]
+## Creating CVARs
 A simple CVAR only requires two parameters, a name and a default value. However, it's a good idea to include a description:
 
-[php]class myplugin extends Plugins {
+```php
+class myplugin extends Plugins {
 	private $cvars;
- 
+
 	public function __construct() {
 		$this->cvars['Enable'] = $this->createCVAR('myplugin_enabled', 1, 'Sets whether my plugin is enabled.');
 	}
-}[/php]
+}
+```
 
 You can also specify value constraints. For example, let's create a cvar called myplugin_ratio which cannot go above 1.0 or below 0.1.
 
-[php]class myplugin extends Plugins {
+```php
+class myplugin extends Plugins {
 	private $cvars;
 
 	public function __construct() {
@@ -45,15 +50,16 @@ You can also specify value constraints. For example, let's create a cvar called 
 			1.0					# Highest value permissable
 		);
 	}
-}[/php]
+}
+```
 
 The default value can be of any valid datatype noted above, and it does not restrict future data types that can be used. However, the minimum and maximum constraints always interpret the value as a float.
 If you create a CVAR that already exists, you will receive a refrence to that CVAR. Furthermore, the refrence itself will be identical, as neither plugin will own the refrence. The description, default value, or constraints will not be changed.
 
-[b]Using/Changing Values[/b]
+## Using/Changing Values
 
-[b]Flags[/b]
+## Flags
 
-[b]Change Callbacks[/b]
+## Change Callbacks
 
 http://wiki.alliedmods.net/ConVars_(SourceMod_Scripting)
