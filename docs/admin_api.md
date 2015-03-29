@@ -34,7 +34,7 @@ When checking for immunity, the following heuristics are performed in this exact
 
 The primary function for computing immunity is Plugin::canUserTarget().
 
-### Cache Types
+## Cache Types
 There are three cache types in the Administration API. To invalidate a cache means to entirely delete it and rebuild it from scratch. Rebuilding a cache means requesting each IAdminListener to rebuild that portion of the cache. Aside from rebuilding a cache, there are generally three major operations to each cache: Reading, Appending (adding new settings), and Deleting (deleting individual records).
 
 * **Global Override Cache**: Holds global overrides.
