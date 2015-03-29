@@ -38,7 +38,7 @@ A checkpoint looks like a square bracket, and you must drive FROM the
 side with the "ends" of the square bracket and over TO the "flat side"
 of the square bracket.
 
-## Restricted areas and route control:
+## Restricted areas and route control
 In "marshall" mode you can place Marshall areas and Route checkers.
 
 Marshall areas are shown by a red circle.  If a car enters one of them
@@ -53,7 +53,7 @@ forced to spectate.  The route index is automatically generated in the
 order the route checkers are created.  You can manually edit the route
 index by clicking on the route index button.
 
-## Controls:
+## Controls
 View control - mouse and keys - listed on screen.
 Press V to toggle between high and low view.
 Viewing the track - press SPACE to hide / show editor buttons.

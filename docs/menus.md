@@ -55,7 +55,6 @@ We'll draw this menu with both a basic Menu and a Panel to show the API differen
 ### Basic Menu
 First, let's write our example using the Menu building API.
 ```php
-<?php
 class basicMenu extends Plugins, Menus {
 	public function __construct() {
 		$this->registerSayCommand('menuTest', 'menuTest');
@@ -86,7 +85,6 @@ class basicMenu extends Plugins, Menus {
 		return PLUGIN_HANDLED;
 	}
 }
-?>
 ```
 **Note a few very important points from this example**:
 
@@ -100,30 +98,28 @@ class basicMenu extends Plugins, Menus {
 ### Basic Panel
 Now, let's rewrite our example to use Panels instead.
 ```php
-<?php
-	class basicPanel extends Plugins, Panels {
-		public function __construct() {
-			$this->registerSayCommand('panelTest', 'panelTest');
-		}
-		public function panelHandler($action, $param1, $param2) {
-			if ($action == MENU_ACTION_SELECT) {
-				$this->clientPrint($param1, PRINT_CHAT, "You selected item: {$param2}");
-			} else if (action == MENU_ACTION_CANCEL) {
-				$this->clientPrint($param1, PRINT_CHAT, "Menu was cancelled.  Reason: {$param2}");
-			}
-		}
-		public function panelTest($args, $CLID) {
-			$panel = new handlePanel();
-			$panel->setTitle("Do you like apples?");
-			$panel->drawItem("Yes");
-			$panel->drawItem("No");
-			$panel->sendToClient($CLID, 'panelHandler', 20);
-			$panel->close();
-
-			return PLUGIN_HANDLED;
+class basicPanel extends Plugins, Panels {
+	public function __construct() {
+		$this->registerSayCommand('panelTest', 'panelTest');
+	}
+	public function panelHandler($action, $param1, $param2) {
+		if ($action == MENU_ACTION_SELECT) {
+			$this->clientPrint($param1, PRINT_CHAT, "You selected item: {$param2}");
+		} else if (action == MENU_ACTION_CANCEL) {
+			$this->clientPrint($param1, PRINT_CHAT, "Menu was cancelled.  Reason: {$param2}");
 		}
 	}
-?>
+	public function panelTest($args, $CLID) {
+		$panel = new handlePanel();
+		$panel->setTitle("Do you like apples?");
+		$panel->drawItem("Yes");
+		$panel->drawItem("No");
+		$panel->sendToClient($CLID, 'panelHandler', 20);
+		$panel->close();
+
+		return PLUGIN_HANDLED;
+	}
+}
 ```
 As you can see, Panels are significantly different.
 
@@ -136,7 +132,8 @@ Now, let's take a more advanced example -- pagination. Let's say we want to buil
 Since reading and parsing a file is an expensive operation, we only want to do this once per track. Thus we'll build the menu in onTrackStart, and we won't call closeHandle until onTrackEnd.
 
 Our example tracklist.txt
-`AS4
+```
+AS4
 AS5
 AS7R
 BL1
@@ -153,64 +150,63 @@ KY3
 SO1
 SO3
 SO4R
-SO5`
+SO5
+```
 
 Source code:
 ```php
-<?php
-	class changeMap extends Plugins, Menus {
-		private $trackMenu;
-		public function __construct() {
-			$this->registerSayCommand('prism change track', 'cmdChangeTrack', 'Displays a menu to change the track.', ADMIN_TRACK);
-			$this->makeTrackMenu();
-		}
-		public function cmdChangeTrack($args, $CLID) {
-			if ($this->trackMenu == NULL)
-				$this->clientPrint($param1, PRINT_CHAT, "The tracklist.txt file was not found!");
-			else
-				$this->trackMenu->display($CLID, MENU_TIME_FOREVER);
-			return PLUGIN_HANDLED;
-		}
-		public function makeTrackMenu() {
-			# Open the file
-			if (($tracklist = file('tracklist.txt')) == FALSE)
-				return ($this->trackMenu = NULL);
+class changeMap extends Plugins, Menus {
+	private $trackMenu;
+	public function __construct() {
+		$this->registerSayCommand('prism change track', 'cmdChangeTrack', 'Displays a menu to change the track.', ADMIN_TRACK);
+		$this->makeTrackMenu();
+	}
+	public function cmdChangeTrack($args, $CLID) {
+		if ($this->trackMenu == NULL)
+			$this->clientPrint($param1, PRINT_CHAT, "The tracklist.txt file was not found!");
+		else
+			$this->trackMenu->display($CLID, MENU_TIME_FOREVER);
+		return PLUGIN_HANDLED;
+	}
+	public function makeTrackMenu() {
+		# Open the file
+		if (($tracklist = file('tracklist.txt')) == FALSE)
+			return ($this->trackMenu = NULL);
 
-			# Create the menu Handle
-			$this->trackMenu = new handleMenu('menuChangeTrack');
-			foreach ($tracklist as $trackname)
-			{
-				# Skip Comments
-				if ($trackname{0} == ';')
-					continue;
-				# Cut off the name at any whitespace
-				if (($whitespace = strPos($trackname, ' ') != FALSE)
-					$trackname = subStr($trackname, $whitespace);
-				# Check if the map is valid
-				if (!$this->isTrackValid($trackname))
-					continue;
-				# Add it to the menu
-				$this->trackMenu->addMenuItem($trackname, $trackname);
-			}
-			# Make sure we close the file!
-			unset($tracklist);
-
-			# Finally, set the title
-			$this->trackMenu->setTitle("Please select a track:");
+		# Create the menu Handle
+		$this->trackMenu = new handleMenu('menuChangeTrack');
+		foreach ($tracklist as $trackname)
+		{
+			# Skip Comments
+			if ($trackname{0} == ';')
+				continue;
+			# Cut off the name at any whitespace
+			if (($whitespace = strPos($trackname, ' ') != FALSE)
+				$trackname = subStr($trackname, $whitespace);
+			# Check if the map is valid
+			if (!$this->isTrackValid($trackname))
+				continue;
+			# Add it to the menu
+			$this->trackMenu->addMenuItem($trackname, $trackname);
 		}
-		public function menuChangeTrack($action, $param1, $param2) {
-			if ($action == MENU_ACTION_SELECT) {
-				# Get item info
-				$found = $this->trackMenu->getMenuItem($param2, $info = NULL);
-				# Tell the client
-				$this->printToChat($param1, "You selected item: {$param2} (found? {$found} info: {$info})");
-				# Change the map
-				$this->serverCommand("/end");
-				$this->serverCommand("/track {$info}");
-			}
+		# Make sure we close the file!
+		unset($tracklist);
+
+		# Finally, set the title
+		$this->trackMenu->setTitle("Please select a track:");
+	}
+	public function menuChangeTrack($action, $param1, $param2) {
+		if ($action == MENU_ACTION_SELECT) {
+			# Get item info
+			$found = $this->trackMenu->getMenuItem($param2, $info = NULL);
+			# Tell the client
+			$this->printToChat($param1, "You selected item: {$param2} (found? {$found} info: {$info})");
+			# Change the map
+			$this->serverCommand("/end");
+			$this->serverCommand("/track {$info}");
 		}
 	}
-?>
+}
 ```
 
 This menu results in many selections (our tracklist.txt file had around 18 maps).
@@ -243,110 +239,106 @@ The voting system extends overall menus with two additional properties:
 
 The example below shows has to create a function called Vote::doMenu() which will ask all clients whether or not they would like to change to the given track.
 ```php
-<?php
-	class simpleVote extends Plugin, Vote {
-		public function __construct() {
-			$this->registerSayCommand('prism vote track', 'cmdVoteMenu', '<trackcode> - Allows you to vote for a track to go to.');
+class simpleVote extends Plugin, Vote {
+	public function __construct() {
+		$this->registerSayCommand('prism vote track', 'cmdVoteMenu', '<trackcode> - Allows you to vote for a track to go to.');
+	}
+	public function handleVoteMenu($menu, $action, $param1, $param2) {
+		if ($action == MENU_ACTION_END)
+		{	# This is called after VoteEnd
+			$menu->close();
 		}
-		public function handleVoteMenu($menu, $action, $param1, $param2) {
-			if ($action == MENU_ACTION_END)
-			{	# This is called after VoteEnd
-				$menu->close();
-			}
-			else if ($action == MENU_ACTION_VOTE_END)
+		else if ($action == MENU_ACTION_VOTE_END)
+		{
+			# 0=yes, 1=no
+			if (param1 == 0)
 			{
-				# 0=yes, 1=no
-				if (param1 == 0)
-				{
-					$menu->getMenuItem($param1, $track);
-					$this->serverCommand("/end");
-					$this->serverCommand("/track {$track}");
-				}
+				$menu->getMenuItem($param1, $track);
+				$this->serverCommand("/end");
+				$this->serverCommand("/track {$track}");
 			}
-		}
-		public function cmdVoteMenu($args, $CLID) {
-			# Make sure there is no vote in progress.
-			if ($this->isVoteMenuInProgress())
-				return PLUGIN_HANDLED;
-
-			# Check Arg Count
-			if (($argc = count($argv = str_getcsv($cmd, ' '))) < 3 || $argc > 3)
-			{
-				$this->printToChat($param1, "You must input only one track code. (For example BL1).");
-				return PLUGIN_HANDLED;
-			}
-
-			# Make sure the track is valid.
-			$track = array_pop($argv);
-			if (!$this->isValidTrack($track))
-				return PLUGIN_HANDLED;
-
-			$menu = new voteHandle('handleVoteMenu');
-			$menu->setTitle("Change map to: {$track}?");
-			$menu->addMenuItem($track, "Yes");
-			$menu->addMenuItem("no", "No");
-			$menu->setExitButton(FALSE);
-			$menu->voteMenuToAll(20);
-
-			return PLUGIN_HANDLED;
 		}
 	}
-?>
+	public function cmdVoteMenu($args, $CLID) {
+		# Make sure there is no vote in progress.
+		if ($this->isVoteMenuInProgress())
+			return PLUGIN_HANDLED;
+
+		# Check Arg Count
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 3 || $argc > 3)
+		{
+			$this->printToChat($param1, "You must input only one track code. (For example BL1).");
+			return PLUGIN_HANDLED;
+		}
+
+		# Make sure the track is valid.
+		$track = array_pop($argv);
+		if (!$this->isValidTrack($track))
+			return PLUGIN_HANDLED;
+
+		$menu = new voteHandle('handleVoteMenu');
+		$menu->setTitle("Change map to: {$track}?");
+		$menu->addMenuItem($track, "Yes");
+		$menu->addMenuItem("no", "No");
+		$menu->setExitButton(FALSE);
+		$menu->voteMenuToAll(20);
+
+		return PLUGIN_HANDLED;
+	}
+}
 ```
 ### Advanced Voting
 If you need more information about voting results than MENU_ACTION_VOTE_END gives you, you can choose to have a different callback invoked. The new callback will provide much more information, but at a price: MENU_ACTION_VOTE_END will not be called, and you will have to decide how to interpret the results. This is done via Vote::setVoteResultCallback().
 
 Example:
 ```php
-<?php
-	class advancedVoting extends Plugin, Vote {
-		public function __constructor() {
-			$this->registerSayCommand('prism vote menu', 'doVoteMenu', '<track> - Makes a vote for a track.');
-		}
-		public handleVoteMenu($menu, $action, $param1, $param2) {
-			if ($action == MENU_ACTION_END)
-			{
-				/* This is called after VoteEnd */
-				$menu->close();
-			}
-		}
-		public handleVoteMenu($menu, $votes, $clients, $items) {
-			/* See if there were multiple winners */
-			$winner = 0;
-			if (($count = count($items)) > 1)
-				$winner = rand(0, $count);
-
-			$track = $menu->getMenuItem($items[$winner]);
-			$this->serverCommand("/end");
-			$this->serverCommand("/changetrack {$track}");
-		}
-		public function doVoteMenu($track) {
-			# Make sure there is no vote in progress.
-			if ($this->isVoteMenuInProgress())
-				return PLUGIN_HANDLED;
-
-			# Check Arg Count
-			if (($argc = count($argv = str_getcsv($cmd, ' '))) < 3 || $argc > 3)
-			{
-				$this->printToChat($param1, "You must input only one track code. (For example BL1).");
-				return PLUGIN_HANDLED;
-			}
-
-			# Make sure the track is valid.
-			$track = array_pop($argv);
-			if (!$this->isValidTrack($track))
-				return PLUGIN_HANDLED;
-
-			$menu = new voteHandle('handleVoteMenu');
-			$menu->voteResultCallback('handleVoteResults');
-			$menu->setMenuTitle("Change track to: {$track}?");
-			$menu->addMenuItem($track, 'Yes');
-			$menu->addMenuItem('no', 'No');
-			$menu->setMenuExitButton(FALSE);
-			$menu->voteMenuToAll(20);
+class advancedVoting extends Plugin, Vote {
+	public function __constructor() {
+		$this->registerSayCommand('prism vote menu', 'doVoteMenu', '<track> - Makes a vote for a track.');
+	}
+	public handleVoteMenu($menu, $action, $param1, $param2) {
+		if ($action == MENU_ACTION_END)
+		{
+			/* This is called after VoteEnd */
+			$menu->close();
 		}
 	}
-?>
+	public handleVoteMenu($menu, $votes, $clients, $items) {
+		/* See if there were multiple winners */
+		$winner = 0;
+		if (($count = count($items)) > 1)
+			$winner = rand(0, $count);
+
+		$track = $menu->getMenuItem($items[$winner]);
+		$this->serverCommand("/end");
+		$this->serverCommand("/changetrack {$track}");
+	}
+	public function doVoteMenu($track) {
+		# Make sure there is no vote in progress.
+		if ($this->isVoteMenuInProgress())
+			return PLUGIN_HANDLED;
+
+		# Check Arg Count
+		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 3 || $argc > 3)
+		{
+			$this->printToChat($param1, "You must input only one track code. (For example BL1).");
+			return PLUGIN_HANDLED;
+		}
+
+		# Make sure the track is valid.
+		$track = array_pop($argv);
+		if (!$this->isValidTrack($track))
+			return PLUGIN_HANDLED;
+
+		$menu = new voteHandle('handleVoteMenu');
+		$menu->voteResultCallback('handleVoteResults');
+		$menu->setMenuTitle("Change track to: {$track}?");
+		$menu->addMenuItem($track, 'Yes');
+		$menu->addMenuItem('no', 'No');
+		$menu->setMenuExitButton(FALSE);
+		$menu->voteMenuToAll(20);
+	}
+}
 ```
 
 

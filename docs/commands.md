@@ -25,7 +25,8 @@ Server commands are registered through the registerServerCommand() function defi
 * **PLUGIN_STOP** - This is used only to stop repeating timers within PRISM.
 
 ## Adding Commands
-`class example extends Plugins {
+```php
+class example extends Plugins {
 	public function __construct() {
 		$this->registerSayCommand('command', 'callbackMethod', 'Information about the triggers purpose goes here.');
 	}
@@ -33,7 +34,8 @@ Server commands are registered through the registerServerCommand() function defi
 		var_dump($Msg, $UName);
 		return PLUGIN_HANDLED;
 	}
-}`
+}
+```
 
 ## Hooking Commands
 A common example is registering a say command, as shown above. Let's say we want to tell players how many clients are in the server.
@@ -47,20 +49,23 @@ Before we implement this, a common point of confusion is that the whole 'Msg' is
 * Argument #3: arg1
 * Argument #4: arg2
 
-`class example extends Plugins {
+```php
+class example extends Plugins {
 	public function __construct() {
 		$this->registerSayCommand('command', 'callbackMethod', 'Information about the function');
 	}
 	public function callbackMethod($Msg, $UName) {
 		$this->clientPrint($UName, PRINT_CHAT, count($this->getClients()));
 	}
-}`
+}
+```
 
 ## Creating Admin Commands
 The only diffrence from creating an admin command verse that of a regular command is one more argument to the registerSayCommand method. This argument can be omitted if you want the command available to all clients. However, should you chose to use it, it must be an int value, or a bit mask combonation from the ADMIN_* defines.
 
 Let's create a simple admin command which kicks another client by their user name.
-`class example extends Plugins {
+```php
+class example extends Plugins {
 	public function __construct() {
 		$this->registerSayCommand('prism kick', 'cmdKick', '<UName> - Kicks a client from the server', ADMIN_KICK);
 	}
@@ -83,7 +88,8 @@ Let's create a simple admin command which kicks another client by their user nam
 		$this->clientPrint($UName, PRINT_CHAT, "Could not find any player with the name: '{$target}'.");
 		return PLUGIN_HANDLED;
 	}
-}`
+}
+```
 
 ## Immunity
 In our previous example, we did not take immunity into account. Two functions are used to find this information.
@@ -101,7 +107,8 @@ When checking for immunity, the following heuristics are performed in this exact
 
 So, how can we adapt our function about to use immunity?
 
-`public function cmdKick($Msg, $UName) {
+```php
+public function cmdKick($Msg, $UName) {
 	if (($argc = count($argv = explode(' ', $Msg))) < 3) {
 		$this->clientPrint('Useage: \`prism kick <UName>\`', PRINT_CHAT, $UName);
 		return PLUGIN_HANDLED;
@@ -123,4 +130,5 @@ So, how can we adapt our function about to use immunity?
 
 	$this->clientPrint($UName, PRINT_CHAT, "Could not find any player with the name: '{$target}'.");
 	return PLUGIN_HANDLED;
-}`
+}
+```

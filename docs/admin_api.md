@@ -11,26 +11,26 @@ Note the difference between the two: In the first example, the cache is being us
 Permissions are granted through the AdminFlag data type. Each flag specifies an action or permission type that requires administrative access. For each admin, the set of flags which are enabled is called the admin's effective permissions.
 AdminFlags are stored in a variety of ways to account for various coding flexibilities. Functions to convert in between these storage methods are available in the administration APIs for both C++ extensions and Pawn scripts.
 
-	* AdminFlag: Represents a single admin permission as part of an enumeration.
-	* AdminFlag\[\]: Represents an array of AdminFlags in no specific order, each member being a different flag enabled.
-	* bool[]: Represents a bit array, where each index i of the array specifies whether AdminFlag i is enabled (true) or disabled (false).
-	* FlagBits: Represents an unsigned 32bit integer, where each bit n of the integer specifies whether AdminFlag n is enabled (bit 1) or disabled (bit 0). Convenience macros are available for dealing with bitwise numbers. They are found in IAdminSystem.h and each start with ADMFLAG instead of Admin.
+* **AdminFlag**: Represents a single admin permission as part of an enumeration.
+* **AdminFlag\[\]**: Represents an array of AdminFlags in no specific order, each member being a different flag enabled.
+* **bool[]**: Represents a bit array, where each index i of the array specifies whether AdminFlag i is enabled (true) or disabled (false).
+* **FlagBits**: Represents an unsigned 32bit integer, where each bit n of the integer specifies whether AdminFlag n is enabled (bit 1) or disabled (bit 0). Convenience macros are available for dealing with bitwise numbers. They are found in IAdminSystem.h and each start with ADMFLAG instead of Admin.
 
 ### Overrides
 Permissions can also be granted through overrides. Overrides are specific permissions that override the default effective permissions. They can act on both commands and command groups (a command group is a set of commands under a common name). There are two types of overrides:
 
-	* Global Overrides: These override the default admin flag(s) required for a given command or command group.
-	* Group Overrides: These override whether members of the group can or cannot access a given command.
+* **Global Overrides**: These override the default admin flag(s) required for a given command or command group.
+* **Group Overrides**: These override whether members of the group can or cannot access a given command.
 
 ### Immunity
 Immunity in SourceMod is based on immunity levels, which are arbitrary numbers greater than or equal to zero. If an admin has an immunity level of 0, that admin has no immunity. An admin can only target other admins if their immunity level is greater than or equal to the target's immunity level. This functionality can be tweaked via sm_immunity_mode in cfg/sourcemod.cfg.
 When checking for immunity, the following heuristics are performed in this exact order:
 
-	* If the targeting client is not an admin, targeting fails.
-	* If the targetted client is not an admin, targeting succeeds.
-	* If the targeting client has ADMIN_ROOT, targeting succeeds.
-	* If the targetted client has ADMIN_IMMUNITY AND the targeting client does not have ADMIN_UNIMUNIZE, targeting fails.
-	* If no conclusion is reached via the previous steps, targeting succeeds.
+* If the targeting client is not an admin, targeting fails.
+* If the targetted client is not an admin, targeting succeeds.
+* If the targeting client has ADMIN_ROOT, targeting succeeds.
+* If the targetted client has ADMIN_IMMUNITY AND the targeting client does not have ADMIN_UNIMUNIZE, targeting fails.
+* If no conclusion is reached via the previous steps, targeting succeeds.
 
 The primary function for computing immunity is Plugin::canUserTarget().
 

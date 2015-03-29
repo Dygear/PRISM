@@ -14,16 +14,12 @@ You have made a test file called wwwtest.php which you have put in the www-docs
 folder. In it you declare a function and then trigger the function.
 
 ```php
-<?php
-
 function testFunction()
 {
 	return 'We have liftoff';
 }
 
 echo testFunction().PHP_EOL;
-
-?>
 ```
 
 The first time this php file is executed, php will internally declare your

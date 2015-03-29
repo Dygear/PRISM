@@ -1,6 +1,6 @@
 # Live for Speed command line options and text commands
 
-## Command line options:
+## Command line options
 LFS can be started using a command line or another program.
 A dedicated host mode is available with no hardware draw : "nogfx".
 Before selecting host options, you may find it helpful to run LFS
@@ -61,7 +61,7 @@ LFS /cfg=xxx.txt (where xxx.txt is the name of the config file)
 * /lytdir=X            :set the data folder for layouts
 
 
-## Host commands:
+## Host commands
 Some text commands are intended for hosts and administrators.
 
 Using the normal text message system (pressing T in a normal host or
@@ -154,14 +154,14 @@ the host using the admin password if one was specified when the host
 was started.
 
 
-## To display a welcome message on a host:
+## To display a welcome message on a host
 Create a text file named "X.txt" in your LFS folder.
 Type up to 200 characters into the text file.
 
 Use the command /welcome=X.txt in your startup command line
 
 
-## To restrict the tracks allowed on a host:
+## To restrict the tracks allowed on a host
 Create a text file named "X.txt" in your LFS folder.
 List all the tracks and configurations you want to allow.
 Type one configuration on each line.
@@ -180,7 +180,7 @@ Example:
 Use the command /tracks=X.txt in your startup command line
 
 
-## Local commands:
+## Local commands
 Most of these text commands replicate functions usually controlled by
 pressing on-screen buttons but can be useful in other situations, for
 example when controlling LFS from an external program using InSim.
@@ -261,7 +261,7 @@ IN A SCRIPT: //comment - this line is ignored
 IN CHAT BOX: //xxx - short for /run xxx
 
 
-### To get info from LFS World - /w and /ws commands:
+### To get info from LFS World - /w and /ws commands
 /w CMD sends command to LFS World for current car/track
 e.g.  /w pb  (Personal Best)  or  /w laps  (Laps)
 
@@ -271,12 +271,12 @@ e.g.  /ws BL1R XRT pb  (get PB in XR GT TURBO at Blackwood GP REV)
 More online DB access commands can be found on the
 "LFS Keys" page at www.liveforspeed.net
 
-### To get info from master server - /m command :
+### To get info from master server - /m command
 /m find USER : find a user online
 /m ?         : get a list of master commands
 
 
-## Car Strings:
+## Car Strings
 The /cars command for the startup command line or for hosts / admins
 now uses the three-letter S2 car codes.
 
@@ -300,7 +300,7 @@ The plus and minus symbols can be used in conjuction with these :
 * /cars=ROAD-UF1       :Allow all road cars except the UF 1000
 
 
-## FUNCTION NAMES for the /button AND /key COMMANDS:
+## FUNCTION NAMES for the /button AND /key COMMANDS
 steer_left, steer_right, steer_fast, steer_slow
 throttle, brake, shift_up, shift_down, clutch, handbrake
 left_view, right_view, rear_view, horn, flash, reset
@@ -308,13 +308,13 @@ pit_speed, tc_disable, ignition, zoom_in, zoom_out
 reverse, gear_1 - gear_7, ctrl_f1 - ctrl_f12
 
 
-## FUNCTION NAMES for the /axis AND /invert COMMANDS:
+## FUNCTION NAMES for the /axis AND /invert COMMANDS
 steer, combined, throttle, brake
 lookh, lookp, lookr
 clutch, handbrake, shiftx, shifty
 
 
-## UNASSIGNING a button or axis:
+## UNASSIGNING a button or axis
 To unassign a button or axis from a function,
 you can assign -1 to that function.
 
@@ -322,7 +322,7 @@ Example 1 : /button -1 shift_up <- unassign the shift up button
 Example 2 : /axis -1 clutch     <- unassign the clutch axis
 
 
-## PARAMETERS for the key commands (press / shift / ctrl / alt):
+## PARAMETERS for the key commands (press / shift / ctrl / alt)
 Letters A to Z
 Numbers 0 to 9
 F1 to F12
