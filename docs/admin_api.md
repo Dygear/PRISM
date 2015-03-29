@@ -55,10 +55,10 @@ There are three cache types in the Administration API. To invalidate a cache mea
 
 ### Global Override Cache
 The global override cache stores information about global overrides. Every operation to this cache occurs both retroactively and for future command creations. An override need not be tied to a command; however, if a command has the same name, the command will inherit that override's permissions.
-### Writing/Appending
+#### Writing/Appending
 New entries to the global override cache will affect both already existing commands and future commands registered during the cache's lifetime.
 Each command can be assigned any or no access flags.
-### Deleting/Invalidation
+#### Deleting/Invalidation
 Deleting a part or the whole of the global override cache will cause affected commands to revert to their original access behavior.
 ### Group Cache
 The group cache scores all information about current groups. It is designed to be quite static, and thus modifying groups in memory is not very flexible.
@@ -69,13 +69,12 @@ Groups have a few important properties:
 * **Immunity Level**: If a user inheriting the group has a lower immunity level than this number, they inherit the new higher value from the group.
 * **Specific**: Immunity from a list of specific groups.
 
-### Writing/Appending
+#### Writing/Appending
+* Add Flags**: These can be modified at any time. However, users which inherit the group will not have their member permissions updated for performance reasons.
+* **Immunity**: Default and global immunity can be changed at any time. Users inheriting the group will be affected by the changes. Specific immunity can have new groups added (and it will affect member admins).
+* **Overrides**: Overrides can be changed between allow or deny at any time.
 
-**Add Flags**: These can be modified at any time. However, users which inherit the group will not have their member permissions updated for performance reasons.
-**Immunity**: Default and global immunity can be changed at any time. Users inheriting the group will be affected by the changes. Specific immunity can have new groups added (and it will affect member admins).
-**Overrides**: Overrides can be changed between allow or deny at any time.
-
-### Deleting/Invalidation
+#### Deleting/Invalidation
 Per-group immunities cannot be removed once added. Groups themselves cannot be removed either, as this would be a potentially expensive operation. Instead, the entire group cache must be rebuilt (and with it, the admin cache). The goal with this design decision is to make group invalidations rare. In order to change a group fully, the entire admin cache must be "refreshed".
 
 ### Admin/User Cache
@@ -88,11 +87,11 @@ Users have the following properties:
 * **Password**: A generic password that an authentication method might require.
 * **Identities**: One or more mappings between authentication methods and unique identification strings.
 
-### Writing/Appending
+#### Writing/Appending
 * **Flags**: Flags can be changed at any time. Changing flags will affect effective flags, even if done after groups are inherited.
 * **Groups**: Groups can be inherited at any time, although a group cannot be inherited twice. Permissions inherited from groups cannot be updated (yet).
 * **Password**: Passwords can be changed at any time.
 * **Identities**: Identities can be added, but not changed or removed.
 
-### Deleting/Invalidation
+#### Deleting/Invalidation
 Groups cannot be removed from an admin's inherited group list. However, admins can be invalidated. This lets an authentication system, such as SQL, remove individual admins to refresh their privileges. Resources used by an admin object are always reclaimed efficiently.
