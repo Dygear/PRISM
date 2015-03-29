@@ -48,10 +48,10 @@ There are three cache types in the Administration API. To invalidate a cache mea
 	* Appendable: Yes
 	* Deletable: Yes
 * **Group Cache**: Holds Admin Group objects.
-	* **Invalidation**: Invalidates self and Admin Cache.
-	* **Readable**: Yes
-	* **Appendable**: Yes
-	* **Deletable**: No
+	* Invalidation: Invalidates self and Admin Cache.
+	* Readable: Yes
+	* Appendable: Yes
+	* Deletable: No
 
 ### Global Override Cache
 The global override cache stores information about global overrides. Every operation to this cache occurs both retroactively and for future command creations. An override need not be tied to a command; however, if a command has the same name, the command will inherit that override's permissions.
@@ -64,10 +64,10 @@ Deleting a part or the whole of the global override cache will cause affected co
 The group cache scores all information about current groups. It is designed to be quite static, and thus modifying groups in memory is not very flexible.
 Groups have a few important properties:
 
-* Add Flags: These are flags added to any user who inherits the group.
-* Immunity: Specifies rules for which admins cannot target this group.
-* Immunity Level: If a user inheriting the group has a lower immunity level than this number, they inherit the new higher value from the group.
-* Specific: Immunity from a list of specific groups.
+* **Add Flags**: These are flags added to any user who inherits the group.
+* **Immunity**: Specifies rules for which admins cannot target this group.
+* **Immunity Level**: If a user inheriting the group has a lower immunity level than this number, they inherit the new higher value from the group.
+* **Specific**: Immunity from a list of specific groups.
 
 ### Writing/Appending
 
