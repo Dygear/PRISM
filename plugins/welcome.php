@@ -29,7 +29,7 @@ class welcome extends Plugins
         $this->createNamedTimer("WelcomePlugin_ButtonHandle_{$NCN->UName}", 'DoButtonHandle', 0.50, Timer::REPEAT, array($NCN->UName));
 
         $this->BTNMan[$UName]->InitButton('poweredBy', 'welcomeMSG', (IS_Y_MAX - IS_Y_MIN), IS_X_MIN, IS_X_MAX, 8, ISB_DARK, 'This server is powered by', 10);
-        $this->BTNMan[$UName]->AddClickEventToBtn('poweredBy', $this, 'onPoweredByClick', array($NCN->UCID))
+        $this->BTNMan[$UName]->AddClickEventToBtn('poweredBy', $this, 'onPoweredByClick', array($NCN->UCID));
         $this->BTNMan[$UName]->InitButton('prism', 'welcomeMSG', (IS_Y_MAX - IS_Y_MIN + 8), IS_X_MIN, IS_X_MAX, 8, ISB_DARK, '^3PRISM ^8Version ^7'.PHPInSimMod::VERSION.'^8.', 10);
 
 	}
