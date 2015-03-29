@@ -353,8 +353,9 @@ abstract class Plugins extends Timers
 		if (($host = $PRISM->hosts->getHostById($hostID)) && $host !== null) {
 			return $host;
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	protected function getHostState($hostID = null)
@@ -364,8 +365,9 @@ abstract class Plugins extends Timers
 		if (($state = $PRISM->hosts->getStateById($hostID)) && $state !== null) {
 			return $state;
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
 
 	/** Server Methods */
@@ -384,8 +386,9 @@ abstract class Plugins extends Timers
 		if (($players = $this->getHostState($hostID)->players) && $players !== null && isset($players[$PLID])) {
 			return $players[$PLID];
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	protected function &getPlayerByUCID(&$UCID, $hostID = null)
@@ -393,8 +396,9 @@ abstract class Plugins extends Timers
 		if (($clients =& $this->getHostState($hostID)->clients) && $clients !== null && isset($clients[$UCID])) {
 			return $clients[$UCID]->players;
         }
-    
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	protected function &getPlayerByPName(&$PName, $hostID = null)
@@ -406,8 +410,9 @@ abstract class Plugins extends Timers
 				}
 			}
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	protected function &getPlayerByUName(&$UName, $hostID = null)
@@ -419,8 +424,9 @@ abstract class Plugins extends Timers
 				}
 			}
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	protected function &getClientByPLID(&$PLID, $hostID = null)
@@ -429,7 +435,8 @@ abstract class Plugins extends Timers
 			$UCID = $players[$PLID]->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
 			return $this->getClientByUCID($UCID);
 		}
-        
+
+        $return = null;
 		return $return;
 	}
     
@@ -438,8 +445,9 @@ abstract class Plugins extends Timers
 		if (($clients =& $this->getHostState($hostID)->clients) && $clients !== null && isset($clients[$UCID])) {
 			return $clients[$UCID];
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	protected function &getClientByPName(&$PName, $hostID = null)
@@ -452,8 +460,9 @@ abstract class Plugins extends Timers
 				}
 			}
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	protected function &getClientByUName(&$UName, $hostID = null)
@@ -465,8 +474,9 @@ abstract class Plugins extends Timers
 				}
 			}
 		}
-        
-		return null;
+
+        $return = null;
+		return $return;
 	}
     
 	// Is
