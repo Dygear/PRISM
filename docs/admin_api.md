@@ -89,7 +89,6 @@ Users have the following properties:
 * **Identities**: One or more mappings between authentication methods and unique identification strings.
 
 ### Writing/Appending
-
 * **Flags**: Flags can be changed at any time. Changing flags will affect effective flags, even if done after groups are inherited.
 * **Groups**: Groups can be inherited at any time, although a group cannot be inherited twice. Permissions inherited from groups cannot be updated (yet).
 * **Password**: Passwords can be changed at any time.
