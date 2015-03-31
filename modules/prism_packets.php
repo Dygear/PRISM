@@ -230,11 +230,44 @@ abstract class Struct
 // NOTE : This text file was written with a TAB size equal to 4 spaces.
 // ====================
 
-/* const int INSIM_VERSION = 5; */
-define('INSIM_VERSION', 5);
+/* const int INSIM_VERSION = 6; */
+define('INSIM_VERSION', 6);
 
 // CHANGES
 // =======
+
+// Version 0.6G14 (INSIM_VERSION increased to 6)
+// --------------
+// IS_REO and IS_NLP increased in size to allow 40 drivers
+// ObjectInfo Zchar is now Zbyte - see layout file description
+
+// Version 0.6C
+// ------------
+// Small change to the in-game usage of IS_REO - only valid after SMALL_VTA
+// Some more values (CPW / OOS / JOOS / HACK) added to the leave reasons
+
+// Version 0.6B (INSIM_VERSION increased to 5)
+// ------------
+// Lap timing info added to IS_RST (Timing byte)
+// NLP / MCI minimum time interval reduced to 40 ms (was 50 ms)
+// IS_VTC now cancels game votes even if the majority has not been reached
+// IS_MTC (Msg To Connection) now has a variable length (up to 128 characters)
+// IS_MTC can be sent to all (UCID = 255) and sound effect can be specified
+// IS_CON reports contact between two cars           (if ISF_CON is set)
+// IS_OBH reports information about any object hit   (if ISF_OBH is set)
+// IS_HLV reports incidents that would violate HLVC  (if ISF_HLV is set)
+// IS_PLC sets allowed cars for individual players
+// IS_AXM to add / remove / clear autocross objects
+// IS_ACR reports successful or attempted admin commands
+// OG_SHIFT and OG_CTRL (keys) bits added to OutGaugePack
+// New IS_RIP option RIPOPT_FULL_PHYS to use full physics when searching
+// ISS_SHIFTU_HIGH is no longer used (no high / low view distinction)
+// FIX : Clutch axis / button was not reported from Controls screen
+// FIX : TTime in IS_RIP was wrong in mid-joined Multiplayer Replays
+// FIX : IS_BTN did not allow the documented limit of 240 characters
+// FIX : OutGaugePack ID was always zero regardless of ID in cfg.txt
+// FIX : InSim camera with vertical pitch would cause LFS to crash
+
 
 // Version 0.5Z (compatible so no change to INSIM_VERSION)
 
@@ -1089,7 +1122,7 @@ class IS_HCP extends Struct // HandiCaPs
 	{
 		parent::unpack($rawPacket);
 
-		for ($i = 0; $i < 40; ++$i) {
+		for ($i = 0; $i < 32; ++$i) {
 			$this->Info[$i] = new CarHCP(substr($rawPacket, 4 + ($i * 2), 2));
 		}
 
@@ -1583,10 +1616,10 @@ class IS_RES extends Struct // RESult (qualify or confirmed finish)
 
 class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 {
-	const PACK = 'CCCCC32';
-	const UNPACK = 'CSize/CType/CReqI/CNumP/C32PLID';
+	const PACK = 'CCCCC40';
+	const UNPACK = 'CSize/CType/CReqI/CNumP/C40PLID';
 
-	protected $Size = 36;				# 36
+	protected $Size = 44;				# 44
 	protected $Type = ISP_REO;			# ISP_REO
 	public $ReqI;						# 0 unless this is a reply to an TINY_REO request
 	public $NumP;						# number of players in race
@@ -2128,11 +2161,11 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 class ObjectInfo extends Struct // Info about a single object - explained in the layout file format
 {
 	const PACK = 'sscCCC';
-	const UNPACK = 'sX/sY/CZchar/CFlags/CIndex/CHeading';
+	const UNPACK = 'sX/sY/CZbyte/CFlags/CIndex/CHeading';
 
 	public $X;
 	public $Y;
-	public $Zchar;
+	public $Zbyte;
 	public $Flags;
 	public $Index;
 	public $Heading;
