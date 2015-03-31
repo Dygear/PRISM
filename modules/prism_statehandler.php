@@ -146,6 +146,7 @@ class StateHandler extends PropertyMaster
 		# Get information on the clients & players, and their current race state.
 		$ISP->SubT(TINY_SST)->Send();	# Send STate info (ISP_STA)
 		$ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
+		$ISP->SubT(TINY_NCI)->Send();	# get NCI for all guests (ISP_NCN)
 		$ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
 		$ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
 		# Get information on everything else about the state.
@@ -274,6 +275,7 @@ class StateHandler extends PropertyMaster
             # Send out some info requests, to make sure we have all of the baseline information.
             $ISP = IS_TINY()->ReqI(1);
             $ISP->SubT(TINY_NCN)->Send();	# get all connections (ISP_NCN)
+            $ISP->SubT(TINY_NCI)->Send();	# get NCI for all guests (ISP_NCI)
             $ISP->SubT(TINY_NPL)->Send();	# get all players (ISP_NPL)
             $ISP->SubT(TINY_RES)->Send();	# get all results (ISP_RES)
         }
