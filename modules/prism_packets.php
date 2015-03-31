@@ -216,7 +216,7 @@ abstract class Struct
 #define _ISPACKETS_H_
 /////////////////////
 
-// InSim for Live for Speed : 0.5Z
+// InSim for Live for Speed : 0.6H
 
 // InSim allows communication between up to 8 external programs and LFS.
 
