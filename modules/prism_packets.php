@@ -236,10 +236,11 @@ define('INSIM_VERSION', 6);
 // CHANGES
 // =======
 
-// Version 0.6G14 (INSIM_VERSION increased to 6)
-// --------------
+// Version 0.6H (INSIM_VERSION increased to 6)
+// ------------
 // IS_REO and IS_NLP increased in size to allow 40 drivers
 // ObjectInfo Zchar is now Zbyte - see layout file description
+// ISP_NCI packet added to give host more info about new guest
 
 // Version 0.6C
 // ------------
