@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * Properties are private by design.
@@ -633,9 +633,11 @@ class LayoutObject {
 		90 => '200m Sign',
 		91 => '250m Sign',
 		96 => 'Short Railing',
-		97 => 'Medium Railing', 98 => 'Long Railing',
+		97 => 'Medium Railing',
+        98 => 'Long Railing',
 		104 => 'Long Barrier',
-		105 => 'Red Barrier', 106 => 'White Barrier',
+		105 => 'Red Barrier',
+        106 => 'White Barrier',
 		112 => 'Banner',
 		113 => 'Banner',
 		120 => 'Ramp',
