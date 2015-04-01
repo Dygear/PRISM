@@ -515,7 +515,7 @@ class LayoutObject {
     public static $AXO_146 = 146;
     public static $AXO_147 = 147;
     public static $AXO_RAILING = 148;
-    public static $AXO_149 = 149;
+    public static $AXO_START_LIGHTS = 149;
     public static $AXO_150 = 150;
     public static $AXO_151 = 151;
     public static $AXO_152 = 152;
