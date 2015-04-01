@@ -31,6 +31,7 @@ class StateHandler extends PropertyMaster
 		ISP_NCN => 'onClientPacket',
 		ISP_CNL => 'onClientPacket',
 		ISP_CPR => 'onClientPacket',
+        ISP_NCI => 'onClientPacket',
 		# Player handles
 		ISP_NPL => 'onPlayerPacket',
 		ISP_PLP => 'onPlayerPacket',
@@ -369,6 +370,7 @@ class ClientHandler extends PropertyMaster
 		ISP_CNL => '__destruct',	# 19
 		ISP_CPR => 'onRename',		# 20
 		ISP_TOC => 'onTakeOverCar'	# 31
+        ISP_NCI => 'onClientInfo'	# 57
 	);
 	public $players = array();
 
@@ -380,13 +382,17 @@ class ClientHandler extends PropertyMaster
 		}
 	}
 
-	// Baiscly the IS_NCN Struct.
+	// Basically the IS_NCN Struct.
 	protected $UCID;			# Connection's Unique ID (0 = Host)
 	protected $UName;			# UserName
 	protected $PName;			# PlayerName
 	protected $Admin;			# TRUE If Client is Admin.
 	protected $Total;			# Number of Connections Including Host
 	protected $Flags;			# 2 If Client is Remote
+    protected $Plate;			#
+    protected $Language;        #
+    protected $UserID;			#
+    protected $IPAddress;		#
 
 	// Construct
 	public function __construct(IS_NCN $NCN, StateHandler $parent)
@@ -429,7 +435,14 @@ class ClientHandler extends PropertyMaster
 		# Removes the copy from this class, but should not garbage collect it, because it's copyied in the new class.
 		unset($this->parent->clients[$TOC->OldUCID]->players[$TOC->PLID]);
 	}
-	
+
+	public function onClientInfo(IS_NCI $NCI)
+	{
+        $this->Language   = $NCI->Language;
+        $this->UserID     = $NCI->UserID;
+        $this->IPAddress  = $NCI->IPAddress;
+	}
+
 	// Is
 	public function isAdmin(){ return ($this->isLFSAdmin() || $this->isPRISMAdmin) ? TRUE : FALSE; }
 	public function isLFSAdmin(){ return ($this->UCID == 0 || $this->Admin == 1) ? TRUE : FALSE; }
