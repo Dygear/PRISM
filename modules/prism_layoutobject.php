@@ -658,7 +658,7 @@ class LayoutObject {
 		173 => 'Concrete Ramp',
 		174 => 'Concrete Wall',
 		175 => 'Concrete Pillar',
-		176 => 'Concrete Slab Wall'
+		176 => 'Concrete Slab Wall',
 		177 => 'Concrete Ramp Wall'
 	);
 }
