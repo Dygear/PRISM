@@ -545,7 +545,7 @@ class IS_SMALL extends Struct // General purpose 8 byte packet
     public $ReqI;                   # 0 unless it is an info request or a reply to an info request
     public $SubT;                   # subtype, from SMALL_ enumeration (e.g. SMALL_SSP)
 
-    public $UVal;                        # value (e.g. for SMALL_SSP this would be the OutSim packet rate)
+    public $UVal;                   # value (e.g. for SMALL_SSP this would be the OutSim packet rate)
 }; function IS_SMALL() { return new IS_SMALL; }
 
 
