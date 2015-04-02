@@ -369,7 +369,7 @@ class ClientHandler extends PropertyMaster
         ISP_NCN => '__construct',    # 18
         ISP_CNL => '__destruct',    # 19
         ISP_CPR => 'onRename',        # 20
-        ISP_TOC => 'onTakeOverCar'    # 31
+        ISP_TOC => 'onTakeOverCar',    # 31
         ISP_NCI => 'onClientInfo'    # 57
     );
     public $players = array();
