@@ -48,9 +48,9 @@ class admin extends Plugins
 	public function cmdRaceControlMessagePlayer($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 4)
-			$this->createTimer('tmrClearRCM', $argv[4], Timer::Close, $argv[3]);
+			$this->createTimer('tmrClearRCM_ply', $argv[4], Timer::Close, $argv[3]);
 		else
-			$this->createTimer('tmrClearRCM', 5);
+			$this->createTimer('tmrClearRCM_ply', 5);
 
 		$argv = $this->raceControlMessage($cmd);
 
@@ -63,9 +63,9 @@ class admin extends Plugins
 	public function cmdRaceControlMessageAll($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 3)
-			$this->createTimer('tmrClearRCM', $argv[3]);
+			$this->createTimer('tmrClearRCM_all', $argv[3]);
 		else
-			$this->createTimer('tmrClearRCM', 5);
+			$this->createTimer('tmrClearRCM_all', 5);
 
 		$argv = $this->raceControlMessage($cmd);
 
@@ -75,10 +75,14 @@ class admin extends Plugins
 		return PLUGIN_HANDLED;
 	}
 
-	public function tmrClearRCM($args = NULL)
+	public function tmrClearRCM_all()
 	{
 		IS_MST()->Msg("/rcc_all")->Send();
-		IS_MST()->Msg("/rcc_ply {$argv[3]}")->Send();
+	}
+
+	public function tmrClearRCM_ply($UName)
+	{
+		IS_MST()->Msg("/rcc_ply {$UName}")->Send();
 	}
 
 	public function cmdRCON($cmd, $ucid)
