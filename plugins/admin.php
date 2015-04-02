@@ -135,15 +135,23 @@ class admin extends Plugins
 		global $PRISM;
 		$MTC = IS_MTC()->Sound(SND_SYSMESSAGE)->UCID($ucid);
 
-		$requestingClient = $this->getClientByUCID($ucid);
+		$clientAccessFlags = $this->getClientByUCID($ucid)->getAccessFlags();
 
 		$MTC->Text('^7COMMAND^8 - DESCRIPTION')->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
 			{
-				#something is wrong here.
-				if ($requestingClient->getAccessFlags() & $detail['accessLevel'])
+				# something is wrong here.
+				#################
+				##    debug    ##
+				#################
+				var_export($clientAccessFlags);
+				var_export($detail['accessLevel']);
+				#################
+				##  end debug  ##
+				#################
+				if ($clientAccessFlags & $detail['accessLevel'])
 					$MTC->Text("^7{$command}^8 - {$detail['info']}")->Send();
 			}
 		}
