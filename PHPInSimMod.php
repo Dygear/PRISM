@@ -56,26 +56,26 @@ $PRISM->start();
 */
 class PHPInSimMod
 {
-    const VERSION = '0.4.6.2';
+    const VERSION = '0.4.6.3';
     const ROOTPATH = ROOTPATH;
 
     /* Run Time Arrays */
-    public $config                = null;
-    public $hosts                = null;
+    public $config              = null;
+    public $hosts               = null;
     public $http                = null;
-    public $telnet                = null;
-    public $plugins                = null;
-    public $admins                = null;
+    public $telnet              = null;
+    public $plugins             = null;
+    public $admins              = null;
 
     # Time outs
-    private $sleep                = null;
-    private $uSleep                = null;
+    private $sleep              = null;
+    private $uSleep             = null;
 
     private $nextMaintenance    = 0;
-    public $isWindows            = false;
+    public $isWindows            false;
 
     // Main while loop will run as long as this is set to true.
-    private $isRunning            = false;
+    private $isRunning          = false;
 
     // Real Magic Functions
     public function __construct()
