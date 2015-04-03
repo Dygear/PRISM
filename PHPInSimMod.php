@@ -72,7 +72,7 @@ class PHPInSimMod
     private $uSleep             = null;
 
     private $nextMaintenance    = 0;
-    public $isWindows            false;
+    public $isWindows           = false;
 
     // Main while loop will run as long as this is set to true.
     private $isRunning          = false;
