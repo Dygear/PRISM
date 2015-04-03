@@ -340,7 +340,7 @@ class betterButtonManager
      */
     public function AddClickEventToBtn($Name, $Class, $Function, $Params=null)
     {
-        if($Event == null) {
+        if($Function == null) {
             return PLUGIN_CONTINUE;
         }
         $Button = ButtonManager::getButtonForKey($this->UCID, $Name);
