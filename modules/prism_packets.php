@@ -2645,7 +2645,7 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
     public function pack()
     {
         if (strLen($this->Text) > 239) {
-            $this->Text = subStr($this->Msg, 0, 239);
+            $this->Text = subStr($this->Text, 0, 239);
         }
 
         return parent::pack();
