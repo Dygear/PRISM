@@ -19,16 +19,16 @@ class LayoutObject {
     private $typeData = 0; /** object index / circle radius / checkpoint half-width */
     private $colour = 0;
 
-    public static $OBJ_REAL_OBJECT        = 'object';
-    public static $OBJ_RESTRICTED        = 'restricted_area';
-    public static $OBJ_MARSHALL            = 'marshall';
+    public static $OBJ_REAL_OBJECT      = 'object';
+    public static $OBJ_RESTRICTED       = 'restricted_area';
+    public static $OBJ_MARSHALL         = 'marshall';
     public static $OBJ_MARSHALL_LEFT    = 'marshall_left';
-    public static $OBJ_MARSHALL_RIGHT    = 'marshall_right';
-    public static $OBJ_ROUTE_CHECK        = 'route_check';
+    public static $OBJ_MARSHALL_RIGHT   = 'marshall_right';
+    public static $OBJ_ROUTE_CHECK      = 'route_check';
     public static $OBJ_START            = 'start';
-    public static $OBJ_CHECK_1            = 'check_1';
-    public static $OBJ_CHECK_2            = 'check_2';
-    public static $OBJ_CHECK_3            = 'check_3';
+    public static $OBJ_CHECK_1          = 'check_1';
+    public static $OBJ_CHECK_2          = 'check_2';
+    public static $OBJ_CHECK_3          = 'check_3';
     public static $OBJ_FINISH            = 'finish';
 
     /**
@@ -659,7 +659,9 @@ class LayoutObject {
         174 => 'Concrete Wall',
         175 => 'Concrete Pillar',
         176 => 'Concrete Slab Wall',
-        177 => 'Concrete Ramp Wall'
+        177 => 'Concrete Ramp Wall',
+        178 => 'Concrete Short Slab Wall',
+        179 => 'Concrete Wedge'
     );
 }
 
