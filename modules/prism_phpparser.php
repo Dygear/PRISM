@@ -86,12 +86,12 @@ class PHPParser
             } else if (strpos($SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) {
                 $encoding = 'gzip';
             } else {
-                # Nothing...
+                // Nothing...
             }
 
             if ($encoding) {
                 $RESPONSE->addHeader('Content-Encoding: '.$encoding);
-                return gzencode ($html, 1);
+                return gzencode($html, 1);
             } else {
                 return $html;
             }

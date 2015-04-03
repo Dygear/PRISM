@@ -1,13 +1,16 @@
 <?php
 
-class LayoutParser {
+class LayoutParser
+{
 
     private $version = -1;
     private $revision = -1;
     private $numObjects = -1;
     private $laps = -1;
 
-    /** Base path for layouts. Ends on / */
+    /**
+ * Base path for layouts. Ends on / 
+*/
     private $basePath;
 
     private $objects = array();
@@ -15,7 +18,8 @@ class LayoutParser {
     const UNPACK = 'x6/Cversion/Crevision/vnumObjects/Claps/x';
     const PACK = 'a6CCvCC';
 
-    public function __construct($path) {
+    public function __construct($path) 
+    {
         if (substr($path, -1) != '/') {
             $path .= '/';
         }
@@ -45,7 +49,8 @@ class LayoutParser {
      * @param shortTrackName Track name like FE1 or BL1
      * @param Layoutname Name for the layout behind the BL1_
      */
-    public function parseLayout($shortTrackName, $layoutName) {
+    public function parseLayout($shortTrackName, $layoutName) 
+    {
         $lyt = file_get_contents($this->basePath . $shortTrackName . '_' . $layoutName . '.lyt');
 
         foreach (unpack(Layout::UNPACK, substr($lyt, 0, 12)) as $property => $value) {
@@ -63,7 +68,8 @@ class LayoutParser {
      * Whether or not the object is an marshal object
      * @return boolean
      */
-    private function isMarshal($object) {
+    private function isMarshal($object) 
+    {
         return $object instanceof MarshalObject
         ||    $object->type() == LayoutObject::OBJ_MARSHALL
         ||    $object->type() == LayoutObject::OBJ_MARSHALL_LEFT
@@ -74,7 +80,8 @@ class LayoutParser {
      * @param shortTrackName Track name like FE1 or BL1
      * @param Layoutname Name for the layout behind the BL1_
      */
-    public function writeLayout($shortTrackName, $layoutName) {
+    public function writeLayout($shortTrackName, $layoutName) 
+    {
         $out = pack(self::PACK, 'LFSLYT', $this->version, $this->revision, count($this->objects), $this->laps, 0x01);
 
         foreach ($this->objects as $object) {
@@ -84,17 +91,20 @@ class LayoutParser {
         $lyt = file_put_contents($this->basePath . $shortTrackName . '_' . $layoutName . '.lyt', $out);
     }
 
-    public function clearLayout() {
+    public function clearLayout() 
+    {
         $this->objects = array();
     }
 
-    public function addObject($obj) {
+    public function addObject($obj) 
+    {
         // send insim add packet...
         $this->removeObject();
         $this->objects[$obj->x().':'.$obj->y()] = $obj;
     }
 
-    public function removeObject($obj) {
+    public function removeObject($obj) 
+    {
         // send insim remove packet...
         unset($this->objects[$obj->x().':'.$obj->y()]);
     }

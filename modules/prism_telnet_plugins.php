@@ -15,7 +15,7 @@ class TSPluginSection extends TSSection
         $this->setSize($width, $height);
         $this->setTType($ttype);
         $this->setId('plugins');
-//        $this->setBorder(TS_BORDER_REGULAR);
+        //        $this->setBorder(TS_BORDER_REGULAR);
     }
 
     public function __destruct()
@@ -27,16 +27,16 @@ class TSPluginSection extends TSSection
     {
         switch($key)
         {
-            case KEY_CURUP :
-                $this->previousItem();
-                break;
+        case KEY_CURUP :
+            $this->previousItem();
+            break;
 
-            case KEY_CURDOWN :
-                $this->nextItem();
-                break;
+        case KEY_CURDOWN :
+            $this->nextItem();
+            break;
 
-            default :
-                return false;
+        default :
+            return false;
         }
 
         return true;
@@ -52,31 +52,31 @@ class TSPluginSection extends TSSection
         $object = $this->getCurObject();
         switch ($object->getId())
         {
-            default :
-                $this->setInputCallback(null);
-                break;
+        default :
+            $this->setInputCallback(null);
+            break;
         }
     }
 
     private function createMenu()
     {
-//        $textArea = new TSTextArea();
-//        $textArea->setId('accounts');
-//        $textArea->setText(VT100_STYLE_BOLD.'A'.VT100_STYLE_RESET.'ccounts');
-//        $textArea->setOptions(TS_OPT_ISSELECTABLE | TS_OPT_ISSELECTED);
-//        $this->add($textArea);
-//
-//        $textArea = new TSTextArea();
-//        $textArea->setId('hosts');
-//        $textArea->setText(VT100_STYLE_BOLD.'H'.VT100_STYLE_RESET.'osts');
-//        $textArea->setOptions(TS_OPT_ISSELECTABLE);
-//        $this->add($textArea);
-//
-//        $textArea = new TSTextArea();
-//        $textArea->setId('plugins');
-//        $textArea->setText(VT100_STYLE_BOLD.'P'.VT100_STYLE_RESET.'lugins');
-//        $textArea->setOptions(TS_OPT_ISSELECTABLE);
-//        $this->add($textArea);
+        //        $textArea = new TSTextArea();
+        //        $textArea->setId('accounts');
+        //        $textArea->setText(VT100_STYLE_BOLD.'A'.VT100_STYLE_RESET.'ccounts');
+        //        $textArea->setOptions(TS_OPT_ISSELECTABLE | TS_OPT_ISSELECTED);
+        //        $this->add($textArea);
+        //
+        //        $textArea = new TSTextArea();
+        //        $textArea->setId('hosts');
+        //        $textArea->setText(VT100_STYLE_BOLD.'H'.VT100_STYLE_RESET.'osts');
+        //        $textArea->setOptions(TS_OPT_ISSELECTABLE);
+        //        $this->add($textArea);
+        //
+        //        $textArea = new TSTextArea();
+        //        $textArea->setId('plugins');
+        //        $textArea->setText(VT100_STYLE_BOLD.'P'.VT100_STYLE_RESET.'lugins');
+        //        $textArea->setOptions(TS_OPT_ISSELECTABLE);
+        //        $this->add($textArea);
     }
 }
 

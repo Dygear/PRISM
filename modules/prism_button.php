@@ -13,7 +13,7 @@ class Button extends IS_BTN
     public static $TO_ALL = 255;
     public static $TO_LOCAL = 0;
 
-    public function __construct($UCID = 0, $key = NULL, $group = NULL)
+    public function __construct($UCID = 0, $key = null, $group = null)
     {
         $this->key = $key;
         $this->group = $group;
@@ -21,14 +21,12 @@ class Button extends IS_BTN
         $this->ClickID = -1;
     }
 
-    public function send($hostId = NULL)
+    public function send($hostId = null)
     {
         $id = ButtonManager::registerButton($this, $hostId, $this->key, $this->group);
 
-        if ($id !== false)
-        {
-            if (is_numeric($id))
-            {
+        if ($id !== false) {
+            if (is_numeric($id)) {
                 $this->ReqI = $id + 1; // may not be zero -_-
                 $this->ClickID = $id;
             }
@@ -36,24 +34,25 @@ class Button extends IS_BTN
         }
     }
 
-    public function registerOnClick(Plugins $plugin, $methodName, $params = NULL)
+    public function registerOnClick(Plugins $plugin, $methodName, $params = null)
     {
         $this->onClick = array($plugin, $methodName, $params);
         $this->BStyle |= ISB_CLICK;
     }
     public function click(IS_BTC $BTC)
     {
-        if (!is_array($this->onClick))
-            return;
+        if (!is_array($this->onClick)) {
+            return; 
+        }
 
         switch (count($this->onClick))
         {
-            case 3:
-                call_user_func_array(array($this->onClick[0], $this->onClick[1]), $this->onClick[2]);
+        case 3:
+            call_user_func_array(array($this->onClick[0], $this->onClick[1]), $this->onClick[2]);
             break;
-            case 2:
-            default:
-                call_user_func($this->onClick, $BTC, $this);
+        case 2:
+        default:
+            call_user_func($this->onClick, $BTC, $this);
             break;
         }
     }
@@ -75,7 +74,7 @@ class Button extends IS_BTN
         }
     }
 
-    public function delete($hostId = NULL)
+    public function delete($hostId = null)
     {
         return ButtonManager::removeButton($this, $hostId);
     }

@@ -5,42 +5,42 @@
  * @subpackage Admin
 */
 
-require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
+require_once ROOTPATH . '/modules/prism_sectionhandler.php';
 
 // Admin Flags
-define('ADMIN_NONE',                0);            # No flags.
-define('ADMIN_ACCESS',                1);            # Flag "a", Allows you to issue commands from the remote console or web admin area.
-define('ADMIN_BAN',                    2);            # Flag "b", Allows you to ban and unban clients.
-define('ADMIN_CFG',                    4);            # Flag "c", Allows you to change the, runtime, configuration of LFS.
-define('ADMIN_CVAR',                8);            # Flag "d", Allows you to change the, runtime, configuration of PRISM.
-define('ADMIN_LEVEL_E',                16);        # Flag "e",
-define('ADMIN_LEVEL_F',                32);        # Flag "f",
-define('ADMIN_GAME',                64);        # Flag "g", Allows you to change the way the game is played.
-define('ADMIN_HOST',                128);        # Flag "h", Allows you to change the way the host runs.
-define('ADMIN_IMMUNITY',            256);        # Flag "i", Allows you to be immune to admin commands.
-define('ADMIN_LEVEL_J',                512);        # Flag "j",
-define('ADMIN_KICK',                1024);        # Flag "k", Allows you to kick clients from server.
-define('ADMIN_LEVEL_L',                2048);        # Flag "l",
-define('ADMIN_TRACK',                4096);        # Flag "m", Allows you to change the track on the server.
-define('ADMIN_LEVEL_N',                8192);        # Flag "n",
-define('ADMIN_OBJECT',                16384);        # Flag "o", Allows you to set & remove autox objects in the track.
-define('ADMIN_PENALTIES',            32768);        # Flag "p", Allows you to set a penalty on any client.
-define('ADMIN_RESERVATION',            65536);        # Flag "q", Allows you to join in a reserved slot.
-define('ADMIN_RCM',                    131072);    # Flag "r", Allows you to send race control messages.
-define('ADMIN_SPECTATE',            262144);    # Flag "s", Allows you to spectate and pit a client or all clients.
-define('ADMIN_CHAT',                524288);    # Flag "t", Allows you to send messages to clients in their chat area.
-define('ADMIN_UNIMMUNIZE',            1048576);    # Flag "u", Allows you to run commands on immune admins also.
-define('ADMIN_VOTE',                2097152);    # Flag "v", Allows you to start or stop votes for anything.
-define('ADMIN_LEVEL_W',                4194304);    # Flag "w",
-define('ADMIN_LEVEL_X',                8388608);    # Flag "x",
-define('ADMIN_LEVEL_Y',                16777216);    # Flag "y",
-define('ADMIN_LEVEL_Z',                33554432);    # Flag "z",
-define('ADMIN_ALL',                    134217727);    # All flags, a - z.
+define('ADMIN_NONE',                0);            // No flags.
+define('ADMIN_ACCESS',                1);            // Flag "a", Allows you to issue commands from the remote console or web admin area.
+define('ADMIN_BAN',                    2);            // Flag "b", Allows you to ban and unban clients.
+define('ADMIN_CFG',                    4);            // Flag "c", Allows you to change the, runtime, configuration of LFS.
+define('ADMIN_CVAR',                8);            // Flag "d", Allows you to change the, runtime, configuration of PRISM.
+define('ADMIN_LEVEL_E',                16);        // Flag "e",
+define('ADMIN_LEVEL_F',                32);        // Flag "f",
+define('ADMIN_GAME',                64);        // Flag "g", Allows you to change the way the game is played.
+define('ADMIN_HOST',                128);        // Flag "h", Allows you to change the way the host runs.
+define('ADMIN_IMMUNITY',            256);        // Flag "i", Allows you to be immune to admin commands.
+define('ADMIN_LEVEL_J',                512);        // Flag "j",
+define('ADMIN_KICK',                1024);        // Flag "k", Allows you to kick clients from server.
+define('ADMIN_LEVEL_L',                2048);        // Flag "l",
+define('ADMIN_TRACK',                4096);        // Flag "m", Allows you to change the track on the server.
+define('ADMIN_LEVEL_N',                8192);        // Flag "n",
+define('ADMIN_OBJECT',                16384);        // Flag "o", Allows you to set & remove autox objects in the track.
+define('ADMIN_PENALTIES',            32768);        // Flag "p", Allows you to set a penalty on any client.
+define('ADMIN_RESERVATION',            65536);        // Flag "q", Allows you to join in a reserved slot.
+define('ADMIN_RCM',                    131072);    // Flag "r", Allows you to send race control messages.
+define('ADMIN_SPECTATE',            262144);    // Flag "s", Allows you to spectate and pit a client or all clients.
+define('ADMIN_CHAT',                524288);    // Flag "t", Allows you to send messages to clients in their chat area.
+define('ADMIN_UNIMMUNIZE',            1048576);    // Flag "u", Allows you to run commands on immune admins also.
+define('ADMIN_VOTE',                2097152);    // Flag "v", Allows you to start or stop votes for anything.
+define('ADMIN_LEVEL_W',                4194304);    // Flag "w",
+define('ADMIN_LEVEL_X',                8388608);    // Flag "x",
+define('ADMIN_LEVEL_Y',                16777216);    // Flag "y",
+define('ADMIN_LEVEL_Z',                33554432);    // Flag "z",
+define('ADMIN_ALL',                    134217727);    // All flags, a - z.
 
-define('ADMIN_MOD', ADMIN_BAN + ADMIN_KICK + ADMIN_SPECTATE); # Low level access to some basic admin commands.
-define('ADMIN_ADMIN', ADMIN_MOD + ADMIN_CFG + ADMIN_GAME + ADMIN_HOST + ADMIN_TRACK + ADMIN_PENALTIES + ADMIN_RCM + ADMIN_VOTE); # Same as giving /admin password to this user.
-define('ADMIN_SERVER', ADMIN_ADMIN + ADMIN_IMMUNITY + ADMIN_UNIMMUNIZE); # Automicaly given to server hosts.
-define('ADMIN_ROOT', ADMIN_ALL); # Root level access. (Full Access)
+define('ADMIN_MOD', ADMIN_BAN + ADMIN_KICK + ADMIN_SPECTATE); // Low level access to some basic admin commands.
+define('ADMIN_ADMIN', ADMIN_MOD + ADMIN_CFG + ADMIN_GAME + ADMIN_HOST + ADMIN_TRACK + ADMIN_PENALTIES + ADMIN_RCM + ADMIN_VOTE); // Same as giving /admin password to this user.
+define('ADMIN_SERVER', ADMIN_ADMIN + ADMIN_IMMUNITY + ADMIN_UNIMMUNIZE); // Automicaly given to server hosts.
+define('ADMIN_ROOT', ADMIN_ALL); // Root level access. (Full Access)
 
 /**
  * AdminHandler public functions :
@@ -74,11 +74,11 @@ class AdminHandler extends SectionHandler
                 console('Loaded '.$this->iniFile);
             }
         } else {
-            # We ask the client to manually input the user details here.
-            require_once(ROOTPATH . '/modules/prism_interactive.php');
+            // We ask the client to manually input the user details here.
+            include_once ROOTPATH . '/modules/prism_interactive.php';
             Interactive::queryAdmins($this->admins);
 
-            # Then build a admins.ini file based on these details provided.
+            // Then build a admins.ini file based on these details provided.
             $extraInfo = <<<ININOTES
 ;
 ; Line starting with ; is a comment
@@ -150,7 +150,7 @@ ININOTES;
             }
         }
 
-        # Crazy stuff we have to do to make sure that usernames are lowercase.
+        // Crazy stuff we have to do to make sure that usernames are lowercase.
         $tempAdmins = array();
 
         foreach ($this->admins as $username => &$details) {
@@ -159,7 +159,7 @@ ININOTES;
 
         $this->admins = $tempAdmins;
 
-        return TRUE;
+        return true;
     }
 
     public function &getAdminsInfo()
@@ -239,7 +239,7 @@ ININOTES;
         );
 
         // Add new user section to admin.ini
-        if ($store)    {
+        if ($store) {
             $this->appendSection($username, $this->admins[$username]);
         } else {
             $this->admins[$username]['temporary'] = true;

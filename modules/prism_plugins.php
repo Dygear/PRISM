@@ -5,14 +5,14 @@
  * @subpackage Plugin
 */
 
-define('PRINT_CHAT',        (1 << 0));        # 1
-define('PRINT_RCM',            (1 << 1));        # 2
-define('PRINT_NUM',            (1 << 2)-1);    # 4 - 1
-define('PRINT_CONTEXT',        PRINT_NUM);        # 3
+define('PRINT_CHAT',        (1 << 0));        // 1
+define('PRINT_RCM',            (1 << 1));        // 2
+define('PRINT_NUM',            (1 << 2)-1);    // 4 - 1
+define('PRINT_CONTEXT',        PRINT_NUM);        // 3
 
 class PluginHandler extends SectionHandler
 {
-    private $plugins            = array();            # Stores references to the plugins we've spawned.
+    private $plugins            = array();            // Stores references to the plugins we've spawned.
     private $pluginvars            = array();
 
     public function __construct()
@@ -47,8 +47,8 @@ class PluginHandler extends SectionHandler
                 }
             }
         } else {
-            # We ask the client to manually input the plugin details here.
-            require_once(ROOTPATH . '/modules/prism_interactive.php');
+            // We ask the client to manually input the plugin details here.
+            include_once ROOTPATH . '/modules/prism_interactive.php';
             Interactive::queryPlugins($this->pluginvars, $PRISM->hosts->getHostsInfo());
 
             if ($this->createIniFile('PHPInSimMod Plugins', $this->pluginvars)) {
@@ -81,16 +81,16 @@ class PluginHandler extends SectionHandler
                 console('No plugins found in the directory.');
             }
 
-            # As we can't find any plugin files, we invalidate the the ini settings.
+            // As we can't find any plugin files, we invalidate the the ini settings.
             $this->pluginvars = null;
         }
 
-        # If there are no plugins, then don't loop through the list.
+        // If there are no plugins, then don't loop through the list.
         if ($this->pluginvars == null) {
             return true;
         }
 
-        # Find what plugin files have ini entrys
+        // Find what plugin files have ini entrys
         foreach ($this->pluginvars as $pluginSection => $pluginHosts) {
             $pluginFileHasPluginSection = false;
 
@@ -100,18 +100,18 @@ class PluginHandler extends SectionHandler
                 }
             }
 
-            # Remove any pluginini value who does not have a file associated with it.
+            // Remove any pluginini value who does not have a file associated with it.
             if ($pluginFileHasPluginSection === false) {
                 unset($this->pluginvars[$pluginSection]);
                 continue;
             }
 
-            # Load the plugin file.
+            // Load the plugin file.
             if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE) {
                 console("Loading plugin: $pluginSection");
             }
 
-            include_once("$pluginPath/$pluginSection.php");
+            include_once "$pluginPath/$pluginSection.php";
 
             $this->plugins[$pluginSection] = new $pluginSection($this);
 
@@ -144,19 +144,19 @@ class PluginHandler extends SectionHandler
         $PRISM->hosts->curHostID = $hostID;
 
         foreach ($this->plugins as $name => $plugin) {
-            # If the packet we are looking at has no callbacks for this packet type don't go to the loop.
+            // If the packet we are looking at has no callbacks for this packet type don't go to the loop.
             if (!isset($plugin->callbacks[$packet->Type])) {
                 continue;
             }
 
-            # If the plugin is not registered on this server, skip this plugin.
+            // If the plugin is not registered on this server, skip this plugin.
             if (!$this->isPluginEligibleForPacket($name, $hostID)) {
                 continue;
             }
 
             foreach ($plugin->callbacks[$packet->Type] as $callback) {
                 if (($plugin->$callback($packet)) == PLUGIN_HANDLED) {
-                    continue 2; # Skips all of the rest of the plugins who wanted this packet.
+                    continue 2; // Skips all of the rest of the plugins who wanted this packet.
                 }
             }
         }
@@ -165,13 +165,17 @@ class PluginHandler extends SectionHandler
 
 abstract class Plugins extends Timers
 {
-    /** These consts should _ALWAYS_ be defined in your classes. */
+    /**
+ * These consts should _ALWAYS_ be defined in your classes. 
+*/
     /* const NAME;            */
     /* const DESCRIPTION;    */
     /* const AUTHOR;        */
     /* const VERSION;        */
 
-    /** Properties */
+    /**
+ * Properties 
+*/
     public $callbacks = array(
     );
     // Callbacks
@@ -180,7 +184,9 @@ abstract class Plugins extends Timers
     public $localCommands = array();
     public $sayCommands = array();
 
-    /** Internal Methods */
+    /**
+ * Internal Methods 
+*/
     private function getCallback($cmdsArray, $cmdString)
     {
         // Quick Lookup (Commands without Args)
@@ -190,8 +196,8 @@ abstract class Plugins extends Timers
 
         // Through Lookup (Commands with Args)
         foreach ($cmdsArray as $cmd => $details)  {
-            # Due to the nature of these commands, we have to check all instances for matches.
-            if (strpos($cmdString, $cmd) === 0) { # Check if the string STARTS with our command.
+            // Due to the nature of these commands, we have to check all instances for matches.
+            if (strpos($cmdString, $cmd) === 0) { // Check if the string STARTS with our command.
                 return $details;
             }
         }
@@ -199,14 +205,18 @@ abstract class Plugins extends Timers
         return false;
     }
 
-    /** Send Methods */
+    /**
+ * Send Methods 
+*/
     protected function sendPacket(Struct $packetClass)
     {
         global $PRISM;
         return $PRISM->hosts->sendPacket($packetClass);
     }
 
-    /** Handle Methods */
+    /**
+ * Handle Methods 
+*/
     // This is the yang to the registerSayCommand & registerLocalCommand function's Yin.
     public function handleCmd(IS_MSO $packet)
     {
@@ -245,11 +255,13 @@ abstract class Plugins extends Timers
         }
     }
 
-    /** Access Level Related Functions */
+    /**
+ * Access Level Related Functions 
+*/
     protected function canUserAccessCommand($UCID, $cmd)
     {
-        # Hosts are automatic admins so due to their nature, they have full access.
-        # Commands that have no premission level don't require this check.
+        // Hosts are automatic admins so due to their nature, they have full access.
+        // Commands that have no premission level don't require this check.
         if ($UCID == 0 OR $cmd['accessLevel'] == -1) {
             return true;
         }
@@ -266,7 +278,9 @@ abstract class Plugins extends Timers
         return ($userLevel & $accessLevel) ? true : false;
     }
 
-    /** Register Methods */
+    /**
+ * Register Methods 
+*/
     // Directly registers a packet to be handled by a callbackMethod within the plugin.
     protected function registerPacket($callbackMethod, $PacketType)
     {
@@ -290,7 +304,7 @@ abstract class Plugins extends Timers
     protected function registerConsoleCommand($cmd, $callbackMethod, $info = '')
     {
         if (!isset($this->callbacks['STDIN']) && !isset($this->callbacks['STDIN']['handleConsoleCmd'])) {
-            # We don't have any local callback hooking to the STDIN stream, make one.
+            // We don't have any local callback hooking to the STDIN stream, make one.
             $this->registerPacket('handleInsimCmd', 'STDIN');
         }
 
@@ -301,7 +315,7 @@ abstract class Plugins extends Timers
     protected function registerInsimCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
     {
         if (!isset($this->callbacks[ISP_III]) && !isset($this->callbacks[ISP_III]['handleInsimCmd'])) {
-            # We don't have any local callback hooking to the ISP_III packet, make one.
+            // We don't have any local callback hooking to the ISP_III packet, make one.
             $this->registerPacket('handleInsimCmd', ISP_III);
         }
 
@@ -312,7 +326,7 @@ abstract class Plugins extends Timers
     protected function registerLocalCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
     {
         if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd'])) {
-            # We don't have any local callback hooking to the ISP_MSO packet, make one.
+            // We don't have any local callback hooking to the ISP_MSO packet, make one.
             $this->registerPacket('handleCmd', ISP_MSO);
         }
 
@@ -323,14 +337,16 @@ abstract class Plugins extends Timers
     protected function registerSayCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
     {
         if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd'])) {
-            # We don't have any local callback hooking to the ISP_MSO packet, make one.
+            // We don't have any local callback hooking to the ISP_MSO packet, make one.
             $this->registerPacket('handleCmd', ISP_MSO);
         }
 
         $this->sayCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
     }
 
-    /** Internal Functions */
+    /**
+ * Internal Functions 
+*/
     protected function getCurrentHostId()
     {
         global $PRISM;
@@ -370,7 +386,9 @@ abstract class Plugins extends Timers
         return $return;
     }
 
-    /** Server Methods */
+    /**
+ * Server Methods 
+*/
     protected function serverGetName()
     {
         if ($this->getHostState() !== null) {
@@ -380,7 +398,9 @@ abstract class Plugins extends Timers
         return null;
     }
 
-    /** Client & Player */
+    /**
+ * Client & Player 
+*/
     protected function &getPlayerByPLID(&$PLID, $hostID = null)
     {
         if (($players = $this->getHostState($hostID)->players) && $players !== null && isset($players[$PLID])) {
@@ -432,7 +452,7 @@ abstract class Plugins extends Timers
     protected function &getClientByPLID(&$PLID, $hostID = null)
     {
         if (($players = $this->getHostState($hostID)->players) && $players !== null && isset($players[$PLID])) {
-            $UCID = $players[$PLID]->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
+            $UCID = $players[$PLID]->UCID; // As so to avoid Indirect modification of overloaded property NOTICE;
             return $this->getClientByUCID($UCID);
         }
 
@@ -455,7 +475,7 @@ abstract class Plugins extends Timers
         if (($players = $this->getHostState($hostID)->players) && $players !== null) {
             foreach ($players as $plid => $player) {
                 if (strToLower($player->PName) == ($PName)) {
-                    $UCID = $player->UCID; # As so to avoid Indirect modification of overloaded property NOTICE;
+                    $UCID = $player->UCID; // As so to avoid Indirect modification of overloaded property NOTICE;
                     return $this->getClientByUCID($UCID);
                 }
             }
@@ -487,25 +507,25 @@ abstract class Plugins extends Timers
 
     protected function isAdmin(&$username, $hostID = null)
     {
-//        global $PRISM;
-        # Check the user is defined as an admin.
-//        if (!$PRISM->admins->adminExists($username))
-//            return false;
+        //        global $PRISM;
+        // Check the user is defined as an admin.
+        //        if (!$PRISM->admins->adminExists($username))
+        //            return false;
 
-        # set the $hostID;
+        // set the $hostID;
         if ($hostID === null) {
             $hostID = $this->getHostId($hostID);
         }
 
-        # Check the user is defined as an admin on all or the host current host.
-//        $adminInfo = $PRISM->admins->getAdminInfo($username);
+        // Check the user is defined as an admin on all or the host current host.
+        //        $adminInfo = $PRISM->admins->getAdminInfo($username);
         return ($this->isAdminGlobal($username) || $this->isAdminLocal($username, $hostID)) ? true : false;
     }
 
     protected function isAdminGlobal(&$username)
     {
         global $PRISM;
-        # Check the user is defined as an admin.
+        // Check the user is defined as an admin.
         if (!$PRISM->admins->adminExists($username)) {
             return false;
         }
@@ -518,17 +538,17 @@ abstract class Plugins extends Timers
     {
         global $PRISM;
 
-        # Check the user is defined as an admin.
+        // Check the user is defined as an admin.
         if (!$PRISM->admins->adminExists($username)) {
             return false;
         }
 
-        # set the $hostID;
+        // set the $hostID;
         if ($hostID === null) {
             $hostID = $PRISM->hosts->curHostID;
         }
 
-        # Check the user is defined as an admin on the host current host.
+        // Check the user is defined as an admin on the host current host.
         $adminInfo = $PRISM->admins->getAdminInfo($username);
         return ((strpos($adminInfo['connection'], $hostID) !== false) !== false) ? true : false;
     }
@@ -536,12 +556,12 @@ abstract class Plugins extends Timers
     protected function isImmune(&$username)
     {
         global $PRISM;
-        # Check the user is defined as an admin.
+        // Check the user is defined as an admin.
         if (!$PRISM->admins->adminExists($username)) {
             return false;
         }
 
-        # Check the user is defined as an admin on the host current host.
+        // Check the user is defined as an admin on the host current host.
         $adminInfo = $PRISM->admins->getAdminInfo($username);
         return ($adminInfo['accessFlags'] & ADMIN_IMMUNITY) ? true : false;
     }

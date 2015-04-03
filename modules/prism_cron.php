@@ -25,12 +25,13 @@ class cron
 
         try
         {
-            if (FALSE === file_exists($this->crontab))
-                $this->writeTemplate($this->crontab);
+            if (false === file_exists($this->crontab)) {
+                $this->writeTemplate($this->crontab); 
+            }
 
             $this->loadTable($this->crontab);
-#            Timers::Add('Cron', new Timer(1, -1, -1, array($this, 'tick')));
-#            console('Cron started ('.sizeof($this->jobs).' jobs)');
+            // Timers::Add('Cron', new Timer(1, -1, -1, array($this, 'tick')));
+            // console('Cron started ('.sizeof($this->jobs).' jobs)');
         }
         catch (Exception $e)
         {
@@ -42,8 +43,9 @@ class cron
     {
         $time = time();
 
-        if (abs($time - $this->time) > 10)
-            $this->time = $time - 1;
+        if (abs($time - $this->time) > 10) {
+            $this->time = $time - 1; 
+        }
 
         while ($this->time < $time)
         {
@@ -51,17 +53,18 @@ class cron
 
             foreach ($this->jobs as $job)
             {
-                if (FALSE === (bool) preg_match('/'.$job['regex'].'/', $now))
-                    continue;
+                if (false === (bool) preg_match('/'.$job['regex'].'/', $now)) {
+                    continue; 
+                }
 
                 switch ($job['cmd']{0})
                 {
-                    case '/':
-                        IS_MST()->Msg($job['cmd'])->Send();
-                        break;
-                    default:
-                        IS_MSX()->Msg($job['cmd'])->Send();
-                        break;
+                case '/':
+                    IS_MST()->Msg($job['cmd'])->Send();
+                    break;
+                default:
+                    IS_MSX()->Msg($job['cmd'])->Send();
+                    break;
                 }
             }
         }
@@ -75,18 +78,21 @@ class cron
 
     protected function loadTable($file)
     {
-        if (FALSE === file_exists($file) || FALSE === is_file($file) ||  FALSE === ($file_contents = file_get_contents($file)))
-            throw new Exception('<Cron> cannot not load crontab "'.$file.'"');
+        if (false === file_exists($file) || false === is_file($file) ||  false === ($file_contents = file_get_contents($file))) {
+            throw new Exception('<Cron> cannot not load crontab "'.$file.'"'); 
+        }
 
         foreach (preg_split('/\r?\n/', $file_contents, -1, PREG_SPLIT_NO_EMPTY) as $line)
         {
-            if ($line{0} === '#')
-                continue;
+            if ($line{0} === '#') {
+                continue; 
+            }
 
             list($seconds, $minutes, $hours, $mday, $month, $day, $command) = preg_split('/\s+/', $line, 7, PREG_SPLIT_NO_EMPTY);
 
-            if ($seconds == '' || $minutes == '' || $hours == '' || $mday == '' || $month == '' || $day == '' || $command == '')
-                continue;
+            if ($seconds == '' || $minutes == '' || $hours == '' || $mday == '' || $month == '' || $day == '' || $command == '') {
+                continue; 
+            }
 
             $this->jobs[] = array (
                 'regex'    => $this->format($seconds, 59) . $this->format($minutes, 59) . $this->format($hours, 23) . $this->format($mday, 31) . $this->format($month, 12) . $this->format($day, 6, 1),
@@ -97,8 +103,7 @@ class cron
 
     protected function format($value, $rangemax, $digits=2)
     {
-        if ($value === '*')
-        {
+        if ($value === '*') {
             return str_repeat('.', $digits);
         }
 
@@ -120,7 +125,8 @@ class cron
 
     protected function writeTemplate($filename)
     {
-        file_put_contents($filename,
+        file_put_contents(
+            $filename,
             '#    +-------------------------- second (0 - 59)'. PHP_EOL .
             '#    |'. PHP_EOL .
             '#    |    +---------------------- minute (0 - 59)'. PHP_EOL .

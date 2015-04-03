@@ -25,8 +25,9 @@ class ButtonManager
                 $out = "Conn ".$UCID.': ';
                 foreach ($buttons as $clickID => $BTN)
                 {
-                    if ($BTN != null)
-                        $out .= $clickID.' ';
+                    if ($BTN != null) {
+                        $out .= $clickID.' '; 
+                    }
                 }
                 console("\t\t$out");
             }
@@ -36,25 +37,24 @@ class ButtonManager
 
     private static $buttons = array();
 
-    /** Called by Button->send(). Assigns unique clickId. */
+    /**
+ * Called by Button->send(). Assigns unique clickId. 
+*/
     public static function registerButton(Button $BTN, $hostId = null)
     {
-        if ($BTN->ClickID != -1)
-        {
+        if ($BTN->ClickID != -1) {
             // clickid already set
             return true;
         }
 
         self::debug();
 
-        if ($hostId === NULL)
-        {
+        if ($hostId === null) {
             global $PRISM;
             $hostId = $PRISM->hosts->curHostID;
         }
         // make sure hostid is set in array
-        if (!isset(self::$buttons[$hostId]))
-        {
+        if (!isset(self::$buttons[$hostId])) {
             self::$buttons[$hostId] = array();
         }
 
@@ -63,8 +63,7 @@ class ButtonManager
         }
         else {
             // make sure the button-reservation array exists
-            if (!isset(self::$buttons[$hostId][$BTN->UCID]))
-            {
+            if (!isset(self::$buttons[$hostId][$BTN->UCID])) {
                 self::$buttons[$hostId][$BTN->UCID] = array_fill(0, BM_MAX_BUTTONS, null);
             }
             $ids = self::$buttons[$hostId][$BTN->UCID];
@@ -73,15 +72,13 @@ class ButtonManager
             $id = -1;
             for ($i = 0; $i < BM_MAX_BUTTONS; $i++)
             {
-                if ($ids[$i] === null)
-                {
+                if ($ids[$i] === null) {
                     $id = $i;
                     break;
                 }
             }
 
-            if ($id === -1)
-            {
+            if ($id === -1) {
                 echo "No free ButtonID found."; // add "paging" here...
                 return false;
             }
@@ -94,17 +91,16 @@ class ButtonManager
         return false;
     }
 
-// removal
-    public static function removeButtonByKey($UCID, $key, $hostId = NULL)
+    // removal
+    public static function removeButtonByKey($UCID, $key, $hostId = null)
     {
         $button = self::getButtonForKey($UCID, $key, $hostId);
-        if ($button != null)
-        {
+        if ($button != null) {
             self::removeButton($button, $hostId);
         }
     }
 
-    public static function removeButtonsByGroup($UCID, $group, $hostId = NULL)
+    public static function removeButtonsByGroup($UCID, $group, $hostId = null)
     {
         $buttons = self::getButtonsForGroup($UCID, $group, $hostId);
         foreach ($buttons as $button)
@@ -113,11 +109,10 @@ class ButtonManager
         }
     }
 
-    public static function removeButton(Button $BTN, $hostId = NULL)
+    public static function removeButton(Button $BTN, $hostId = null)
     {
         self::debug();
-        if ($hostId === NULL)
-        {
+        if ($hostId === null) {
             global $PRISM;
             $hostId = $PRISM->hosts->curHostID;
         }
@@ -133,15 +128,14 @@ class ButtonManager
     }
 
 
-// interaction
+    // interaction
     public static function onButtonClick(IS_BTC $BTC)
     {
         self::debug();
         global $PRISM;
         $hostId = $PRISM->hosts->curHostID;
 
-        if (!isset(self::$buttons[$hostId][$BTC->UCID][$BTC->ClickID]))
-        {
+        if (!isset(self::$buttons[$hostId][$BTC->UCID][$BTC->ClickID])) {
             console('ERROR: Received click for unknown button!');
             var_dump($BTC);
             var_dump(self::$buttons);
@@ -160,8 +154,7 @@ class ButtonManager
         global $PRISM;
         $hostId = $PRISM->hosts->curHostID;
 
-        if (!isset(self::$buttons[$hostId][$BTT->UCID][$BTT->ClickID]))
-        {
+        if (!isset(self::$buttons[$hostId][$BTT->UCID][$BTT->ClickID])) {
             console('ERROR: Received button text for unknown button!');
             var_dump($BTC);
             var_dump(self::$buttons);
@@ -175,21 +168,18 @@ class ButtonManager
 
 
 
-//Getter methods
-    public static function getButtonForKey($UCID, $key, $hostId = NULL)
+    //Getter methods
+    public static function getButtonForKey($UCID, $key, $hostId = null)
     {
-        if ($hostId === NULL)
-        {
+        if ($hostId === null) {
             global $PRISM;
             $hostId = $PRISM->hosts->curHostID;
         }
 
-        if (isset(self::$buttons[$hostId][$UCID]))
-        {
+        if (isset(self::$buttons[$hostId][$UCID])) {
             foreach (self::$buttons[$hostId][$UCID] as $button)
             {
-                if ($button != null && $button->key() == $key)
-                {
+                if ($button != null && $button->key() == $key) {
                     return $button;
                 }
             }
@@ -198,22 +188,19 @@ class ButtonManager
         return null;
     }
 
-    public static function getButtonsForGroup($UCID, $group, $hostId = NULL)
+    public static function getButtonsForGroup($UCID, $group, $hostId = null)
     {
-        if ($hostId === NULL)
-        {
+        if ($hostId === null) {
             global $PRISM;
             $hostId = $PRISM->hosts->curHostID;
         }
 
         $buttons = array();
 
-        if (isset(self::$buttons[$hostId][$UCID]))
-        {
+        if (isset(self::$buttons[$hostId][$UCID])) {
             foreach (self::$buttons[$hostId][$UCID] as $button)
             {
-                if ($button != null && $button->group() == $group)
-                {
+                if ($button != null && $button->group() == $group) {
                     $buttons[] = $button;
                 }
             }
@@ -224,7 +211,7 @@ class ButtonManager
 
 
 
-    public static function clearButtonsForConn($UCID, $hostId = NULL)
+    public static function clearButtonsForConn($UCID, $hostId = null)
     {
         $hostButtons = self::buttonsForHost($hostId);
         unset($hostButtons[$UCID]);
@@ -255,16 +242,14 @@ class ButtonManager
     }
     */
 
-    private static function buttonsForHost($hostId = NULL)
+    private static function buttonsForHost($hostId = null)
     {
-        if ($hostId === NULL)
-        {
+        if ($hostId === null) {
             global $PRISM;
             $hostId = $PRISM->hosts->curHostID;
         }
 
-        if (!isset(self::$buttons[$hostId]))
-        {
+        if (!isset(self::$buttons[$hostId])) {
             self::$buttons[$hostId] = array();
         }
 
@@ -289,7 +274,7 @@ class ButtonManager
     }
     */
 
-// Area reserving
+    // Area reserving
 
     private static $reservedAreas = array();
 
@@ -312,16 +297,11 @@ class ButtonManager
 
         foreach (self::$reservedAreas as $area)
         {
-            if (
-                $area['L'] < ($L + $W)
-                &&
-                ($area['L'] + $area['W']) > $L
-                &&
-                $area['T'] < ($T + $H)
-                &&
-                ($area['T'] + $area['H']) > $T
-            )
-            {
+            if ($area['L'] < ($L + $W)
+                && ($area['L'] + $area['W']) > $L
+                && $area['T'] < ($T + $H)
+                && ($area['T'] + $area['H']) > $T
+            ) {
                 console('Area already reserved. L:'.$area['L'].", T:".$area['T'].", W:".$area['W'].", H:".$area['H']);
                 return false;
             }

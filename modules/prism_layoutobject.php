@@ -4,7 +4,8 @@
  * Properties are private by design.
  * You should never edit an object. Just create a new one as you need to remove the old object and add the new one.
  */
-class LayoutObject {
+class LayoutObject
+{
     const UNPACK = 'sX/sY/CZ/CFlags/CIndex/CHeading';
     const PACK = 'ssCCCC';
 
@@ -16,7 +17,9 @@ class LayoutObject {
 
     private $index = -1;
     private $type;
-    private $typeData = 0; /** object index / circle radius / checkpoint half-width */
+    private $typeData = 0; /**
+ * object index / circle radius / checkpoint half-width 
+*/
     private $colour = 0;
 
     public static $OBJ_REAL_OBJECT      = 'object';
@@ -37,20 +40,19 @@ class LayoutObject {
      * @param dataOrX 8 byte data or value for X coordinate
      * @param y Y coordinate
      * @param z Z coordinate
-     * @param type one of LayoutObject::$OBJ_... values
+     * @param type one of LayoutObject::                                          $OBJ_... values
      * @param hdng heading in degree or route index
      * @param typeData object index, circle radius or half-width of control point
      * @param colour Colour for chalk and tyre stacks
      */
-    public function __construct($dataOrX, $y = null, $z = null, $type = null, $hdng = null, $typeData = null, $colour = null) {
-        if ($type != null)
-        {
+    public function __construct($dataOrX, $y = null, $z = null, $type = null, $hdng = null, $typeData = null, $colour = null) 
+    {
+        if ($type != null) {
             $this->x = $dataOrX;
             $this->y = $y;
             $this->z = $z;
             $this->type = $type;
-            if ($this->type == self::$OBJ_ROUTE_CHECK)
-            {
+            if ($this->type == self::$OBJ_ROUTE_CHECK) {
                 $this->setRouteIndex($hdng);
             }
             else
@@ -65,25 +67,24 @@ class LayoutObject {
         }
     }
 
-    public function __toString() {
+    public function __toString() 
+    {
         $retVal = $this->type;
 
-        if ($this->type == self::$OBJ_REAL_OBJECT)
-        {
+        if ($this->type == self::$OBJ_REAL_OBJECT) {
             $retVal .= ': ' . self::$REV_AXO[$this->typeData];
-            if ($this->typeData >= self::$AXO_CHALK_LINE && $this->typeData <= self::$AXO_CHALK_RIGHT3)
-            {
+            if ($this->typeData >= self::$AXO_CHALK_LINE && $this->typeData <= self::$AXO_CHALK_RIGHT3) {
                 $retVal .= ', col:' . self::$REV_CC[$this->colour];
             }
-            else if ($this->typeData >= self::$AXO_TYRE_SINGLE && $this->typeData <= self::$AXO_TYRE_STACK4_BIG)
-            {
+            else if ($this->typeData >= self::$AXO_TYRE_SINGLE && $this->typeData <= self::$AXO_TYRE_STACK4_BIG) {
                 $retVal .= ', col:' . self::$REV_TC[$this->colour];
             }
         }
         return $retVal;
     }
 
-    public function pack() {
+    public function pack() 
+    {
         $x = $this->rawX();
         $y = $this->rawY();
         $z = $this->z * 4;
@@ -106,8 +107,9 @@ class LayoutObject {
         return round($this->y * 16);
     }
 
-    public function initFromBytes($data) {
-    $obj = unpack(LayoutObject::UNPACK, $data);
+    public function initFromBytes($data) 
+    {
+        $obj = unpack(LayoutObject::UNPACK, $data);
         // scale ...
         $this->x = $obj['X'] / 16;
         $this->y = $obj['Y'] / 16;
@@ -129,21 +131,21 @@ class LayoutObject {
                     // bits 0 to 1 :
                     switch ($flg & 0x03) {
                         // 00 = no marshall
-                        case 0:
-                            $this->type = self::$OBJ_RESTRICTED;
-                            break;
+                    case 0:
+                        $this->type = self::$OBJ_RESTRICTED;
+                        break;
                         // 01 = standing marshall
-                        case 1:
-                            $this->type = self::$OBJ_MARSHALL;
-                            break;
+                    case 1:
+                        $this->type = self::$OBJ_MARSHALL;
+                        break;
                         // 10 = marshall pointing left
-                        case 2:
-                            $this->type = self::$OBJ_MARSHALL_LEFT;
-                            break;
+                    case 2:
+                        $this->type = self::$OBJ_MARSHALL_LEFT;
+                        break;
                         // 11 = marshall pointing right
-                        case 3:
-                            $this->type = self::$OBJ_MARSHALL_RIGHT;
-                            break;
+                    case 3:
+                        $this->type = self::$OBJ_MARSHALL_RIGHT;
+                        break;
                     }
                     // bits 2 to 5 :
                     // circle diameter in metres (shifted left by 2 bits)
@@ -178,26 +180,26 @@ class LayoutObject {
                 // bits 0 to 1 :
                 switch ($flg & 0x03) {
                     // 00 = Start position (if width = 0) or finish line (if width > 0)
-                    case 0:
-                        if ($this->typeData == 0) {
-                            $this->type = self::$OBJ_START;
-                        }
-                        else {
-                            $this->type = self::$OBJ_FINISH;
-                        }
-                        break;
+                case 0:
+                    if ($this->typeData == 0) {
+                        $this->type = self::$OBJ_START;
+                    }
+                    else {
+                        $this->type = self::$OBJ_FINISH;
+                    }
+                    break;
                     // 01 = Checkpoint 1
-                    case 1:
-                        $this->type = self::$OBJ_CHECK_1;
-                        break;
+                case 1:
+                    $this->type = self::$OBJ_CHECK_1;
+                    break;
                     // 10 = Checkpoint 2
-                    case 2:
-                        $this->type = self::$OBJ_CHECK_2;
-                        break;
+                case 2:
+                    $this->type = self::$OBJ_CHECK_2;
+                    break;
                     // 11 = Checkpoint 3
-                    case 3:
-                        $this->type = self::$OBJ_CHECK_3;
-                        break;
+                case 3:
+                    $this->type = self::$OBJ_CHECK_3;
+                    break;
                 }
             }
             else // highest bit of flags is not set : autocross object
@@ -215,63 +217,64 @@ class LayoutObject {
      * Computes the index flag and heading fields for the current object.
      * @return array Array containing the value for 'flags', 'index' and 'heading'
      */
-    public function dataForType() {
+    public function dataForType() 
+    {
         $dat = array();
 
         switch($this->type) {
-            case self::$OBJ_RESTRICTED:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x80;
-                $dat['index'] = 254;
-                break;
-            case self::$OBJ_MARSHALL:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x81;
-                $dat['index'] = 254;
-                break;
-            case self::$OBJ_MARSHALL_LEFT:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x82;
-                $dat['index'] = 254;
-                break;
-            case self::$OBJ_MARSHALL_RIGHT:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x83;
-                $dat['index'] = 254;
-                break;
-            case self::$OBJ_ROUTE_CHECK:
-                $dat['flags'] = $this->typeData << 2 & 0x3C;
-                $dat['index'] = 255;
-                $dat['heading'] = $this->hdng;
-                break;
+        case self::$OBJ_RESTRICTED:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x80;
+            $dat['index'] = 254;
+            break;
+        case self::$OBJ_MARSHALL:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x81;
+            $dat['index'] = 254;
+            break;
+        case self::$OBJ_MARSHALL_LEFT:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x82;
+            $dat['index'] = 254;
+            break;
+        case self::$OBJ_MARSHALL_RIGHT:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x83;
+            $dat['index'] = 254;
+            break;
+        case self::$OBJ_ROUTE_CHECK:
+            $dat['flags'] = $this->typeData << 2 & 0x3C;
+            $dat['index'] = 255;
+            $dat['heading'] = $this->hdng;
+            break;
 
-            case self::$OBJ_REAL_OBJECT:
-                $dat['flags'] = $this->colour;
-                $dat['index'] = $this->typeData;
-                break;
-            case self::$OBJ_START:
-                $dat['flags'] = 0x80;
-                $dat['index'] = 0;
-                break;
-            case self::$OBJ_CHECK_1:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x81;
-                $dat['index'] = 0;
-                break;
-            case self::$OBJ_CHECK_2:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x82;
-                $dat['index'] = 0;
-                break;
-            case self::$OBJ_CHECK_3:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x83;
-                $dat['index'] = 0;
-                break;
-            case self::$OBJ_FINISH:
-                $dat['flags'] = $this->typeData << 2 & 0x3C | 0x80;
-                $dat['index'] = 0;
-                break;
+        case self::$OBJ_REAL_OBJECT:
+            $dat['flags'] = $this->colour;
+            $dat['index'] = $this->typeData;
+            break;
+        case self::$OBJ_START:
+            $dat['flags'] = 0x80;
+            $dat['index'] = 0;
+            break;
+        case self::$OBJ_CHECK_1:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x81;
+            $dat['index'] = 0;
+            break;
+        case self::$OBJ_CHECK_2:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x82;
+            $dat['index'] = 0;
+            break;
+        case self::$OBJ_CHECK_3:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x83;
+            $dat['index'] = 0;
+            break;
+        case self::$OBJ_FINISH:
+            $dat['flags'] = $this->typeData << 2 & 0x3C | 0x80;
+            $dat['index'] = 0;
+            break;
 
-            default:
-                // unknown objects...
-                if (is_array($this->type)) {
-                    $dat['flags'] = $this->type[0];
-                    $dat['index'] = $this->type[1];
-                }
+        default:
+            // unknown objects...
+            if (is_array($this->type)) {
+                $dat['flags'] = $this->type[0];
+                $dat['index'] = $this->type[1];
+            }
         }
 
         // default heading calculation
@@ -286,7 +289,8 @@ class LayoutObject {
      * Set the heading in deg.
      * Normalizes the heading to use the lfs notation between -180° and 180°.
      */
-    private function setHeading($val) {
+    private function setHeading($val) 
+    {
         if ($this->type == self::$OBJ_ROUTE_CHECK) {
             throw new Exception('Trying to set heading on route checker object. Use setRouteIndex instead.');
         }
@@ -310,7 +314,8 @@ class LayoutObject {
     /**
      * Set the route index if the object is a route check.
      */
-    private function setRouteIndex($val) {
+    private function setRouteIndex($val) 
+    {
         if ($this->type != self::$OBJ_ROUTE_CHECK) {
             throw new Exception('Trying to set route index on a non route checker object. Use setHeading instead.');
         }
@@ -361,8 +366,7 @@ class LayoutObject {
     }
     public function index()
     {
-        if ($this->index == -1)
-        {
+        if ($this->index == -1) {
             $dat = $this->dataForType();
             $this->index = $dat['index'];
         }

@@ -5,11 +5,11 @@
  * @subpackage Telnet
 */
 
-require_once(ROOTPATH . '/modules/prism_telnet_defines.php');
-require_once(ROOTPATH . '/modules/prism_telnet_server.php');
-require_once(ROOTPATH . '/modules/prism_telnet_admins.php');
-require_once(ROOTPATH . '/modules/prism_telnet_hosts.php');
-require_once(ROOTPATH . '/modules/prism_telnet_plugins.php');
+require_once ROOTPATH . '/modules/prism_telnet_defines.php';
+require_once ROOTPATH . '/modules/prism_telnet_server.php';
+require_once ROOTPATH . '/modules/prism_telnet_admins.php';
+require_once ROOTPATH . '/modules/prism_telnet_hosts.php';
+require_once ROOTPATH . '/modules/prism_telnet_plugins.php';
 
 define('TELNET_NOT_LOGGED_IN', 0);
 define('TELNET_ASKED_USERNAME', 1);
@@ -49,11 +49,11 @@ class TelnetHandler extends SectionHandler
                 console('Loaded '.$this->iniFile);
             }
         } else {
-            # We ask the client to manually input the connection details here.
-            require_once(ROOTPATH . '/modules/prism_interactive.php');
+            // We ask the client to manually input the connection details here.
+            include_once ROOTPATH . '/modules/prism_interactive.php';
             Interactive::queryTelnet($this->telnetVars);
 
-            # Then build a telnet.ini file based on these details provided.
+            // Then build a telnet.ini file based on these details provided.
             $extraInfo = <<<ININOTES
 ;
 ; Telnet listen details (for remote console access).
@@ -84,7 +84,7 @@ ININOTES;
         if ($this->telnetVars['ip'] != '' && $this->telnetVars['port'] > 0) {
             $this->telnetSock = @stream_socket_server('tcp://'.$this->telnetVars['ip'].':'.$this->telnetVars['port'], $errNo, $errStr);
 
-            if (!is_resource($this->telnetSock) || $this->telnetSock === FALSE || $errNo) {
+            if (!is_resource($this->telnetSock) || $this->telnetSock === false || $errNo) {
                 console('Error opening telnet socket : '.$errStr.' ('.$errNo.')');
                 return false;
             } else {
@@ -141,7 +141,7 @@ ININOTES;
 
             // Accept the new connection
             $peerInfo = '';
-            $sock = @stream_socket_accept ($this->telnetSock, null, $peerInfo);
+            $sock = @stream_socket_accept($this->telnetSock, null, $peerInfo);
 
             if (is_resource($sock)) {
                 //stream_set_blocking ($sock, 0);
@@ -179,7 +179,7 @@ ININOTES;
             // Did the client hang up?
             if ($data == '') {
                 console('Closed telnet client (client initiated) '.$this->clients[$k]->getRemoteIP().':'.$this->clients[$k]->getRemotePort());
-                array_splice ($this->clients, $k, 1);
+                array_splice($this->clients, $k, 1);
                 $k--;
                 $this->numClients--;
                 continue;
@@ -191,7 +191,7 @@ ININOTES;
             if ($this->clients[$k]->getMustClose()) {
                 $this->clients[$k]->__destruct();
                 console('Closed telnet client (client ctrl-c) '.$this->clients[$k]->getRemoteIP().':'.$this->clients[$k]->getRemotePort());
-                array_splice ($this->clients, $k, 1);
+                array_splice($this->clients, $k, 1);
                 $k--;
                 $this->numClients--;
             }
@@ -268,50 +268,50 @@ class PrismTelnet extends TelnetServer
     protected function doLogin($line)
     {
         switch($this->getLoginState()) {
-            case TELNET_NOT_LOGGED_IN :
-                // Send error notice and ask for username
-                $msg .= "\r\nPlease login with your Prism account details.\r\n";
-                $msg .= "Username : ";
+        case TELNET_NOT_LOGGED_IN :
+            // Send error notice and ask for username
+            $msg .= "\r\nPlease login with your Prism account details.\r\n";
+            $msg .= "Username : ";
 
+            $this->write($msg);
+            $this->loginState = TELNET_ASKED_USERNAME;
+
+            break;
+        case TELNET_ASKED_USERNAME :
+            if ($line == '') {
+                $this->write("\r\nUsername : ");
+                break;
+            }
+
+            $this->username = $line;
+            $this->write("\r\nPassword : ");
+            $this->loginState = TELNET_ASKED_PASSWORD;
+            $this->setEchoChar('*');
+
+            break;
+        case TELNET_ASKED_PASSWORD :
+            $this->setEchoChar(null);
+
+            if ($this->verifyLogin($line)) {
+                $this->loginState = TELNET_LOGGED_IN;
+
+                $this->writeBuf("\r\nLogin successful\r\n");
+                $this->writeBuf("(x or ctrl-c to exit)\r\n");
+                $this->setCursorProperties(TELNET_CURSOR_HIDE);
+                $this->flush();
+
+                console('Successful telnet login from '.$this->username.' on '.date('r'));
+
+                // Now setup the screen
+                $this->setupMenu();
+            } else {
+                $msg = "\r\nIncorrect login. Please try again.\r\n";
+                $msg .= "Username : ";
+                $this->username = '';
                 $this->write($msg);
                 $this->loginState = TELNET_ASKED_USERNAME;
-
-                break;
-            case TELNET_ASKED_USERNAME :
-                if ($line == '') {
-                    $this->write("\r\nUsername : ");
-                    break;
-                }
-
-                $this->username = $line;
-                $this->write("\r\nPassword : ");
-                $this->loginState = TELNET_ASKED_PASSWORD;
-                $this->setEchoChar('*');
-
-                break;
-            case TELNET_ASKED_PASSWORD :
-                $this->setEchoChar(null);
-
-                if ($this->verifyLogin($line)) {
-                    $this->loginState = TELNET_LOGGED_IN;
-
-                    $this->writeBuf("\r\nLogin successful\r\n");
-                    $this->writeBuf("(x or ctrl-c to exit)\r\n");
-                    $this->setCursorProperties(TELNET_CURSOR_HIDE);
-                    $this->flush();
-
-                    console('Successful telnet login from '.$this->username.' on '.date('r'));
-
-                    // Now setup the screen
-                    $this->setupMenu();
-                } else {
-                    $msg = "\r\nIncorrect login. Please try again.\r\n";
-                    $msg .= "Username : ";
-                    $this->username = '';
-                    $this->write($msg);
-                    $this->loginState = TELNET_ASKED_USERNAME;
-                }
-                break;
+            }
+            break;
         }
     }
 
@@ -365,23 +365,23 @@ class PrismTelnet extends TelnetServer
 
         // Make the section active
         switch ($section) {
-            case 'admins' :
-                $this->section->setVisible(false);
-                $this->section = $this->adminSection;
-                break;
+        case 'admins' :
+            $this->section->setVisible(false);
+            $this->section = $this->adminSection;
+            break;
 
-            case 'hosts' :
-                $this->section->setVisible(false);
-                $this->section = $this->hostSection;
-                break;
+        case 'hosts' :
+            $this->section->setVisible(false);
+            $this->section = $this->hostSection;
+            break;
 
-            case 'plugins' :
-                $this->section->setVisible(false);
-                $this->section = $this->pluginSection;
-                break;
+        case 'plugins' :
+            $this->section->setVisible(false);
+            $this->section = $this->pluginSection;
+            break;
 
-            default :
-                return false;
+        default :
+            return false;
         }
 
         $this->section->setVisible(true);
@@ -414,122 +414,122 @@ class PrismTelnet extends TelnetServer
 
         // Default key actions
         switch ($key) {
-            case 'A' :
-                $this->selectSection('admins');
-                break;
-            case 'H' :
-                $this->selectSection('hosts');
-                break;
-            case 'P' :
-                $this->selectSection('plugins');
-                break;
-            case 'x' :
-                $this->shutdown();
-                return;
-            case KEY_ENTER :
-                $tl->setText('Enter');
-                break;
-            case KEY_CURLEFT :
-                $tl->setText('Cursor left');
-                break;
-            case KEY_CURRIGHT :
-                $tl->setText('Cursor right');
-                break;
-            case KEY_CURUP :
-                $tl->setText('Cursor up');
-                break;
-            case KEY_CURDOWN :
-                $tl->setText('Cursor down');
-                break;
-            case KEY_CURLEFT_CTRL :
-                $tl->setText('CTRL-Cursor left');
-                break;
-            case KEY_CURRIGHT_CTRL :
-                $tl->setText('CTRL-Cursor right');
-                break;
-            case KEY_CURUP_CTRL :
-                $tl->setText('CTRL-Cursor up');
-                break;
-            case KEY_CURDOWN_CTRL :
-                $tl->setText('CTRL-Cursor down');
-                break;
-            case KEY_HOME :
-                $tl->setText('Home key');
-                break;
-            case KEY_END :
-                $tl->setText('End key');
-                break;
-            case KEY_PAGEUP :
-                $tl->setText('Page up');
-                break;
-            case KEY_PAGEDOWN :
-                $tl->setText('Page down');
-                break;
-            case KEY_INSERT :
-                $tl->setText('Insert');
-                break;
-            case KEY_BS :
-                $tl->setText('Backspace');
-                break;
-            case KEY_TAB :
-                $tl->setText('TAB key');
-                break;
-            case KEY_SHIFTTAB :
-                $tl->setText('SHIFT-TAB key');
-                break;
-            case KEY_DELETE :
-                $tl->setText('Delete key');
-                break;
-            case KEY_ESCAPE :
-                $tl->setText('Escape key');
-                break;
-            case KEY_F1 :
-                $tl->setText('F1 key');
-                break;
-            case KEY_F2 :
-                $tl->setText('F2 key');
-                break;
-            case KEY_F3 :
-                $tl->setText('F3 key');
-                break;
-            case KEY_F4 :
-                $tl->setText('F4 key');
-                break;
-            case KEY_F5 :
-                $tl->setText('F5 key');
-                break;
-            case KEY_F6 :
-                $tl->setText('F6 key');
-                break;
-            case KEY_F7 :
-                $tl->setText('F7 key');
-                break;
-            case KEY_F8 :
-                // Toggle ttypes
-                $this->setTType($this->getTType() + 1);
+        case 'A' :
+            $this->selectSection('admins');
+            break;
+        case 'H' :
+            $this->selectSection('hosts');
+            break;
+        case 'P' :
+            $this->selectSection('plugins');
+            break;
+        case 'x' :
+            $this->shutdown();
+            return;
+        case KEY_ENTER :
+            $tl->setText('Enter');
+            break;
+        case KEY_CURLEFT :
+            $tl->setText('Cursor left');
+            break;
+        case KEY_CURRIGHT :
+            $tl->setText('Cursor right');
+            break;
+        case KEY_CURUP :
+            $tl->setText('Cursor up');
+            break;
+        case KEY_CURDOWN :
+            $tl->setText('Cursor down');
+            break;
+        case KEY_CURLEFT_CTRL :
+            $tl->setText('CTRL-Cursor left');
+            break;
+        case KEY_CURRIGHT_CTRL :
+            $tl->setText('CTRL-Cursor right');
+            break;
+        case KEY_CURUP_CTRL :
+            $tl->setText('CTRL-Cursor up');
+            break;
+        case KEY_CURDOWN_CTRL :
+            $tl->setText('CTRL-Cursor down');
+            break;
+        case KEY_HOME :
+            $tl->setText('Home key');
+            break;
+        case KEY_END :
+            $tl->setText('End key');
+            break;
+        case KEY_PAGEUP :
+            $tl->setText('Page up');
+            break;
+        case KEY_PAGEDOWN :
+            $tl->setText('Page down');
+            break;
+        case KEY_INSERT :
+            $tl->setText('Insert');
+            break;
+        case KEY_BS :
+            $tl->setText('Backspace');
+            break;
+        case KEY_TAB :
+            $tl->setText('TAB key');
+            break;
+        case KEY_SHIFTTAB :
+            $tl->setText('SHIFT-TAB key');
+            break;
+        case KEY_DELETE :
+            $tl->setText('Delete key');
+            break;
+        case KEY_ESCAPE :
+            $tl->setText('Escape key');
+            break;
+        case KEY_F1 :
+            $tl->setText('F1 key');
+            break;
+        case KEY_F2 :
+            $tl->setText('F2 key');
+            break;
+        case KEY_F3 :
+            $tl->setText('F3 key');
+            break;
+        case KEY_F4 :
+            $tl->setText('F4 key');
+            break;
+        case KEY_F5 :
+            $tl->setText('F5 key');
+            break;
+        case KEY_F6 :
+            $tl->setText('F6 key');
+            break;
+        case KEY_F7 :
+            $tl->setText('F7 key');
+            break;
+        case KEY_F8 :
+            // Toggle ttypes
+            $this->setTType($this->getTType() + 1);
 
-                if ($this->getTType() == TELNET_TTYPE_NUM) {
-                    $this->setTType(0);
-                }
+            if ($this->getTType() == TELNET_TTYPE_NUM) {
+                $this->setTType(0);
+            }
 
-                $this->updateTTypes($this->getTType());
-                $tl->setText('Toggling ttype ('.$this->getTType().')');
-                break;
-            case KEY_F9 :
-                $tl->setText('F9 key');
-                break;
-            case KEY_F10 :
-                $tl->setText('F10 key');
-                break;
-            case KEY_F11 :
-                $tl->setText('F11 key');
-                break;
-            case KEY_F12 :
-                $tl->setText('F12 key');
-                break;
-            default :
-                $tl->setText($key.' pressed');
-                break;
+            $this->updateTTypes($this->getTType());
+            $tl->setText('Toggling ttype ('.$this->getTType().')');
+            break;
+        case KEY_F9 :
+            $tl->setText('F9 key');
+            break;
+        case KEY_F10 :
+            $tl->setText('F10 key');
+            break;
+        case KEY_F11 :
+            $tl->setText('F11 key');
+            break;
+        case KEY_F12 :
+            $tl->setText('F12 key');
+            break;
+        default :
+            $tl->setText($key.' pressed');
+            break;
         }
 
         $this->redraw();
@@ -579,8 +579,9 @@ class MenuBar extends ScreenContainer
 
         while ($object = $this->getObjectByIndex($a)) {
             if ($object->getId() == $section) {
-                if (($object->getOptions() & TS_OPT_ISSELECTED) == 0)
-                    $object->toggleSelected();
+                if (($object->getOptions() & TS_OPT_ISSELECTED) == 0) {
+                    $object->toggleSelected(); 
+                }
             } else {
                 if (($object->getOptions() & TS_OPT_ISSELECTED) > 0) {
                     $object->toggleSelected();

@@ -5,7 +5,8 @@
  * @subpackage File
 */
 
-class file {
+class file
+{
     const EXTENSIONS = array(
         '3gp' => 'video/3gpp',
         'a' => 'application/octet-stream',
@@ -174,15 +175,18 @@ class file {
         'zip' => 'application/zip'
     );
 
-    public static function extensionLookup($extension, $fallback = 'application/octet-stream') {
+    public static function extensionLookup($extension, $fallback = 'application/octet-stream') 
+    {
         return (isset(SELF::EXTENSIONS[$extension])) ? SELF::EXTENSIONS[$extension] : $fallback;
     }
 
-    public static function getKnownExtensions() {
+    public static function getKnownExtensions() 
+    {
         return array_keys(SELF::EXTENSIONS);
     }
 
-    public static function getKnownStreams() {
+    public static function getKnownStreams() 
+    {
         return array_values(SELF::EXTENSIONS);
     }
 }
