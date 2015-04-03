@@ -1244,6 +1244,19 @@ class IS_NCI extends Struct // New Conn Info
 
     public $UserID;
     public $IPAddress;
+
+    public function unpack($rawPacket)
+    {
+        parent::unpack($rawPacket);
+
+        $IPSegments = [];
+        for ($i = 0; $i < 4; ++$i) {
+            $IPSegments[$i] = unpack("C", substr($rawPacket, 12 + $i))[1];
+        }
+        $this->IPAddress = implode('.', $IPSegments);
+
+        return $this;
+    }
 }; function IS_NCI() { return new IS_NCI; }
 
 class IS_CNL extends Struct // ConN Leave
