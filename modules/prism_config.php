@@ -5,7 +5,7 @@
  * @subpackage Config
 */
 
-require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
+require_once ROOTPATH . '/modules/prism_sectionhandler.php';
 
 class ConfigHandler extends SectionHandler
 {
@@ -25,31 +25,32 @@ class ConfigHandler extends SectionHandler
             'secToken'        => 'X-0ZbIY)TN>.@sr}',
         );
 
-    public function __construct()
-    {
-        $this->iniFile = 'cvars.ini';
-    }
-
-    public function initialise()
-    {
-        global $PRISM;
-
-        if ($this->loadIniFile($this->cvars, FALSE))
+        public function __construct()
         {
-            if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE)
-                console('Loaded '.$this->iniFile);
-        }
-        else
-        {
-            $this->cvars['secToken'] = str_replace(array('"', '\'', ' '), '.', createRandomString(16));
-
-            console('Using cvars defaults.');
-            if ($this->createIniFile('PHPInSimMod Configuration Variables', array('prism' => &$this->cvars)))
-                console('Generated config/'.$this->iniFile);
+            $this->iniFile = 'cvars.ini';
         }
 
-        return true;
-    }
+        public function initialise()
+        {
+            global $PRISM;
+
+            if ($this->loadIniFile($this->cvars, false)) {
+                if ($this->cvars['debugMode'] & PRISM_DEBUG_CORE) {
+                    console('Loaded '.$this->iniFile); 
+                }
+            }
+            else
+            {
+                $this->cvars['secToken'] = str_replace(array('"', '\'', ' '), '.', createRandomString(16));
+
+                console('Using cvars defaults.');
+                if ($this->createIniFile('PHPInSimMod Configuration Variables', array('prism' => &$this->cvars))) {
+                    console('Generated config/'.$this->iniFile); 
+                }
+            }
+
+            return true;
+        }
 }
 
 ?>

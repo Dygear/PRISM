@@ -27,10 +27,10 @@ class SMX
         $this->file = file_get_contents($smxFilePath);
 
         if ($this->readHeader($this->file) === true) {
-            return; # trigger_error returns (bool) true, so if the return is true, there was an error.
+            return; // trigger_error returns (bool) true, so if the return is true, there was an error.
         }
 
-       //zenware check
+        //zenware check
         for ($i = 0, $offset = 64; $i < $this->Objects; ++$i) {
             $this->Object[$i] = $this->readObject($offset);
         }
@@ -72,10 +72,10 @@ class Object
 
     public function __construct(&$offset, $file)
     {
-        # Center
+        // Center
         $this->Center = unpack(Object::CENTER, substr($file, $offset, 12));
         $offset += 12;
-        # Object
+        // Object
         $Object = unpack(Object::OBJECT, substr($file, $offset, 12));
 
         foreach ($Object as $property => $value) {
@@ -84,12 +84,12 @@ class Object
 
         $offset += 12;
 
-        # Point
+        // Point
         for ($i = 0, $Points = $this->Points, $this->Points = array(); $i < $Points; ++$i, $offset += 16) {
             $this->Points[$i] = unpack(Object::POINT, substr($file, $offset, 16));
         }
 
-        # Triangle
+        // Triangle
         for ($i = 0, $Triangles = $this->Triangles, $this->Triangles = array(); $i < $Triangles; ++$i, $offset += 8) {
             $this->Triangles[$i] = unpack(Object::TRIANGLE, substr($file, $offset, 8));
         }

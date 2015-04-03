@@ -5,7 +5,7 @@
  * @subpackage PTH
 */
 
-require_once(ROOTPATH . '/modules/prism_geometry.php');
+require_once ROOTPATH . '/modules/prism_geometry.php';
 
 // PaTH
 class Path
@@ -27,7 +27,7 @@ class Path
         $file = file_get_contents($pthFilePath);
 
         if ($this->unPack($file) === true) {
-            return; # trigger_error returns (bool) TRUE, so if the return is true, there was an error.
+            return; // trigger_error returns (bool) TRUE, so if the return is true, there was an error.
         }
 
         return $this;
@@ -71,16 +71,24 @@ class Path
 
         foreach ($this->Nodes as $i => $Nodes) {
             if ($i == 0) {
-                $pa = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Left + $Nodes->Center->X,
-                                 -$Nodes->Direction->X * $Nodes->$limitRoad->Left + $Nodes->Center->Y);
-                $pb = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Right + $Nodes->Center->X,
-                                 -$Nodes->Direction->X * $Nodes->$limitRoad->Right + $Nodes->Center->Y);
+                $pa = new Point2D(
+                    $Nodes->Direction->Y * $Nodes->$limitRoad->Left + $Nodes->Center->X,
+                    -$Nodes->Direction->X * $Nodes->$limitRoad->Left + $Nodes->Center->Y
+                );
+                $pb = new Point2D(
+                    $Nodes->Direction->Y * $Nodes->$limitRoad->Right + $Nodes->Center->X,
+                    -$Nodes->Direction->X * $Nodes->$limitRoad->Right + $Nodes->Center->Y
+                );
             }
 
-            $pc = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Left + $Nodes->Center->X,
-                             -$Nodes->Direction->X * $Nodes->$limitRoad->Left + $Nodes->Center->Y);
-            $pd = new Point2D($Nodes->Direction->Y * $Nodes->$limitRoad->Right + $Nodes->Center->X,
-                             -$Nodes->Direction->X * $Nodes->$limitRoad->Right + $Nodes->Center->Y);
+            $pc = new Point2D(
+                $Nodes->Direction->Y * $Nodes->$limitRoad->Left + $Nodes->Center->X,
+                -$Nodes->Direction->X * $Nodes->$limitRoad->Left + $Nodes->Center->Y
+            );
+            $pd = new Point2D(
+                $Nodes->Direction->Y * $Nodes->$limitRoad->Right + $Nodes->Center->X,
+                -$Nodes->Direction->X * $Nodes->$limitRoad->Right + $Nodes->Center->Y
+            );
 
             $nodePolys[] = new Polygon2D(array($pa, $pb, $pd, $pc));
 
@@ -135,7 +143,7 @@ class Path
 
         return true;
     }
-    public function drawPath ($fileName)
+    public function drawPath($fileName)
     {
         $im = imagecreatetruecolor(2560, 2560);
         $bg = imagecolorallocate($im, 254, 254, 254);
@@ -144,12 +152,12 @@ class Path
 
         $p =& $this;
 
-        $LeftCos = cos (90 * M_PI / 180);
-        $LeftSin = sin (90 * M_PI / 180);
-        $RightCos = cos (-90 * M_PI / 180);
-        $RightSin = sin (-90 * M_PI / 180);
+        $LeftCos = cos(90 * M_PI / 180);
+        $LeftSin = sin(90 * M_PI / 180);
+        $RightCos = cos(-90 * M_PI / 180);
+        $RightSin = sin(-90 * M_PI / 180);
 
-        $Node = end($p->Nodes); # Get's last node.
+        $Node = end($p->Nodes); // Get's last node.
         $llx2 = ($Node->Direction->X * $LeftCos - (-$Node->Direction->Y) * $LeftSin) * $Node->Limit->Left + ($Node->Center->X + 1024);
         $lly2 = ((-$Node->Direction->Y) * $LeftCos + $Node->Direction->X * $LeftSin) * $Node->Limit->Left + ((-$Node->Center->Y) + 1024);
         $lrx2 = ($Node->Direction->X * $RightCos - (-$Node->Direction->Y) * $RightSin) * -$Node->Limit->Right + ($Node->Center->X + 1024);
@@ -163,7 +171,7 @@ class Path
         $limit_col = imagecolorallocatealpha($im, 8, 128, 16, 64);
         $drive_col = imagecolorallocatealpha($im, 64, 64, 64, 64);
 
-        reset($p->Nodes);    # Resets our pointer back to the start.
+        reset($p->Nodes);    // Resets our pointer back to the start.
 
         foreach ($p->Nodes as $i => $Node)
         {
@@ -208,7 +216,8 @@ class Node
     public $Limit;
     public $Road;
 
-    public function __construct($RawNode) {
+    public function __construct($RawNode) 
+    {
         $this->Center = new Center(substr($RawNode, 0, 12));
         $this->Direction = new Direction(substr($RawNode, 12, 12));
         $this->Limit = new Limit(substr($RawNode, 24, 8));
@@ -221,13 +230,16 @@ class Center
     const PACK = 'lll';
     const UNPACK = 'lX/lY/lZ';
 
-    public function __construct($rawCenter) {
+    public function __construct($rawCenter) 
+    {
         $this->unPack($rawCenter);
     }
 
-    public function unPack($rawCenter) {
-        foreach (unpack($this::UNPACK, $rawCenter) as $property => $value)
-            $this->$property = $value / 65536;
+    public function unPack($rawCenter) 
+    {
+        foreach (unpack($this::UNPACK, $rawCenter) as $property => $value) {
+            $this->$property = $value / 65536; 
+        }
     }
 }
 
@@ -236,13 +248,16 @@ class Direction
     const PACK = 'fff';
     const UNPACK = 'fX/fY/fZ';
 
-    public function __construct($rawDirection) {
+    public function __construct($rawDirection) 
+    {
         $this->unPack($rawDirection);
     }
 
-    public function unPack($rawDirection) {
-        foreach (unpack($this::UNPACK, $rawDirection) as $property => $value)
-            $this->$property = $value;
+    public function unPack($rawDirection) 
+    {
+        foreach (unpack($this::UNPACK, $rawDirection) as $property => $value) {
+            $this->$property = $value; 
+        }
     }
 }
 
@@ -251,13 +266,16 @@ class Limit
     const PACK = 'ff';
     const UNPACK = 'fLeft/fRight';
 
-    public function __construct($rawLimit) {
+    public function __construct($rawLimit) 
+    {
         $this->unPack($rawLimit);
     }
 
-    public function unPack($rawLimit) {
-        foreach (unpack($this::UNPACK, $rawLimit) as $property => $value)
-            $this->$property = $value;
+    public function unPack($rawLimit) 
+    {
+        foreach (unpack($this::UNPACK, $rawLimit) as $property => $value) {
+            $this->$property = $value; 
+        }
     }
 }
 
@@ -266,12 +284,15 @@ class Road
     const PACK = 'ff';
     const UNPACK = 'fLeft/fRight';
 
-    public function __construct($rawRoad) {
+    public function __construct($rawRoad) 
+    {
         $this->unPack($rawRoad);
     }
 
-    public function unPack($rawRoad) {
-        foreach (unpack($this::UNPACK, $rawRoad) as $property => $value)
-            $this->$property = $value;
+    public function unPack($rawRoad) 
+    {
+        foreach (unpack($this::UNPACK, $rawRoad) as $property => $value) {
+            $this->$property = $value; 
+        }
     }
 }

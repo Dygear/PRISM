@@ -10,7 +10,7 @@ class betterButtonManager
     /**
      * __construct
      *
-     * @param mixed $UCID
+     * @param  mixed $UCID
      * @access public
      * @return void
      */
@@ -24,15 +24,15 @@ class betterButtonManager
     /**
      * InitButton
      *
-     * @param mixed $Name
-     * @param mixed $Group
-     * @param int $T
-     * @param int $L
-     * @param int $W
-     * @param int $H
-     * @param bool $BStyle
-     * @param string $Text
-     * @param int $Expire
+     * @param  mixed  $Name
+     * @param  mixed  $Group
+     * @param  int    $T
+     * @param  int    $L
+     * @param  int    $W
+     * @param  int    $H
+     * @param  bool   $BStyle
+     * @param  string $Text
+     * @param  int    $Expire
      * @access public
      * @return void
      */
@@ -53,8 +53,9 @@ class betterButtonManager
         $this->bState[$Name]['timestamp'] = time() - 1;
         $this->bState[$Name]['expire'] = -1;
         $this->bState[$Name]['override'] = false;
-        if($Expire > 0)
-            $this->bState[$Name]['expire'] = time() + $Expire;
+        if($Expire > 0) {
+            $this->bState[$Name]['expire'] = time() + $Expire; 
+        }
     }
     /* }}} */
 
@@ -62,15 +63,15 @@ class betterButtonManager
     /**
      * MoveGUIClusterV
      *
-     * @param mixed $Cluster
-     * @param int $Offset
+     * @param  mixed $Cluster
+     * @param  int   $Offset
      * @access public
      * @return void
      */
     public function MoveGUIClusterV($Cluster, $Offset=0)
     {
         if(!isset($this->cData[$Cluster])) {
-            return PLUGIN_CONTINUE; #Cluster Not Loaded
+            return PLUGIN_CONTINUE; // Cluster Not Loaded
         }
         $this->cData[$Cluster]['Top'] += $Offset;
         $this->ReloadGUICluster($Cluster);
@@ -81,15 +82,15 @@ class betterButtonManager
     /**
      * MoveGUIClusterH
      *
-     * @param mixed $Cluster
-     * @param int $Offset
+     * @param  mixed $Cluster
+     * @param  int   $Offset
      * @access public
      * @return void
      */
     public function MoveGUIClusterH($Cluster, $Offset=0)
     {
         if(!isset($this->cData[$Cluster])) {
-            return PLUGIN_CONTINUE; #Cluster Not Loaded
+            return PLUGIN_CONTINUE; // Cluster Not Loaded
         }
         $this->cData[$Cluster]['Left'] += $Offset;
         $this->ReloadGUICluster($Cluster);
@@ -100,16 +101,16 @@ class betterButtonManager
     /**
      * MoveGUIClusterD
      *
-     * @param mixed $Cluster
-     * @param int $OffsetT
-     * @param int $OffsetL
+     * @param  mixed $Cluster
+     * @param  int   $OffsetT
+     * @param  int   $OffsetL
      * @access public
      * @return void
      */
     public function MoveGUIClusterD($Cluster, $OffsetT=0, $OffsetL=0)
     {
         if(!isset($this->cData[$Cluster])) {
-            return PLUGIN_CONTINUE; #Cluster Not Loaded
+            return PLUGIN_CONTINUE; // Cluster Not Loaded
         }
         $this->cData[$Cluster]['Top'] += $OffsetT;
         $this->cData[$Cluster]['Left'] += $OffsetL;
@@ -121,21 +122,21 @@ class betterButtonManager
     /**
      * LoadGUICluster
      *
-     * @param mixed $Cluster
-     * @param bool $Layout
-     * @param bool $OffsetT
-     * @param bool $OffsetL
+     * @param  mixed $Cluster
+     * @param  bool  $Layout
+     * @param  bool  $OffsetT
+     * @param  bool  $OffsetL
      * @access public
      * @return void
      */
     public function LoadGUICluster($Cluster, $Layout='default', $OffsetT=null, $OffsetL=null)
     {
         $Design = parse_ini_file("GUI/{$Cluster}/{$Layout}.ini", true);
-        if(!$Design){
+        if(!$Design) {
             return PLUGIN_CONTINUE; // Design File Not Found
         }
         if($OffsetT == null || $OffsetL == null) {
-            if(isset($Design['default'])){
+            if(isset($Design['default'])) {
                 $OffsetT = $Design['default']['Top'];
                 $OffsetL = $Design['default']['Left'];
             } else {
@@ -165,13 +166,14 @@ class betterButtonManager
     /**
      * ReloadGUICluster
      *
-     * @param mixed $Cluster
+     * @param  mixed $Cluster
      * @access public
      * @return void
      */
-    public function ReloadGUICluster($Cluster){
+    public function ReloadGUICluster($Cluster)
+    {
         if(!isset($this->cData[$Cluster])) {
-            return PLUGIN_CONTINUE; #Cluster Not Loaded
+            return PLUGIN_CONTINUE; // Cluster Not Loaded
         }
         $Layout = $this->cData[$Cluster]['Layout'];
         $Top = $this->cData[$Cluster]['Top'];
@@ -184,13 +186,14 @@ class betterButtonManager
     /**
      * GetGUIClusterInfo
      *
-     * @param mixed $Cluster
+     * @param  mixed $Cluster
      * @access public
      * @return void
      */
-    public function GetGUIClusterInfo($Cluster){
+    public function GetGUIClusterInfo($Cluster)
+    {
         if(!isset($this->cData[$Cluster])) {
-            return PLUGIN_CONTINUE; #Cluster Not Loaded
+            return PLUGIN_CONTINUE; // Cluster Not Loaded
         }
         return array($this->cData[$Cluster]);
     }
@@ -200,7 +203,7 @@ class betterButtonManager
     /**
      * NextText
      *
-     * @param mixed $Name
+     * @param  mixed $Name
      * @access public
      * @return void
      */
@@ -223,7 +226,7 @@ class betterButtonManager
         }
     }
     /* }}} */
-    public function HandleButtons() # Needs to be added to a timer on NCN
+    public function HandleButtons() // Needs to be added to a timer on NCN
     {
         foreach($this->bState as $Name => $bState){
             if($bState['expire'] != -1 && $bState['expire'] <= time()) {
@@ -240,7 +243,7 @@ class betterButtonManager
     /**
      * OverRideButton
      *
-     * @param mixed $Name
+     * @param  mixed $Name
      * @access public
      * @return void
      */
@@ -257,7 +260,7 @@ class betterButtonManager
     /**
      * RemoveButton
      *
-     * @param mixed $Name
+     * @param  mixed $Name
      * @access public
      * @return void
      */
@@ -276,14 +279,15 @@ class betterButtonManager
     /**
      * RemoveGroup
      *
-     * @param mixed $Group
+     * @param  mixed $Group
      * @access public
      * @return void
      */
     public function RemoveGroup($Group)
     {
-        foreach(ButtonManager::getButtonsForGroup($this->UCID, $Group) as $button)
-            $this->RemoveButton($button->key());
+        foreach(ButtonManager::getButtonsForGroup($this->UCID, $Group) as $button) {
+            $this->RemoveButton($button->key()); 
+        }
     }
     /* }}} */
 
@@ -291,8 +295,8 @@ class betterButtonManager
     /**
      * AddTextToBtn
      *
-     * @param mixed $Name
-     * @param mixed $Text
+     * @param  mixed $Name
+     * @param  mixed $Text
      * @access public
      * @return void
      */
@@ -310,10 +314,10 @@ class betterButtonManager
     /**
      * UpdateTextOnBtn
      *
-     * @param mixed $Name
-     * @param string $Text
-     * @param int $ID
-     * @param bool $Override
+     * @param  mixed  $Name
+     * @param  string $Text
+     * @param  int    $ID
+     * @param  bool   $Override
      * @access public
      * @return void
      */
@@ -331,10 +335,10 @@ class betterButtonManager
     /**
      * AddClickEventToBtn
      *
-     * @param mixed $Name
-     * @param mixed $Class
-     * @param mixed $Function
-     * @param mixed $Params
+     * @param  mixed $Name
+     * @param  mixed $Class
+     * @param  mixed $Function
+     * @param  mixed $Params
      * @access public
      * @return void
      */
@@ -353,10 +357,10 @@ class betterButtonManager
     /**
      * AddTextEventToBtn
      *
-     * @param mixed $Name
-     * @param mixed $Class
-     * @param bool $Event
-     * @param int $Length
+     * @param  mixed $Name
+     * @param  mixed $Class
+     * @param  bool  $Event
+     * @param  int   $Length
      * @access public
      * @return void
      */

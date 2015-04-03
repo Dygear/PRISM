@@ -5,8 +5,8 @@
  * @subpackage Http
 */
 
-require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
-require_once(ROOTPATH . '/modules/prism_phpparser.php');
+require_once ROOTPATH . '/modules/prism_sectionhandler.php';
+require_once ROOTPATH . '/modules/prism_phpparser.php';
 
 define('HTTP_AUTH_REALM', 'Prism administration');    // Token used for http auth & digest
 define('HTTP_KEEP_ALIVE', 10);                        // Keep-alive timeout in seconds
@@ -18,7 +18,7 @@ define('HTTP_MAX_CONN', 1024);                        // Max number of simultane
 
 class HttpHandler extends SectionHandler
 {
-    private $httpSock        = NULL;
+    private $httpSock        = null;
     private $httpClients    = array();
     private $httpNumClients    = 0;
 
@@ -81,8 +81,9 @@ class HttpHandler extends SectionHandler
 
     public function getNonceInfo(&$nonce)
     {
-        if (!isset($this->nonceCache[$nonce]))
-            return false;
+        if (!isset($this->nonceCache[$nonce])) {
+            return false; 
+        }
 
         return array($this->nonceCache[$nonce][0], $this->nonceCache[$nonce][1], $this->nonceCache[$nonce][2]);
     }
@@ -96,8 +97,9 @@ class HttpHandler extends SectionHandler
 
     public function incNonceCounter(&$nonce, &$nc)
     {
-        if (!isset($this->nonceCache[$nonce]))
-            return false;
+        if (!isset($this->nonceCache[$nonce])) {
+            return false; 
+        }
 
         $this->nonceCache[$nonce][0] = time();
         $this->nonceCache[$nonce][1] = $nc;
@@ -112,11 +114,13 @@ class HttpHandler extends SectionHandler
 
     private function close($all)
     {
-        if (is_resource($this->httpSock))
-            fclose($this->httpSock);
+        if (is_resource($this->httpSock)) {
+            fclose($this->httpSock); 
+        }
 
-        if (!$all)
-            return;
+        if (!$all) {
+            return; 
+        }
 
         for ($k=0; $k<$this->httpNumClients; $k++)
         {
@@ -141,18 +145,18 @@ class HttpHandler extends SectionHandler
             'logFile'        => 'logs/http.log',
         );
 
-        if ($this->loadIniFile($this->httpVars, false))
-        {
-            if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE)
-                console('Loaded '.$this->iniFile);
+        if ($this->loadIniFile($this->httpVars, false)) {
+            if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE) {
+                console('Loaded '.$this->iniFile); 
+            }
         }
         else
         {
-            # We ask the client to manually input the connection details here.
-            require_once(ROOTPATH . '/modules/prism_interactive.php');
+            // We ask the client to manually input the connection details here.
+            include_once ROOTPATH . '/modules/prism_interactive.php';
             Interactive::queryHttp($this->httpVars);
 
-            # Then build a http.ini file based on these details provided.
+            // Then build a http.ini file based on these details provided.
             $extraInfo = <<<ININOTES
 ;
 ; Http listen details (for administration web pages).
@@ -163,32 +167,36 @@ class HttpHandler extends SectionHandler
 ;
 
 ININOTES;
-            if ($this->createIniFile('HTTP Configuration (web admin)', array('http' => &$this->httpVars), $extraInfo))
-                console('Generated config/'.$this->iniFile);
+            if ($this->createIniFile('HTTP Configuration (web admin)', array('http' => &$this->httpVars), $extraInfo)) {
+                console('Generated config/'.$this->iniFile); 
+            }
         }
 
         // Set docRoot
-        if (!$this->setDocRoot())
-            return false;
+        if (!$this->setDocRoot()) {
+            return false; 
+        }
 
         // Set logFile
-        if (!$this->setLogFile())
-            return false;
+        if (!$this->setLogFile()) {
+            return false; 
+        }
 
         // Setup http socket to listen on
-        if (!$this->setupListenSocket())
-            return false;
+        if (!$this->setupListenSocket()) {
+            return false; 
+        }
 
         // Setup site domain
         $this->setupSiteDomain();
 
         // Validate httpAuthPath
-        if (!$this->validateAuthPath())
-            return false;
+        if (!$this->validateAuthPath()) {
+            return false; 
+        }
 
         // Validate httpAuthType
-        if ($this->httpVars['httpAuthType'] != 'Digest' & $this->httpVars['httpAuthType'] != 'Basic')
-        {
+        if ($this->httpVars['httpAuthType'] != 'Digest' & $this->httpVars['httpAuthType'] != 'Basic') {
             console('Invalid httpAuthType in '.$this->iniFile);
             return false;
         }
@@ -200,11 +208,9 @@ ININOTES;
     {
         $this->close(false);
 
-        if ($this->httpVars['ip'] != '' && $this->httpVars['port'] > 0)
-        {
+        if ($this->httpVars['ip'] != '' && $this->httpVars['port'] > 0) {
             $this->httpSock = @stream_socket_server('tcp://'.$this->httpVars['ip'].':'.$this->httpVars['port'], $httpErrNo, $httpErrStr);
-            if (!is_resource($this->httpSock) || $this->httpSock === FALSE || $httpErrNo)
-            {
+            if (!is_resource($this->httpSock) || $this->httpSock === false || $httpErrNo) {
                 console('Error opening http socket : '.$httpErrStr.' ('.$httpErrNo.')');
                 return false;
             }
@@ -221,8 +227,9 @@ ININOTES;
         // Strip trailing slashes
         $this->httpVars['path'] = preg_replace('/(.*)([\/\\\]*)$/U', '\\1', $this->httpVars['path']);
 
-        if ($this->httpVars['path'] == '')
-            $this->httpVars['path'] = 'www-docs';
+        if ($this->httpVars['path'] == '') {
+            $this->httpVars['path'] = 'www-docs'; 
+        }
 
         // Store in docRoot
         $this->docRoot =
@@ -231,8 +238,7 @@ ININOTES;
             ROOTPATH.'/'.$this->httpVars['path'];
 
         // Check if it's valid
-        if (!file_exists($this->docRoot))
-        {
+        if (!file_exists($this->docRoot)) {
             console('The path to your web-root does not exist : '.$this->httpVars['path']);
             return false;
         }
@@ -245,8 +251,9 @@ ININOTES;
         // Strip trailing slashes
         $this->httpVars['logFile'] = preg_replace('/(.*)([\/\\\]*)$/U', '\\1', $this->httpVars['logFile']);
 
-        if ($this->httpVars['logFile'] == '')
-            $this->httpVars['logFile'] = 'logs/http.log';
+        if ($this->httpVars['logFile'] == '') {
+            $this->httpVars['logFile'] = 'logs/http.log'; 
+        }
 
         // Store in logFile
         $this->logFile =
@@ -256,13 +263,11 @@ ININOTES;
 
         // Check if its path is valid
         $logPath = pathinfo($this->logFile);
-        if (!isset($logPath['filename']) || $logPath['filename'] == '' || !file_exists($logPath['dirname']))
-        {
+        if (!isset($logPath['filename']) || $logPath['filename'] == '' || !file_exists($logPath['dirname'])) {
             console('The path to your log folder does not exist : '.$logPath['dirname']);
             return false;
         }
-        else if (is_dir($this->logFile))
-        {
+        else if (is_dir($this->logFile)) {
             console('The path to your http log folder is a folder itself : '.$this->logFile);
             return false;
         }
@@ -275,10 +280,10 @@ ININOTES;
         $this->siteDomain = '';
 
         // Ignore site domain? (accept any incoming request, no matter what host the request contains)
-        if ($this->httpVars['siteDomain'] == '')
-            return;
-        if (!getIP($this->httpVars['siteDomain']))
-        {
+        if ($this->httpVars['siteDomain'] == '') {
+            return; 
+        }
+        if (!getIP($this->httpVars['siteDomain'])) {
             console('Invalid siteDomain provided in '.$this->iniFile.' (it does not resolve). Ignoring this setting.');
             return;
         }
@@ -288,10 +293,10 @@ ININOTES;
 
     private function validateAuthPath()
     {
-        if ($this->httpVars['httpAuthPath'] == '')
-            return true;
-        if ($this->httpVars['httpAuthPath'] == '/')
-        {
+        if ($this->httpVars['httpAuthPath'] == '') {
+            return true; 
+        }
+        if ($this->httpVars['httpAuthPath'] == '/') {
             $this->httpVars['httpAuthPath'] = $this->docRoot.$this->httpVars['httpAuthPath'];
             return true;
         }
@@ -306,8 +311,7 @@ ININOTES;
             $this->docRoot.'/'.$this->httpVars['httpAuthPath'];
 
         // Check if it's valid
-        if (!file_exists($this->httpVars['httpAuthPath']))
-        {
+        if (!file_exists($this->httpVars['httpAuthPath'])) {
             console('httpAuthPath path does not exist : '.$this->httpVars['httpAuthPath']);
             return false;
         }
@@ -318,18 +322,19 @@ ININOTES;
     public function getSelectableSockets(array &$sockReads, array &$sockWrites)
     {
         // Add http sockets to sockReads
-        if (is_resource($this->httpSock))
-            $sockReads[] = $this->httpSock;
+        if (is_resource($this->httpSock)) {
+            $sockReads[] = $this->httpSock; 
+        }
 
         for ($k=0; $k<$this->httpNumClients; $k++)
         {
-            if (is_resource($this->httpClients[$k]->getSocket()))
-            {
+            if (is_resource($this->httpClients[$k]->getSocket())) {
                 $sockReads[] = $this->httpClients[$k]->getSocket();
 
                 // If write buffer was full, we must check to see when we can write again
-                if ($this->httpClients[$k]->getSendQLen() > 0 || $this->httpClients[$k]->getSendFilePntr() > -1)
-                    $sockWrites[] = $this->httpClients[$k]->getSocket();
+                if ($this->httpClients[$k]->getSendQLen() > 0 || $this->httpClients[$k]->getSendFilePntr() > -1) {
+                    $sockWrites[] = $this->httpClients[$k]->getSocket(); 
+                }
             }
         }
     }
@@ -339,16 +344,14 @@ ININOTES;
         $activity = 0;
 
         // httpSock input (incoming http connection)
-        if (in_array ($this->httpSock, $sockReads))
-        {
+        if (in_array($this->httpSock, $sockReads)) {
             $activity++;
 
             // Accept the new connection
             $peerInfo = '';
-            $sock = @stream_socket_accept ($this->httpSock, NULL, $peerInfo);
-            if (is_resource($sock))
-            {
-                stream_set_blocking ($sock, 0);
+            $sock = @stream_socket_accept($this->httpSock, null, $peerInfo);
+            if (is_resource($sock)) {
+                stream_set_blocking($sock, 0);
 
                 // Add new connection to httpClients array
                 $exp = explode(':', $peerInfo);
@@ -362,32 +365,34 @@ ININOTES;
         // httpClients input
         for ($k=0; $k<$this->httpNumClients; $k++) {
             // Recover from a full write buffer?
-            if (($this->httpClients[$k]->getSendQLen() > 0  ||
-                 $this->httpClients[$k]->getSendFilePntr() > -1) &&
-                in_array($this->httpClients[$k]->getSocket(), $sockWrites))
-            {
+            if (($this->httpClients[$k]->getSendQLen() > 0  
+                || $this->httpClients[$k]->getSendFilePntr() > -1) 
+                && in_array($this->httpClients[$k]->getSocket(), $sockWrites)
+            ) {
                 $activity++;
 
                 // Flush the sendQ (bit by bit, not all at once - that could block the whole app)
-                if ($this->httpClients[$k]->getSendQLen() > 0)
-                    $this->httpClients[$k]->flushSendQ();
-                else
-                    $this->httpClients[$k]->writeFile();
+                if ($this->httpClients[$k]->getSendQLen() > 0) {
+                    $this->httpClients[$k]->flushSendQ(); 
+                }
+                else {
+                    $this->httpClients[$k]->writeFile(); 
+                }
             }
 
             // Did we receive something from a httpClient?
-            if (!in_array($this->httpClients[$k]->getSocket(), $sockReads))
-                continue;
+            if (!in_array($this->httpClients[$k]->getSocket(), $sockReads)) {
+                continue; 
+            }
 
             $activity++;
 
             $data = $this->httpClients[$k]->read();
 
             // Did the client hang up?
-            if ($data == '')
-            {
+            if ($data == '') {
                 console('Closed httpClient (client initiated) '.$this->httpClients[$k]->getRemoteIP().':'.$this->httpClients[$k]->getRemotePort());
-                array_splice ($this->httpClients, $k, 1);
+                array_splice($this->httpClients, $k, 1);
                 $k--;
                 $this->httpNumClients--;
                 continue;
@@ -395,11 +400,10 @@ ININOTES;
 
             // Ok we recieved some input from the http client.
             // Pass the data to the HttpClient so it can handle it.
-            if (!$this->httpClients[$k]->handleInput($data, $errNo))
-            {
+            if (!$this->httpClients[$k]->handleInput($data, $errNo)) {
                 // Something went wrong - we can hang up now
                 console('Closed httpClient ('.$errNo.' - '.HttpResponse::$responseCodes[$errNo].') '.$this->httpClients[$k]->getRemoteIP().':'.$this->httpClients[$k]->getRemotePort());
-                array_splice ($this->httpClients, $k, 1);
+                array_splice($this->httpClients, $k, 1);
                 $k--;
                 $this->httpNumClients--;
                 continue;
@@ -413,10 +417,9 @@ ININOTES;
     {
         for ($k=0; $k<$this->httpNumClients; $k++)
         {
-            if ($this->httpClients[$k]->getLastActivity() < time() - HTTP_KEEP_ALIVE)
-            {
+            if ($this->httpClients[$k]->getLastActivity() < time() - HTTP_KEEP_ALIVE) {
                 console('Closed httpClient (keep alive) '.$this->httpClients[$k]->getRemoteIP().':'.$this->httpClients[$k]->getRemotePort());
-                array_splice ($this->httpClients, $k, 1);
+                array_splice($this->httpClients, $k, 1);
                 $k--;
                 $this->httpNumClients--;
             }
@@ -464,13 +467,16 @@ class HttpClient
 
     public function __destruct()
     {
-        if (is_resource($this->socket))
-            fclose($this->socket);
+        if (is_resource($this->socket)) {
+            fclose($this->socket); 
+        }
 
-        if ($this->sendFile)
-            $this->writeFileReset();
-        if ($this->sendQLen > 0)
-            $this->sendQReset();
+        if ($this->sendFile) {
+            $this->writeFileReset(); 
+        }
+        if ($this->sendQLen > 0) {
+            $this->sendQReset(); 
+        }
     }
 
     public function &getSocket()
@@ -493,34 +499,33 @@ class HttpClient
         return $this->lastActivity;
     }
 
-    public function write($data, $sendQPacket = FALSE)
+    public function write($data, $sendQPacket = false)
     {
         $bytes = 0;
         $dataLen = strlen($data);
-        if ($dataLen == 0)
-            return 0;
+        if ($dataLen == 0) {
+            return 0; 
+        }
 
-        if (!is_resource($this->socket))
-            return $bytes;
+        if (!is_resource($this->socket)) {
+            return $bytes; 
+        }
 
-        if ($sendQPacket == TRUE)
-        {
+        if ($sendQPacket == true) {
             // This packet came from the sendQ. We just try to send this and don't bother too much about error checking.
             // That's done from the sendQ flushing code.
             $bytes = @fwrite($this->socket, $data);
         }
         else
         {
-            if ($this->sendQLen == 0)
-            {
+            if ($this->sendQLen == 0) {
                 // It's Ok to send packet
                 $bytes = @fwrite($this->socket, $data);
                 $this->lastActivity = time();
 
-                if (!$bytes || $bytes != $dataLen)
-                {
+                if (!$bytes || $bytes != $dataLen) {
                     // Could not send everything in one go - send the remainder to sendQ
-                    $this->addPacketToSendQ (substr($data, $bytes));
+                    $this->addPacketToSendQ(substr($data, $bytes));
                 }
             }
             else
@@ -547,16 +552,18 @@ class HttpClient
     public function flushSendQ()
     {
         // Send chunk of data
-        $bytes = $this->write(substr($this->sendQ, 0, $this->sendWindow), TRUE);
+        $bytes = $this->write(substr($this->sendQ, 0, $this->sendWindow), true);
 
         // Dynamic window sizing
-        if ($bytes == $this->sendWindow)
-            $this->sendWindow += STREAM_WRITE_BYTES;
+        if ($bytes == $this->sendWindow) {
+            $this->sendWindow += STREAM_WRITE_BYTES; 
+        }
         else
         {
             $this->sendWindow -= STREAM_WRITE_BYTES;
-            if ($this->sendWindow < STREAM_WRITE_BYTES)
-                $this->sendWindow = STREAM_WRITE_BYTES;
+            if ($this->sendWindow < STREAM_WRITE_BYTES) {
+                $this->sendWindow = STREAM_WRITE_BYTES; 
+            }
         }
 
         // Update the sendQ
@@ -564,13 +571,11 @@ class HttpClient
         $this->sendQLen -= $bytes;
 
         // Cleanup / reset timers
-        if ($this->sendQLen == 0)
-        {
+        if ($this->sendQLen == 0) {
             // All done flushing - reset queue variables
             $this->sendQReset();
         }
-        else if ($bytes > 0)
-        {
+        else if ($bytes > 0) {
             // Set when the last packet was flushed
             $this->lastActivity        = time();
         }
@@ -591,11 +596,11 @@ class HttpClient
 
     public function writeFile($fileName = '', $startOffset = 0)
     {
-        if ($fileName != '' && $this->sendFile == null)
-        {
+        if ($fileName != '' && $this->sendFile == null) {
             $this->sendFile = fopen($fileName, 'rb');
-            if (!$this->sendFile)
-                return false;
+            if (!$this->sendFile) {
+                return false; 
+            }
             $this->sendFilePntr = (int) $startOffset;
             fseek($this->sendFile, $this->sendFilePntr);
             $this->sendFileSize = filesize($fileName);
@@ -608,19 +613,22 @@ class HttpClient
         $this->lastActivity = time();
 
         // Dynamic window sizing
-        if ($bytes == $this->sendWindow)
-            $this->sendWindow += STREAM_WRITE_BYTES;
+        if ($bytes == $this->sendWindow) {
+            $this->sendWindow += STREAM_WRITE_BYTES; 
+        }
         else
         {
             $this->sendWindow -= STREAM_WRITE_BYTES;
-            if ($this->sendWindow < STREAM_WRITE_BYTES)
-                $this->sendWindow = STREAM_WRITE_BYTES;
+            if ($this->sendWindow < STREAM_WRITE_BYTES) {
+                $this->sendWindow = STREAM_WRITE_BYTES; 
+            }
         }
 
         //console('BYTES : '.$bytes.' - PNTR : '.$this->sendFilePntr);
         // Done?
-        if ($this->sendFilePntr >= $this->sendFileSize)
-            $this->writeFileReset();
+        if ($this->sendFilePntr >= $this->sendFileSize) {
+            $this->writeFileReset(); 
+        }
     }
 
     private function writeFileReset()
@@ -642,10 +650,10 @@ class HttpClient
         $out .= '</body>'.$eol;
         $out .= '</html>'.$eol;
 
-        if ($appendPadding)
-        {
-            for ($a=0; $a<6; $a++)
-                $out .= '<!-- a padding to disable MSIE and Chrome friendly error page -->'.$eol;
+        if ($appendPadding) {
+            for ($a=0; $a<6; $a++) {
+                $out .= '<!-- a padding to disable MSIE and Chrome friendly error page -->'.$eol; 
+            }
         }
         return $out;
     }
@@ -659,32 +667,28 @@ class HttpClient
     public function handleInput(&$data, &$errNo)
     {
         // What is this? we're getting input while we're sending a reply?
-        if ($this->sendFile)
-        {
+        if ($this->sendFile) {
             $this->writeFileReset();
             $this->httpRequest = null;
         }
-        else if ($this->sendQLen > 0)
-        {
+        else if ($this->sendQLen > 0) {
             $this->sendQReset();
             $this->httpRequest = null;
         }
 
-        if (!$this->httpRequest)
-            $this->httpRequest = new HttpRequest();
+        if (!$this->httpRequest) {
+            $this->httpRequest = new HttpRequest(); 
+        }
 
         // Pass the incoming data to the HttpRequest class, so it can handle it.
-        if (!$this->httpRequest->handleInput($data))
-        {
+        if (!$this->httpRequest->handleInput($data)) {
             // An error was encountered while receiving the requst.
             // Send reply (unless 444, a special 'direct reject' code) and return false to close this connection.
-            if ($this->httpRequest->errNo != 444)
-            {
+            if ($this->httpRequest->errNo != 444) {
                 $r = new HttpResponse('1.1', $this->httpRequest->errNo);
                 $r->addBody($this->createErrorPage($this->httpRequest->errNo, $this->httpRequest->errStr));
 
-                if ($this->httpRequest->errNo == 405)
-                {
+                if ($this->httpRequest->errNo == 405) {
                     $r->addHeader('Allow: GET, POST, HEAD');
                     $r->addHeader('Access-Control-Allow-Methods: GET, POST, HEAD');
                 }
@@ -704,10 +708,10 @@ class HttpClient
 
         // If we have no headers, or we are busy with receiving.
         // Just return and wait for more data.
-        if (!$this->httpRequest->hasHeaders ||             // We're still receiving headers
-            $this->httpRequest->isReceiving)             // We're still receiving the body of a request
-            return true;                                // Return true to just wait and try again later
-
+        if (!$this->httpRequest->hasHeaders              // We're still receiving headers
+            || $this->httpRequest->isReceiving             // We're still receiving the body of a request
+        ) { return true;                                // Return true to just wait and try again later
+        }
         // At this point we have a fully qualified and parsed HttpRequest
         // The HttpRequest object contains all info about the headers / GET / POST / COOKIE / FILES
         // Just finalise it by adding some extra client info.
@@ -725,20 +729,24 @@ class HttpClient
         $this->httpRequest->SERVER['HTTP_ACCEPT_CHARSET']    = isset($this->httpRequest->headers['Accept-Charset']) ? $this->httpRequest->headers['Accept-Charset'] : '';
         $this->httpRequest->SERVER['HTTP_CONNECTION']        = isset($this->httpRequest->headers['Connection']) ? $this->httpRequest->headers['Connection'] : '';
         $this->httpRequest->SERVER['HTTP_KEEP_ALIVE']        = isset($this->httpRequest->headers['Keep-Alive']) ? $this->httpRequest->headers['Keep-Alive'] : '';
-        if (isset($this->httpRequest->headers['Referer']))
-            $this->httpRequest->SERVER['HTTP_REFERER']        = $this->httpRequest->headers['Referer'];
-        if (isset($this->httpRequest->headers['Range']))
-            $this->httpRequest->SERVER['HTTP_RANGE']        = $this->httpRequest->headers['Range'];
-        if (isset($this->httpRequest->headers['Cookie']))
-            $this->httpRequest->SERVER['HTTP_COOKIE']= $this->httpRequest->headers['Cookie'];
-        if (isset($this->httpRequest->headers['Authorization']))
-            $this->httpRequest->SERVER['HTTP_AUTHORIZATION']= $this->httpRequest->headers['Authorization'];
+        if (isset($this->httpRequest->headers['Referer'])) {
+            $this->httpRequest->SERVER['HTTP_REFERER']        = $this->httpRequest->headers['Referer']; 
+        }
+        if (isset($this->httpRequest->headers['Range'])) {
+            $this->httpRequest->SERVER['HTTP_RANGE']        = $this->httpRequest->headers['Range']; 
+        }
+        if (isset($this->httpRequest->headers['Cookie'])) {
+            $this->httpRequest->SERVER['HTTP_COOKIE']= $this->httpRequest->headers['Cookie']; 
+        }
+        if (isset($this->httpRequest->headers['Authorization'])) {
+            $this->httpRequest->SERVER['HTTP_AUTHORIZATION']= $this->httpRequest->headers['Authorization']; 
+        }
         $this->httpRequest->SERVER['REQUEST_TIME']            = time();
 
         // Check if we have to match siteDomain
-        if ($this->http->getSiteDomain() != '' &&
-            $this->http->getSiteDomain() != $this->httpRequest->SERVER['SERVER_NAME'])
-        {
+        if ($this->http->getSiteDomain() != '' 
+            && $this->http->getSiteDomain() != $this->httpRequest->SERVER['SERVER_NAME']
+        ) {
             $r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 404);
             $r->addBody($this->createErrorPage(404));
             $this->write($r->getHeaders());
@@ -749,29 +757,31 @@ class HttpClient
         }
 
         // HTTP Authorisation?
-        if ($this->http->getHttpAuthPath() != '')
-        {
+        if ($this->http->getHttpAuthPath() != '') {
             $scriptPath = pathinfo($this->httpRequest->SERVER['SCRIPT_NAME'], PATHINFO_DIRNAME);
 
             // Check if path must be auth'd and if HTTP_AUTHORIZATION header exists and if so, validate it
-            if (isDirInDir($this->http->getHttpAuthPath(), $this->http->getDocRoot().$scriptPath) &&
-                (!isset($this->httpRequest->SERVER['HTTP_AUTHORIZATION']) ||
-                 !$this->validateAuthorization()))
-            {
+            if (isDirInDir($this->http->getHttpAuthPath(), $this->http->getDocRoot().$scriptPath) 
+                && (!isset($this->httpRequest->SERVER['HTTP_AUTHORIZATION']) 
+                || !$this->validateAuthorization())
+            ) {
                 // Not validated - send 401 Unauthorized
                 do
                 {
                     $nonce = createRandomString(17, RAND_HEX);
-                    if (!$this->http->getNonceInfo($nonce))
-                        break;
+                    if (!$this->http->getNonceInfo($nonce)) {
+                        break; 
+                    }
                 } while(true);
                 $opaque = $this->http->addNewNonce($nonce);
 
                 $r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 401);
-                if ($this->http->getHttpAuthType() == 'Digest')
-                    $r->addHeader('WWW-Authenticate: Digest realm="'.HTTP_AUTH_REALM.'", qop="auth", nonce="'.$nonce.'", opaque="'.$opaque.'"');
-                else
-                    $r->addHeader('WWW-Authenticate: Basic realm="'.HTTP_AUTH_REALM.'"');
+                if ($this->http->getHttpAuthType() == 'Digest') {
+                    $r->addHeader('WWW-Authenticate: Digest realm="'.HTTP_AUTH_REALM.'", qop="auth", nonce="'.$nonce.'", opaque="'.$opaque.'"'); 
+                }
+                else {
+                    $r->addHeader('WWW-Authenticate: Basic realm="'.HTTP_AUTH_REALM.'"'); 
+                }
                 $r->addBody($this->createErrorPage(401, '', true));
                 $this->write($r->getHeaders());
                 $this->write($r->getBody());
@@ -792,13 +802,10 @@ class HttpClient
         // Rewrite script name? (keep it internal - don't rewrite SERVER header
         $scriptName = ($this->httpRequest->SERVER['SCRIPT_NAME'] == '/') ? '/index.php' : $this->httpRequest->SERVER['SCRIPT_NAME'];
 
-        if (file_exists($this->http->getDocRoot().$scriptName))
-        {
+        if (file_exists($this->http->getDocRoot().$scriptName)) {
             // Should we serve a file or pass the request to PHPParser for page generation?
-            if (preg_match('/^.*\.php$/', $scriptName))
-            {
-                if ($this->httpRequest->SERVER['REQUEST_METHOD'] == 'HEAD')
-                {
+            if (preg_match('/^.*\.php$/', $scriptName)) {
+                if ($this->httpRequest->SERVER['REQUEST_METHOD'] == 'HEAD') {
                     $r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
                     $this->write($r->getHeaders());
                 }
@@ -822,8 +829,7 @@ class HttpClient
                     $this->write($r->getBody());
                 }
             }
-            else if (is_dir($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']))
-            {
+            else if (is_dir($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME'])) {
                 // 403 - not allowed to view folder contents
                 $r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 403);
                 $r->addBody($this->createErrorPage(403));
@@ -834,8 +840,7 @@ class HttpClient
             else
             {
                 // Send a file
-                if ($this->httpRequest->SERVER['REQUEST_METHOD'] == 'HEAD')
-                {
+                if ($this->httpRequest->SERVER['REQUEST_METHOD'] == 'HEAD') {
                     $r = new HttpResponse($this->httpRequest->SERVER['httpVersion'], 200);
                     $this->write($r->getHeaders());
                 }
@@ -872,8 +877,7 @@ class HttpClient
         // Cache?
         $useCache = false;
         $scriptnameHash = md5($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
-        if (isset($this->httpRequest->headers['Cache-Control']) || isset($this->httpRequest->headers['Pragma']))
-        {
+        if (isset($this->httpRequest->headers['Cache-Control']) || isset($this->httpRequest->headers['Pragma'])) {
             $ifModifiedSince =
                 isset($this->httpRequest->headers['If-Modified-Since']) ?
                 (int) strtotime($this->httpRequest->headers['If-Modified-Since']) :
@@ -888,12 +892,9 @@ class HttpClient
                 array();
 
             // Detect 'If-Modified-Since' (weak) cache validator (http1.1)
-            if ($ifModifiedSince > 0)
-            {
-                if (isset($this->http->cache[$scriptnameHash]))
-                {
-                    if ($this->http->cache[$scriptnameHash] == $ifModifiedSince)
-                    {
+            if ($ifModifiedSince > 0) {
+                if (isset($this->http->cache[$scriptnameHash])) {
+                    if ($this->http->cache[$scriptnameHash] == $ifModifiedSince) {
                         // File has not been changed - tell the browser to use the cache (send a 304)
                         $useCache = true;
                     }
@@ -902,22 +903,20 @@ class HttpClient
                 {
                     $scriptMTime = filemtime($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
                     $this->http->cache[$scriptnameHash] = $scriptMTime;
-                    if ($scriptMTime == $ifModifiedSince)
-                    {
+                    if ($scriptMTime == $ifModifiedSince) {
                         // File has not been changed - tell the browser to use the cache (send a 304)
                         $useCache = true;
                     }
                 }
             }
             // Otherwise detect 'Cache-Control' or 'Pragma' (strong) validators (http1.0/http1.1)
-            else if ((isset($cacheControl['max-age']) && $cacheControl['max-age'] == 0) &&
-                        $cacheControl != 'no-cache' &&
-                        $pragma != 'no-cache' &&
-                        isset($this->http->cache[$scriptnameHash]))
-            {
+            else if ((isset($cacheControl['max-age']) && $cacheControl['max-age'] == 0) 
+                && $cacheControl != 'no-cache' 
+                && $pragma != 'no-cache' 
+                && isset($this->http->cache[$scriptnameHash])
+            ) {
                 $scriptMTime = filemtime($this->http->getDocRoot().$this->httpRequest->SERVER['SCRIPT_NAME']);
-                if ($this->http->cache[$scriptnameHash] == $scriptMTime)
-                {
+                if ($this->http->cache[$scriptnameHash] == $scriptMTime) {
                     // File has not been changed - tell the browser to use the cache (send a 304)
                     $useCache = true;
                 }
@@ -930,8 +929,7 @@ class HttpClient
             }
         }
 
-        if ($useCache)
-        {
+        if ($useCache) {
             $r->setResponseCode(304);
             $this->write($r->getHeaders());
         }
@@ -942,8 +940,7 @@ class HttpClient
             $r->addHeader('Content-Type: '.$this->getMimeType());
             $r->addHeader('Last-Modified: '.date('r', $scriptMTime));
 
-            if (isset($this->httpRequest->SERVER['HTTP_RANGE']))
-            {
+            if (isset($this->httpRequest->SERVER['HTTP_RANGE'])) {
                 console('HTTP_RANGE HEADER : '.$this->httpRequest->SERVER['HTTP_RANGE']);
                 $exp = explode('=', $this->httpRequest->SERVER['HTTP_RANGE']);
                 $startByte = (int) substr($exp[1], 0, -1);
@@ -960,8 +957,7 @@ class HttpClient
             }
 
             // Store the filemtime in $cache
-            if (!isset($this->http->cache[$scriptnameHash]))
-            {
+            if (!isset($this->http->cache[$scriptnameHash])) {
                 $this->http->cache[$scriptnameHash] = $scriptMTime;
             }
             clearstatcache();
@@ -975,57 +971,65 @@ class HttpClient
         global $PRISM;
 
         $matches = array();
-        if (preg_match('/^Digest (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
-        {
+        if (preg_match('/^Digest (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches)) {
             // Digest method
             $info = array();
             $infoTmp = $this->httpRequest->parseHeaderValue($matches[1]);
             foreach ($infoTmp as $a => $b)
             {
-                foreach ($b as $k => $v)
-                    $info[$k] = preg_replace('/"?(.*)"?/U', '\\1', $v);
+                foreach ($b as $k => $v) {
+                    $info[$k] = preg_replace('/"?(.*)"?/U', '\\1', $v); 
+                }
             }
 
             // Check that all values are provided
-            if (!isset($info['username']) ||
-                !isset($info['realm']) ||
-                !isset($info['nonce']) ||
-                !isset($info['uri']) ||
-                !isset($info['response']) ||
-                !isset($info['opaque']) ||
-                !isset($info['qop']) ||
-                !isset($info['nc']) ||
-                !isset($info['cnonce']))
-                return false;
+            if (!isset($info['username']) 
+                || !isset($info['realm']) 
+                || !isset($info['nonce']) 
+                || !isset($info['uri']) 
+                || !isset($info['response']) 
+                || !isset($info['opaque']) 
+                || !isset($info['qop']) 
+                || !isset($info['nc']) 
+                || !isset($info['cnonce'])
+            ) {
+                return false; 
+            }
 
             //  Check that nonce exists and nc is not reused AND that opaque value matches
-            if (!($nonceInfo = $this->http->getNonceInfo($info['nonce'])))
-                return false;
-            if ($nonceInfo[1] >= $info['nc'])
-                return false;
-            if (!isset($nonceInfo[2]))
-                return false;
-            if ($nonceInfo[2] != $info['opaque'])
-                return false;
+            if (!($nonceInfo = $this->http->getNonceInfo($info['nonce']))) {
+                return false; 
+            }
+            if ($nonceInfo[1] >= $info['nc']) {
+                return false; 
+            }
+            if (!isset($nonceInfo[2])) {
+                return false; 
+            }
+            if ($nonceInfo[2] != $info['opaque']) {
+                return false; 
+            }
 
             // Do the digest check
-            if (!($ha1 = $PRISM->admins->getRealmDigest($info['username'])))
-                return false;
+            if (!($ha1 = $PRISM->admins->getRealmDigest($info['username']))) {
+                return false; 
+            }
             $ha2 = md5($this->httpRequest->SERVER['REQUEST_METHOD'].':'.$info['uri']);
             $response = md5($ha1.':'.$info['nonce'].':'.$info['nc'].':'.$info['cnonce'].':'.$info['qop'].':'.$ha2);
-            if ($response != $info['response'])
-                return false;
+            if ($response != $info['response']) {
+                return false; 
+            }
 
             // Validated!
             $this->http->incNonceCounter($info['nonce'], $info['nc']);
             $this->httpRequest->SERVER['PHP_AUTH_USER']    = $info['username'];
         }
-        else if (preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches))
-        {
+        else if (preg_match('/^Basic (.*)$/', $this->httpRequest->SERVER['HTTP_AUTHORIZATION'], $matches)) {
             // Basic method
             $auth = explode(':', base64_decode($matches[1]), 2);
-            if (count($auth) != 2 || !$PRISM->admins->isPasswordCorrect($auth[0], $auth[1]))
-                return false;
+            if (count($auth) != 2 || !$PRISM->admins->isPasswordCorrect($auth[0], $auth[1])) {
+                return false; 
+            }
 
             // Validated!
             $this->httpRequest->SERVER['PHP_AUTH_USER']    = $auth[0];
@@ -1047,77 +1051,78 @@ class HttpClient
         $mimeType = 'application/octet-stream';
         switch(strtolower($pathInfo['extension']))
         {
-            case 'txt' :
-                $mimeType = 'text/plain';
-                break;
+        case 'txt' :
+            $mimeType = 'text/plain';
+            break;
 
-            case 'html' :
-            case 'htm' :
-            case 'shtml' :
-                $mimeType = 'text/html';
-                break;
+        case 'html' :
+        case 'htm' :
+        case 'shtml' :
+            $mimeType = 'text/html';
+            break;
 
-            case 'css' :
-                $mimeType = 'text/css';
-                break;
+        case 'css' :
+            $mimeType = 'text/css';
+            break;
 
-            case 'xml' :
-                $mimeType = 'text/xml';
-                break;
+        case 'xml' :
+            $mimeType = 'text/xml';
+            break;
 
-            case 'gif' :
-                $mimeType = 'image/gif';
-                break;
+        case 'gif' :
+            $mimeType = 'image/gif';
+            break;
 
-            case 'jpeg' :
-            case 'jpg' :
-                $mimeType = 'image/jpeg';
-                break;
+        case 'jpeg' :
+        case 'jpg' :
+            $mimeType = 'image/jpeg';
+            break;
 
-            case 'png' :
-                $mimeType = 'image/png';
-                break;
+        case 'png' :
+            $mimeType = 'image/png';
+            break;
 
-            case 'tif' :
-            case 'tiff' :
-                $mimeType = 'image/tiff';
-                break;
+        case 'tif' :
+        case 'tiff' :
+            $mimeType = 'image/tiff';
+            break;
 
-            case 'wbmp' :
-                $mimeType = 'image/vnd.wap.wbmp';
-                break;
+        case 'wbmp' :
+            $mimeType = 'image/vnd.wap.wbmp';
+            break;
 
-            case 'bmp' :
-                $mimeType = 'image/x-ms-bmp';
-                break;
+        case 'bmp' :
+            $mimeType = 'image/x-ms-bmp';
+            break;
 
-            case 'svg' :
-                $mimeType = 'image/svg+xml';
-                break;
+        case 'svg' :
+            $mimeType = 'image/svg+xml';
+            break;
 
-            case 'ico' :
-                $mimeType = 'image/x-icon';
-                break;
+        case 'ico' :
+            $mimeType = 'image/x-icon';
+            break;
 
-            case 'js' :
-                $mimeType = 'application/x-javascript';
-                break;
+        case 'js' :
+            $mimeType = 'application/x-javascript';
+            break;
 
-            case 'atom' :
-                $mimeType = 'application/atom+xml';
-                break;
+        case 'atom' :
+            $mimeType = 'application/atom+xml';
+            break;
 
-            case 'rss' :
-                $mimeType = 'application/rss+xml';
-                break;
+        case 'rss' :
+            $mimeType = 'application/rss+xml';
+            break;
         }
         return $mimeType;
     }
 
     private function logRequest($code, $size = 0)
     {
-        if ($this->http->getLogFile() == '')
-            return;
+        if ($this->http->getLogFile() == '') {
+            return; 
+        }
 
         $logLine =
             $this->ip.' '.
@@ -1164,8 +1169,9 @@ class HttpRequest
     public function __destruct()
     {
         // tmpFiles cleanup
-        foreach ($this->tmpFiles as $v)
-            unlink($v);
+        foreach ($this->tmpFiles as $v) {
+            unlink($v); 
+        }
     }
 
     public function handleInput(&$data)
@@ -1174,50 +1180,44 @@ class HttpRequest
         // be coming in until we have received all the headers.
         // Normally though all headers should come in unfragmented, but don't rely on that.
         $this->rawInput .= $data;
-        if (strlen($this->rawInput) > HTTP_MAX_REQUEST_SIZE)
-        {
+        if (strlen($this->rawInput) > HTTP_MAX_REQUEST_SIZE) {
             $this->errNo = 413;
             $this->errStr = 'You tried to send more than '.HTTP_MAX_REQUEST_SIZE.' bytes to the server, which it doesn\'t like.';
             return false;
         }
 
         // Check if we have header lines in the buffer, for as long as !$this->hasHeaders
-        if (!$this->hasHeaders)
-        {
-            if (!$this->parseHeaders())
-            {
-                if ($this->errNo == 0)
-                    $this->errNo = 400;
+        if (!$this->hasHeaders) {
+            if (!$this->parseHeaders()) {
+                if ($this->errNo == 0) {
+                    $this->errNo = 400; 
+                }
                 return false;                // returns false is something went wrong (bad headers)
             }
         }
 
         // If we have headers then we can now figure out if we have received all there is,
         // or if there is more to come. If there is, just return true and wait for more.
-        if ($this->hasHeaders)
-        {
+        if ($this->hasHeaders) {
             // With a GET there will be no extra data. With a POST however ...
-            if ($this->SERVER['REQUEST_METHOD'] == 'POST')
-            {
+            if ($this->SERVER['REQUEST_METHOD'] == 'POST') {
                 // Check if we have enough and proper data to read the POST
-                if (!isset($this->headers['Content-Length']))
-                {
+                if (!isset($this->headers['Content-Length'])) {
                     $this->errNo = 411;
                     return false;
                 }
                 $contentType = isset($this->headers['Content-Type']) ? $this->parseContentType($this->headers['Content-Type']) : '';
-                if (!$contentType ||
-                    ($contentType['mediaType'] != 'application/x-www-form-urlencoded' &&
-                     $contentType['mediaType'] != 'multipart/form-data'))
-                {
+                if (!$contentType 
+                    || ($contentType['mediaType'] != 'application/x-www-form-urlencoded' 
+                    && $contentType['mediaType'] != 'multipart/form-data')
+                ) {
                     $this->errNo = 415;
                     $this->errStr = 'No Content-Type was provided that I can handle. At the moment I only like application/x-www-form-urlencoded and multipart/form-data.';
                     return false;
                 }
 
                 // Should we expect more data to come in?
-                if ((int) $this->headers['Content-Length'] > strlen($this->rawInput))
-                {
+                if ((int) $this->headers['Content-Length'] > strlen($this->rawInput)) {
                     // We have not yet received all the POST data, so I'll return and wait.
                     $this->isReceiving = true;
                     return true;
@@ -1227,12 +1227,11 @@ class HttpRequest
                 $this->isReceiving = false;
 
                 // Parse POST variables
-                if ($contentType['mediaType'] == 'application/x-www-form-urlencoded')
-                    $this->parsePOSTurlenc(substr($this->rawInput, 0, $this->headers['Content-Length']));
-                else if ($contentType['mediaType'] == 'multipart/form-data')
-                {
-                    if (!$this->parsePOSTformdata($this->rawInput, $contentType['boundary'][1]))
-                    {
+                if ($contentType['mediaType'] == 'application/x-www-form-urlencoded') {
+                    $this->parsePOSTurlenc(substr($this->rawInput, 0, $this->headers['Content-Length'])); 
+                }
+                else if ($contentType['mediaType'] == 'multipart/form-data') {
+                    if (!$this->parsePOSTformdata($this->rawInput, $contentType['boundary'][1])) {
                         $this->errNo = 400;
                         $this->errStr = 'Bad Request - Problems parsing body data';
                         return false;
@@ -1270,19 +1269,15 @@ class HttpRequest
         {
             // Do we have a header line?
             $pos = strpos($this->rawInput, "\r\n");
-            if ($pos === false)
-            {
+            if ($pos === false) {
                 // Extra (garbage) input error checking here
-                if (!$this->hasRequestUri)
-                {
+                if (!$this->hasRequestUri) {
                     $len = strlen($this->rawInput);
-                    if ($len > HTTP_MAX_URI_LENGTH)
-                    {
+                    if ($len > HTTP_MAX_URI_LENGTH) {
                         $this->errNo = 414;
                         return false;
                     }
-                    else if ($len > 3 && !preg_match('/^(GET|POST|HEAD).*$/', $this->rawInput))
-                    {
+                    else if ($len > 3 && !preg_match('/^(GET|POST|HEAD).*$/', $this->rawInput)) {
                         $this->errNo = 444;
                         return false;
                     }
@@ -1291,11 +1286,9 @@ class HttpRequest
                 // Otherwise just return and wait for more data
                 return true;
             }
-            else if ($pos === 0)
-            {
+            else if ($pos === 0) {
                 // This cannot possibly be the end of headers, if we don't even have a request uri (or host header)
-                if (!$this->hasRequestUri || !isset($this->headers['Host']))
-                {
+                if (!$this->hasRequestUri || !isset($this->headers['Host'])) {
                     $this->errNo = 444;
                     return false;
                 }
@@ -1310,29 +1303,27 @@ class HttpRequest
             $this->rawInput = substr($this->rawInput, $pos+2);        // +2 to include \r\n
 
             // Do we have a request line already? If not, try to parse this header line as a request line
-            if (!$this->hasRequestUri)
-            {
+            if (!$this->hasRequestUri) {
                 // Read the first header (the request line)
-                if (!$this->parseRequestLine($header))
-                {
-                    if ($this->errNo == 0)
-                        $this->errNo = 400;
+                if (!$this->parseRequestLine($header)) {
+                    if ($this->errNo == 0) {
+                        $this->errNo = 400; 
+                    }
                     return false;
                 }
                 $this->hasRequestUri = true;
             }
-            else if (!$this->hasHeaders)
-            {
-                if (strpos($header, ':') === false)
-                {
+            else if (!$this->hasHeaders) {
+                if (strpos($header, ':') === false) {
                     $this->errNo = 400;
                     return false;
                 }
 
                 // Parse regular header line
                 $exp = explode(':', $header, 2);
-                if (count($exp) == 2)
-                    $this->headers[trim($exp[0])] = trim($exp[1]);
+                if (count($exp) == 2) {
+                    $this->headers[trim($exp[0])] = trim($exp[1]); 
+                }
             }
         } while (true);
         return true;
@@ -1348,8 +1339,9 @@ class HttpRequest
         foreach ($lines as $header)
         {
             $exp = explode(':', $header, 2);
-            if (count($exp) == 2)
-                $parsed[trim($exp[0])] = $this->parseHeaderValue(trim($exp[1]));
+            if (count($exp) == 2) {
+                $parsed[trim($exp[0])] = $this->parseHeaderValue(trim($exp[1])); 
+            }
         }
 
         return $parsed;
@@ -1357,36 +1349,38 @@ class HttpRequest
 
     public function parseHeaderValue($header, $level = 0)
     {
-//        image/png,image/*;q=0.8,*/*;q=0.5
-//        image/png,
-//                  image/*;q=0.8,
-//                                */*;q=0.5
+        //        image/png,image/*;q=0.8,*/*;q=0.5
+        //        image/png,
+        //                  image/*;q=0.8,
+        //                                */*;q=0.5
 
         // Split by ...
         switch($level)
         {
-            case 0 :            // ,
-                $items = explode(',', $header);
-                break;
+        case 0 :            // ,
+            $items = explode(',', $header);
+            break;
 
-            case 1 :            // ;
-                $items = explode(';', $header);
-                break;
+        case 1 :            // ;
+            $items = explode(';', $header);
+            break;
 
-            case 2 :            // =
-                $items = explode('=', $header);
-                break;
+        case 2 :            // =
+            $items = explode('=', $header);
+            break;
         }
 
-        if ($level == 2)
-        {
-            if (count($items) == 1)
-                return $header;
-            else
-                return array(trim($items[0]) => $items[1]);
+        if ($level == 2) {
+            if (count($items) == 1) {
+                return $header; 
+            }
+            else {
+                return array(trim($items[0]) => $items[1]); 
+            }
         }
-        if (count($items) == 1)
-            return $this->parseHeaderValue($header, $level + 1);
+        if (count($items) == 1) {
+            return $this->parseHeaderValue($header, $level + 1); 
+        }
 
         $parsed = array();
 
@@ -1400,8 +1394,9 @@ class HttpRequest
 
     public function parseContentType(&$header)
     {
-        if ($header == '')
-            return false;
+        if ($header == '') {
+            return false; 
+        }
 
         // Split?
         $parsed = array();
@@ -1417,15 +1412,13 @@ class HttpRequest
         $this->requestLine = $line;
 
         $exp = explode(' ', $line);
-        if (count($exp) != 3)
-        {
+        if (count($exp) != 3) {
             $this->errNo = 444;
             return false;
         }
 
         // check the request command
-        if ($exp[0] != 'GET' && $exp[0] != 'POST' && $exp[0] != 'HEAD')
-        {
+        if ($exp[0] != 'GET' && $exp[0] != 'POST' && $exp[0] != 'HEAD') {
             $this->errNo = 444;
             return false;
         }
@@ -1433,13 +1426,15 @@ class HttpRequest
 
         // Check the request uri
         $this->SERVER['REQUEST_URI'] = $exp[1];
-        if (($uri = parse_url($this->SERVER['REQUEST_URI'])) === false)
-            return false;
+        if (($uri = parse_url($this->SERVER['REQUEST_URI'])) === false) {
+            return false; 
+        }
 
         // Path sanitation
         $uri['path'] = filter_var(trim($uri['path']), FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW);
-        if (!isset($uri['path'][0]) || $uri['path'][0] != '/')
-            return false;
+        if (!isset($uri['path'][0]) || $uri['path'][0] != '/') {
+            return false; 
+        }
         $this->SERVER['SCRIPT_NAME'] = $uri['path'];
 
         // Set the query string - all chars allowed in there
@@ -1449,8 +1444,7 @@ class HttpRequest
         $exp2 = explode('/', $this->SERVER['SCRIPT_NAME']);
         foreach ($exp2 as $v)
         {
-            if (trim($v) == '..')
-            {
+            if (trim($v) == '..') {
                 // Ooops the user probably tried something nasty (reach a file outside of our www folder)
                 return false;
             }
@@ -1459,8 +1453,9 @@ class HttpRequest
         // Check the HTTP protocol version
         $this->SERVER['SERVER_PROTOCOL'] = $exp[2];
         $httpexp = explode('/', $exp[2]);
-        if ($httpexp[0] != 'HTTP' || ($httpexp[1] != '1.0' && $httpexp[1] != '1.1'))
-            return false;
+        if ($httpexp[0] != 'HTTP' || ($httpexp[1] != '1.0' && $httpexp[1] != '1.1')) {
+            return false; 
+        }
         $this->SERVER['httpVersion'] = $httpexp[1];
 
         return true;
@@ -1471,8 +1466,9 @@ class HttpRequest
         $exp = explode('&', $this->SERVER['QUERY_STRING']);
         foreach ($exp as $v)
         {
-            if ($v == '')
-                continue;
+            if ($v == '') {
+                continue; 
+            }
             $exp2 = explode('=', $v, 2);
             $this->GET[urldecode($exp2[0])] = isset($exp2[1]) ? urldecode($exp2[1]) : '';
         }
@@ -1487,15 +1483,17 @@ class HttpRequest
             $key = urldecode($exp2[0]);
             $value = urldecode($exp2[1]);
 
-            if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches))
-            {
-                if (!isset($this->POST[$matches[1]]))
-                    $this->POST[$matches[1]] = array();
+            if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches)) {
+                if (!isset($this->POST[$matches[1]])) {
+                    $this->POST[$matches[1]] = array(); 
+                }
 
-                if ($matches[2] == '')
-                    $this->POST[$matches[1]][] = $value;
-                else
-                    $this->POST[$matches[1]][$matches[2]] = $value;
+                if ($matches[2] == '') {
+                    $this->POST[$matches[1]][] = $value; 
+                }
+                else {
+                    $this->POST[$matches[1]][$matches[2]] = $value; 
+                }
             }
             else
             {
@@ -1508,9 +1506,11 @@ class HttpRequest
     {
         // Check if the raw data at least begins and ends with the boundary
         $bLen = strlen($boundary);
-        if (substr($raw, 0, ($bLen + 2)) != '--'.$boundary ||
-            trim(substr($raw, -($bLen + 2))) != substr($boundary, 2).'--')
-            return false;
+        if (substr($raw, 0, ($bLen + 2)) != '--'.$boundary 
+            || trim(substr($raw, -($bLen + 2))) != substr($boundary, 2).'--'
+        ) {
+            return false; 
+        }
 
         // Split into separate parts
         $parts = explode('--'.$boundary, $raw);
@@ -1529,31 +1529,33 @@ class HttpRequest
             $value = $exp[1];
 
             $contentType = '';
-            if (isset($headers['Content-Disposition'][2]['filename']))
-                $fileName = preg_replace('/^"(.*)"$/', '\\1', $headers['Content-Disposition'][2]['filename']);
-            if (isset($fileName) && isset($headers['Content-Type']))
-                $contentType = $headers['Content-Type'];
+            if (isset($headers['Content-Disposition'][2]['filename'])) {
+                $fileName = preg_replace('/^"(.*)"$/', '\\1', $headers['Content-Disposition'][2]['filename']); 
+            }
+            if (isset($fileName) && isset($headers['Content-Type'])) {
+                $contentType = $headers['Content-Type']; 
+            }
 
-            if (isset($fileName))
-            {
-                if (!$fileName)
-                    continue;
+            if (isset($fileName)) {
+                if (!$fileName) {
+                    continue; 
+                }
 
                 $fileError = UPLOAD_ERR_OK;
 
                 // Store the uploaded file in a temp place
                 $tmpFileName = tempnam(sys_get_temp_dir(), 'Prism');
-                if (!@file_put_contents($tmpFileName, $value))
-                    $fileError = UPLOAD_ERR_CANT_WRITE;
-                else
-                    $this->tmpFiles[] = $tmpFileName;
+                if (!@file_put_contents($tmpFileName, $value)) {
+                    $fileError = UPLOAD_ERR_CANT_WRITE; 
+                }
+                else {
+                    $this->tmpFiles[] = $tmpFileName; 
+                }
 
                 // Fill $FILES with details on the file
-                if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches))
-                {
+                if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches)) {
                     // Create entry array if not yet exists
-                    if (!isset($this->FILES[$matches[1]]))
-                    {
+                    if (!isset($this->FILES[$matches[1]])) {
                         $this->FILES[$matches[1]] = array(
                             'name'        => array(),
                             'tmp_name'    => array(),
@@ -1564,8 +1566,7 @@ class HttpRequest
                     }
 
                     // Fill in the values
-                    if ($matches[2] == '')
-                    {
+                    if ($matches[2] == '') {
                         $this->FILES[$matches[1]]['name'][]        = $fileName;
                         $this->FILES[$matches[1]]['tmp_name'][]    = $tmpFileName;
                         $this->FILES[$matches[1]]['type'][]        = $contentType;
@@ -1594,15 +1595,17 @@ class HttpRequest
             }
             else
             {
-                if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches))
-                {
-                    if (!isset($this->POST[$matches[1]]))
-                        $this->POST[$matches[1]] = array();
+                if (preg_match('/^(.*)\[(.*)\]$/', $key, $matches)) {
+                    if (!isset($this->POST[$matches[1]])) {
+                        $this->POST[$matches[1]] = array(); 
+                    }
 
-                    if ($matches[2] == '')
-                        $this->POST[$matches[1]][] = $value;
-                    else
-                        $this->POST[$matches[1]][$matches[2]] = $value;
+                    if ($matches[2] == '') {
+                        $this->POST[$matches[1]][] = $value; 
+                    }
+                    else {
+                        $this->POST[$matches[1]][$matches[2]] = $value; 
+                    }
                 }
                 else
                 {
@@ -1617,8 +1620,9 @@ class HttpRequest
 
     private function parseCOOKIE()
     {
-        if (!isset($this->headers['Cookie']))
-            return;
+        if (!isset($this->headers['Cookie'])) {
+            return; 
+        }
 
         $exp = explode(';', $this->headers['Cookie']);
         foreach ($exp as $v)
@@ -1654,126 +1658,129 @@ class HttpResponse
             444 => 'Garbage Request Rejected',
         );
 
-    private $responseCode    = 200;
-    private $httpVersion    = '1.1';
-    private $headers        = array
+        private $responseCode    = 200;
+        private $httpVersion    = '1.1';
+        private $headers        = array
         (
             'Server'        => '',
             'Date'            => '',
             'Content-Type'    => 'text/html',
         );
-    private $cookies        = array();
-    private $body            = '';
-    private $bodyLen        = 0;
+        private $cookies        = array();
+        private $body            = '';
+        private $bodyLen        = 0;
 
-    public function __construct($httpVersion = '1.1', $code = 200)
-    {
-        $this->httpVersion = $httpVersion;
-        $this->setResponseCode($code);
-        $this->headers['Server'] = 'PRISM/'.PHPInSimMod::VERSION;
-    }
-
-    public function setResponseCode($code)
-    {
-        $this->responseCode = (int) $code;
-    }
-
-    public function getResponseCode()
-    {
-        return $this->responseCode;
-    }
-
-    public function addHeader($header)
-    {
-        // Parse the header (validate it)
-        $exp = explode(':', $header, 2);
-        if (count($exp) != 2)
-            return false;
-
-        $exp[0] = trim($exp[0]);
-        $exp[1] = trim($exp[1]);
-        // Check for duplicate (can't do that the easy way because i want to do a case insensitive check)
-        foreach ($this->headers as $k => $v)
+        public function __construct($httpVersion = '1.1', $code = 200)
         {
-            if (strtolower($exp[0]) == strtolower($k))
+            $this->httpVersion = $httpVersion;
+            $this->setResponseCode($code);
+            $this->headers['Server'] = 'PRISM/'.PHPInSimMod::VERSION;
+        }
+
+        public function setResponseCode($code)
+        {
+            $this->responseCode = (int) $code;
+        }
+
+        public function getResponseCode()
+        {
+            return $this->responseCode;
+        }
+
+        public function addHeader($header)
+        {
+            // Parse the header (validate it)
+            $exp = explode(':', $header, 2);
+            if (count($exp) != 2) {
+                return false; 
+            }
+
+            $exp[0] = trim($exp[0]);
+            $exp[1] = trim($exp[1]);
+            // Check for duplicate (can't do that the easy way because i want to do a case insensitive check)
+            foreach ($this->headers as $k => $v)
             {
-                unset($this->headers[$k]);
-                break;
+                if (strtolower($exp[0]) == strtolower($k)) {
+                    unset($this->headers[$k]);
+                    break;
+                }
+            }
+
+            // Store the header
+            $this->headers[$exp[0]] = $exp[1];
+
+            return true;
+        }
+
+        public function getHeader($key)
+        {
+            return isset($this->headers[$key]) ? $this->headers[$key] : false;
+        }
+
+        public function getHeaders()
+        {
+            $this->finaliseHeaders();
+
+            $headers = 'HTTP/'.$this->httpVersion.' '.$this->responseCode.' '.self::$responseCodes[$this->responseCode]."\r\n";
+            foreach ($this->headers as $k => $v)
+            {
+                $headers .= $k.': '.$v."\r\n";
+            }
+
+            foreach ($this->cookies as $k => $v) {
+                $headers .= 'Set-Cookie: '.urlencode($k).'='.urlencode($v[0]).'; expires='.date('l, d-M-y H:i:s T', (int) $v[1]).'; path='.$v[2].'; domain='.$v[3].(($v[4]) ? '; secure' : '')."\r\n"; 
+            }
+
+            return $headers."\r\n";
+        }
+
+        private function finaliseHeaders()
+        {
+            // Adjust the response code for a redirect?
+            if (isset($this->headers['Location'])) {
+                $this->responseCode = 302; 
+            }
+
+            // Set server-side headers
+            $this->headers['Date']                    = date('r');
+            $this->headers['Accept-Ranges']            = 'bytes';
+
+            if (!isset($this->headers['Content-Length']) 
+                && $this->responseCode != 304
+            ) {
+                $this->headers['Content-Length']    = $this->bodyLen;
+            }
+
+            if ($this->responseCode == 200 
+                || $this->responseCode == 302 
+                || $this->responseCode == 404
+            ) {
+                $this->headers['Connection']        = 'Keep-Alive';
+                $this->headers['Keep-Alive']        = 'timeout='.HTTP_KEEP_ALIVE;
             }
         }
 
-        // Store the header
-        $this->headers[$exp[0]] = $exp[1];
-
-        return true;
-    }
-
-    public function getHeader($key)
-    {
-        return isset($this->headers[$key]) ? $this->headers[$key] : false;
-    }
-
-    public function getHeaders()
-    {
-        $this->finaliseHeaders();
-
-        $headers = 'HTTP/'.$this->httpVersion.' '.$this->responseCode.' '.self::$responseCodes[$this->responseCode]."\r\n";
-        foreach ($this->headers as $k => $v)
+        public function addBody($data)
         {
-            $headers .= $k.': '.$v."\r\n";
+            $this->body .= $data;
+            $this->bodyLen += strlen($data);
         }
 
-        foreach ($this->cookies as $k => $v)
-            $headers .= 'Set-Cookie: '.urlencode($k).'='.urlencode($v[0]).'; expires='.date('l, d-M-y H:i:s T', (int) $v[1]).'; path='.$v[2].'; domain='.$v[3].(($v[4]) ? '; secure' : '')."\r\n";
-
-        return $headers."\r\n";
-    }
-
-    private function finaliseHeaders()
-    {
-        // Adjust the response code for a redirect?
-        if (isset($this->headers['Location']))
-            $this->responseCode = 302;
-
-        // Set server-side headers
-        $this->headers['Date']                    = date('r');
-        $this->headers['Accept-Ranges']            = 'bytes';
-
-        if (!isset($this->headers['Content-Length']) &&
-            $this->responseCode != 304)
+        public function &getBody()
         {
-            $this->headers['Content-Length']    = $this->bodyLen;
+            return $this->body;
         }
 
-        if ($this->responseCode == 200 ||
-            $this->responseCode == 302 ||
-            $this->responseCode == 404)
+        public function setCookie($name, $value, $expire, $path, $domain, $secure = false, $httponly = false)
         {
-            $this->headers['Connection']        = 'Keep-Alive';
-            $this->headers['Keep-Alive']        = 'timeout='.HTTP_KEEP_ALIVE;
+            // Some value sanitation here, because it's user-input.
+            $expire = (int) $expire;
+            if ($path[0] != '/') {
+                $path = '/'.$path; 
+            }
+
+            $this->cookies[$name] = array($value, $expire, $path, $domain, $secure, $httponly);
         }
-    }
-
-    public function addBody($data)
-    {
-        $this->body .= $data;
-        $this->bodyLen += strlen($data);
-    }
-
-    public function &getBody()
-    {
-        return $this->body;
-    }
-
-    public function setCookie($name, $value, $expire, $path, $domain, $secure = false, $httponly = false)
-    {
-        // Some value sanitation here, because it's user-input.
-        $expire = (int) $expire;
-        if ($path[0] != '/')
-            $path = '/'.$path;
-
-        $this->cookies[$name] = array($value, $expire, $path, $domain, $secure, $httponly);
-    }
 }
 
 ?>
