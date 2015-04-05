@@ -46,15 +46,9 @@ class betterButtonManager
         }
         $Button->T($T)->L($L)->W($W)->H($H);
         $Button->BStyle($BStyle);
-        if(is_array($Text)) {
-            $Button->Text($Text[0]);
-            $this->bTexts[$Name] = $Text;
-        } else {
-            $Button->Text($Text);
-            $this->bTexts[$Name][0] = $Text;
-        }
+        $Button->Text($Text);
         $Button->Send();
-
+        $this->bTexts[$Name][0] = $Text;
         $this->bState[$Name]['ID'] = 0;
         $this->bState[$Name]['timestamp'] = time() - 1;
         $this->bState[$Name]['expire'] = -1;
