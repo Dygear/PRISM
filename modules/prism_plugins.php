@@ -191,7 +191,7 @@ abstract class Plugins extends Timers
         // Through Lookup (Commands with Args)
         foreach ($cmdsArray as $cmd => $details)  {
             # Due to the nature of these commands, we have to check all instances for matches.
-            if (strpos($cmdString, $cmd) === 0) { # Check if the string STARTS with our command.
+            if (stripos($cmdString, $cmd) === 0) { # Check if the string STARTS with our command.
                 return $details;
             }
         }
