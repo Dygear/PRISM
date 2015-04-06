@@ -380,6 +380,30 @@ abstract class Plugins extends Timers
         return null;
     }
 
+    protected function translateGlobalMessage($messageID, $args = array(), $hostID = null)
+    {
+        if (($clients = $this->getHostState($hostID)->clients) && $clients !== null) {
+            foreach ($clients as $UCID => $client) {
+                $this->translatePrivateMessage($UCID, $messageID, $args, $hostID);
+            }
+        }
+    }
+
+    protected function translatePrivateMessage($UCID, $messageID, $args = array(), $hostID = null)
+    {
+        $languageID = $this->getClientByUCID($UCID, $hostID)->Language;
+        $MTC = IS_MTC()->UCID($UCID);
+        $MTC->Text($this->translateMessage($languageID, $messageID, $args));
+        $MTC->send($hostID);
+    }
+
+    protected function translateMessage($languageID, $messageID, $args = array())
+    {
+        $lang_array = array("en", "de", "pt", "fr", "fi", "nn", "nl", "ca", "tr", "es", "it", "da", "cs", "ru", "et", "sr", "el", "pl", "hr", "hu", "br", "sv", "sk", "gl", "sl", "be", "lv", "lt", "zh", "cn", "ja", "ko", "bg", "mx", "uk", "id", "ro");
+        $LANG = parse_ini_file ( ROOTPATH . "/data/langs/plugin_name/{$lang_array[$languageID]}.ini");
+        return vsprintf ( $LANG[$messageID], $args);
+    }
+
     /** Client & Player */
     protected function &getPlayerByPLID(&$PLID, $hostID = null)
     {
