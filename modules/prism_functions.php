@@ -14,7 +14,7 @@ function translateMessage($lang_subdirectory, $languageID, $messageID, $args = a
         return "Unknown Language Selected";
     }
     $lang_folder = ROOTPATH . "/data/langs/{$lang_subdirectory}";
-    if(!is_readable($lang_file)){
+    if(!is_readable($lang_folder)){
         console("Language Folder for {$lang_subdirectory} is missing or not readable.");
         return "Language Folder for {$lang_subdirectory} is missing or not readable.";
     }
