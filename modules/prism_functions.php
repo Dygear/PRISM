@@ -7,7 +7,7 @@ function console($line, $EOL = true)
     echo $line . (($EOL) ? PHP_EOL : '');
 }
 
-function translateMessage($lang_subdirectory, $languageID, $messageID, $args = array())
+function translateEngine($lang_subdirectory, $languageID, $messageID, $args = array())
 {
     $lang_array = array("en", "de", "pt", "fr", "fi", "nn", "nl", "ca", "tr", "es", "it", "da", "cs", "ru", "et", "sr", "el", "pl", "hr", "hu", "br", "sv", "sk", "gl", "sl", "be", "lv", "lt", "zh", "cn", "ja", "ko", "bg", "mx", "uk", "id", "ro");
     if(!isset($lang_array[$languageID])){

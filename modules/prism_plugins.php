@@ -391,10 +391,15 @@ abstract class Plugins extends Timers
 
     protected function translatePrivateMessage($UCID, $lang_subdirectory, $messageID, $args = array(), $hostID = null)
     {
-        $languageID = $this->getClientByUCID($UCID, $hostID)->Language;
         $MTC = IS_MTC()->UCID($UCID);
-        $MTC->Text(translateMessage($lang_subdirectory, $languageID, $messageID, $args));
+        $MTC->Text($this->translateText($lang_subdirectory, $messageID, $args, $hostID = null));
         $MTC->send($hostID);
+    }
+
+    protected function translateText($lang_subdirectory, $messageID, $args = array(), $hostID = null)
+    {
+        $languageID = $this->getClientByUCID($UCID, $hostID)->Language;
+        return translateEngine($lang_subdirectory, $languageID, $messageID, $args);
     }
 
     /** Client & Player */
