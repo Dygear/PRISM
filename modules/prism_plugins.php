@@ -400,8 +400,30 @@ abstract class Plugins extends Timers
     protected function translateMessage($languageID, $messageID, $args = array())
     {
         $lang_array = array("en", "de", "pt", "fr", "fi", "nn", "nl", "ca", "tr", "es", "it", "da", "cs", "ru", "et", "sr", "el", "pl", "hr", "hu", "br", "sv", "sk", "gl", "sl", "be", "lv", "lt", "zh", "cn", "ja", "ko", "bg", "mx", "uk", "id", "ro");
-        $LANG = parse_ini_file ( ROOTPATH . "/data/langs/plugin_name/{$lang_array[$languageID]}.ini");
-        return vsprintf ( $LANG[$messageID], $args);
+        if(!isset($lang_array[$languageID])){
+            return "Unknown Language Selected";
+        }
+        $plugin_name = 'plugin_name'; # Need to figure out how to determine Plugin Name here.
+        $lang_folder = ROOTPATH . "/data/langs/{$plugin_name}";
+        $lang_file = "{$lang_folder}/{$lang_array[$languageID]}.ini";
+        if(is_readable($lang_file)){
+            $LANG = parse_ini_file ($lang_file);
+        } else {
+            $lang_file = "{$lang_folder}/fallback.ini";
+            if(is_readable($lang_file)){
+                $LANG = parse_ini_file ($lang_file);
+                console("Language File for {$lang_array[$languageID]} for {$plugin_name} is missing or not readable.");
+            } else {
+                console("Language File for {$lang_array[$languageID]} for {$plugin_name} is missing or not readable. No Fallback Available.");
+                return "Language File for {$lang_array[$languageID]} for {$plugin_name} is missing or not readable. No Fallback Available.";
+            }
+        }
+
+        if(isset($LANG[$messageID])){
+            return vsprintf ( $LANG[$messageID], $args);
+        } else {
+            return "Missing Language Entry: {$messageID} in {$lang_array[$languageID]}";
+        }
     }
 
     /** Client & Player */
