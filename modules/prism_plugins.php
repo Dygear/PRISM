@@ -380,50 +380,21 @@ abstract class Plugins extends Timers
         return null;
     }
 
-    protected function translateGlobalMessage($messageID, $args = array(), $hostID = null)
+    protected function translateGlobalMessage($lang_subdirectory, $messageID, $args = array(), $hostID = null)
     {
         if (($clients = $this->getHostState($hostID)->clients) && $clients !== null) {
             foreach ($clients as $UCID => $client) {
-                $this->translatePrivateMessage($UCID, $messageID, $args, $hostID);
+                $this->translatePrivateMessage($UCID, $lang_subdirectory, $messageID, $args, $hostID);
             }
         }
     }
 
-    protected function translatePrivateMessage($UCID, $messageID, $args = array(), $hostID = null)
+    protected function translatePrivateMessage($UCID, $lang_subdirectory, $messageID, $args = array(), $hostID = null)
     {
         $languageID = $this->getClientByUCID($UCID, $hostID)->Language;
         $MTC = IS_MTC()->UCID($UCID);
-        $MTC->Text($this->translateMessage($languageID, $messageID, $args));
+        $MTC->Text(translateMessage($lang_subdirectory, $languageID, $messageID, $args));
         $MTC->send($hostID);
-    }
-
-    protected function translateMessage($languageID, $messageID, $args = array())
-    {
-        $lang_array = array("en", "de", "pt", "fr", "fi", "nn", "nl", "ca", "tr", "es", "it", "da", "cs", "ru", "et", "sr", "el", "pl", "hr", "hu", "br", "sv", "sk", "gl", "sl", "be", "lv", "lt", "zh", "cn", "ja", "ko", "bg", "mx", "uk", "id", "ro");
-        if(!isset($lang_array[$languageID])){
-            return "Unknown Language Selected";
-        }
-        $plugin_name = 'plugin_name'; # Need to figure out how to determine Plugin Name here.
-        $lang_folder = ROOTPATH . "/data/langs/{$plugin_name}";
-        $lang_file = "{$lang_folder}/{$lang_array[$languageID]}.ini";
-        if(is_readable($lang_file)){
-            $LANG = parse_ini_file ($lang_file);
-        } else {
-            $lang_file = "{$lang_folder}/fallback.ini";
-            if(is_readable($lang_file)){
-                $LANG = parse_ini_file ($lang_file);
-                console("Language File for {$lang_array[$languageID]} for {$plugin_name} is missing or not readable.");
-            } else {
-                console("Language File for {$lang_array[$languageID]} for {$plugin_name} is missing or not readable. No Fallback Available.");
-                return "Language File for {$lang_array[$languageID]} for {$plugin_name} is missing or not readable. No Fallback Available.";
-            }
-        }
-
-        if(isset($LANG[$messageID])){
-            return vsprintf ( $LANG[$messageID], $args);
-        } else {
-            return "Missing Language Entry: {$messageID} in {$lang_array[$languageID]}";
-        }
     }
 
     /** Client & Player */
