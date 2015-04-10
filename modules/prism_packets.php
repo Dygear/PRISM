@@ -140,13 +140,9 @@ abstract class Struct
             } elseif (is_array($pkFnkFormat)) {
                 list($type, $elements) = $pkFnkFormat;
 
-                if (($j = count($value)) > $elements) {
-                    $j = $elements;
-                }
-
-                for ($i = 0; $i < $elements; ++$i, --$j) {
+                for ($i = 0; $i < $elements; ++$i) {
                     if(isset($value[$i])){
-                        var_dump($value, $type, $elements, $i, $j, $value[$i]);
+                        var_dump($value, $type, $elements, $i, $value[$i]);
                         $return .= pack($type, $value[$i]);
                     } else {
                         $return .= pack("x");
