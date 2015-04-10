@@ -144,13 +144,13 @@ abstract class Struct
                     $j = $elements;
                 }
 
-                for ($i = 0; $i < $j; ++$i, --$j) {
-                    var_dump($value, $type, $elements, $i, $j, $value[$i]);
-                    $return .= pack($type, $value[$i]);
-                }
-
-                if ($j > 0) {
-                    $return .= pack("x{$j}");    # Fills the rest of the space with null data.
+                for ($i = 0; $i < $elements; ++$i, --$j) {
+                    if(isset($value[$i])){
+                        var_dump($value, $type, $elements, $i, $j, $value[$i]);
+                        $return .= pack($type, $value[$i]);
+                    } else {
+                        $return .= pack("x");
+                    }
                 }
             } else {
                 $return .= pack($pkFnkFormat, $value);
