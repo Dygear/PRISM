@@ -180,6 +180,10 @@ abstract class Plugins extends Timers
     public $localCommands = array();
     public $sayCommands = array();
 
+    /* Translation Engine Stuff */
+    private $lang_subdirectory;
+    private $lang_fallback;
+
     /** Internal Methods */
     private function getCallback($cmdsArray, $cmdString)
     {
@@ -380,26 +384,35 @@ abstract class Plugins extends Timers
         return null;
     }
 
-    protected function translateGlobalMessage($lang_subdirectory, $messageID, $args = array(), $hostID = null)
+    protected function setTranslationSettings($directory, $fallback = 'en') {
+        $this->lang_subdirectory = $directory;
+        $this->lang_fallback = $fallback;
+    }
+
+    protected function translateGlobalMessage($messageID, $args = array(), $hostID = null)
     {
         if (($clients = $this->getHostState($hostID)->clients) && $clients !== null) {
             foreach ($clients as $UCID => $client) {
-                $this->translatePrivateMessage($UCID, $lang_subdirectory, $messageID, $args, $hostID);
+                $this->translatePrivateMessage($UCID, $messageID, $args, $hostID);
             }
         }
     }
 
-    protected function translatePrivateMessage($UCID, $lang_subdirectory, $messageID, $args = array(), $hostID = null)
+    protected function translatePrivateMessage($UCID, $messageID, $args = array(), $hostID = null)
     {
         $MTC = IS_MTC()->UCID($UCID);
-        $MTC->Text($this->translateText($UCID, $lang_subdirectory, $messageID, $args, $hostID = null));
+        $MTC->Text($this->translateText($UCID, $messageID, $args, $hostID = null));
         $MTC->send($hostID);
     }
 
-    protected function translateText($UCID, $lang_subdirectory, $messageID, $args = array(), $hostID = null)
+    protected function translateText($UCID, $messageID, $args = array(), $hostID = null)
     {
+        if(!isset($this->lang_subdirectory)){
+            console('Calling plugin does not have it\'s language directory specifed.');
+            return 'Calling plugin does not have it\'s language directory specifed.';
+        }
         $languageID = $this->getClientByUCID($UCID, $hostID)->Language;
-        return translateEngine($lang_subdirectory, $languageID, $messageID, $args);
+        return translateEngine($this->lang_subdirectory, $languageID, $messageID, $args, $this->lang_fallback);
     }
 
     /** Client & Player */

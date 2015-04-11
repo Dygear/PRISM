@@ -7,7 +7,7 @@ function console($line, $EOL = true)
     echo $line . (($EOL) ? PHP_EOL : '');
 }
 
-function translateEngine($lang_subdirectory, $languageID, $messageID, $args = array())
+function translateEngine($lang_subdirectory, $languageID, $messageID, $args = array(), $fallback = 'en')
 {
     $lang_array = array("en", "de", "pt", "fr", "fi", "nn", "nl", "ca", "tr", "es", "it", "da", "cs", "ru", "et", "sr", "el", "pl", "hr", "hu", "br", "sv", "sk", "gl", "sl", "be", "lv", "lt", "zh", "cn", "ja", "ko", "bg", "mx", "uk", "id", "ro");
     if(!isset($lang_array[$languageID])){
@@ -22,7 +22,8 @@ function translateEngine($lang_subdirectory, $languageID, $messageID, $args = ar
     if(is_readable($lang_file)){
         $LANG = parse_ini_file ($lang_file);
     } else {
-        $lang_file = "{$lang_folder}/fallback.ini";
+        $lang_file = "{$lang_folder}/{$fallback}.ini";
+        var_dump($lang_file);
         if(is_readable($lang_file)){
             $LANG = parse_ini_file ($lang_file);
             console("Language File for {$lang_array[$languageID]} in {$lang_subdirectory} is missing or not readable.");
