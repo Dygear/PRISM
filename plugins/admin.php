@@ -48,9 +48,9 @@ class admin extends Plugins
 	public function cmdRaceControlMessagePlayer($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 4)
-			$this->createTimer('tmrClearRCM', $argv[4], Timer::Close, $argv[3]);
+			$this->createTimer('tmrClearRCM_ply', $argv[4], Timer::Close, $argv[3]);
 		else
-			$this->createTimer('tmrClearRCM', 5);
+			$this->createTimer('tmrClearRCM_ply', 5);
 
 		$argv = $this->raceControlMessage($cmd);
 
@@ -63,9 +63,9 @@ class admin extends Plugins
 	public function cmdRaceControlMessageAll($cmd, $ucid)
 	{
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) > 3)
-			$this->createTimer('tmrClearRCM', $argv[3]);
+			$this->createTimer('tmrClearRCM_all', $argv[3]);
 		else
-			$this->createTimer('tmrClearRCM', 5);
+			$this->createTimer('tmrClearRCM_all', 5);
 
 		$argv = $this->raceControlMessage($cmd);
 
@@ -75,10 +75,14 @@ class admin extends Plugins
 		return PLUGIN_HANDLED;
 	}
 
-	public function tmrClearRCM($args = NULL)
+	public function tmrClearRCM_all()
 	{
 		IS_MST()->Msg("/rcc_all")->Send();
-		IS_MST()->Msg("/rcc_ply {$argv[3]}")->Send();
+	}
+
+	public function tmrClearRCM_ply($UName)
+	{
+		IS_MST()->Msg("/rcc_ply {$UName}")->Send();
 	}
 
 	public function cmdRCON($cmd, $ucid)
@@ -135,15 +139,23 @@ class admin extends Plugins
 		global $PRISM;
 		$MTC = IS_MTC()->Sound(SND_SYSMESSAGE)->UCID($ucid);
 
-		$requestingClient = $this->getClientByUCID($ucid);
+		$clientAccessFlags = $this->getClientByUCID($ucid)->getAccessFlags();
 
 		$MTC->Text('^7COMMAND^8 - DESCRIPTION')->Send();
 		foreach ($PRISM->plugins->getPlugins() as $plugin => $details)
 		{
 			foreach ($details->sayCommands as $command => $detail)
 			{
-				#something is wrong here.
-				if ($requestingClient->getAccessFlags() & $detail['accessLevel'])
+				# something is wrong here.
+				#################
+				##    debug    ##
+				#################
+				var_export($clientAccessFlags);
+				var_export($detail['accessLevel']);
+				#################
+				##  end debug  ##
+				#################
+				if ($clientAccessFlags & $detail['accessLevel'])
 					$MTC->Text("^7{$command}^8 - {$detail['info']}")->Send();
 			}
 		}

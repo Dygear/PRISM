@@ -1,7 +1,6 @@
-LFS Autocross Editor Instruction Manual
-=======================================
+# LFS Autocross Editor Instruction Manual
 
-Note : Live for Speed must be unlocked to use the autocross editor.
+*Note: Live for Speed must be unlocked to use the autocross editor*.
 
 The autocross editor is accessed by pressing SHIFT+U inside the game.
 In there you can save, load and edit layouts after switching on the
@@ -17,13 +16,13 @@ default start grid and will behave like a normal race track.  In that
 case there will be no time penalties for hitting objects but you will
 need to place checkpoints so that laps are timed.
 
-Placing objects : select an object type and place an object by
+Placing objects: select an object type and place an object by
 pressing O.  You can adjust the direction (heading) of the object by
 using the ',' and '.' keys.  If you press M with any object selected,
 it will be moved to the mouse position and updated with the heading
 that you have set.
 
-Placing checkpoints : you need one finish line and at least one
+Placing checkpoints: you need one finish line and at least one
 checkpoint.  In effect this defines the circuit, and also gives you
 split times at those points.  Pressing F or 1, 2, 3 gives you a finish
 line or a checkpoint.  Checkpoints are invisible when driving.  You
@@ -32,15 +31,14 @@ correct route and drives through the checkpoints.  The W and E keys
 can be used to set the width of a checkpoint.  As for objects,
 press M to update a checkpoint's position, heading or width.
 
-NOTE : direction is important with checkpoints.  You must drive over a
+NOTE: direction is important with checkpoints.  You must drive over a
 checkpoint in the correct direction or no time will be recorded.
 
 A checkpoint looks like a square bracket, and you must drive FROM the
 side with the "ends" of the square bracket and over TO the "flat side"
 of the square bracket.
 
-Restricted areas and route control :
-------------------------------------
+## Restricted areas and route control
 In "marshall" mode you can place Marshall areas and Route checkers.
 
 Marshall areas are shown by a red circle.  If a car enters one of them
@@ -55,13 +53,11 @@ forced to spectate.  The route index is automatically generated in the
 order the route checkers are created.  You can manually edit the route
 index by clicking on the route index button.
 
-Controls :
-----------
+## Controls
 View control - mouse and keys - listed on screen.
 Press V to toggle between high and low view.
 Viewing the track - press SPACE to hide / show editor buttons.
 
-Distance measurement : Press D to activate the measuring tool.
+Distance measurement: Press D to activate the measuring tool.
 
------------------
 LFS - 6 July 2009
