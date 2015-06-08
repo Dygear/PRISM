@@ -1,3 +1,5 @@
+# Forwards
+
 A client connecting to a server is an example of an event, the defined function within a plugin onClientConnect is an example of a registered forward.
 
 http://wiki.alliedmods.net/Game_Events_(Source)

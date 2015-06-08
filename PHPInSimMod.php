@@ -8,21 +8,21 @@
 /* Defines */
 // PRISM
 
-define('PRISM_DEBUG_CORE',    	1);			# Shows Debug Messages From the Core
-define('PRISM_DEBUG_SOCKETS',	2);			# Shows Debug Messages From the Sockets Module
-define('PRISM_DEBUG_MODULES',	4);			# Shows Debug Messages From the all Modules
-define('PRISM_DEBUG_PLUGINS',	8);			# Shows Debug Messages From the Plugins
-define('PRISM_DEBUG_ALL',		15);		# Shows Debug Messages From All
+define('PRISM_DEBUG_CORE',        1);            # Shows Debug Messages From the Core
+define('PRISM_DEBUG_SOCKETS',    2);            # Shows Debug Messages From the Sockets Module
+define('PRISM_DEBUG_MODULES',    4);            # Shows Debug Messages From the all Modules
+define('PRISM_DEBUG_PLUGINS',    8);            # Shows Debug Messages From the Plugins
+define('PRISM_DEBUG_ALL',        15);        # Shows Debug Messages From All
 
-define('MAINTENANCE_INTERVAL', 	2);			# The frequency in seconds to do connection maintenance checks.
+define('MAINTENANCE_INTERVAL',     2);            # The frequency in seconds to do connection maintenance checks.
 
 // Return Codes:
-define('PLUGIN_CONTINUE',		0);			# Plugin passes through operation. Whatever called it continues.
-define('PLUGIN_HANDLED',		1);			# Plugin halts continued operation. Plugins following in the plugins.ini won't be called.
-define('PLUGIN_STOP',			2);			# Plugin stops timer from triggering again in the future.
+define('PLUGIN_CONTINUE',        0);            # Plugin passes through operation. Whatever called it continues.
+define('PLUGIN_HANDLED',        1);            # Plugin halts continued operation. Plugins following in the plugins.ini won't be called.
+define('PLUGIN_STOP',            2);            # Plugin stops timer from triggering again in the future.
 
 error_reporting(E_ALL);
-ini_set('display_errors',		'true');
+ini_set('display_errors',        'true');
 
 define('ROOTPATH', dirname(realpath(__FILE__)));
 
@@ -56,26 +56,26 @@ $PRISM->start();
 */
 class PHPInSimMod
 {
-    const VERSION = '0.4.5.5';
+    const VERSION = '0.4.6.4';
     const ROOTPATH = ROOTPATH;
 
     /* Run Time Arrays */
-    public $config				= null;
-    public $hosts				= null;
-    public $http				= null;
-    public $telnet				= null;
-    public $plugins				= null;
-    public $admins				= null;
+    public $config              = null;
+    public $hosts               = null;
+    public $http                = null;
+    public $telnet              = null;
+    public $plugins             = null;
+    public $admins              = null;
 
     # Time outs
-    private $sleep				= null;
-    private $uSleep				= null;
+    private $sleep              = null;
+    private $uSleep             = null;
 
-    private $nextMaintenance	= 0;
-    public $isWindows			= false;
+    private $nextMaintenance    = 0;
+    public $isWindows           = false;
 
     // Main while loop will run as long as this is set to true.
-    private $isRunning			= false;
+    private $isRunning          = false;
 
     // Real Magic Functions
     public function __construct()
@@ -88,12 +88,12 @@ class PHPInSimMod
         if (preg_match('/^win/i', PHP_OS))
             $this->isWindows = true;
 
-        $this->config	= new ConfigHandler();
-        $this->hosts	= new HostHandler();
-        $this->plugins	= new PluginHandler();
-        $this->http		= new HttpHandler();
-        $this->telnet	= new TelnetHandler();
-        $this->admins	= new AdminHandler();
+        $this->config    = new ConfigHandler();
+        $this->hosts    = new HostHandler();
+        $this->plugins    = new PluginHandler();
+        $this->http        = new HttpHandler();
+        $this->telnet    = new TelnetHandler();
+        $this->admins    = new AdminHandler();
     }
 
     // Pseudo Magic Functions
@@ -281,12 +281,12 @@ class PHPInSimMod
 
                         default :
                             console('Available Commands:');
-                            console('	h - show host info');
-                            console('	I - re-initialise PRISM (reload ini files / reconnect to hosts / reset http socket');
-                            console('	p - show plugin info');
-                            console('	x - exit PHPInSimMod');
-                            console('	w - show www connections');
-                            console('	c - show command list');
+                            console('    h - show host info');
+                            console('    I - re-initialise PRISM (reload ini files / reconnect to hosts / reset http socket');
+                            console('    p - show plugin info');
+                            console('    x - exit PHPInSimMod');
+                            console('    w - show www connections');
+                            console('    c - show command list');
                     }
                 }
 
@@ -320,7 +320,7 @@ class PHPInSimMod
         # If there are no timers set or the next timeout is more then a second away, set the Sleep to 1 & uSleep to null.
         if ($sleepTime == null || $timeout < $sleepTime) {
             $sleepTime = $timeout;
-        } else {	# Set the timeout to the delta of now as compared to the next timer.
+        } else {    # Set the timeout to the delta of now as compared to the next timer.
             list($sleep, $uSleep) = explode('.', sprintf('%1.6f', $timeNow - $sleepTime));
             if (($sleep >= 1 && $uSleep >= 1) || $uSleep >= 1000000) {
                 $sleep = 1;
