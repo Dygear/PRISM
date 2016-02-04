@@ -1770,14 +1770,18 @@ $VIEW = array(VIEW_FOLLOW => 'VIEW_FOLLOW', VIEW_HELI => 'VIEW_HELI', VIEW_CAM =
 
 // Leave reasons
 
-define('LEAVR_DISCO',       0);    // 0 - disconnect
-define('LEAVR_TIMEOUT',     1);    // 1 - timed out
-define('LEAVR_LOSTCONN',    2);    // 2 - lost connection
-define('LEAVR_KICKED',      3);    // 3 - kicked
-define('LEAVR_BANNED',      4);    // 4 - banned
-define('LEAVR_SECURITY',    5);    // 5 - OOS or cheat protection
-define('LEAVR_NUM',         6);
-$LEAVR = array(LEAVR_DISCO => 'LEAVR_DISCO', LEAVR_TIMEOUT => 'LEAVR_TIMEOUT', LEAVR_LOSTCONN => 'LEAVR_LOSTCONN', LEAVR_KICKED => 'LEAVR_KICKED', LEAVR_BANNED => 'LEAVR_BANNED', LEAVR_SECURITY => 'LEAVR_SECURITY', LEAVR_NUM => 'LEAVR_NUM');
+define('LEAVR_DISCO',   0); // 0 - disconnect
+define('LEAVR_TIMEOUT', 1); // 1 - timed out
+define('LEAVR_LOSTCONN',2); // 2 - lost connection
+define('LEAVR_KICKED',  3); // 3 - kicked
+define('LEAVR_BANNED',  4); // 4 - banned
+define('LEAVR_SECURITY',5); // 5 - cheat protection
+define('LEAVR_CPW',     6); // 6 - CPW
+define('LEAVR_OOS',     7); // 7 - OOS
+define('LEAVR_JOOS',    8); // 8 - JOOS
+define('LEAVR_HACK',    9); // 9 - HACK
+define('LEAVR_NUM',     10);
+$LEAVR = array(LEAVR_DISCO => 'LEAVR_DISCO', LEAVR_TIMEOUT => 'LEAVR_TIMEOUT', LEAVR_LOSTCONN => 'LEAVR_LOSTCONN', LEAVR_KICKED => 'LEAVR_KICKED', LEAVR_BANNED => 'LEAVR_BANNED', LEAVR_SECURITY => 'LEAVR_SECURITY', LEAVR_CPW => 'LEAVR_CPW', LEAVR_OOS => 'LEAVR_OOS', LEAVR_JOOS => 'LEAVR_JOOS', LEAVR_HACK => 'LEAVR_HACK', LEAVR_NUM => 'LEAVR_NUM');
 
 // Penalty values (VALID means the penalty can now be cleared)
 
