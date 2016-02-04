@@ -1944,7 +1944,6 @@ struct IS_JRR // Join Request Reply - send one of these back to LFS in response 
 }; function IS_JRR() { return new IS_JRR; }
 
 // Values for JRRAction byte
-
 define('JRR_REJECT',        0);
 define('JRR_SPAWN',         1);
 define('JRR_2',             2);
@@ -1953,6 +1952,7 @@ define('JRR_RESET',         4);
 define('JRR_RESET_NO_REPAIR', 5);
 define('JRR_6',             6);
 define('JRR_7',             7);
+$JRR = array(JRR_REJECT => 'JRR_REJECT', JRR_SPAWN => 'JRR_SPAWN', JRR_2 => 'JRR_2', JRR_3 => 'JRR_3', JRR_RESET => 'JRR_RESET', JRR_RESET_NO_REPAIR => 'JRR_RESET_NO_REPAIR', JRR_6 => 'JRR_6', JRR_7 => 'JRR_7');
 
 // AUTOCROSS
 // =========
