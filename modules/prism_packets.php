@@ -487,7 +487,7 @@ define('ISP_AXM',    54);   // 54 - both ways        : autocross multiple object
 define('ISP_ACR',    55);   // 55 - info            : admin command report
 define('ISP_HCP',    56);   // 56 - instruction        : car handicaps
 define('ISP_NCI',    57);   // 57 - info            : new connection - extra info for host
-define('ISP_JRR',    58);   // 58 - instruction		: reply to a join request (allow / disallow)
+define('ISP_JRR',    58);   // 58 - instruction     : reply to a join request (allow / disallow)
 $ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR');
 
 // the fourth byte of an IS_TINY packet is one of these
@@ -515,7 +515,7 @@ define('TINY_AXI',      20);    // 20 - info request    : send an IS_AXI - AutoX
 define('TINY_AXC',      21);    // 21 - info            : autocross cleared
 define('TINY_RIP',      22);    // 22 - info request    : send an IS_RIP - Replay Information Packet
 define('TINY_NCI',      23);    // 23 - info request    : get NCI for all guests (on host only)
-define('TINY_ALC',      24);    // 24 - info request	: send a SMALL_ALC (allowed cars)
+define('TINY_ALC',      24);    // 24 - info request    : send a SMALL_ALC (allowed cars)
 $TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC');
 
 // the fourth byte of an IS_SMALL packet is one of these
@@ -527,7 +527,7 @@ define('SMALL_TMS',     4);    //  4 - inStruction      : time stop
 define('SMALL_STP',     5);    //  5 - inStruction      : time step
 define('SMALL_RTP',     6);    //  6 - info             : race time packet (reply to GTH)
 define('SMALL_NLI',     7);    //  7 - inStruction      : set node lap interval
-define('SMALL_ALC',     8);    //  8 - both ways		: set or get allowed cars (TINY_ALC)
+define('SMALL_ALC',     8);    //  8 - both ways        : set or get allowed cars (TINY_ALC)
 $SMALL = array(SMALL_NONE => 'SMALL_NONE', SMALL_SSP => 'SMALL_SSP', SMALL_SSG => 'SMALL_SSG', SMALL_VTA => 'SMALL_VTA', SMALL_TMS => 'SMALL_TMS', SMALL_STP => 'SMALL_STP', SMALL_RTP => 'SMALL_RTP', SMALL_NLI => 'SMALL_NLI', SMALL_ALC => 'SMALL_ALC');
 
 
@@ -771,9 +771,9 @@ class IS_MOD extends Struct // MODe : send to LFS to change screen mode
 class IS_MSO extends Struct // MSg Out - system messages and user messages
 {
     const PACK = 'CCxxCCCCa128';
-    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CUserType/CTextStart/a128Msg';
+    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CUserType/CTextStart/a*Msg';
 
-    protected $Size = 136;      # 136
+    protected $Size;            # Variable size
     protected $Type = ISP_MSO;  # ISP_MSO
     protected $ReqI = null;     # 0
     protected $Zero = null;
@@ -800,9 +800,9 @@ $MSO = array(MSO_SYSTEM => 'MSO_SYSTEM', MSO_USER => 'MSO_USER', MSO_PREFIX => '
 class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 {
     const PACK = 'CCxxCCxxa64';
-    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
+    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a*Msg';
 
-    protected $Size = 72;       # 72
+    protected $Size;            # Variable size
     protected $Type = ISP_III;  # ISP_III
     protected $ReqI = 0;        # 0
     protected $Zero = null;
@@ -818,9 +818,9 @@ class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 class IS_ACR extends Struct // Admin Command Report - any user typed an admin command
 {
     const PACK = 'CCxxCCxxa64';
-    const UNPACK = 'CSize/CType/xReqI/xZero/CUCID/CAdmin/CResult/xSp3/a64Text';
+    const UNPACK = 'CSize/CType/xReqI/xZero/CUCID/CAdmin/CResult/xSp3/a*Text';
 
-    protected $Size = 72;       # 72
+    protected $Size;            # Variable size
     protected $Type = ISP_ACR;  # ISP_ACR
     protected $ReqI = 0;        # 0
     protected $Zero = null;
@@ -1064,19 +1064,19 @@ class IS_VTN extends Struct // VoTe Notify
 // To set the allowed cars on the host (like /cars command) you can send this IS_SMALL :
 
 // ReqI : 0
-// SubT : SMALL_ALC		(ALlowed Cars)
-// UVal : Cars			(see below)
+// SubT : SMALL_ALC     (ALlowed Cars)
+// UVal : Cars          (see below)
 
 // To find out the allowed cars at any time (on guest or host) send this IS_TINY :
 
-// ReqI : non-zero		(returned in the reply)
-// SubT : TINY_ALC		(request a SMALL_ALC)
+// ReqI : non-zero      (returned in the reply)
+// SubT : TINY_ALC      (request a SMALL_ALC)
 
 // LFS will reply with this IS_SMALL :
 
-// ReqI : non-zero		(as received in the request packet)
-// SubT : SMALL_ALC		(ALlowed Cars)
-// UVal : Cars			(see below)
+// ReqI : non-zero      (as received in the request packet)
+// SubT : SMALL_ALC     (ALlowed Cars)
+// UVal : Cars          (see below)
 
 // You can send a packet to limit the cars that can be used by a given connection
 // The resulting set of selectable cars is a subset of the cars set to be available
@@ -1770,14 +1770,18 @@ $VIEW = array(VIEW_FOLLOW => 'VIEW_FOLLOW', VIEW_HELI => 'VIEW_HELI', VIEW_CAM =
 
 // Leave reasons
 
-define('LEAVR_DISCO',       0);    // 0 - disconnect
-define('LEAVR_TIMEOUT',     1);    // 1 - timed out
-define('LEAVR_LOSTCONN',    2);    // 2 - lost connection
-define('LEAVR_KICKED',      3);    // 3 - kicked
-define('LEAVR_BANNED',      4);    // 4 - banned
-define('LEAVR_SECURITY',    5);    // 5 - OOS or cheat protection
-define('LEAVR_NUM',         6);
-$LEAVR = array(LEAVR_DISCO => 'LEAVR_DISCO', LEAVR_TIMEOUT => 'LEAVR_TIMEOUT', LEAVR_LOSTCONN => 'LEAVR_LOSTCONN', LEAVR_KICKED => 'LEAVR_KICKED', LEAVR_BANNED => 'LEAVR_BANNED', LEAVR_SECURITY => 'LEAVR_SECURITY', LEAVR_NUM => 'LEAVR_NUM');
+define('LEAVR_DISCO',   0); // 0 - disconnect
+define('LEAVR_TIMEOUT', 1); // 1 - timed out
+define('LEAVR_LOSTCONN',2); // 2 - lost connection
+define('LEAVR_KICKED',  3); // 3 - kicked
+define('LEAVR_BANNED',  4); // 4 - banned
+define('LEAVR_SECURITY',5); // 5 - cheat protection
+define('LEAVR_CPW',     6); // 6 - CPW
+define('LEAVR_OOS',     7); // 7 - OOS
+define('LEAVR_JOOS',    8); // 8 - JOOS
+define('LEAVR_HACK',    9); // 9 - HACK
+define('LEAVR_NUM',     10);
+$LEAVR = array(LEAVR_DISCO => 'LEAVR_DISCO', LEAVR_TIMEOUT => 'LEAVR_TIMEOUT', LEAVR_LOSTCONN => 'LEAVR_LOSTCONN', LEAVR_KICKED => 'LEAVR_KICKED', LEAVR_BANNED => 'LEAVR_BANNED', LEAVR_SECURITY => 'LEAVR_SECURITY', LEAVR_CPW => 'LEAVR_CPW', LEAVR_OOS => 'LEAVR_OOS', LEAVR_JOOS => 'LEAVR_JOOS', LEAVR_HACK => 'LEAVR_HACK', LEAVR_NUM => 'LEAVR_NUM');
 
 // Penalty values (VALID means the penalty can now be cleared)
 
@@ -1887,18 +1891,18 @@ $HOSTF = array(HOSTF_CAN_VOTE => 'HOSTF_CAN_VOTE', HOSTF_CAN_SELECT => 'HOSTF_CA
 // OBJECT INFO - for autocross objects - used in some packets and the layout file
 // ===========
 
-class ObjectInfo extends struct // Info about a single object - explained in the layout file format
+class ObjectInfo extends Struct // Info about a single object - explained in the layout file format
 {
     const PACK = 'ssCCCC';
     const UNPACK = 'sX/sY/CZbyte/CFlags/CIndex/CHeading';
     
-	public $X;
-	public $Y;
+    public $X;
+    public $Y;
 
-	public $Zbyte;
-	public $Flags;
-	public $Index;
-	public $Heading;
+    public $Zbyte;
+    public $Flags;
+    public $Index;
+    public $Heading;
 };
 
 
@@ -1916,31 +1920,31 @@ class ObjectInfo extends struct // Info about a single object - explained in the
 // IS_JRR can also be used to move an existing car to a different location
 // In this case, PLID must be set, JRRAction must be JRR_RESET or higher and StartPos must be set
 
-struct IS_JRR // Join Request Reply - send one of these back to LFS in response to a join request
+class IS_JRR extends Struct // Join Request Reply - send one of these back to LFS in response to a join request
 {
     const PACK = 'CCxCCCxx';
     const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CJRRAction';
     
-	protected $Size = 16;       # 16
-	protected $Type = ISP_JRR;  # ISP_JRR
-	public $ReqI;               # 0
-	protected $PLID;            # ZERO when this is a reply to a join request - SET to move a car
+    protected $Size = 16;       # 16
+    protected $Type = ISP_JRR;  # ISP_JRR
+    public $ReqI;               # 0
+    protected $PLID;            # ZERO when this is a reply to a join request - SET to move a car
 
-	public $UCID;               # set when this is a reply to a join request - ignored when moving a car
-	public $JRRAction;          # 1 - allow / 0 - reject (should send message to user)
-	public $Sp2;
-	public $Sp3;
+    public $UCID;               # set when this is a reply to a join request - ignored when moving a car
+    public $JRRAction;          # 1 - allow / 0 - reject (should send message to user)
+    public $Sp2;
+    public $Sp3;
 
-	public $StartPos = []; // 0 : use default start point / Flags = 0x80 : set start point
-	
-	public function unpack($rawPacket)
-	{
-	    parent::unpack($rawPacket);
-	    
-	    $this->StartPos = new ObjectInfo(substr($rawPacket, 8, 8));
-	    
-	    return $this;
-	}
+    public $StartPos = []; // 0 : use default start point / Flags = 0x80 : set start point
+    
+    public function unpack($rawPacket)
+    {
+        parent::unpack($rawPacket);
+        
+        $this->StartPos = new ObjectInfo(substr($rawPacket, 8, 8));
+        
+        return $this;
+    }
 }; function IS_JRR() { return new IS_JRR; }
 
 // Values for JRRAction byte
@@ -2296,19 +2300,6 @@ class IS_HLV extends Struct // Hot Lap Validity - off track / hit wall / speedin
 
 // You can also add or remove objects by sending IS_AXM packets.
 // Some care must be taken with these - please read the notes below.
-
-class ObjectInfo extends Struct // Info about a single object - explained in the layout file format
-{
-    const PACK = 'sscCCC';
-    const UNPACK = 'sX/sY/CZbyte/CFlags/CIndex/CHeading';
-
-    public $X;
-    public $Y;
-    public $Zbyte;
-    public $Flags;
-    public $Index;
-    public $Heading;
-};
 
 class IS_AXM extends Struct // AutoX Multiple objects - variable size
 {
