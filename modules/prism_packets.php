@@ -1923,27 +1923,54 @@ class ObjectInfo extends Struct // Info about a single object - explained in the
 class IS_JRR extends Struct // Join Request Reply - send one of these back to LFS in response to a join request
 {
     const PACK = 'CCxCCCxx';
-    const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CJRRAction';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CJRRAction/xSp2/xSp3';
     
     protected $Size = 16;       # 16
     protected $Type = ISP_JRR;  # ISP_JRR
     public $ReqI;               # 0
-    protected $PLID;            # ZERO when this is a reply to a join request - SET to move a car
+    public $PLID;            # ZERO when this is a reply to a join request - SET to move a car
 
     public $UCID;               # set when this is a reply to a join request - ignored when moving a car
     public $JRRAction;          # 1 - allow / 0 - reject (should send message to user)
     public $Sp2;
     public $Sp3;
 
-    public $StartPos = []; // 0 : use default start point / Flags = 0x80 : set start point
+    public $StartPos; // 0 : use default start point / Flags = 0x80 : set start point
     
-    public function unpack($rawPacket)
-    {
-        parent::unpack($rawPacket);
+    public function pack() {
+        $return = '';
+        $packFormat = $this->parsePackFormat();
+        $propertyNumber = -1;
+
+        foreach ($this as $property => $value) {
+            if (!isset($packFormat[++$propertyNumber])) break;
+
+            $pkFnkFormat = $packFormat[$propertyNumber];
+
+            if ($pkFnkFormat == 'x') {
+                $return .= pack('C', 0); # null & 0 are the same thing in Binary (00000000) and Hex (x00), so null == 0.
+            } elseif (is_array($pkFnkFormat)) {
+                list($type, $elements) = $pkFnkFormat;
+
+                for ($i = 0; $i < $elements; ++$i) {
+                    if(isset($value[$i])){
+                        var_dump($value, $type, $elements, $i, $value[$i]);
+                        $return .= pack($type, $value[$i]);
+                    } else {
+                        $return .= pack("x");
+                    }
+                }
+            } else {
+                $return .= pack($pkFnkFormat, $value);
+            }
+        }
+
+        # Pack the starting position object
+        if ($this->StartPos == null)
+            # Dummy object when it wasn't set
+            $this->StartPos = new ObjectInfo();
         
-        $this->StartPos = new ObjectInfo(substr($rawPacket, 8, 8));
-        
-        return $this;
+        return $return . $this->StartPos->pack();
     }
 }; function IS_JRR() { return new IS_JRR; }
 
