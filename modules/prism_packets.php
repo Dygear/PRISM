@@ -488,7 +488,8 @@ define('ISP_ACR',    55);   // 55 - info            : admin command report
 define('ISP_HCP',    56);   // 56 - instruction        : car handicaps
 define('ISP_NCI',    57);   // 57 - info            : new connection - extra info for host
 define('ISP_JRR',    58);   // 58 - instruction     : reply to a join request (allow / disallow)
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR');
+define('ISP_UCO',    59);   // 59 - info            : report InSim checkpoint / InSim circle
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',     0);     //  0 - keep alive        : see "maintaining the connection"
@@ -2317,6 +2318,65 @@ class IS_HLV extends Struct // Hot Lap Validity - off track / hit wall / speedin
         return $this;
     }
 }; function IS_HLV() { return new IS_HLV; }
+
+// CONTROL - reports crossing an InSim checkpoint / entering an InSim circle (from layout)
+// =======
+
+class IS_UCO extends Struct // User Control Object
+{
+    const PACK = 'CCCCxCxxVx8x8';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/xSp0/CUCOAction/xSp2/xSp3/VTime/x8/x8';
+
+    protected $Size = 28;       # 28
+    protected $Type = ISP_UCO;  # ISP_UCO
+    protected $ReqI;            # 0
+    public $PLID;               # player's unique id
+
+    private $Sp0;
+    public $UCOAction;
+    private $Sp2;
+    private $Sp3;
+
+    public $Time;               # hundredths of a second since start (as in SMALL_RTP)
+    
+    public $C;
+
+    public $Info;               # Info about the checkpoint or circle (see below)
+
+    public function unpack($rawPacket)
+    {
+        parent::unpack($rawPacket);
+
+        $this->C = new CarContOBJ(substr($rawPacket, 10, 8));
+        $this->Info = new ObjectInfo(substr($rawPacket, 18, 8));
+
+        return $this;
+    }
+}; function IS_UCO() { return new IS_UCO; }
+
+// UCOAction byte
+
+define('UCO_CIRCLE_ENTER',  0);     // entered a circle
+define('UCO_CIRCLE_LEAVE',  1);     // left a circle
+define('UCO_CP_FWD',        2);     // crossed cp in forward direction
+define('UCO_CP_REV',        3);     // crossed cp in reverse direction
+$UCO = array(UCO_CIRCLE_ENTER => 'UCO_CIRCLE_ENTER', UCO_CIRCLE_LEAVE => 'UCO_CIRCLE_LEAVE', UCO_CP_FWD => 'UCO_CP_FWD', UCO_CP_REV => 'UCO_CP_REV');
+
+// Identifying an InSim checkpoint from the ObjectInfo :
+
+// Index is 252.  Checkpoint index (seen in the autocross editor) is stored in Flags bits 0 and 1
+
+// 00 = finish line
+// 01 = 1st checkpoint
+// 10 = 2nd checkpoint
+// 11 = 3rd checkpoint
+
+// Note that the checkpoint index has no meaning in LFS and is provided only for your convenience.
+// If you use many InSim checkpoints you may need to identify them with the X and Y values.
+
+// Identifying an InSim circle from the ObjectInfo :
+
+// Index is 253.  The circle index (seen in the autocross editor) is stored in the Heading byte.
 
 
 // AUTOCROSS OBJECTS - reporting / adding / removing
