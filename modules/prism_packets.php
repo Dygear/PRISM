@@ -231,6 +231,22 @@ define('INSIM_VERSION', 7);
 // CHANGES
 // =======
 
+// Version 0.6K18
+// --------------
+// Added TINY_SEL to request an IS_AXM with layout editor selection
+// new value PMO_REQUESTED renamed to PMO_TINY_AXM for consistency
+// new IS_AXM option PMO_SELECTION to set the current editor selection
+
+// Version 0.6K17
+// --------------
+// Added TINY_AXM to request IS_AXM packets for the entire layout
+
+// Version 0.6K13
+// --------------
+// InSim checkpoints and circles can be placed in the autocross editor
+// New packet IS_UCO sends info about InSim checkpoints and circles
+// Zbyte added to IS_OBH so the layout object can be identified
+
 // Version 0.6K12 (INSIM_VERSION increased to 7)
 // --------------
 // Backward compatibility system - send INSIM_VERSION in the IS_ISI packet
@@ -517,7 +533,9 @@ define('TINY_AXC',      21);    // 21 - info            : autocross cleared
 define('TINY_RIP',      22);    // 22 - info request    : send an IS_RIP - Replay Information Packet
 define('TINY_NCI',      23);    // 23 - info request    : get NCI for all guests (on host only)
 define('TINY_ALC',      24);    // 24 - info request    : send a SMALL_ALC (allowed cars)
-$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC');
+define('TINY_AXM',      25);    // 25 - info request    : send IS_AXM packets for the entire layout
+define('TINY_SEL',      26);    // 26 - info request    : send IS_AXM for the layout editor selection
+$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC', TINY_AXM => 'TINY_AXM', TINY_SEL => 'TINY_SEL');
 
 // the fourth byte of an IS_SMALL packet is one of these
 define('SMALL_NONE',    0);    //  0                    : not used
@@ -2437,8 +2455,11 @@ define('PMO_LOADING_FILE',  0);     // 0 - sent by the layout loading system onl
 define('PMO_ADD_OBJECTS',   1);     // 1 - adding objects (from InSim or editor)
 define('PMO_DEL_OBJECTS',   2);     // 2 - delete objects (from InSim or editor)
 define('PMO_CLEAR_ALL',     3);     // 3 - clear all objects (NumO must be zero)
-define('PMO_NUM',           4);
-$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_NUM => 'PMO_NUM');
+define('PMO_TINY_AXM',      4);     // 4 - a reply to a TINY_AXM request
+define('PMO_TINY_SEL',      5);     // 5 - a reply to a TINY_SEL request
+define('PMO_SELECTION',     6);     // 6 - set the current editor selection
+define('PMO_NUM',           7);
+$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_TINY_AXM => 'PMO_TINY_AXM', PMO_TINY_SEL => 'PMO_TINY_SEL', PMO_SELECTION => 'PMO_SELECTION', PMO_NUM => 'PMO_NUM');
 
 // Info about the PMOFlags byte (only bit 0 is currently used) :
 
