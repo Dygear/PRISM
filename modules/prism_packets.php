@@ -1969,7 +1969,7 @@ class IS_JRR extends Struct // Join Request Reply - send one of these back to LF
         if ($this->StartPos == null)
             # Dummy object when it wasn't set
             $this->StartPos = new ObjectInfo();
-        
+
         return $return . $this->StartPos->pack();
     }
 }; function IS_JRR() { return new IS_JRR; }
@@ -2251,8 +2251,8 @@ class CarContOBJ extends Struct // 8 bytes : car in a contact with an object
 
 class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an unknown object
 {
-    const PACK = 'CCCCvvx8ssxxCC';
-    const UNPACK = 'CSize/CType/CReqI/CPLID/vSpClose/vTime/x8C/sX/sY/xSp0/xSp1/CIndex/COBHFlags';
+    const PACK = 'CCCCvvx8ssCxCC';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/vSpClose/vTime/x8C/sX/sY/CZbyte/xSp1/CIndex/COBHFlags';
 
     protected $Size = 24;       # 24
     protected $Type = ISP_OBH;  # ISP_OBH
@@ -2267,7 +2267,7 @@ class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an un
     public $X;                  # as in ObjectInfo
     public $Y;                  # as in ObjectInfo
 
-    private $Sp0;
+    public $Zbyte;              # if OBH_LAYOUT is set : Zbyte as in ObjectInfo
     private $Sp1;
     public $Index;              # AXO_x as in ObjectInfo or zero if it is an unknown object
     public $OBHFlags;           # see below
