@@ -2741,7 +2741,7 @@ $RIPOPT = array(RIPOPT_LOOP => 'RIPOPT_LOOP', RIPOPT_SKINS => 'RIPOPT_SKINS');
 class IS_SSH extends Struct // ScreenSHot
 {
     const PACK = 'CCCCxxxxa32';
-    const UNPACK = 'CSize/CType/CReqI/CError/CSp0/CSp1/CSp2/CSp3/a32BMP';
+    const UNPACK = 'CSize/CType/CReqI/CError/CSp0/CSp1/CSp2/CSp3/a32Name';
 
     protected $Size = 40;       # 40
     protected $Type = ISP_SSH;  # ISP_SSH
@@ -2753,7 +2753,7 @@ class IS_SSH extends Struct // ScreenSHot
     protected $Sp2;             # 0
     protected $Sp3;             # 0
 
-    public $BMP;                # name of screenshot file - last byte must be zero
+    public $Name;                # name of screenshot file - last byte must be zero
 }; function IS_SSH() { return new IS_SSH; }
 
 // Error codes returned in IS_SSH replies :
