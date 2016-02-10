@@ -231,6 +231,11 @@ define('INSIM_VERSION', 7);
 // CHANGES
 // =======
 
+// Version 0.6K21
+// --------------
+// changed TINY_SEL to more useful TTC_SEL to get a connection's selection
+// similarly IS_AXM with PMO_SELECTION can set a connection's selection
+
 // Version 0.6K20
 // --------------
 // IS_SSH documentation updated as it is no longer only for bmp files
@@ -511,7 +516,8 @@ define('ISP_NCI',    57);   // 57 - info            : new connection - extra inf
 define('ISP_JRR',    58);   // 58 - instruction     : reply to a join request (allow / disallow)
 define('ISP_UCO',    59);   // 59 - info            : report InSim checkpoint / InSim circle
 define('ISP_OCO',    60);   // 60 - instruction     : object control (currently used for lights)
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO');
+define('ISP_TTC',    61);   // 61 - instruction     : multi purpose - target to connection
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO', ISP_TTC => 'ISP_TTC');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',     0);     //  0 - keep alive        : see "maintaining the connection"
@@ -540,8 +546,7 @@ define('TINY_RIP',      22);    // 22 - info request    : send an IS_RIP - Repla
 define('TINY_NCI',      23);    // 23 - info request    : get NCI for all guests (on host only)
 define('TINY_ALC',      24);    // 24 - info request    : send a SMALL_ALC (allowed cars)
 define('TINY_AXM',      25);    // 25 - info request    : send IS_AXM packets for the entire layout
-define('TINY_SEL',      26);    // 26 - info request    : send IS_AXM for the layout editor selection
-$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC', TINY_AXM => 'TINY_AXM', TINY_SEL => 'TINY_SEL');
+$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC', TINY_AXM => 'TINY_AXM');
 
 // the fourth byte of an IS_SMALL packet is one of these
 define('SMALL_NONE',    0);    //  0                    : not used
@@ -555,8 +560,12 @@ define('SMALL_NLI',     7);    //  7 - inStruction      : set node lap interval
 define('SMALL_ALC',     8);    //  8 - both ways        : set or get allowed cars (TINY_ALC)
 $SMALL = array(SMALL_NONE => 'SMALL_NONE', SMALL_SSP => 'SMALL_SSP', SMALL_SSG => 'SMALL_SSG', SMALL_VTA => 'SMALL_VTA', SMALL_TMS => 'SMALL_TMS', SMALL_STP => 'SMALL_STP', SMALL_RTP => 'SMALL_RTP', SMALL_NLI => 'SMALL_NLI', SMALL_ALC => 'SMALL_ALC');
 
+// the fourth byte of an IS_TTC packet is one of these
+define('TTC_NONE',      0);    //  0                : not used
+define('TTC_SEL',       1);    //  1 - info request : send IS_AXM for a layout editor selection
+$TTC = array(TTC_NONE => 'TTC_NONE', TTC_SEL => 'TTC_SEL');
 
-// GENERAL PURPOSE PACKETS - IS_TINY (4 bytes) and IS_SMALL (8 bytes)
+// GENERAL PURPOSE PACKETS - IS_TINY (4 bytes) / IS_SMALL (8 bytes) / IS_TTC (8 bytes)
 // =======================
 
 // To avoid defining several packet Structures that are exactly the same, and to avoid
@@ -590,6 +599,24 @@ class IS_SMALL extends Struct // General purpose 8 byte packet
 
     public $UVal;                   # value (e.g. for SMALL_SSP this would be the OutSim packet rate)
 }; function IS_SMALL() { return new IS_SMALL; }
+
+// IS_TTC
+
+class IS_TTC extends Struct // General purpose 8 byte packet (Target To Connection)
+{
+    const PACK = 'CCCCCCCC';
+    const UNPACK = 'CSize/CType/CReqI/CSubT/CUCID/CB1/CB2/CB3';
+
+    protected $Size = 8;            # always 8
+    protected $Type = ISP_TTC;      # ISP_TTC
+    public $ReqI;                   # 0 unless it is an info request or a reply to an info request
+    public $SubT;                   # subtype, from TTC_ enumeration (e.g. TTC_SEL)
+
+    public $UCID;                   # connection's unique id (0 = local)
+    public $B1;                     # B1, B2, B3 may be used in various ways depending on SubT
+    public $B2;
+    public $B3;
+}; function IS_TTC() { return new IS_TTC; }
 
 
 // VERSION REQUEST
@@ -2462,6 +2489,8 @@ $OCO = array(OCO_ZERO => 'OCO_ZERO', OCO_1 => 'OCO_1', OCO_2 => 'OCO_2', OCO_3 =
 // You can also add or remove objects by sending IS_AXM packets.
 // Some care must be taken with these - please read the notes below.
 
+// You can also get (TTC_SEL) or set (PMO_SELECTION) the current editor selection.
+
 class IS_AXM extends Struct // AutoX Multiple objects - variable size
 {
     const PACK = 'CCCCCCCx';
@@ -2512,14 +2541,17 @@ define('PMO_ADD_OBJECTS',   1);     // 1 - adding objects (from InSim or editor)
 define('PMO_DEL_OBJECTS',   2);     // 2 - delete objects (from InSim or editor)
 define('PMO_CLEAR_ALL',     3);     // 3 - clear all objects (NumO must be zero)
 define('PMO_TINY_AXM',      4);     // 4 - a reply to a TINY_AXM request
-define('PMO_TINY_SEL',      5);     // 5 - a reply to a TINY_SEL request
+define('PMO_TTC_SEL',       5);     // 5 - a reply to a TTC_SEL request
 define('PMO_SELECTION',     6);     // 6 - set the current editor selection
 define('PMO_NUM',           7);
-$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_TINY_AXM => 'PMO_TINY_AXM', PMO_TINY_SEL => 'PMO_TINY_SEL', PMO_SELECTION => 'PMO_SELECTION', PMO_NUM => 'PMO_NUM');
+$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_TINY_AXM => 'PMO_TINY_AXM', PMO_TTC_SEL => 'PMO_TTC_SEL', PMO_SELECTION => 'PMO_SELECTION', PMO_NUM => 'PMO_NUM');
 
-// Info about the PMOFlags byte (only bit 0 is currently used) :
+// Info about the PMOFlags byte :
 
-// If PMOFlags bit 0 is set in a PMO_LOADING_FILE packet, LFS has reached the end of
+define('PMO_FILE_END',          1);
+define('PMO_SUPPRESS_WARNINGS', 2);
+
+// If PMO_FILE_END is set in a PMO_LOADING_FILE packet, LFS has reached the end of
 // a layout file which it is loading.  The added objects will then be optimised.
 
 // Optimised in this case means that static vertex buffers will be created for all
@@ -2527,13 +2559,13 @@ $PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD
 // there are many objects loaded, optimisation causes a significant glitch which can
 // be long enough to cause a driver who is cornering to lose control and crash.
 
-// PMOFlags bit 0 can also be set in an IS_AXM with PMOAction of PMO_ADD_OBJECTS.
-// This causes all objects to be optimised.  It is important not to set bit 0 in
-// every packet you send to add objects or you will cause severe glitches on the
+// PMO_FILE_END can also be set in an IS_AXM with PMOAction of PMO_ADD_OBJECTS.
+// This causes all objects to be optimised.  It is important not to set PMO_FILE_END
+// in every packet you send to add objects or you will cause severe glitches on the
 // clients computers.  It is ok to have some objects on the track which are not
 // optimised.  So if you have a few objects that are being removed and added
 // occasionally, the best advice is not to request optimisation at all.  Only
-// request optimisation (by setting bit 0) if you have added so many objects
+// request optimisation (by setting PMO_FILE_END) if you have added so many objects
 // that it is needed to improve the frame rate.
 
 // NOTE 1) LFS makes sure that all objects are optimised when the race restarts.
@@ -2545,6 +2577,21 @@ $PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD
 // to use LFS's method of doing this : send the first packet of objects then wait for
 // the corresponding IS_AXM that will be output when the packet is processed.  Then
 // you can send the second packet and again wait for the IS_AXM and so on.
+
+// To request IS_AXM packets for all layout objects and circles send this IS_TINY :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TINY_AXM      (request IS_AXM packets for the entire layout)
+
+// LFS will send as many IS_AXM packets as needed to describe the whole layout.
+// If there are no objects or circles, there will be one IS_AXM with zero NumO.
+// The final IS_AXM packet will have the PMO_FILE_END flag set.
+
+// To request an IS_AXM for a connection's layout editor selection send this IS_TTC :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TTC_SEL       (request an IS_AXM for the current selection)
+// UCID : connection    (0 = local / non-zero = guest)
 
 
 // CAR POSITION PACKETS (Initialising OutSim from InSim - See "OutSim" below)
