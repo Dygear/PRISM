@@ -231,6 +231,11 @@ define('INSIM_VERSION', 7);
 // CHANGES
 // =======
 
+// Version 0.6K20
+// --------------
+// IS_SSH documentation updated as it is no longer only for bmp files
+// New packet IS_OCO can be used to override specific or all start lights
+
 // Version 0.6K18
 // --------------
 // Added TINY_SEL to request an IS_AXM with layout editor selection
@@ -505,7 +510,8 @@ define('ISP_HCP',    56);   // 56 - instruction        : car handicaps
 define('ISP_NCI',    57);   // 57 - info            : new connection - extra info for host
 define('ISP_JRR',    58);   // 58 - instruction     : reply to a join request (allow / disallow)
 define('ISP_UCO',    59);   // 59 - info            : report InSim checkpoint / InSim circle
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO');
+define('ISP_OCO',    60);   // 60 - instruction     : object control (currently used for lights)
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',     0);     //  0 - keep alive        : see "maintaining the connection"
@@ -2395,6 +2401,56 @@ $UCO = array(UCO_CIRCLE_ENTER => 'UCO_CIRCLE_ENTER', UCO_CIRCLE_LEAVE => 'UCO_CI
 // Identifying an InSim circle from the ObjectInfo :
 
 // Index is 253.  The circle index (seen in the autocross editor) is stored in the Heading byte.
+
+
+// OBJECT CONTROL - currently used for switching start lights
+// ==============
+
+class IS_OCO extends Struct // Object COntrol
+{
+    const PACK = 'CCCxCCCC';
+    const UNPACK = 'CSize/CType/CReqI/xZero/COCOAction/CIndex/CIdentifier/CData';
+    
+    protected $Size = 8;        # 8
+    protected $Type = ISP_OCO;  # ISP_OCO
+    protected $ReqI;            # 0
+    protected $Zero;
+
+    public $OCOAction;          # see below
+    public $Index;              # see below
+    public $Identifier;         # identify particular start lights objects (0 to 63 or 255 = all)
+    public $Data;               # see below
+}; function IS_OCO() { return new IS_OCO; }
+
+// Index byte
+
+// This can be used to identify a light object from the autocross objects list.
+// Currently only AXO_START_LIGHTS and the following special value are supported  :
+
+define('OCO_INDEX_MAIN',    240);   // overrides the main start light system
+
+// Identifier byte corresponds with the indentifier seen in the layout editor
+
+// OCOAction byte
+
+define('OCO_ZERO',          0);     // reserved
+define('OCO_1',             1);     //
+define('OCO_2',             2);     //
+define('OCO_3',             3);     //
+define('OCO_LIGHTS_RESET',  4);     // give up control of all lights
+define('OCO_LIGHTS_SET',    5);     // use Data byte to set the bulbs
+define('OCO_LIGHTS_UNSET',  6);     // give up control of the specified lights
+define('OCO_NUM',           7);
+$OCO = array(OCO_ZERO => 'OCO_ZERO', OCO_1 => 'OCO_1', OCO_2 => 'OCO_2', OCO_3 => 'OCO_3', OCO_LIGHTS_RESET => 'OCO_LIGHTS_RESET', OCO_LIGHTS_SET => 'OCO_LIGHTS_SET', OCO_LIGHTS_UNSET => 'OCO_LIGHTS_UNSET', OCO_NUM => 'OCO_NUM');
+
+// Data byte is currently used for setting particular bulbs
+
+// Here are the bulb values for the currently available lights :
+
+// bit 0 : red1
+// bit 1 : red2
+// bit 2 : red3
+// bit 3 : green
 
 
 // AUTOCROSS OBJECTS - reporting / adding / removing
