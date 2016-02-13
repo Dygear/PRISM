@@ -228,54 +228,27 @@ abstract class Struct
 /* const int INSIM_VERSION = 7; */
 define('INSIM_VERSION', 7);
 
-// CHANGES
-// =======
 
-// Version 0.6K21
-// --------------
-// changed TINY_SEL to more useful TTC_SEL to get a connection's selection
-// similarly IS_AXM with PMO_SELECTION can set a connection's selection
-
-// Version 0.6K20
-// --------------
-// IS_SSH documentation updated as it is no longer only for bmp files
-// New packet IS_OCO can be used to override specific or all start lights
-
-// Version 0.6K18
-// --------------
-// Added TINY_SEL to request an IS_AXM with layout editor selection
-// new value PMO_REQUESTED renamed to PMO_TINY_AXM for consistency
-// new IS_AXM option PMO_SELECTION to set the current editor selection
-
-// Version 0.6K17
-// --------------
-// Added TINY_AXM to request IS_AXM packets for the entire layout
-
-// Version 0.6K13
-// --------------
-// InSim checkpoints and circles can be placed in the autocross editor
-// New packet IS_UCO sends info about InSim checkpoints and circles
-// Zbyte added to IS_OBH so the layout object can be identified
-
-// Version 0.6K12 (INSIM_VERSION increased to 7)
-// --------------
-// Backward compatibility system - send INSIM_VERSION in the IS_ISI packet
+// Version 0.6M (INSIM_VERSION increased to 7)
+// ------------
+// Backward compatibility system - send INSIM_VERSION in the IS_ISI
 // Older programs (that send zero) are assumed to require version 6
-// Added TINY_ALC and SMALL_ALC to get and set allowed cars (replaces /cars)
-
-// Version 0.6K11
-// --------------
+// New join request system enabled if ISF_REQ_JOIN is set in IS_ISI
+// IS_JRR can also be used to reset a car at a specified location
+// Packet IS_CSC to report changes in car state (currently start or stop)
+// Zbyte added to CarContObject structure to report car's altitude
+// Zbyte added to IS_OBH so the layout object can be identified
 // IS_MSO / IS_III / IS_ACR message out packets now have variable size
 // IS_BFN can now be used to delete a range of buttons with a single packet
-// In game spectate then SHIFT+P and type /join - message is now shown
-
-// Version 0.6K10
-// --------------
-// Join request system enabled if ISF_REQ_JOIN is set
-// IS_JRR can also be used to reset a car at a specified location
-
-// Version 0.6K2
-// -------------
+// New packet IS_OCO can be used to override specific or all start lights
+// New IS_AXM option PMO_SELECTION to set the current editor selection
+// Added TTC_SEL to request an IS_AXM with layout editor selection
+// Added TINY_AXM to request IS_AXM packets for the entire layout
+// IS_SSH documentation updated as it is no longer only for bmp files
+// New packet IS_UCO sends info about InSim checkpoints and circles
+// New packet IS_SLC reports a connection's currently selected car
+// Packet TINY_SLC to request an IS_SLC for all connections
+// Added TINY_ALC and SMALL_ALC to get and set allowed cars (like /cars)
 // Value 5 (out of bounds) added to the IS_HLV packet
 
 // Version 0.6H (INSIM_VERSION increased to 6)
@@ -517,7 +490,9 @@ define('ISP_JRR',    58);   // 58 - instruction     : reply to a join request (a
 define('ISP_UCO',    59);   // 59 - info            : report InSim checkpoint / InSim circle
 define('ISP_OCO',    60);   // 60 - instruction     : object control (currently used for lights)
 define('ISP_TTC',    61);   // 61 - instruction     : multi purpose - target to connection
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO', ISP_TTC => 'ISP_TTC');
+define('ISP_SLC',    62);   // 62 - info            : connection selected a car
+define('ISP_CSC',    63);   // 63 - info            : car state changed
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO', ISP_TTC => 'ISP_TTC', ISP_SLC => 'ISP_SLC', ISP_CSC => 'ISP_CSC');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',     0);     //  0 - keep alive        : see "maintaining the connection"
@@ -546,7 +521,8 @@ define('TINY_RIP',      22);    // 22 - info request    : send an IS_RIP - Repla
 define('TINY_NCI',      23);    // 23 - info request    : get NCI for all guests (on host only)
 define('TINY_ALC',      24);    // 24 - info request    : send a SMALL_ALC (allowed cars)
 define('TINY_AXM',      25);    // 25 - info request    : send IS_AXM packets for the entire layout
-$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC', TINY_AXM => 'TINY_AXM');
+define('TINY_SLC',      26);    // 26 - info request    : send IS_SLC packets for all connections
+$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC', TINY_AXM => 'TINY_AXM', TINY_SLC => 'TINY_SLC');
 
 // the fourth byte of an IS_SMALL packet is one of these
 define('SMALL_NONE',    0);    //  0                    : not used
@@ -1345,6 +1321,19 @@ class IS_NCI extends Struct // New Conn Info
         return $this;
     }
 }; function IS_NCI() { return new IS_NCI; }
+
+class IS_SLC extends Struct // SeLected Car - sent when a connection selects a car (empty if no car)
+{
+    const PACK = 'CCCCa4';
+    const UNPACK = 'CSize/CType/CReqI/CUCID/a4CName';
+
+    protected $Size = 8;        # 8
+    protected $Type = ISP_SLC;  # ISP_SLC
+    public $ReqI;               # 0 unless this is a reply to a TINY_SLC request
+    public $UCID;               # connection's unique id (0 = host)
+
+    public $CName;              # car name
+}; function IS_SLC() { return new IS_SLC; }
 
 class IS_CNL extends Struct // ConN Leave
 {
@@ -2289,13 +2278,13 @@ class IS_CON extends Struct // CONtact - between two cars (A and B are sorted by
 
 class CarContOBJ extends Struct // 8 bytes : car in a contact with an object
 {
-    const PACK = 'CCCxss';
-    const UNPACK = 'CDirection/CHeading/CSpeed/CSp3/sX/sY';
+    const PACK = 'CCCCss';
+    const UNPACK = 'CDirection/CHeading/CSpeed/CZbyte/sX/sY';
 
     public $Direction;                    # car's motion if Speed > 0 : 0 = world y direction, 128 = 180 deg
     public $Heading;                    # direction of forward axis : 0 = world y direction, 128 = 180 deg
     public $Speed;                        # m/s
-    protected $Sp3;
+    public $Zbyte;
 
     public $X;                            # position (1 metre = 16)
     public $Y;                            # position (1 metre = 16)
@@ -2428,6 +2417,41 @@ $UCO = array(UCO_CIRCLE_ENTER => 'UCO_CIRCLE_ENTER', UCO_CIRCLE_LEAVE => 'UCO_CI
 // Identifying an InSim circle from the ObjectInfo :
 
 // Index is 253.  The circle index (seen in the autocross editor) is stored in the Heading byte.
+
+class IS_CSC extends Struct // Car State Changed - reports a change in a car's state (currently start or stop)
+{
+    const PACK = 'CCCCxCxxVx8';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/xSp0/CCSCAction/xSp2/xSp3/VTime/x8C';
+
+    protected $Size = 20;       # 20
+    protected $Type = ISP_CSC;  # ISP_CSC
+    protected $ReqI;            # 0
+    public $PLID;               # player's unique id
+
+    private $Sp0;
+    public $CSCAction;
+    private $Sp2;
+    private $Sp3;
+
+    public $Time;               # hundredths of a second since start (as in SMALL_RTP)
+
+    public $C;
+
+    public function unpack($rawPacket)
+    {
+        parent::unpack($rawPacket);
+
+        $this->C = new CarContOBJ(substr($rawPacket, 12, 8));
+
+        return $this;
+    }
+}; function IS_CSC() { return new IS_CSC; }
+
+// CSCAction byte
+
+define('CSC_STOP',  0);
+define('CSC_START', 1);
+$CSC = array(CSC_STOP => 'CSC_STOP', CSC_START => 'CSC_START');
 
 
 // OBJECT CONTROL - currently used for switching start lights
