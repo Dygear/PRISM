@@ -212,7 +212,7 @@ abstract class Struct
 #define _ISPACKETS_H_
 /////////////////////
 
-// InSim for Live for Speed : 0.6H
+// InSim for Live for Speed : 0.6K2
 
 // InSim allows communication between up to 8 external programs and LFS.
 
@@ -222,15 +222,34 @@ abstract class Struct
 
 // NOTE : This text file was written with a TAB size equal to 4 spaces.
 
-
-// NOTE : This text file was written with a TAB size equal to 4 spaces.
+// INSIM VERSION NUMBER (updated for version 0.6K12)
 // ====================
 
-/* const int INSIM_VERSION = 6; */
-define('INSIM_VERSION', 6);
+/* const int INSIM_VERSION = 7; */
+define('INSIM_VERSION', 7);
 
-// CHANGES
-// =======
+
+// Version 0.6M (INSIM_VERSION increased to 7)
+// ------------
+// Backward compatibility system - send INSIM_VERSION in the IS_ISI
+// Older programs (that send zero) are assumed to require version 6
+// New join request system enabled if ISF_REQ_JOIN is set in IS_ISI
+// IS_JRR can also be used to reset a car at a specified location
+// Packet IS_CSC to report changes in car state (currently start or stop)
+// Zbyte added to CarContObject structure to report car's altitude
+// Zbyte added to IS_OBH so the layout object can be identified
+// IS_MSO / IS_III / IS_ACR message out packets now have variable size
+// IS_BFN can now be used to delete a range of buttons with a single packet
+// New packet IS_OCO can be used to override specific or all start lights
+// New IS_AXM option PMO_SELECTION to set the current editor selection
+// Added TTC_SEL to request an IS_AXM with layout editor selection
+// Added TINY_AXM to request IS_AXM packets for the entire layout
+// IS_SSH documentation updated as it is no longer only for bmp files
+// New packet IS_UCO sends info about InSim checkpoints and circles
+// New packet IS_SLC reports a connection's currently selected car
+// Packet TINY_SLC to request an IS_SLC for all connections
+// Added TINY_ALC and SMALL_ALC to get and set allowed cars (like /cars)
+// Value 5 (out of bounds) added to the IS_HLV packet
 
 // Version 0.6H (INSIM_VERSION increased to 6)
 // ------------
@@ -343,12 +362,10 @@ define('INSIM_VERSION', 6);
 // TCP : Connect to LFS using a TCP connection, then send this packet :
 // UDP : No connection required, just send this packet to LFS :
 
-#What is the long name of this class?
-
 class IS_ISI extends Struct // InSim Init - packet to initialise the InSim system
 {
-    const PACK = 'CCCxvvxCva16a16';
-    const UNPACK = 'CSize/CType/CReqI/CZero/vUDPPort/vFlags/CSp0/CPrefix/vInterval/a16Admin/a16IName';
+    const PACK = 'CCCxvvCCva16a16';
+    const UNPACK = 'CSize/CType/CReqI/CZero/vUDPPort/vFlags/CInSimVer/CPrefix/vInterval/a16Admin/a16IName';
 
     protected $Size = 44;       # 44
     protected $Type = ISP_ISI;  # always ISP_ISI
@@ -358,7 +375,7 @@ class IS_ISI extends Struct // InSim Init - packet to initialise the InSim syste
     public $UDPPort;            # Port for UDP replies from LFS (0 to 65535)
     public $Flags;              # Bit flags for options (see below)
 
-    protected $Sp0 = null;      # 0
+    public $InSimVer = INSIM_VERSION; # The INSIM_VERSION used by your program
     public $Prefix;             # Special host message prefix character
     public $Interval;           # Time in ms between NLP or MCI (0 = none)
 
@@ -389,7 +406,8 @@ define('ISF_OBH',       128);       // bit  7 : receive OBH packets
 define('ISF_HLV',       256);       // bit  8 : receive HLV packets
 define('ISF_AXM_LOAD',  512);       // bit  9 : receive AXM when loading a layout
 define('ISF_AXM_EDIT',  1024);      // bit 10 : receive AXM when changing objects
-$ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'ISF_LOCAL', ISF_MSO_COLS => 'ISF_MSO_COLS', ISF_NLP => 'ISF_NLP', ISF_MCI => 'ISF_MCI', ISF_CON => 'ISF_CON', ISF_OBH => 'ISF_OBH', ISF_HLV => 'ISF_HLV', ISF_AXM_LOAD => 'ISF_AXM_LOAD', ISF_AXM_EDIT => 'ISF_AXM_EDIT');
+define('ISF_REQ_JOIN',  2048);      // bit 11 : process join requests
+$ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'ISF_LOCAL', ISF_MSO_COLS => 'ISF_MSO_COLS', ISF_NLP => 'ISF_NLP', ISF_MCI => 'ISF_MCI', ISF_CON => 'ISF_CON', ISF_OBH => 'ISF_OBH', ISF_HLV => 'ISF_HLV', ISF_AXM_LOAD => 'ISF_AXM_LOAD', ISF_AXM_EDIT => 'ISF_AXM_EDIT', ISF_REQ_JOIN => 'ISF_REQ_JOIN');
 
 // In most cases you should not set both ISF_NLP and ISF_MCI flags
 // because all IS_NLP information is included in the IS_MCI packet.
@@ -468,7 +486,13 @@ define('ISP_AXM',    54);   // 54 - both ways        : autocross multiple object
 define('ISP_ACR',    55);   // 55 - info            : admin command report
 define('ISP_HCP',    56);   // 56 - instruction        : car handicaps
 define('ISP_NCI',    57);   // 57 - info            : new connection - extra info for host
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI');
+define('ISP_JRR',    58);   // 58 - instruction     : reply to a join request (allow / disallow)
+define('ISP_UCO',    59);   // 59 - info            : report InSim checkpoint / InSim circle
+define('ISP_OCO',    60);   // 60 - instruction     : object control (currently used for lights)
+define('ISP_TTC',    61);   // 61 - instruction     : multi purpose - target to connection
+define('ISP_SLC',    62);   // 62 - info            : connection selected a car
+define('ISP_CSC',    63);   // 63 - info            : car state changed
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO', ISP_TTC => 'ISP_TTC', ISP_SLC => 'ISP_SLC', ISP_CSC => 'ISP_CSC');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',     0);     //  0 - keep alive        : see "maintaining the connection"
@@ -495,7 +519,10 @@ define('TINY_AXI',      20);    // 20 - info request    : send an IS_AXI - AutoX
 define('TINY_AXC',      21);    // 21 - info            : autocross cleared
 define('TINY_RIP',      22);    // 22 - info request    : send an IS_RIP - Replay Information Packet
 define('TINY_NCI',      23);    // 23 - info request    : get NCI for all guests (on host only)
-$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI');
+define('TINY_ALC',      24);    // 24 - info request    : send a SMALL_ALC (allowed cars)
+define('TINY_AXM',      25);    // 25 - info request    : send IS_AXM packets for the entire layout
+define('TINY_SLC',      26);    // 26 - info request    : send IS_SLC packets for all connections
+$TINY = array(TINY_NONE => 'TINY_NONE', TINY_VER => 'TINY_VER', TINY_CLOSE => 'TINY_CLOSE', TINY_PING => 'TINY_PING', TINY_REPLY => 'TINY_REPLY', TINY_VTC => 'TINY_VTC', TINY_SCP => 'TINY_SCP', TINY_SST => 'TINY_SST', TINY_GTH => 'TINY_GTH', TINY_MPE => 'TINY_MPE', TINY_ISM => 'TINY_ISM', TINY_REN => 'TINY_REN', TINY_CLR => 'TINY_CLR', TINY_NCN => 'TINY_NCN', TINY_NPL => 'TINY_NPL', TINY_RES => 'TINY_RES', TINY_NLP => 'TINY_NLP', TINY_MCI => 'TINY_MCI', TINY_REO => 'TINY_REO', TINY_RST => 'TINY_RST', TINY_AXI => 'TINY_AXI', TINY_AXC => 'TINY_AXC', TINY_RIP => 'TINY_RIP', TINY_NCI => 'TINY_NCI', TINY_ALC => 'TINY_ALC', TINY_AXM => 'TINY_AXM', TINY_SLC => 'TINY_SLC');
 
 // the fourth byte of an IS_SMALL packet is one of these
 define('SMALL_NONE',    0);    //  0                    : not used
@@ -506,10 +533,15 @@ define('SMALL_TMS',     4);    //  4 - inStruction      : time stop
 define('SMALL_STP',     5);    //  5 - inStruction      : time step
 define('SMALL_RTP',     6);    //  6 - info             : race time packet (reply to GTH)
 define('SMALL_NLI',     7);    //  7 - inStruction      : set node lap interval
-$SMALL = array(SMALL_NONE => 'SMALL_NONE', SMALL_SSP => 'SMALL_SSP', SMALL_SSG => 'SMALL_SSG', SMALL_VTA => 'SMALL_VTA', SMALL_TMS => 'SMALL_TMS', SMALL_STP => 'SMALL_STP', SMALL_RTP => 'SMALL_RTP', SMALL_NLI => 'SMALL_NLI');
+define('SMALL_ALC',     8);    //  8 - both ways        : set or get allowed cars (TINY_ALC)
+$SMALL = array(SMALL_NONE => 'SMALL_NONE', SMALL_SSP => 'SMALL_SSP', SMALL_SSG => 'SMALL_SSG', SMALL_VTA => 'SMALL_VTA', SMALL_TMS => 'SMALL_TMS', SMALL_STP => 'SMALL_STP', SMALL_RTP => 'SMALL_RTP', SMALL_NLI => 'SMALL_NLI', SMALL_ALC => 'SMALL_ALC');
 
+// the fourth byte of an IS_TTC packet is one of these
+define('TTC_NONE',      0);    //  0                : not used
+define('TTC_SEL',       1);    //  1 - info request : send IS_AXM for a layout editor selection
+$TTC = array(TTC_NONE => 'TTC_NONE', TTC_SEL => 'TTC_SEL');
 
-// GENERAL PURPOSE PACKETS - IS_TINY (4 bytes) and IS_SMALL (8 bytes)
+// GENERAL PURPOSE PACKETS - IS_TINY (4 bytes) / IS_SMALL (8 bytes) / IS_TTC (8 bytes)
 // =======================
 
 // To avoid defining several packet Structures that are exactly the same, and to avoid
@@ -543,6 +575,24 @@ class IS_SMALL extends Struct // General purpose 8 byte packet
 
     public $UVal;                   # value (e.g. for SMALL_SSP this would be the OutSim packet rate)
 }; function IS_SMALL() { return new IS_SMALL; }
+
+// IS_TTC
+
+class IS_TTC extends Struct // General purpose 8 byte packet (Target To Connection)
+{
+    const PACK = 'CCCCCCCC';
+    const UNPACK = 'CSize/CType/CReqI/CSubT/CUCID/CB1/CB2/CB3';
+
+    protected $Size = 8;            # always 8
+    protected $Type = ISP_TTC;      # ISP_TTC
+    public $ReqI;                   # 0 unless it is an info request or a reply to an info request
+    public $SubT;                   # subtype, from TTC_ enumeration (e.g. TTC_SEL)
+
+    public $UCID;                   # connection's unique id (0 = local)
+    public $B1;                     # B1, B2, B3 may be used in various ways depending on SubT
+    public $B2;
+    public $B3;
+}; function IS_TTC() { return new IS_TTC; }
 
 
 // VERSION REQUEST
@@ -749,9 +799,9 @@ class IS_MOD extends Struct // MODe : send to LFS to change screen mode
 class IS_MSO extends Struct // MSg Out - system messages and user messages
 {
     const PACK = 'CCxxCCCCa128';
-    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CUserType/CTextStart/a128Msg';
+    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CUserType/CTextStart/a*Msg';
 
-    protected $Size = 136;      # 136
+    protected $Size;            # Variable size
     protected $Type = ISP_MSO;  # ISP_MSO
     protected $ReqI = null;     # 0
     protected $Zero = null;
@@ -778,9 +828,9 @@ $MSO = array(MSO_SYSTEM => 'MSO_SYSTEM', MSO_USER => 'MSO_USER', MSO_PREFIX => '
 class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 {
     const PACK = 'CCxxCCxxa64';
-    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a64Msg';
+    const UNPACK = 'CSize/CType/CReqI/CZero/CUCID/CPLID/CSp2/CSp3/a*Msg';
 
-    protected $Size = 72;       # 72
+    protected $Size;            # Variable size
     protected $Type = ISP_III;  # ISP_III
     protected $ReqI = 0;        # 0
     protected $Zero = null;
@@ -796,9 +846,9 @@ class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 class IS_ACR extends Struct // Admin Command Report - any user typed an admin command
 {
     const PACK = 'CCxxCCxxa64';
-    const UNPACK = 'CSize/CType/xReqI/xZero/CUCID/CAdmin/CResult/xSp3/a64Text';
+    const UNPACK = 'CSize/CType/xReqI/xZero/CUCID/CAdmin/CResult/xSp3/a*Text';
 
-    protected $Size = 72;       # 72
+    protected $Size;            # Variable size
     protected $Type = ISP_ACR;  # ISP_ACR
     protected $ReqI = 0;        # 0
     protected $Zero = null;
@@ -1039,9 +1089,26 @@ class IS_VTN extends Struct // VoTe Notify
 // ALLOWED CARS
 // ============
 
+// To set the allowed cars on the host (like /cars command) you can send this IS_SMALL :
+
+// ReqI : 0
+// SubT : SMALL_ALC     (ALlowed Cars)
+// UVal : Cars          (see below)
+
+// To find out the allowed cars at any time (on guest or host) send this IS_TINY :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TINY_ALC      (request a SMALL_ALC)
+
+// LFS will reply with this IS_SMALL :
+
+// ReqI : non-zero      (as received in the request packet)
+// SubT : SMALL_ALC     (ALlowed Cars)
+// UVal : Cars          (see below)
+
 // You can send a packet to limit the cars that can be used by a given connection
 // The resulting set of selectable cars is a subset of the cars set to be available
-// on the host (by the /cars command)
+// on the host (by the /cars command or SMALL_ALC)
 
 // For example :
 // Cars = 0          ... no cars can be selected on the specified connection
@@ -1254,6 +1321,19 @@ class IS_NCI extends Struct // New Conn Info
         return $this;
     }
 }; function IS_NCI() { return new IS_NCI; }
+
+class IS_SLC extends Struct // SeLected Car - sent when a connection selects a car (empty if no car)
+{
+    const PACK = 'CCCCa4';
+    const UNPACK = 'CSize/CType/CReqI/CUCID/a4CName';
+
+    protected $Size = 8;        # 8
+    protected $Type = ISP_SLC;  # ISP_SLC
+    public $ReqI;               # 0 unless this is a reply to a TINY_SLC request
+    public $UCID;               # connection's unique id (0 = host)
+
+    public $CName;              # car name
+}; function IS_SLC() { return new IS_SLC; }
 
 class IS_CNL extends Struct // ConN Leave
 {
@@ -1731,14 +1811,18 @@ $VIEW = array(VIEW_FOLLOW => 'VIEW_FOLLOW', VIEW_HELI => 'VIEW_HELI', VIEW_CAM =
 
 // Leave reasons
 
-define('LEAVR_DISCO',       0);    // 0 - disconnect
-define('LEAVR_TIMEOUT',     1);    // 1 - timed out
-define('LEAVR_LOSTCONN',    2);    // 2 - lost connection
-define('LEAVR_KICKED',      3);    // 3 - kicked
-define('LEAVR_BANNED',      4);    // 4 - banned
-define('LEAVR_SECURITY',    5);    // 5 - OOS or cheat protection
-define('LEAVR_NUM',         6);
-$LEAVR = array(LEAVR_DISCO => 'LEAVR_DISCO', LEAVR_TIMEOUT => 'LEAVR_TIMEOUT', LEAVR_LOSTCONN => 'LEAVR_LOSTCONN', LEAVR_KICKED => 'LEAVR_KICKED', LEAVR_BANNED => 'LEAVR_BANNED', LEAVR_SECURITY => 'LEAVR_SECURITY', LEAVR_NUM => 'LEAVR_NUM');
+define('LEAVR_DISCO',   0); // 0 - disconnect
+define('LEAVR_TIMEOUT', 1); // 1 - timed out
+define('LEAVR_LOSTCONN',2); // 2 - lost connection
+define('LEAVR_KICKED',  3); // 3 - kicked
+define('LEAVR_BANNED',  4); // 4 - banned
+define('LEAVR_SECURITY',5); // 5 - cheat protection
+define('LEAVR_CPW',     6); // 6 - CPW
+define('LEAVR_OOS',     7); // 7 - OOS
+define('LEAVR_JOOS',    8); // 8 - JOOS
+define('LEAVR_HACK',    9); // 9 - HACK
+define('LEAVR_NUM',     10);
+$LEAVR = array(LEAVR_DISCO => 'LEAVR_DISCO', LEAVR_TIMEOUT => 'LEAVR_TIMEOUT', LEAVR_LOSTCONN => 'LEAVR_LOSTCONN', LEAVR_KICKED => 'LEAVR_KICKED', LEAVR_BANNED => 'LEAVR_BANNED', LEAVR_SECURITY => 'LEAVR_SECURITY', LEAVR_CPW => 'LEAVR_CPW', LEAVR_OOS => 'LEAVR_OOS', LEAVR_JOOS => 'LEAVR_JOOS', LEAVR_HACK => 'LEAVR_HACK', LEAVR_NUM => 'LEAVR_NUM');
 
 // Penalty values (VALID means the penalty can now be cleared)
 
@@ -1845,6 +1929,102 @@ $HOSTF = array(HOSTF_CAN_VOTE => 'HOSTF_CAN_VOTE', HOSTF_CAN_SELECT => 'HOSTF_CA
 // SubT : TINY_NLP - request a single IS_NLP
 // SubT : TINY_MCI - request a set of IS_MCI
 
+// OBJECT INFO - for autocross objects - used in some packets and the layout file
+// ===========
+
+class ObjectInfo extends Struct // Info about a single object - explained in the layout file format
+{
+    const PACK = 'ssCCCC';
+    const UNPACK = 'sX/sY/CZbyte/CFlags/CIndex/CHeading';
+    
+    public $X;
+    public $Y;
+
+    public $Zbyte;
+    public $Flags;
+    public $Index;
+    public $Heading;
+};
+
+
+// JOIN REQUEST - allows external program to decide if a player can join
+// ============
+
+// Set the ISF_REQ_JOIN flag in the IS_ISI to receive join requests
+// A join request is seen as an IS_NPL packet with ZERO in the NumP field
+// An immediate response (e.g. within 1 second) is required using an IS_JRR packet
+
+// In this case, PLID must be zero and JRRAction must be JRR_REJECT or JRR_SPAWN
+// If you allow the join and it is successful you will then get a normal IS_NPL with NumP set
+// You can also specify the start position of the car using the StartPos structure
+
+// IS_JRR can also be used to move an existing car to a different location
+// In this case, PLID must be set, JRRAction must be JRR_RESET or higher and StartPos must be set
+
+class IS_JRR extends Struct // Join Request Reply - send one of these back to LFS in response to a join request
+{
+    const PACK = 'CCxCCCxx';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CJRRAction/xSp2/xSp3';
+    
+    protected $Size = 16;       # 16
+    protected $Type = ISP_JRR;  # ISP_JRR
+    public $ReqI;               # 0
+    public $PLID;            # ZERO when this is a reply to a join request - SET to move a car
+
+    public $UCID;               # set when this is a reply to a join request - ignored when moving a car
+    public $JRRAction;          # 1 - allow / 0 - reject (should send message to user)
+    public $Sp2;
+    public $Sp3;
+
+    public $StartPos; // 0 : use default start point / Flags = 0x80 : set start point
+    
+    public function pack() {
+        $return = '';
+        $packFormat = $this->parsePackFormat();
+        $propertyNumber = -1;
+
+        foreach ($this as $property => $value) {
+            if (!isset($packFormat[++$propertyNumber])) break;
+
+            $pkFnkFormat = $packFormat[$propertyNumber];
+
+            if ($pkFnkFormat == 'x') {
+                $return .= pack('C', 0); # null & 0 are the same thing in Binary (00000000) and Hex (x00), so null == 0.
+            } elseif (is_array($pkFnkFormat)) {
+                list($type, $elements) = $pkFnkFormat;
+
+                for ($i = 0; $i < $elements; ++$i) {
+                    if(isset($value[$i])){
+                        var_dump($value, $type, $elements, $i, $value[$i]);
+                        $return .= pack($type, $value[$i]);
+                    } else {
+                        $return .= pack("x");
+                    }
+                }
+            } else {
+                $return .= pack($pkFnkFormat, $value);
+            }
+        }
+
+        # Pack the starting position object
+        if ($this->StartPos == null)
+            # Dummy object when it wasn't set
+            $this->StartPos = new ObjectInfo();
+
+        return $return . $this->StartPos->pack();
+    }
+}; function IS_JRR() { return new IS_JRR; }
+
+// Values for JRRAction byte
+define('JRR_REJECT',        0);
+define('JRR_SPAWN',         1);
+define('JRR_2',             2);
+define('JRR_3',             3);
+define('JRR_RESET',         4);
+define('JRR_RESET_NO_REPAIR', 5);
+define('JRR_6',             6);
+define('JRR_7',             7);
+$JRR = array(JRR_REJECT => 'JRR_REJECT', JRR_SPAWN => 'JRR_SPAWN', JRR_2 => 'JRR_2', JRR_3 => 'JRR_3', JRR_RESET => 'JRR_RESET', JRR_RESET_NO_REPAIR => 'JRR_RESET_NO_REPAIR', JRR_6 => 'JRR_6', JRR_7 => 'JRR_7');
 
 // AUTOCROSS
 // =========
@@ -2098,13 +2278,13 @@ class IS_CON extends Struct // CONtact - between two cars (A and B are sorted by
 
 class CarContOBJ extends Struct // 8 bytes : car in a contact with an object
 {
-    const PACK = 'CCCxss';
-    const UNPACK = 'CDirection/CHeading/CSpeed/CSp3/sX/sY';
+    const PACK = 'CCCCss';
+    const UNPACK = 'CDirection/CHeading/CSpeed/CZbyte/sX/sY';
 
     public $Direction;                    # car's motion if Speed > 0 : 0 = world y direction, 128 = 180 deg
     public $Heading;                    # direction of forward axis : 0 = world y direction, 128 = 180 deg
     public $Speed;                        # m/s
-    protected $Sp3;
+    public $Zbyte;
 
     public $X;                            # position (1 metre = 16)
     public $Y;                            # position (1 metre = 16)
@@ -2112,8 +2292,8 @@ class CarContOBJ extends Struct // 8 bytes : car in a contact with an object
 
 class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an unknown object
 {
-    const PACK = 'CCCCvvx8ssxxCC';
-    const UNPACK = 'CSize/CType/CReqI/CPLID/vSpClose/vTime/x8C/sX/sY/xSp0/xSp1/CIndex/COBHFlags';
+    const PACK = 'CCCCvvx8ssCxCC';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/vSpClose/vTime/x8C/sX/sY/CZbyte/xSp1/CIndex/COBHFlags';
 
     protected $Size = 24;       # 24
     protected $Type = ISP_OBH;  # ISP_OBH
@@ -2128,7 +2308,7 @@ class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an un
     public $X;                  # as in ObjectInfo
     public $Y;                  # as in ObjectInfo
 
-    private $Sp0;
+    public $Zbyte;              # if OBH_LAYOUT is set : Zbyte as in ObjectInfo
     private $Sp1;
     public $Index;              # AXO_x as in ObjectInfo or zero if it is an unknown object
     public $OBHFlags;           # see below
@@ -2153,7 +2333,7 @@ $OBH = array(OBH_LAYOUT => 'OBH_LAYOUT', OBH_CAN_MOVE => 'OBH_CAN_MOVE', OBH_WAS
 
 // Set the ISP_HLV flag in the IS_ISI to receive reports of incidents that would violate HLVC
 
-class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / speeding in pit lane
+class IS_HLV extends Struct // Hot Lap Validity - off track / hit wall / speeding in pits / out of bounds
 {
     const PACK = 'CCCCCCvx8';
     const UNPACK = 'CSize/CType/CReqI/CPLID/CHLVC/xSp1/vTime/x8C';
@@ -2163,7 +2343,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
     protected $ReqI = null;     # 0
     public $PLID;               # player's unique id
 
-    public $HLVC;               # 0 : ground / 1 : wall / 4 : speeding
+    public $HLVC;               # 0 : ground / 1 : wall / 4 : speeding / 5 : out of bounds
     private    $Sp1;
     public $Time;               # looping time stamp (hundredths - time since reset - like TINY_GTH)
 
@@ -2179,6 +2359,150 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
     }
 }; function IS_HLV() { return new IS_HLV; }
 
+// CONTROL - reports crossing an InSim checkpoint / entering an InSim circle (from layout)
+// =======
+
+class IS_UCO extends Struct // User Control Object
+{
+    const PACK = 'CCCCxCxxVx8x8';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/xSp0/CUCOAction/xSp2/xSp3/VTime/x8/x8';
+
+    protected $Size = 28;       # 28
+    protected $Type = ISP_UCO;  # ISP_UCO
+    protected $ReqI;            # 0
+    public $PLID;               # player's unique id
+
+    private $Sp0;
+    public $UCOAction;
+    private $Sp2;
+    private $Sp3;
+
+    public $Time;               # hundredths of a second since start (as in SMALL_RTP)
+    
+    public $C;
+
+    public $Info;               # Info about the checkpoint or circle (see below)
+
+    public function unpack($rawPacket)
+    {
+        parent::unpack($rawPacket);
+
+        $this->C = new CarContOBJ(substr($rawPacket, 10, 8));
+        $this->Info = new ObjectInfo(substr($rawPacket, 18, 8));
+
+        return $this;
+    }
+}; function IS_UCO() { return new IS_UCO; }
+
+// UCOAction byte
+
+define('UCO_CIRCLE_ENTER',  0);     // entered a circle
+define('UCO_CIRCLE_LEAVE',  1);     // left a circle
+define('UCO_CP_FWD',        2);     // crossed cp in forward direction
+define('UCO_CP_REV',        3);     // crossed cp in reverse direction
+$UCO = array(UCO_CIRCLE_ENTER => 'UCO_CIRCLE_ENTER', UCO_CIRCLE_LEAVE => 'UCO_CIRCLE_LEAVE', UCO_CP_FWD => 'UCO_CP_FWD', UCO_CP_REV => 'UCO_CP_REV');
+
+// Identifying an InSim checkpoint from the ObjectInfo :
+
+// Index is 252.  Checkpoint index (seen in the autocross editor) is stored in Flags bits 0 and 1
+
+// 00 = finish line
+// 01 = 1st checkpoint
+// 10 = 2nd checkpoint
+// 11 = 3rd checkpoint
+
+// Note that the checkpoint index has no meaning in LFS and is provided only for your convenience.
+// If you use many InSim checkpoints you may need to identify them with the X and Y values.
+
+// Identifying an InSim circle from the ObjectInfo :
+
+// Index is 253.  The circle index (seen in the autocross editor) is stored in the Heading byte.
+
+class IS_CSC extends Struct // Car State Changed - reports a change in a car's state (currently start or stop)
+{
+    const PACK = 'CCCCxCxxVx8';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/xSp0/CCSCAction/xSp2/xSp3/VTime/x8C';
+
+    protected $Size = 20;       # 20
+    protected $Type = ISP_CSC;  # ISP_CSC
+    protected $ReqI;            # 0
+    public $PLID;               # player's unique id
+
+    private $Sp0;
+    public $CSCAction;
+    private $Sp2;
+    private $Sp3;
+
+    public $Time;               # hundredths of a second since start (as in SMALL_RTP)
+
+    public $C;
+
+    public function unpack($rawPacket)
+    {
+        parent::unpack($rawPacket);
+
+        $this->C = new CarContOBJ(substr($rawPacket, 12, 8));
+
+        return $this;
+    }
+}; function IS_CSC() { return new IS_CSC; }
+
+// CSCAction byte
+
+define('CSC_STOP',  0);
+define('CSC_START', 1);
+$CSC = array(CSC_STOP => 'CSC_STOP', CSC_START => 'CSC_START');
+
+
+// OBJECT CONTROL - currently used for switching start lights
+// ==============
+
+class IS_OCO extends Struct // Object COntrol
+{
+    const PACK = 'CCCxCCCC';
+    const UNPACK = 'CSize/CType/CReqI/xZero/COCOAction/CIndex/CIdentifier/CData';
+    
+    protected $Size = 8;        # 8
+    protected $Type = ISP_OCO;  # ISP_OCO
+    protected $ReqI;            # 0
+    protected $Zero;
+
+    public $OCOAction;          # see below
+    public $Index;              # see below
+    public $Identifier;         # identify particular start lights objects (0 to 63 or 255 = all)
+    public $Data;               # see below
+}; function IS_OCO() { return new IS_OCO; }
+
+// Index byte
+
+// This can be used to identify a light object from the autocross objects list.
+// Currently only AXO_START_LIGHTS and the following special value are supported  :
+
+define('OCO_INDEX_MAIN',    240);   // overrides the main start light system
+
+// Identifier byte corresponds with the indentifier seen in the layout editor
+
+// OCOAction byte
+
+define('OCO_ZERO',          0);     // reserved
+define('OCO_1',             1);     //
+define('OCO_2',             2);     //
+define('OCO_3',             3);     //
+define('OCO_LIGHTS_RESET',  4);     // give up control of all lights
+define('OCO_LIGHTS_SET',    5);     // use Data byte to set the bulbs
+define('OCO_LIGHTS_UNSET',  6);     // give up control of the specified lights
+define('OCO_NUM',           7);
+$OCO = array(OCO_ZERO => 'OCO_ZERO', OCO_1 => 'OCO_1', OCO_2 => 'OCO_2', OCO_3 => 'OCO_3', OCO_LIGHTS_RESET => 'OCO_LIGHTS_RESET', OCO_LIGHTS_SET => 'OCO_LIGHTS_SET', OCO_LIGHTS_UNSET => 'OCO_LIGHTS_UNSET', OCO_NUM => 'OCO_NUM');
+
+// Data byte is currently used for setting particular bulbs
+
+// Here are the bulb values for the currently available lights :
+
+// bit 0 : red1
+// bit 1 : red2
+// bit 2 : red3
+// bit 3 : green
+
 
 // AUTOCROSS OBJECTS - reporting / adding / removing
 // =================
@@ -2189,18 +2513,7 @@ class IS_HLV extends Struct // Hot Lap Validity - illegal ground / hit wall / sp
 // You can also add or remove objects by sending IS_AXM packets.
 // Some care must be taken with these - please read the notes below.
 
-class ObjectInfo extends Struct // Info about a single object - explained in the layout file format
-{
-    const PACK = 'sscCCC';
-    const UNPACK = 'sX/sY/CZbyte/CFlags/CIndex/CHeading';
-
-    public $X;
-    public $Y;
-    public $Zbyte;
-    public $Flags;
-    public $Index;
-    public $Heading;
-};
+// You can also get (TTC_SEL) or set (PMO_SELECTION) the current editor selection.
 
 class IS_AXM extends Struct // AutoX Multiple objects - variable size
 {
@@ -2251,12 +2564,18 @@ define('PMO_LOADING_FILE',  0);     // 0 - sent by the layout loading system onl
 define('PMO_ADD_OBJECTS',   1);     // 1 - adding objects (from InSim or editor)
 define('PMO_DEL_OBJECTS',   2);     // 2 - delete objects (from InSim or editor)
 define('PMO_CLEAR_ALL',     3);     // 3 - clear all objects (NumO must be zero)
-define('PMO_NUM',           4);
-$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_NUM => 'PMO_NUM');
+define('PMO_TINY_AXM',      4);     // 4 - a reply to a TINY_AXM request
+define('PMO_TTC_SEL',       5);     // 5 - a reply to a TTC_SEL request
+define('PMO_SELECTION',     6);     // 6 - set the current editor selection
+define('PMO_NUM',           7);
+$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_TINY_AXM => 'PMO_TINY_AXM', PMO_TTC_SEL => 'PMO_TTC_SEL', PMO_SELECTION => 'PMO_SELECTION', PMO_NUM => 'PMO_NUM');
 
-// Info about the PMOFlags byte (only bit 0 is currently used) :
+// Info about the PMOFlags byte :
 
-// If PMOFlags bit 0 is set in a PMO_LOADING_FILE packet, LFS has reached the end of
+define('PMO_FILE_END',          1);
+define('PMO_SUPPRESS_WARNINGS', 2);
+
+// If PMO_FILE_END is set in a PMO_LOADING_FILE packet, LFS has reached the end of
 // a layout file which it is loading.  The added objects will then be optimised.
 
 // Optimised in this case means that static vertex buffers will be created for all
@@ -2264,13 +2583,13 @@ $PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD
 // there are many objects loaded, optimisation causes a significant glitch which can
 // be long enough to cause a driver who is cornering to lose control and crash.
 
-// PMOFlags bit 0 can also be set in an IS_AXM with PMOAction of PMO_ADD_OBJECTS.
-// This causes all objects to be optimised.  It is important not to set bit 0 in
-// every packet you send to add objects or you will cause severe glitches on the
+// PMO_FILE_END can also be set in an IS_AXM with PMOAction of PMO_ADD_OBJECTS.
+// This causes all objects to be optimised.  It is important not to set PMO_FILE_END
+// in every packet you send to add objects or you will cause severe glitches on the
 // clients computers.  It is ok to have some objects on the track which are not
 // optimised.  So if you have a few objects that are being removed and added
 // occasionally, the best advice is not to request optimisation at all.  Only
-// request optimisation (by setting bit 0) if you have added so many objects
+// request optimisation (by setting PMO_FILE_END) if you have added so many objects
 // that it is needed to improve the frame rate.
 
 // NOTE 1) LFS makes sure that all objects are optimised when the race restarts.
@@ -2282,6 +2601,21 @@ $PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD
 // to use LFS's method of doing this : send the first packet of objects then wait for
 // the corresponding IS_AXM that will be output when the packet is processed.  Then
 // you can send the second packet and again wait for the IS_AXM and so on.
+
+// To request IS_AXM packets for all layout objects and circles send this IS_TINY :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TINY_AXM      (request IS_AXM packets for the entire layout)
+
+// LFS will send as many IS_AXM packets as needed to describe the whole layout.
+// If there are no objects or circles, there will be one IS_AXM with zero NumO.
+// The final IS_AXM packet will have the PMO_FILE_END flag set.
+
+// To request an IS_AXM for a connection's layout editor selection send this IS_TTC :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TTC_SEL       (request an IS_AXM for the current selection)
+// UCID : connection    (0 = local / non-zero = guest)
 
 
 // CAR POSITION PACKETS (Initialising OutSim from InSim - See "OutSim" below)
@@ -2534,7 +2868,7 @@ $RIPOPT = array(RIPOPT_LOOP => 'RIPOPT_LOOP', RIPOPT_SKINS => 'RIPOPT_SKINS');
 class IS_SSH extends Struct // ScreenSHot
 {
     const PACK = 'CCCCxxxxa32';
-    const UNPACK = 'CSize/CType/CReqI/CError/CSp0/CSp1/CSp2/CSp3/a32BMP';
+    const UNPACK = 'CSize/CType/CReqI/CError/CSp0/CSp1/CSp2/CSp3/a32Name';
 
     protected $Size = 40;       # 40
     protected $Type = ISP_SSH;  # ISP_SSH
@@ -2546,7 +2880,7 @@ class IS_SSH extends Struct // ScreenSHot
     protected $Sp2;             # 0
     protected $Sp3;             # 0
 
-    public $BMP;                # name of screenshot file - last byte must be zero
+    public $Name;                # name of screenshot file - last byte must be zero
 }; function IS_SSH() { return new IS_SSH; }
 
 // Error codes returned in IS_SSH replies :
@@ -2588,8 +2922,8 @@ $IS = array(IS_X_MIN => 'IS_X_MIN', IS_X_MAX => 'IS_X_MAX', IS_Y_MIN => 'IS_Y_MI
 
 class IS_BFN extends Struct  // Button FunctioN - delete buttons / receive button requests
 {
-    const PACK = 'CCxCCCCx';
-    const UNPACK = 'CSize/CType/CReqI/CSubT/CUCID/CClickID/CInst/CSp3';
+    const PACK = 'CCxCCCCC';
+    const UNPACK = 'CSize/CType/CReqI/CSubT/CUCID/CClickID/CClickMax/CInst';
 
     protected $Size = 8;        # 8
     protected $Type = ISP_BFN;  # ISP_BFN
@@ -2598,8 +2932,8 @@ class IS_BFN extends Struct  // Button FunctioN - delete buttons / receive butto
 
     public $UCID;               # connection to send to or from (0 = local / 255 = all)
     public $ClickID;            # ID of button to delete (if SubT is BFN_DEL_BTN)
+    public $ClickMax;           # if SubT is BFN_DEL_BTN : ID of last button in range (if greater than ClickID)
     public $Inst;               # used internally by InSim
-    protected $Sp3;
 }; function IS_BFN() { return new IS_BFN; }
 
 // the fourth byte of IS_BFN packets is one of these
