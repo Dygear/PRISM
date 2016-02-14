@@ -2473,15 +2473,6 @@ class IS_OCO extends Struct // Object COntrol
     public $Data;               # see below
 }; function IS_OCO() { return new IS_OCO; }
 
-// Index byte
-
-// This can be used to identify a light object from the autocross objects list.
-// Currently only AXO_START_LIGHTS and the following special value are supported  :
-
-define('OCO_INDEX_MAIN',    240);   // overrides the main start light system
-
-// Identifier byte corresponds with the indentifier seen in the layout editor
-
 // OCOAction byte
 
 define('OCO_ZERO',          0);     // reserved
@@ -2494,14 +2485,27 @@ define('OCO_LIGHTS_UNSET',  6);     // give up control of the specified lights
 define('OCO_NUM',           7);
 $OCO = array(OCO_ZERO => 'OCO_ZERO', OCO_1 => 'OCO_1', OCO_2 => 'OCO_2', OCO_3 => 'OCO_3', OCO_LIGHTS_RESET => 'OCO_LIGHTS_RESET', OCO_LIGHTS_SET => 'OCO_LIGHTS_SET', OCO_LIGHTS_UNSET => 'OCO_LIGHTS_UNSET', OCO_NUM => 'OCO_NUM');
 
-// Data byte is currently used for setting particular bulbs
+// Index byte specifies which lights you want to override
 
-// Here are the bulb values for the currently available lights :
+// Currently the following values are supported :
 
-// bit 0 : red1
-// bit 1 : red2
-// bit 2 : red3
-// bit 3 : green
+// AXO_START_LIGHTS (149)           // overrides temporary start lights in the layout
+define('OCO_INDEX_MAIN',    240);   // special value to override the main start light system
+
+// Identifier byte can be used to override groups of temporary start lights
+
+// It refers to the temporary lights identifier (0 to 63) seen in the layout editor
+
+// Data byte specifies particular bulbs using the low 4 bits
+
+// Bulb bit values for the currently available lights :
+
+// OCO_INDEX_MAIN       AXO_START_LIGHTS
+
+// bit 0 (1) : red1     bit 0 (1) : red
+// bit 1 (2) : red2     bit 1 (2) : amber
+// bit 2 (4) : red3     -
+// bit 3 (8) : green    bit 3 (8) : green
 
 
 // AUTOCROSS OBJECTS - reporting / adding / removing
