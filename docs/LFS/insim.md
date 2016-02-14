@@ -3,7 +3,7 @@
 #define _ISPACKETS_H_
 /////////////////////
 
-// InSim for Live for Speed : 0.6B
+// InSim for Live for Speed
 
 // InSim allows communication between up to 8 external programs and LFS.
 
@@ -14,22 +14,50 @@
 // NOTE : This text file was written with a TAB size equal to 4 spaces.
 
 
-// INSIM VERSION NUMBER (updated for version 0.6B)
+// INSIM VERSION NUMBER (updated for version 0.6M)
 // ====================
 
-const int INSIM_VERSION = 5;
+const int INSIM_VERSION = 7;
 
 
 // CHANGES
 // =======
 
-// Version 0.5Z (no change to INSIM_VERSION)
+// Version 0.6M (INSIM_VERSION increased to 7)
+// ------------
+// Backward compatibility system - send INSIM_VERSION in the IS_ISI
+// Older programs (that send zero) are assumed to require version 6
+// New join request system enabled if ISF_REQ_JOIN is set in IS_ISI
+// IS_JRR can also be used to reset a car at a specified location
+// Packet IS_CSC to report changes in car state (currently start or stop)
+// Zbyte added to CarContObject structure to report car's altitude
+// Zbyte added to IS_OBH so the layout object can be identified
+// IS_MSO / IS_III / IS_ACR message out packets now have variable size
+// IS_BFN can now be used to delete a range of buttons with a single packet
+// New packet IS_OCO can be used to override specific or all start lights
+// New IS_AXM option PMO_SELECTION to set the current editor selection
+// Added TTC_SEL to request an IS_AXM with layout editor selection
+// Added TINY_AXM to request IS_AXM packets for the entire layout
+// IS_SSH documentation updated as it is no longer only for bmp files
+// New packet IS_UCO sends info about InSim checkpoints and circles
+// New packet IS_SLC reports a connection's currently selected car
+// Packet TINY_SLC to request an IS_SLC for all connections
+// Added TINY_ALC and SMALL_ALC to get and set allowed cars (like /cars)
+// Value 5 (out of bounds) added to the IS_HLV packet
 
-// NLP / MCI packets are now output at regular intervals
-// CCI_LAG bit added to the CompCar structure
+// Version 0.6H (INSIM_VERSION increased to 6)
+// ------------
+// IS_REO and IS_NLP increased in size to allow 40 drivers
+// ObjectInfo Zchar is now Zbyte - see layout file description
+// ISP_NCI packet added to give host more info about new guest
+
+// Version 0.6C
+// ------------
+// Small change to the in-game usage of IS_REO - only valid after SMALL_VTA
+// Some more values (CPW / OOS / JOOS / HACK) added to the leave reasons
 
 // Version 0.6B (INSIM_VERSION increased to 5)
-
+// ------------
 // Lap timing info added to IS_RST (Timing byte)
 // NLP / MCI minimum time interval reduced to 40 ms (was 50 ms)
 // IS_VTC now cancels game votes even if the majority has not been reached
@@ -49,6 +77,11 @@ const int INSIM_VERSION = 5;
 // FIX : IS_BTN did not allow the documented limit of 240 characters
 // FIX : OutGaugePack ID was always zero regardless of ID in cfg.txt
 // FIX : InSim camera with vertical pitch would cause LFS to crash
+
+// Version 0.5Z (no change to INSIM_VERSION)
+// ------------
+// NLP / MCI packets are now output at regular intervals
+// CCI_LAG bit added to the CompCar structure
 
 
 // TYPES : (all multi-byte types are PC style - lowest byte first)
@@ -80,6 +113,8 @@ const int INSIM_VERSION = 5;
 // ReqI : non zero if the packet is a packet request or a reply to a request
 // Data : the first data byte
 
+// Spare bytes and Zero bytes must be filled with ZERO
+
 
 // INITIALISING InSim
 // ==================
@@ -107,7 +142,7 @@ struct IS_ISI // InSim Init - packet to initialise the InSim system
     word    UDPPort;    // Port for UDP replies from LFS (0 to 65535)
     word    Flags;      // Bit flags for options (see below)
 
-    byte    Sp0;        // 0
+    byte    InSimVer;   // The INSIM_VERSION used by your program
     byte    Prefix;     // Special host message prefix character
     word    Interval;   // Time in ms between NLP or MCI (0 = none)
 
@@ -138,6 +173,7 @@ struct IS_ISI // InSim Init - packet to initialise the InSim system
 #define ISF_HLV          256    // bit  8 : receive HLV packets
 #define ISF_AXM_LOAD     512    // bit  9 : receive AXM when loading a layout
 #define ISF_AXM_EDIT    1024    // bit 10 : receive AXM when changing objects
+#define ISF_REQ_JOIN    2048    // bit 11 : process join requests
 
 // In most cases you should not set both ISF_NLP and ISF_MCI flags
 // because all IS_NLP information is included in the IS_MCI packet.
@@ -148,7 +184,13 @@ struct IS_ISI // InSim Init - packet to initialise the InSim system
 // avoiding conflict with the host buttons and allowing the user
 // to switch them with SHIFT+B rather than SHIFT+I.
 
-// NOTE 4) Prefix field, if set when initialising InSim on a host :
+// NOTE 4) InSimVer field :
+
+// Provide the INSIM_VERSION that your program was designed for.
+// Later LFS versions will try to retain backward compatibility
+// if it can be provided, within reason.  Not guaranteed.
+
+// NOTE 5) Prefix field, if set when initialising InSim on a host :
 
 // Messages typed with this prefix will be sent to your InSim program
 // on the host (in IS_MSO) and not displayed on anyone's screen.
@@ -215,6 +257,14 @@ enum // the second byte of any packet is one of these
     ISP_PLC,        // 53 - instruction     : player cars
     ISP_AXM,        // 54 - both ways       : autocross multiple objects
     ISP_ACR,        // 55 - info            : admin command report
+    ISP_HCP,        // 56 - instruction     : car handicaps
+    ISP_NCI,        // 57 - info            : new connection - extra info for host
+    ISP_JRR,        // 58 - instruction     : reply to a join request (allow / disallow)
+    ISP_UCO,        // 59 - info            : report InSim checkpoint / InSim circle
+    ISP_OCO,        // 60 - instruction     : object control (currently used for lights)
+    ISP_TTC,        // 61 - instruction     : multi purpose - target to connection
+    ISP_SLC,        // 62 - info            : connection selected a car
+    ISP_CSC,        // 63 - info            : car state changed
 };
 
 enum // the fourth byte of an IS_TINY packet is one of these
@@ -230,9 +280,9 @@ enum // the fourth byte of an IS_TINY packet is one of these
     TINY_GTH,       //  8 - info request    : get time in hundredths (i.e. SMALL_RTP)
     TINY_MPE,       //  9 - info            : multi player end
     TINY_ISM,       // 10 - info request    : get multiplayer info (i.e. ISP_ISM)
-    TINY_REN,       // 11 - info            : race end (return to game setup screen)
+    TINY_REN,       // 11 - info            : race end (return to race setup screen)
     TINY_CLR,       // 12 - info            : all players cleared from race
-    TINY_NCN,       // 13 - info request    : get all connections
+    TINY_NCN,       // 13 - info request    : get NCN for all connections
     TINY_NPL,       // 14 - info request    : get all players
     TINY_RES,       // 15 - info request    : get all results
     TINY_NLP,       // 16 - info request    : send an IS_NLP
@@ -242,6 +292,10 @@ enum // the fourth byte of an IS_TINY packet is one of these
     TINY_AXI,       // 20 - info request    : send an IS_AXI - AutoX Info
     TINY_AXC,       // 21 - info            : autocross cleared
     TINY_RIP,       // 22 - info request    : send an IS_RIP - Replay Information Packet
+    TINY_NCI,       // 23 - info request    : get NCI for all guests (on host only)
+    TINY_ALC,       // 24 - info request    : send a SMALL_ALC (allowed cars)
+    TINY_AXM,       // 25 - info request    : send IS_AXM packets for the entire layout
+    TINY_SLC,       // 26 - info request    : send IS_SLC packets for all connections
 };
 
 enum // the fourth byte of an IS_SMALL packet is one of these
@@ -254,36 +308,58 @@ enum // the fourth byte of an IS_SMALL packet is one of these
     SMALL_STP,      //  5 - instruction     : time step
     SMALL_RTP,      //  6 - info            : race time packet (reply to GTH)
     SMALL_NLI,      //  7 - instruction     : set node lap interval
+    SMALL_ALC,      //  8 - both ways       : set or get allowed cars (TINY_ALC)
+};
+
+enum // the fourth byte of an IS_TTC packet is one of these
+{
+    TTC_NONE,       //  0                   : not used
+    TTC_SEL,        //  1 - info request    : send IS_AXM for a layout editor selection
 };
 
 
-// GENERAL PURPOSE PACKETS - IS_TINY (4 bytes) and IS_SMALL (8 bytes)
+// GENERAL PURPOSE PACKETS - IS_TINY (4 bytes) / IS_SMALL (8 bytes) / IS_TTC (8 bytes)
 // =======================
 
 // To avoid defining several packet structures that are exactly the same, and to avoid
 // wasting the ISP_ enumeration, IS_TINY is used at various times when no additional data
 // other than SubT is required.  IS_SMALL is used when an additional integer is needed.
 
-// IS_TINY - used for various requests, replies and reports
+// IS_TINY
 
 struct IS_TINY // General purpose 4 byte packet
 {
-    byte Size;      // always 4
-    byte Type;      // always ISP_TINY
-    byte ReqI;      // 0 unless it is an info request or a reply to an info request
-    byte SubT;      // subtype, from TINY_ enumeration (e.g. TINY_RACE_END)
+    byte    Size;       // 4
+    byte    Type;       // ISP_TINY
+    byte    ReqI;       // 0 unless it is an info request or a reply to an info request
+    byte    SubT;       // subtype, from TINY_ enumeration (e.g. TINY_RACE_END)
 };
 
-// IS_SMALL - used for various requests, replies and reports
+// IS_SMALL
 
 struct IS_SMALL // General purpose 8 byte packet
 {
-    byte Size;      // always 8
-    byte Type;      // always ISP_SMALL
-    byte ReqI;      // 0 unless it is an info request or a reply to an info request
-    byte SubT;      // subtype, from SMALL_ enumeration (e.g. SMALL_SSP)
+    byte    Size;       // 8
+    byte    Type;       // ISP_SMALL
+    byte    ReqI;       // 0 unless it is an info request or a reply to an info request
+    byte    SubT;       // subtype, from SMALL_ enumeration (e.g. SMALL_SSP)
 
     unsigned UVal;  // value (e.g. for SMALL_SSP this would be the OutSim packet rate)
+};
+
+// IS_TTC
+
+struct IS_TTC // General purpose 8 byte packet (Target To Connection)
+{
+    byte    Size;       // 8
+    byte    Type;       // ISP_TTC
+    byte    ReqI;       // 0 unless it is an info request or a reply to an info request
+    byte    SubT;       // subtype, from TTC_ enumeration (e.g. TTC_SEL)
+
+    byte    UCID;       // connection's unique id (0 = local)
+    byte    B1;         // B1, B2, B3 may be used in various ways depending on SubT
+    byte    B2;
+    byte    B3;
 };
 
 
@@ -294,7 +370,7 @@ struct IS_SMALL // General purpose 8 byte packet
 // avoid problems when connecting to a host with a later or earlier version.  You will
 // be sent a version packet on connection if you set ReqI in the IS_ISI packet.
 
-// This version packet can be sent on request :
+// This version packet is sent on request :
 
 struct IS_VER // VERsion
 {
@@ -304,14 +380,24 @@ struct IS_VER // VERsion
     byte    Zero;
 
     char    Version[8];     // LFS version, e.g. 0.3G
-    char    Product[6];     // Product : DEMO or S1
-    word    InSimVer;       // InSim Version : increased when InSim packets change
+    char    Product[6];     // Product : DEMO / S1 / S2 / S3
+    byte    InSimVer;       // InSim version (see below)
+    byte    Spare;          // Spare
 };
 
-// To request an InSimVersion packet at any time, send this IS_TINY :
+// To request an IS_VER packet at any time, send this IS_TINY :
 
 // ReqI : non-zero      (returned in the reply)
 // SubT : TINY_VER      (request an IS_VER)
+
+// NOTE : LFS tries to match InSimVer with the version requested in your program's IS_ISI
+// packet if it is lower than the latest version known to LFS.  If backward compatibility
+// is no longer possible then this version may be higher than your program requested.
+// In that case your program may not be able to read some packets sent to it by LFS.
+// If you connect to an older LFS version then InSimVer may be lower than requested.
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TINY_PING     (request a TINY_REPLY)
 
 
 // CLOSING InSim
@@ -359,7 +445,7 @@ struct IS_VER // VERsion
 // STATE REPORTING AND REQUESTS
 // ============================
 
-// LFS will send a StatePack any time the info in the StatePack changes.
+// LFS will send an IS_STA any time the info in it changes.
 
 struct IS_STA // STAte
 {
@@ -411,7 +497,7 @@ struct IS_STA // STAte
 #define ISS_VIEW_OVERRIDE   8192    // override user view
 #define ISS_VISIBLE         16384   // InSim buttons visible
 
-// To request a StatePack at any time, send this IS_TINY :
+// To request an IS_STA at any time, send this IS_TINY :
 
 // ReqI : non-zero      (returned in the reply)
 // SubT : TINY_SST      (Send STate)
@@ -475,19 +561,19 @@ struct IS_MOD // MODe : send to LFS to change screen mode
 // MESSAGES OUT (FROM LFS)
 // ------------
 
-struct IS_MSO // MSg Out - system messages and user messages
+struct IS_MSO // MSg Out - system messages and user messages - variable size
 {
-    byte    Size;       // 136
+    byte    Size;       // 12, 16, 20... 136 depending on Msg
     byte    Type;       // ISP_MSO
     byte    ReqI;       // 0
     byte    Zero;
 
     byte    UCID;       // connection's unique id (0 = host)
     byte    PLID;       // player's unique id (if zero, use UCID)
-    byte    UserType;   // set if typed by a user (see User Values below)
+    byte    UserType;   // set if typed by a user (see User Values below) 
     byte    TextStart;  // first character of the actual text (after player name)
 
-    char    Msg[128];
+    char    Msg[128];   // 4, 8, 12... 128 characters - last byte is zero
 };
 
 // User Values (for UserType byte)
@@ -503,9 +589,9 @@ enum
 
 // NOTE : Typing "/o MESSAGE" into LFS will send an IS_MSO with UserType = MSO_O
 
-struct IS_III // InsIm Info - /i message from user to host's InSim
+struct IS_III // InsIm Info - /i message from user to host's InSim - variable size
 {
-    byte    Size;       // 72
+    byte    Size;       // 12, 16, 20... 72 depending on Msg
     byte    Type;       // ISP_III
     byte    ReqI;       // 0
     byte    Zero;
@@ -515,12 +601,12 @@ struct IS_III // InsIm Info - /i message from user to host's InSim
     byte    Sp2;
     byte    Sp3;
 
-    char    Msg[64];
+    char    Msg[64];    // 4, 8, 12... 64 characters - last byte is zero
 };
 
-struct IS_ACR // Admin Command Report - any user typed an admin command
+struct IS_ACR // Admin Command Report - a user typed an admin command - variable size
 {
-    byte    Size;       // 72
+    byte    Size;       // 12, 16, 20... 72 depending on Text
     byte    Type;       // ISP_ACR
     byte    ReqI;       // 0
     byte    Zero;
@@ -530,7 +616,7 @@ struct IS_ACR // Admin Command Report - any user typed an admin command
     byte    Result;     // 1 - processed / 2 - rejected / 3 - unknown command
     byte    Sp3;
 
-    char    Text[64];
+    char    Text[64];   // 4, 8, 12... 64 characters - last byte is zero
 };
 
 // MESSAGES IN (TO LFS)
@@ -694,9 +780,26 @@ struct IS_VTN // VoTe Notify
 // ALLOWED CARS
 // ============
 
+// To set the allowed cars on the host (like /cars command) you can send this IS_SMALL :
+
+// ReqI : 0
+// SubT : SMALL_ALC     (ALlowed Cars)
+// UVal : Cars          (see below)
+
+// To find out the allowed cars at any time (on guest or host) send this IS_TINY :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TINY_ALC      (request a SMALL_ALC)
+
+// LFS will reply with this IS_SMALL :
+
+// ReqI : non-zero      (as received in the request packet)
+// SubT : SMALL_ALC     (ALlowed Cars)
+// UVal : Cars          (see below)
+
 // You can send a packet to limit the cars that can be used by a given connection
 // The resulting set of selectable cars is a subset of the cars set to be available
-// on the host (by the /cars command)
+// on the host (by the /cars command or SMALL_ALC)
 
 // For example :
 // Cars = 0          ... no cars can be selected on the specified connection
@@ -739,6 +842,30 @@ struct IS_PLC // PLayer Cars
 // FORMULA BMW FB02 - 0x80000
 
 
+// HANDICAPS
+// =========
+
+// You can send a packet to add mass and restrict the intake on each car model
+// The same restriction applies to all drivers using a particular car model
+// This can be useful for creating multi class hosts
+
+struct CarHCP // Car handicaps in 2 bytes - there is an array of these in the HCP (below)
+{
+    byte    H_Mass;     // 0 to 200 - added mass (kg)
+    byte    H_TRes;     // 0 to  50 - intake restriction
+};
+
+struct IS_HCP // HandiCaPs
+{
+    byte    Size;       // 68
+    byte    Type;       // ISP_HCP
+    byte    ReqI;       // 0
+    byte    Zero;
+
+    CarHCP  Info[32];   // H_Mass and H_TRes for each car : XF GTI = 0 / XR GT = 1 etc
+};
+
+
 // RACE TRACKING
 // =============
 
@@ -759,7 +886,7 @@ struct IS_PLC // PLayer Cars
 // ReqI : 0
 // SubT : TINY_CLR      (CLear Race)
 
-// When a race ends (return to game setup screen) LFS sends this IS_TINY
+// When a race ends (return to race setup screen) LFS sends this IS_TINY
 
 // ReqI : 0
 // SubT : TINY_REN      (Race ENd)
@@ -826,6 +953,34 @@ struct IS_NCN // New ConN
     byte    Sp3;
 };
 
+struct IS_NCI // New Conn Info - sent on host only if an admin password has been set
+{
+    byte    Size;       // 16
+    byte    Type;       // ISP_NCI
+    byte    ReqI;       // 0 unless this is a reply to a TINY_NCI request
+    byte    UCID;       // connection's unique id (0 = host)
+
+    byte    Language;   // see below : Languages
+    byte    Sp1;
+    byte    Sp2;
+    byte    Sp3;
+
+    unsigned    UserID;     // LFS UserID
+    unsigned    IPAddress;
+};
+
+struct IS_SLC // SeLected Car - sent when a connection selects a car (empty if no car)
+{
+    byte    Size;       // 8
+    byte    Type;       // ISP_SLC
+    byte    ReqI;       // 0 unless this is a reply to a TINY_SLC request
+    byte    UCID;       // connection's unique id (0 = host)
+
+    char    CName[4];   // car name
+};
+
+// NOTE : If a new guest joins and does have a car selected then an IS_SLC will be sent
+
 struct IS_CNL // ConN Leave
 {
     byte    Size;       // 8
@@ -876,7 +1031,7 @@ struct IS_NPL // New PLayer joining race (if PLID already exists, then leaving p
     int     Spare;
 
     byte    SetF;       // setup flags (see below)
-    byte    NumP;       // number in race (same when leaving pits, 1 more if new)
+    byte    NumP;       // number in race - ZERO if this is a join request
     byte    Sp2;
     byte    Sp3;
 };
@@ -1118,20 +1273,21 @@ struct IS_RES // RESult (qualify or confirmed finish)
 
 // LFS sends one at the start of every race or qualifying session, listing the start order
 
-// You can send one to LFS before a race start, to specify the starting order.
-// It may be a good idea to avoid conflict by using /start=fixed (LFS setting).
-// Alternatively, you can leave the LFS setting, but make sure you send your IS_REO
-// AFTER you receive the SMALL_VTA (VoTe Action).  LFS does its default grid reordering at
-// the same time as it sends the SMALL_VTA and you can override this by sending an IS_REO.
+// You can send one to LFS in two different ways, to specify the starting order :
+// 1) In the race setup screen, to immediately rearrange the grid when the packet arrives
+// 2) In game, just before a restart or exit, to specify the order on the restart or exit
+// If you are sending an IS_REO in game, you should send it when you receive the SMALL_VTA
+// informing you that the Vote Action (VOTE_END / VOTE_RESTART / VOTE_QUALIFY) is about
+// to take place.  Any IS_REO received before the SMALL_VTA is sent will be ignored.
 
 struct IS_REO // REOrder (when race restarts after qualifying)
 {
-    byte    Size;       // 36
+    byte    Size;       // 44
     byte    Type;       // ISP_REO
     byte    ReqI;       // 0 unless this is a reply to an TINY_REO request
     byte    NumP;       // number of players in race
 
-    byte    PLID[32];   // all PLIDs in new order
+    byte    PLID[40];   // all PLIDs in new order
 };
 
 // To request an IS_REO packet at any time, send this IS_TINY :
@@ -1190,16 +1346,64 @@ enum
 
 const int VIEW_ANOTHER = 255; // viewing another car
 
+// Languages
+
+enum
+{
+    LFS_ENGLISH,                // 0
+    LFS_DEUTSCH,                // 1
+    LFS_PORTUGUESE,             // 2
+    LFS_FRENCH,                 // 3
+    LFS_SUOMI,                  // 4
+    LFS_NORSK,                  // 5
+    LFS_NEDERLANDS,             // 6
+    LFS_CATALAN,                // 7
+    LFS_TURKISH,                // 8
+    LFS_CASTELLANO,             // 9
+    LFS_ITALIANO,               // 10
+    LFS_DANSK,                  // 11
+    LFS_CZECH,                  // 12
+    LFS_RUSSIAN,                // 13
+    LFS_ESTONIAN,               // 14
+    LFS_SERBIAN,                // 15
+    LFS_GREEK,                  // 16
+    LFS_POLSKI,                 // 17
+    LFS_CROATIAN,               // 18
+    LFS_HUNGARIAN,              // 19
+    LFS_BRAZILIAN,              // 20
+    LFS_SWEDISH,                // 21
+    LFS_SLOVAK,                 // 22
+    LFS_GALEGO,                 // 23
+    LFS_SLOVENSKI,              // 24
+    LFS_BELARUSSIAN,            // 25
+    LFS_LATVIAN,                // 26
+    LFS_LITHUANIAN,             // 27
+    LFS_TRADITIONAL_CHINESE,    // 28
+    LFS_SIMPLIFIED_CHINESE,     // 29
+    LFS_JAPANESE,               // 30
+    LFS_KOREAN,                 // 31
+    LFS_BULGARIAN,              // 32
+    LFS_LATINO,                 // 33
+    LFS_UKRAINIAN,              // 34
+    LFS_INDONESIAN,             // 35
+    LFS_ROMANIAN,               // 36
+    LFS_NUM_LANG                // 37
+};
+
 // Leave reasons
 
 enum
 {
-    LEAVR_DISCO,        // 0 - disconnect
+    LEAVR_DISCO,        // 0 - none
     LEAVR_TIMEOUT,      // 1 - timed out
     LEAVR_LOSTCONN,     // 2 - lost connection
     LEAVR_KICKED,       // 3 - kicked
     LEAVR_BANNED,       // 4 - banned
-    LEAVR_SECURITY,     // 5 - OOS or cheat protection
+    LEAVR_SECURITY,     // 5 - security
+    LEAVR_CPW,          // 6 - cheat protection wrong
+    LEAVR_OOS,          // 7 - out of sync with host
+    LEAVR_JOOS,         // 8 - join OOS (initial sync failed)
+    LEAVR_HACK,         // 9 - invalid packet
     LEAVR_NUM
 };
 
@@ -1207,7 +1411,7 @@ enum
 
 enum
 {
-    PENALTY_NONE,       // 0
+    PENALTY_NONE,       // 0        
     PENALTY_DT,         // 1
     PENALTY_DT_VALID,   // 2
     PENALTY_SG,         // 3
@@ -1314,6 +1518,70 @@ const int NOT_CHANGED = 255;
 // SubT : TINY_MCI - request a set of IS_MCI
 
 
+// OBJECT INFO - for autocross objects - used in some packets and the layout file
+// ===========
+
+struct ObjectInfo // Info about a single object - explained in the layout file format
+{
+    short   X;
+    short   Y;
+
+    byte    Zbyte;
+    byte    Flags;
+    byte    Index;
+    byte    Heading;
+};
+
+
+// JOIN REQUEST - allows external program to decide if a player can join
+// ============
+
+// Set the ISF_REQ_JOIN flag in the IS_ISI to receive join requests
+// A join request is seen as an IS_NPL packet with ZERO in the NumP field
+// An immediate response (e.g. within 1 second) is required using an IS_JRR packet
+
+// In this case, PLID must be zero and JRRAction must be JRR_REJECT or JRR_SPAWN
+// If you allow the join and it is successful you will then get a normal IS_NPL with NumP set
+// You can also specify the start position of the car using the StartPos structure
+
+// IS_JRR can also be used to move an existing car to a different location
+// In this case, PLID must be set, JRRAction must be JRR_RESET or higher and StartPos must be set
+
+struct IS_JRR // Join Request Reply - send one of these back to LFS in response to a join request
+{
+    byte    Size;       // 16
+    byte    Type;       // ISP_JRR
+    byte    ReqI;       // 0
+    byte    PLID;       // ZERO when this is a reply to a join request - SET to move a car
+
+    byte    UCID;       // set when this is a reply to a join request - ignored when moving a car
+    byte    JRRAction;  // 1 - allow / 0 - reject (should send message to user)
+    byte    Sp2;
+    byte    Sp3;
+
+    ObjectInfo  StartPos; // 0 : use default start point / Flags = 0x80 : set start point
+};
+
+// To use default start point, StartPos should be filled with zero values
+
+// To specify a start point, StartPos X, Y, Zbyte and Heading should be filled like an autocross
+// start position, Flags should be 0x80 and Index should be zero
+
+// Values for JRRAction byte
+
+enum
+{
+    JRR_REJECT,
+    JRR_SPAWN,
+    JRR_2,
+    JRR_3,
+    JRR_RESET,
+    JRR_RESET_NO_REPAIR,
+    JRR_6,
+    JRR_7,
+};
+
+
 // AUTOCROSS
 // =========
 
@@ -1387,7 +1655,7 @@ struct IS_NLP // Node and Lap Packet - variable size
     byte    ReqI;       // 0 unless this is a reply to an TINY_NLP request
     byte    NumP;       // number of players in race
 
-    NodeLap Info[32];   // node and lap of each player, 1 to 32 of these (NumP)
+    NodeLap Info[40];   // node and lap of each player, 1 to 40 of these (NumP)
 };
 
 // If ISF_MCI flag is set, a set of IS_MCI packets is sent...
@@ -1450,7 +1718,7 @@ struct CarContact // 16 bytes : one car in a contact - two of these in the IS_CO
     byte    Info;       // like Info byte in CompCar (CCI_BLUE / CCI_YELLOW / CCI_LAG)
     byte    Sp2;        // spare
     char    Steer;      // front wheel steer in degrees (right positive)
-
+    
     byte    ThrBrk;     // high 4 bits : throttle    / low 4 bits : brake (0 to 15)
     byte    CluHan;     // high 4 bits : clutch      / low 4 bits : handbrake (0 to 15)
     byte    GearSp;     // high 4 bits : gear (15=R) / low 4 bits : spare
@@ -1486,7 +1754,7 @@ struct CarContOBJ // 8 bytes : car in a contact with an object
     byte    Direction;  // car's motion if Speed > 0 : 0 = world y direction, 128 = 180 deg
     byte    Heading;    // direction of forward axis : 0 = world y direction, 128 = 180 deg
     byte    Speed;      // m/s
-    byte    Sp3;
+    byte    Zbyte;
 
     short   X;          // position (1 metre = 16)
     short   Y;          // position (1 metre = 16)
@@ -1507,14 +1775,11 @@ struct IS_OBH // OBject Hit - car hit an autocross object or an unknown object
     short   X;          // as in ObjectInfo
     short   Y;          // as in ObjectInfo
 
-    byte    Sp0;
+    byte    Zbyte;      // if OBH_LAYOUT is set : Zbyte as in ObjectInfo
     byte    Sp1;
     byte    Index;      // AXO_x as in ObjectInfo or zero if it is an unknown object
     byte    OBHFlags;   // see below
 };
-
-'BBBBHHBBBBhhhhBBBB'
-
 
 // OBHFlags byte
 
@@ -1525,19 +1790,146 @@ struct IS_OBH // OBject Hit - car hit an autocross object or an unknown object
 
 // Set the ISF_HLV flag in the IS_ISI to receive reports of incidents that would violate HLVC
 
-struct IS_HLV // Hot Lap Validity - illegal ground / hit wall / speeding in pit lane
+struct IS_HLV // Hot Lap Validity - off track / hit wall / speeding in pits / out of bounds
 {
     byte    Size;       // 16
     byte    Type;       // ISP_HLV
     byte    ReqI;       // 0
     byte    PLID;       // player's unique id
 
-    byte    HLVC;       // 0 : ground / 1 : wall / 4 : speeding
+    byte    HLVC;       // 0 : ground / 1 : wall / 4 : speeding / 5 : out of bounds
     byte    Sp1;
     word    Time;       // looping time stamp (hundredths - time since reset - like TINY_GTH)
 
     CarContOBJ  C;
 };
+
+
+// CONTROL - reports crossing an InSim checkpoint / entering an InSim circle (from layout)
+// =======
+
+struct IS_UCO // User Control Object
+{
+    byte    Size;       // 28
+    byte    Type;       // ISP_UCO
+    byte    ReqI;       // 0
+    byte    PLID;       // player's unique id
+
+    byte    Sp0;
+    byte    UCOAction;
+    byte    Sp2;
+    byte    Sp3;
+
+    unsigned    Time;   // hundredths of a second since start (as in SMALL_RTP)
+    
+    CarContOBJ  C;
+
+    ObjectInfo  Info;   // Info about the checkpoint or circle (see below)
+};
+
+// UCOAction byte
+
+enum
+{
+    UCO_CIRCLE_ENTER,   // entered a circle
+    UCO_CIRCLE_LEAVE,   // left a circle
+    UCO_CP_FWD,         // crossed cp in forward direction
+    UCO_CP_REV,         // crossed cp in reverse direction
+};
+
+// Identifying an InSim checkpoint from the ObjectInfo :
+
+// Index is 252.  Checkpoint index (seen in the autocross editor) is stored in Flags bits 0 and 1
+
+// 00 = finish line
+// 01 = 1st checkpoint
+// 10 = 2nd checkpoint
+// 11 = 3rd checkpoint
+
+// Note that the checkpoint index has no meaning in LFS and is provided only for your convenience.
+// If you use many InSim checkpoints you may need to identify them with the X and Y values.
+
+// Identifying an InSim circle from the ObjectInfo :
+
+// Index is 253.  The circle index (seen in the autocross editor) is stored in the Heading byte.
+
+struct IS_CSC // Car State Changed - reports a change in a car's state (currently start or stop)
+{
+    byte    Size;       // 20
+    byte    Type;       // ISP_CSC
+    byte    ReqI;       // 0
+    byte    PLID;       // player's unique id
+
+    byte    Sp0;
+    byte    CSCAction;
+    byte    Sp2;
+    byte    Sp3;
+
+    unsigned    Time;   // hundredths of a second since start (as in SMALL_RTP)
+
+    CarContOBJ  C;
+};
+
+// CSCAction byte
+
+enum
+{
+    CSC_STOP,
+    CSC_START,
+};
+
+
+// OBJECT CONTROL - currently used for switching start lights
+// ==============
+
+struct IS_OCO // Object COntrol
+{
+    byte    Size;       // 8
+    byte    Type;       // ISP_OCO
+    byte    ReqI;       // 0
+    byte    Zero;
+
+    byte    OCOAction;  // see below
+    byte    Index;      // see below
+    byte    Identifier; // identify particular start lights objects (0 to 63 or 255 = all)
+    byte    Data;       // see below
+};
+
+// OCOAction byte
+
+enum
+{
+    OCO_ZERO,           // reserved
+    OCO_1,              //
+    OCO_2,              //
+    OCO_3,              //
+    OCO_LIGHTS_RESET,   // give up control of all lights
+    OCO_LIGHTS_SET,     // use Data byte to set the bulbs
+    OCO_LIGHTS_UNSET,   // give up control of the specified lights
+    OCO_NUM
+};
+
+// Index byte specifies which lights you want to override
+
+// Currently the following values are supported :
+
+// AXO_START_LIGHTS (149)   // overrides temporary start lights in the layout
+#define OCO_INDEX_MAIN 240  // special value to override the main start light system
+
+// Identifier byte can be used to override groups of temporary start lights
+
+// It refers to the temporary lights identifier (0 to 63) seen in the layout editor
+
+// Data byte specifies particular bulbs using the low 4 bits
+
+// Bulb bit values for the currently available lights :
+
+// OCO_INDEX_MAIN       AXO_START_LIGHTS
+
+// bit 0 (1) : red1     bit 0 (1) : red
+// bit 1 (2) : red2     bit 1 (2) : amber
+// bit 2 (4) : red3     -
+// bit 3 (8) : green    bit 3 (8) : green
 
 
 // AUTOCROSS OBJECTS - reporting / adding / removing
@@ -1549,23 +1941,13 @@ struct IS_HLV // Hot Lap Validity - illegal ground / hit wall / speeding in pit 
 // You can also add or remove objects by sending IS_AXM packets.
 // Some care must be taken with these - please read the notes below.
 
-struct ObjectInfo // Info about a single object - explained in the layout file format
-{
-    short   X;
-    short   Y;
-    char    Zchar;
-    byte    Flags;
-    byte    Index;
-    byte    Heading;
-
-    '2hb3B'
-};
+// You can also get (TTC_SEL) or set (PMO_SELECTION) the current editor selection.
 
 struct IS_AXM // AutoX Multiple objects - variable size
 {
     byte    Size;       // 8 + NumO * 8
     byte    Type;       // ISP_AXM
-    byte    ReqI;       // 0
+    byte    ReqI;       // 0 unless this is a reply to a TINY_AXM request
     byte    NumO;       // number of objects in this packet
 
     byte    UCID;       // unique id of the connection that sent the packet
@@ -1576,8 +1958,6 @@ struct IS_AXM // AutoX Multiple objects - variable size
     ObjectInfo  Info[30];   // info about each object, 0 to 30 of these
 };
 
-'8B'
-
 // Values for PMOAction byte
 
 enum
@@ -1586,12 +1966,18 @@ enum
     PMO_ADD_OBJECTS,    // 1 - adding objects (from InSim or editor)
     PMO_DEL_OBJECTS,    // 2 - delete objects (from InSim or editor)
     PMO_CLEAR_ALL,      // 3 - clear all objects (NumO must be zero)
+    PMO_TINY_AXM,       // 4 - a reply to a TINY_AXM request
+    PMO_TTC_SEL,        // 5 - a reply to a TTC_SEL request
+    PMO_SELECTION,      // 6 - set a connection's layout editor selection
     PMO_NUM
 };
 
-// Info about the PMOFlags byte (only bit 0 is currently used) :
+// Info about the PMOFlags byte :
 
-// If PMOFlags bit 0 is set in a PMO_LOADING_FILE packet, LFS has reached the end of
+#define PMO_FILE_END            1
+#define PMO_SUPPRESS_WARNINGS   2
+
+// If PMO_FILE_END is set in a PMO_LOADING_FILE packet, LFS has reached the end of
 // a layout file which it is loading.  The added objects will then be optimised.
 
 // Optimised in this case means that static vertex buffers will be created for all
@@ -1599,13 +1985,13 @@ enum
 // there are many objects loaded, optimisation causes a significant glitch which can
 // be long enough to cause a driver who is cornering to lose control and crash.
 
-// PMOFlags bit 0 can also be set in an IS_AXM with PMOAction of PMO_ADD_OBJECTS.
-// This causes all objects to be optimised.  It is important not to set bit 0 in
-// every packet you send to add objects or you will cause severe glitches on the
+// PMO_FILE_END can also be set in an IS_AXM with PMOAction of PMO_ADD_OBJECTS.
+// This causes all objects to be optimised.  It is important not to set PMO_FILE_END
+// in every packet you send to add objects or you will cause severe glitches on the
 // clients computers.  It is ok to have some objects on the track which are not
 // optimised.  So if you have a few objects that are being removed and added
 // occasionally, the best advice is not to request optimisation at all.  Only
-// request optimisation (by setting bit 0) if you have added so many objects
+// request optimisation (by setting PMO_FILE_END) if you have added so many objects
 // that it is needed to improve the frame rate.
 
 // NOTE 1) LFS makes sure that all objects are optimised when the race restarts.
@@ -1617,6 +2003,21 @@ enum
 // to use LFS's method of doing this : send the first packet of objects then wait for
 // the corresponding IS_AXM that will be output when the packet is processed.  Then
 // you can send the second packet and again wait for the IS_AXM and so on.
+
+// To request IS_AXM packets for all layout objects and circles send this IS_TINY :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TINY_AXM      (request IS_AXM packets for the entire layout)
+
+// LFS will send as many IS_AXM packets as needed to describe the whole layout.
+// If there are no objects or circles, there will be one IS_AXM with zero NumO.
+// The final IS_AXM packet will have the PMO_FILE_END flag set.
+
+// To request an IS_AXM for a connection's layout editor selection send this IS_TTC :
+
+// ReqI : non-zero      (returned in the reply)
+// SubT : TTC_SEL       (request an IS_AXM for the current selection)
+// UCID : connection    (0 = local / non-zero = guest)
 
 
 // CAR POSITION PACKETS (Initialising OutSim from InSim - See "OutSim" below)
@@ -1701,8 +2102,8 @@ struct IS_CPP // Cam Pos Pack - Full camera packet (in car OR SHIFT+U mode)
     Vec     Pos;        // Position vector
 
     word    H;          // heading - 0 points along Y axis
-    word    P;          // pitch   - 0 means looking at horizon
-    word    R;          // roll    - 0 means no roll
+    word    P;          // pitch
+    word    R;          // roll
 
     byte    ViewPLID;   // Unique ID of viewed player (0 = none)
     byte    InGameCam;  // InGameCam (as reported in StatePack)
@@ -1858,9 +2259,9 @@ enum
 // SCREENSHOTS
 // ===========
 
-// You can instuct LFS to save a screenshot using the IS_SSH packet.
-// The screenshot will be saved as an uncompressed BMP in the data\shots folder.
-// BMP can be a filename (excluding .bmp) or zero - LFS will create a file name.
+// You can instuct LFS to save a screenshot in data\shots using the IS_SSH packet.
+// It will be saved as bmp / jpg / png as set in Misc Options.
+// Name can be a filename (excluding extension) or zero - LFS will create a name.
 // LFS will reply with another IS_SSH when the request is completed.
 
 struct IS_SSH // ScreenSHot
@@ -1875,7 +2276,7 @@ struct IS_SSH // ScreenSHot
     byte    Sp2;        // 0
     byte    Sp3;        // 0
 
-    char    BMP[32];    // name of screenshot file - last byte must be zero
+    char    Name[32];   // name of screenshot file - last byte must be zero
 };
 
 // Error codes returned in IS_SSH replies :
@@ -1884,7 +2285,7 @@ enum
 {
     SSH_OK,             //  0 - OK : completed instruction
     SSH_DEDICATED,      //  1 - can't save a screenshot - dedicated host
-    SSH_CORRUPTED,      //  2 - IS_SSH corrupted (e.g. BMP does not end with zero)
+    SSH_CORRUPTED,      //  2 - IS_SSH corrupted (e.g. Name does not end with zero)
     SSH_NO_SAVE,        //  3 - could not save the screenshot
 };
 
@@ -1899,7 +2300,7 @@ enum
 // LFS can display normal buttons in these four screens :
 
 // - main entry screen
-// - game setup screen
+// - race setup screen
 // - in game
 // - SHIFT+U mode
 
@@ -1916,7 +2317,7 @@ enum
 // Buttons outside that area will not have a space kept clear.
 // You can also make buttons visible in all screens - see below.
 
-// To delete one button or clear all buttons, send this packet :
+// To delete one button or a range of buttons or clear all buttons, send this packet :
 
 struct IS_BFN // Button FunctioN - delete buttons / receive button requests
 {
@@ -1925,15 +2326,15 @@ struct IS_BFN // Button FunctioN - delete buttons / receive button requests
     byte    ReqI;       // 0
     byte    SubT;       // subtype, from BFN_ enumeration (see below)
 
-    byte    UCID;       // connection to send to or from (0 = local / 255 = all)
-    byte    ClickID;    // ID of button to delete (if SubT is BFN_DEL_BTN)
+    byte    UCID;       // connection to send to or received from (0 = local / 255 = all)
+    byte    ClickID;    // if SubT is BFN_DEL_BTN : ID of single button to delete or first button in range
+    byte    ClickMax;   // if SubT is BFN_DEL_BTN : ID of last button in range (if greater than ClickID)
     byte    Inst;       // used internally by InSim
-    byte    Sp3;
 };
 
 enum // the fourth byte of IS_BFN packets is one of these
 {
-    BFN_DEL_BTN,        //  0 - instruction     : delete one button (must set ClickID)
+    BFN_DEL_BTN,        //  0 - instruction     : delete one button or range of buttons (must set ClickID)
     BFN_CLEAR,          //  1 - instruction     : clear all buttons made by this insim instance
     BFN_USER_CLEAR,     //  2 - info            : user cleared this insim instance's buttons
     BFN_REQUEST,        //  3 - user request    : SHIFT+B or SHIFT+I - request for buttons
