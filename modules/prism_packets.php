@@ -882,6 +882,7 @@ class IS_MST extends Struct // MSg Type - send to LFS to type message or command
             $lastColor = '^8';
             foreach(explode("\n", wordwrap($this->Msg, 63, "\n", true)) as $Msg) {
                 $this->Msg($lastColor.$Msg)->Send();
+                $lastColor = substr($Msg, strrchr($Msg, '^'), 2);
                 $this->Msg('');
             }
 
