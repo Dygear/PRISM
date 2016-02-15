@@ -53,10 +53,12 @@ $PRISM->start();
  * @author GeForz (Kai Lochbaum)
  * @author T3charmy (Macgyver Hoferkamp)
  * @author zenware (Jay Looney)
+ * @author FlameCZE
+ * @author Povo
 */
 class PHPInSimMod
 {
-    const VERSION = '0.4.6.4';
+    const VERSION = '0.5.0.1';
     const ROOTPATH = ROOTPATH;
 
     /* Run Time Arrays */
