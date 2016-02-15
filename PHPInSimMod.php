@@ -53,6 +53,7 @@ $PRISM->start();
  * @author GeForz (Kai Lochbaum)
  * @author T3charmy (Macgyver Hoferkamp)
  * @author zenware (Jay Looney)
+ * @author FlameCZE
  * @author Povo
 */
 class PHPInSimMod
