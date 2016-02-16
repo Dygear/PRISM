@@ -216,13 +216,13 @@ abstract class Plugins extends Timers
     {
         if ($packet->UserType == MSO_PREFIX && ($cmdString = substr($packet->Msg, $packet->TextStart + 1)) && ($callback = $this->getCallback($this->sayCommands, $cmdString)) && $callback !== false) {
             if ($this->canUserAccessCommand($packet->UCID, $callback)) {
-                $this->$callback['method']($cmdString, $packet->UCID, $packet);
+                $this->{$callback['method']}($cmdString, $packet->UCID, $packet);
             } else {
                 console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
             }
         } else if ($packet->UserType == MSO_O && ($callback = $this->getCallback($this->localCommands, $packet->Msg)) && $callback !== false) {
             if ($this->canUserAccessCommand($packet->UCID, $callback)) {
-                $this->$callback['method']($packet->Msg, $packet->UCID, $packet);
+                $this->{$callback['method']}($packet->Msg, $packet->UCID, $packet);
             } else {
                 console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
             }
@@ -234,7 +234,7 @@ abstract class Plugins extends Timers
     {
         if (($callback = $this->getCallback($this->insimCommands, $packet->Msg)) && $callback !== false) {
             if ($this->canUserAccessCommand($packet->UCID, $callback)) {
-                $this->$callback['method']($packet->Msg, $packet->UCID, $packet);
+                $this->{$callback['method']}($packet->Msg, $packet->UCID, $packet);
             } else {
                 console("{$this->getClientByUCID($packet->UCID)->UName} tried to access {$callback['method']}.");
             }
@@ -245,7 +245,7 @@ abstract class Plugins extends Timers
     public function handleConsoleCmd($string)
     {
         if (($callback = $this->getCallback($this->consoleCommands, $string)) && $callback !== false) {
-            $this->$callback['method']($string, null);
+            $this->{$callback['method']}($string, null);
         }
     }
 
