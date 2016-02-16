@@ -310,8 +310,9 @@ class PHPInSimMod
     {
         $sleep = 1;
         $uSleep = null;
-
+        $timeout = null;
         $sleepTime = null;
+
         foreach ($this->plugins->getPlugins() as $plugin => $object) {
             $timeout = $object->executeTimers();
 
