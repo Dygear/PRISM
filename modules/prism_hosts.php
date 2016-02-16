@@ -621,6 +621,11 @@ class HostHandler extends SectionHandler
                 trigger_error('Attempted to send invalid packet to relay host, packet request makes no sense in this context.', E_USER_WARNING);
                 return FALSE;
             }
+        }else{
+            if (($host->getFlags() & ISF_LOCAL) && $packetClass instanceof IS_MTC){
+                trigger_error('Attempted to send invalid packet to single player host.', E_USER_WARNING);
+                return FALSE;
+            }
         }
 
         global $PRISM, $TYPEs, $TINY, $SMALL;

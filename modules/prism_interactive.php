@@ -65,7 +65,7 @@ class Interactive
             $tmp['flags']            += (self::query('Receive Hot Lap Verification packets?', array('yes', 'no')) == 'yes') ? ISF_HLV : 0;
             $tmp['flags']            += (self::query('Receive Auto X packet when loading and unloading track layouts?', array('yes', 'no')) == 'yes') ? ISF_AXM_LOAD : 0;
             $tmp['flags']            += (self::query('Receive Auto X packet when editing track layouts?', array('yes', 'no')) == 'yes') ? ISF_AXM_EDIT : 0;
-            $tmp['flags']            += (self::query('Receive Join Requests?') == 'yes') ? ISF_REQ_JOIN : 0;
+            $tmp['flags']            += (self::query('Receive Join Requests?', array('yes', 'no')) == 'yes') ? ISF_REQ_JOIN : 0;
 
             // Ask for the alias (hostID) for this connection
             while (true)
