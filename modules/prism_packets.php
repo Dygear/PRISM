@@ -879,8 +879,13 @@ class IS_MST extends Struct // MSg Type - send to LFS to type message or command
     public function pack()
     {
         if (strLen($this->Msg) > 63) {
+            $lastColor = '^8';
             foreach(explode("\n", wordwrap($this->Msg, 63, "\n", true)) as $Msg) {
-                $this->Msg($Msg)->Send();
+                $this->Msg($lastColor.$Msg)->Send();
+                $lastColorPosition = strrpos($Msg, '^');
+                if($lastColorPosition !== false) {
+                    $lastColor = substr($Msg, $lastColorPosition, 2);
+                }
                 $this->Msg('');
             }
 
@@ -906,8 +911,13 @@ class IS_MSX extends Struct // MSg eXtended - like MST but longer (not for comma
     public function pack()
     {
         if (strLen($this->Msg) > 95) {
+            $lastColor = '^8';
             foreach(explode("\n", wordwrap($this->Msg, 95, "\n", true)) as $Msg) {
-                $this->Msg($Msg)->Send();
+                $this->Msg($lastColor.$Msg)->Send();
+                $lastColorPosition = strrpos($Msg, '^');
+                if($lastColorPosition !== false) {
+                    $lastColor = substr($Msg, $lastColorPosition, 2);
+                }
                 $this->Msg('');
             }
         }
@@ -931,8 +941,13 @@ class IS_MSL extends Struct // MSg Local - message to appear on local computer o
     public function pack()
     {
         if (strLen($this->Msg) > 127){
+            $lastColor = '^8';
             foreach(explode("\n", wordwrap($this->Msg, 127, "\n", true)) as $Msg) {
-                $this->Msg($Msg)->Send();
+                $this->Msg($lastColor.$Msg)->Send();
+                $lastColorPosition = strrpos($Msg, '^');
+                if($lastColorPosition !== false) {
+                    $lastColor = substr($Msg, $lastColorPosition, 2);
+                }
                 $this->Msg('');
             }
         }
@@ -961,8 +976,13 @@ class IS_MTC extends Struct // Msg To Connection - hosts only - send to a connec
     public function pack()
     {
         if (strLen($this->Text) > 127) {
+            $lastColor = '^8';
             foreach(explode("\n", wordwrap($this->Text, 127, "\n", true)) as $Text) {
-                $this->Text($Text)->Send();
+                $this->Text($lastColor.$Text)->Send();
+                $lastColorPosition = strrpos($Text, '^');
+                if($lastColorPosition !== false) {
+                    $lastColor = substr($Text, $lastColorPosition, 2);
+                }
                 $this->Text(''); # Prevents the last segment of the word wrap from sending twice
             }
         }
