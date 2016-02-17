@@ -59,7 +59,6 @@ function translateEngine($lang_subdirectory, $languageID, $messageID, $args = ar
         $LANG = parse_ini_file ($lang_file);
     } else {
         $lang_file = "{$lang_folder}/{$fallback}.ini";
-        var_dump($lang_file);
         if(is_readable($lang_file)){
             $LANG = parse_ini_file ($lang_file);
             console("Language File for {$lang_array[$languageID]} in {$lang_subdirectory} is missing or not readable.");
@@ -72,7 +71,12 @@ function translateEngine($lang_subdirectory, $languageID, $messageID, $args = ar
     if(isset($LANG[$messageID])){
         return vsprintf ( $LANG[$messageID], $args);
     } else {
-        return "Missing Language Entry: {$messageID} in {$lang_array[$languageID]}";
+        console("Missing Language Entry: {$messageID} in {$lang_array[$languageID]}");
+        if($languageID != $fallback) {
+            return translateEngine($lang_subdirectory, $fallback, $messageID, $args, $fallback);
+        } else {
+            return "Missing Language Entry: {$messageID} in {$lang_array[$languageID]}";
+        }
     }
 }
 
