@@ -337,11 +337,15 @@ class LayoutObject {
     }
     public function setY($y)
     {
-        $this->y = $y;;
+        $this->y = $y;
     }
     public function z()
     {
         return $this->z;
+    }
+    public function setZ($z)
+    {
+        $this->z = $z;
     }
     public function heading()
     {
