@@ -38,6 +38,8 @@ function translateEngine($lang_subdirectory, $languageID, $messageID, $args = ar
         console("Missing Language Entry: {$messageID} in {$lang_array[$languageID]}");
         if($languageID != $fallback) {
             return translateEngine($lang_subdirectory, $fallback, $messageID, $args, $fallback);
+        } else {
+            return "Missing Language Entry: {$messageID} in {$lang_array[$languageID]}";
         }
     }
 }
