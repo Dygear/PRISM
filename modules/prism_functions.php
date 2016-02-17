@@ -11,7 +11,7 @@ function console($line, $EOL = true, $fgcolor = "light_gray", $bgcolor = "black"
     // In Linux use a ANSI supported terminal like for example SecureCRT
 
     $ansi_fgcolor_arr = array(
-    						"black"         => "0;30",
+                            "black"         => "0;30",
                             "dark_gray"     => "1;30",
                             "red"           => "0;31",
                             "light_red"     => "1;31",
@@ -30,7 +30,7 @@ function console($line, $EOL = true, $fgcolor = "light_gray", $bgcolor = "black"
                         	);
 
     $ansi_bgcolor_arr = array(
-    						"black"         => "40",
+                            "black"         => "40",
                             "red"           => "41",
                             "green"         => "42",
                             "yellow"        => "43",
