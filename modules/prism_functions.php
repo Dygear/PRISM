@@ -27,7 +27,7 @@ function console($line, $EOL = true, $fgcolor = "light_gray", $bgcolor = "black"
                             "light_cyan"    => "1;36",
                             "light_gray"    => "0;37",
                             "white"         => "1;37"
-                        	);
+                            );
 
     $ansi_bgcolor_arr = array(
                             "black"         => "40",
@@ -38,7 +38,7 @@ function console($line, $EOL = true, $fgcolor = "light_gray", $bgcolor = "black"
                             "magenta"       => "45",
                             "cyan"          => "46",
                             "light_gray"    => "47"
-                        	);
+                            );
 
     echo "\033[" . $ansi_fgcolor_arr[$fgcolor] . "m\033[" . $ansi_bgcolor_arr[$bgcolor] . "m" . $line . "\033[0m" . (($EOL) ? PHP_EOL : '');
 }
