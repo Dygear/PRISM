@@ -472,17 +472,18 @@ class PlayerHandler extends PropertyMaster
     );
 
     // Basicly the IS_NPL Struct.
+    protected $UName;           # UserName
     protected $UCID;            # Connection's Unique ID
-    protected $PType;            # Bit 0 : female / bit 1 : AI / bit 2 : remote
-    protected $Flags;            # Player flags
-    protected $PName;            # Nickname
-    protected $Plate;            # Number plate - NO ZERO AT END!
-    protected $CName;            # Car name
-    protected $SName;            # Skin name - MAX_CAR_TEX_NAME
-    protected $Tyres;            # Compounds
-    protected $HMass;            # Added mass (kg)
-    protected $HTRes;            # Intake restriction
-    protected $Model;            # Driver model
+    protected $PType;           # Bit 0 : female / bit 1 : AI / bit 2 : remote
+    protected $Flags;           # Player flags
+    protected $PName;           # Nickname
+    protected $Plate;           # Number plate - NO ZERO AT END!
+    protected $CName;           # Car name
+    protected $SName;           # Skin name - MAX_CAR_TEX_NAME
+    protected $Tyres;           # Compounds
+    protected $HMass;           # Added mass (kg)
+    protected $HTRes;           # Intake restriction
+    protected $Model;           # Driver model
     protected $Pass;            # Passengers byte
     protected $SetF;            # Setup flags (see below)
     protected $NumP;            # Number in race (same when leaving pits, 1 more if new)
@@ -493,6 +494,7 @@ class PlayerHandler extends PropertyMaster
     public function __construct(IS_NPL $NPL, StateHandler $parent)
     {
         $this->parent = $parent;
+        $this->UName = $parent->clients[$NPL->UCID]->UName;
         $this->onNPL($NPL);
     }
 
