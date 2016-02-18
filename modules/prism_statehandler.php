@@ -536,6 +536,7 @@ class PlayerHandler extends PropertyMaster
     public function onTakeOverCar(IS_TOC $TOC)
     {
         $this->UCID = $TOC->NewUCID;
+        $this->UName = $this->parent->clients[$TOC->NewUCID]->UName;
         $this->PName = $this->parent->clients[$TOC->NewUCID]->PName;
     }
 
