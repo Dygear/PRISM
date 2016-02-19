@@ -3,7 +3,7 @@ class debugger extends Plugins
 {
 	// Set our URL, Name, Author, Version, Description
 	const URL = '';
-	const NAME = 'Debugger';
+	const NAME = 'PRISM Debugger';
 	const AUTHOR = 'T3charmy';
 	const VERSION = '';
 	const DESCRIPTION = 'Use this plugin to send errors from PHP to your LFS server';
@@ -69,8 +69,8 @@ class debugger extends Plugins
     public function onPrismConnect(IS_VER $VER)
     {
         $this->conns[] = $this->getCurrentHostId();
-        IS_MTC()->UCID(255)->Text('^6> ^7'.debugger::NAME.' Version ^3'.debugger::VERSION.' ^7Has Connected.')->Send();
-        console(debugger::NAME.' Version '.debugger::VERSION.' Has Connected.');
+        IS_MTC()->UCID(255)->Text('^6> ^7'.debugger::NAME.' ^7Has Connected.')->Send();
+        console(debugger::NAME.' Has Connected.');
     }
 
     public function debugForceError($cmd, $ucid)
