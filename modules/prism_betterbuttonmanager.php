@@ -136,7 +136,7 @@ class betterButtonManager
      */
     public function LoadGUICluster($Cluster, $Layout='default', $OffsetT=null, $OffsetL=null)
     {
-        $Design = parse_ini_file("GUI/{$Cluster}/{$Layout}.ini", true);
+        $Design = parse_ini_file("data/GUI/{$Cluster}/{$Layout}.ini", true);
         if(!$Design){
             return PLUGIN_CONTINUE; // Design File Not Found
         }
