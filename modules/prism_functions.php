@@ -62,7 +62,7 @@ function translateEngine($lang_subdirectory, $languageID, $messageID, $args = ar
     if(is_readable($lang_file)){
         $Messages = parse_ini_file ($lang_file);
     } else {
-        $lang_file = "{$lang_folder}/{$fallback}.ini";
+        $lang_file = "{$lang_folder}/{$LANG[$fallback]}.ini";
         if(is_readable($lang_file)){
             $Messages = parse_ini_file ($lang_file);
             console("Language File for {$LANG[$languageID]} in {$lang_subdirectory} is missing or not readable.");
