@@ -1342,6 +1342,46 @@ class IS_NCI extends Struct // New Conn Info
     }
 }; function IS_NCI() { return new IS_NCI; }
 
+define('LANG_EN', 0);
+define('LANG_DE', 1);
+define('LANG_PT', 2);
+define('LANG_FR', 3);
+define('LANG_FI', 4);
+define('LANG_NN', 5);
+define('LANG_NL', 6);
+define('LANG_CA', 7);
+define('LANG_TR', 8);
+define('LANG_ES', 9);
+define('LANG_IT', 10);
+define('LANG_DA', 11);
+define('LANG_CS', 12);
+define('LANG_RU', 13);
+define('LANG_ET', 14);
+define('LANG_SR', 15);
+define('LANG_EL', 16);
+define('LANG_PL', 17);
+define('LANG_HR', 18);
+define('LANG_HU', 19);
+define('LANG_BR', 20);
+define('LANG_SV', 21);
+define('LANG_SK', 22);
+define('LANG_GL', 23);
+define('LANG_SL', 24);
+define('LANG_BE', 25);
+define('LANG_LV', 26);
+define('LANG_LT', 27);
+define('LANG_ZH', 28);
+define('LANG_CN', 29);
+define('LANG_JA', 30);
+define('LANG_KO', 31);
+define('LANG_BG', 32);
+define('LANG_MX', 33);
+define('LANG_UK', 34);
+define('LANG_ID', 35);
+define('LANG_RO', 36);
+
+$LANG = array(LANG_EN => 'LANG_EN', LANG_DE => 'LANG_DE', LANG_PT => 'LANG_PT', LANG_FR => 'LANG_FR', LANG_FI => 'LANG_FI', LANG_NN => 'LANG_NN', LANG_NL => 'LANG_NL', LANG_CA => 'LANG_CA', LANG_TR => 'LANG_TR', LANG_ES => 'LANG_ES', LANG_IT => 'LANG_IT', LANG_DA => 'LANG_DA', LANG_CS => 'LANG_CS', LANG_RU => 'LANG_RU', LANG_ET => 'LANG_ET', LANG_SR => 'LANG_SR', LANG_EL => 'LANG_EL', LANG_PL => 'LANG_PL', LANG_HR => 'LANG_HR', LANG_HU => 'LANG_HU', LANG_BR => 'LANG_BR', LANG_SV => 'LANG_SV', LANG_SK => 'LANG_SK', LANG_GL => 'LANG_GL', LANG_SL => 'LANG_SL', LANG_BE => 'LANG_BE', LANG_LV => 'LANG_LV', LANG_LT => 'LANG_LT', LANG_ZH => 'LANG_ZH', LANG_CN => 'LANG_CN', LANG_JA => 'LANG_JA', LANG_KO => 'LANG_KO', LANG_BG => 'LANG_BG', LANG_MX => 'LANG_MX', LANG_UK => 'LANG_UK', LANG_ID => 'LANG_ID', LANG_RO => 'LANG_RO');
+
 class IS_SLC extends Struct // SeLected Car - sent when a connection selects a car (empty if no car)
 {
     const PACK = 'CCCCa4';
