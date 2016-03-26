@@ -228,6 +228,10 @@ abstract class Struct
 /* const int INSIM_VERSION = 7; */
 define('INSIM_VERSION', 7);
 
+// Version 0.6M8
+// -------------
+// Added ISS_DIALOG and ISS_TEXT_ENTRY to the ISS state flags
+// New packet SMALL_LCS - set local car switches (lights, horn, siren)
 
 // Version 0.6M (INSIM_VERSION increased to 7)
 // ------------
@@ -534,7 +538,8 @@ define('SMALL_STP',     5);    //  5 - inStruction      : time step
 define('SMALL_RTP',     6);    //  6 - info             : race time packet (reply to GTH)
 define('SMALL_NLI',     7);    //  7 - inStruction      : set node lap interval
 define('SMALL_ALC',     8);    //  8 - both ways        : set or get allowed cars (TINY_ALC)
-$SMALL = array(SMALL_NONE => 'SMALL_NONE', SMALL_SSP => 'SMALL_SSP', SMALL_SSG => 'SMALL_SSG', SMALL_VTA => 'SMALL_VTA', SMALL_TMS => 'SMALL_TMS', SMALL_STP => 'SMALL_STP', SMALL_RTP => 'SMALL_RTP', SMALL_NLI => 'SMALL_NLI', SMALL_ALC => 'SMALL_ALC');
+define('SMALL_LCS',     9);    //  9 - instruction      : set local car switches (lights, horn, siren)
+$SMALL = array(SMALL_NONE => 'SMALL_NONE', SMALL_SSP => 'SMALL_SSP', SMALL_SSG => 'SMALL_SSG', SMALL_VTA => 'SMALL_VTA', SMALL_TMS => 'SMALL_TMS', SMALL_STP => 'SMALL_STP', SMALL_RTP => 'SMALL_RTP', SMALL_NLI => 'SMALL_NLI', SMALL_ALC => 'SMALL_ALC', SMALL_LCS => 'SMALL_LCS');
 
 // the fourth byte of an IS_TTC packet is one of these
 define('TTC_NONE',      0);    //  0                : not used
@@ -713,7 +718,7 @@ define('ISS_GAME',          1);     // in game (or MPR)
 define('ISS_REPLAY',        2);     // in SPR
 define('ISS_PAUSED',        4);     // paused
 define('ISS_SHIFTU',        8);     // SHIFT+U mode
-define('ISS_16',            16);    // UNUSED
+define('ISS_DIALOG',        16);    // in a dialog
 define('ISS_SHIFTU_FOLLOW', 32);    // FOLLOW view
 define('ISS_SHIFTU_NO_OPT', 64);    // SHIFT+U buttons hidden
 define('ISS_SHOW_2D',       128);   // showing 2d display
@@ -724,7 +729,8 @@ define('ISS_WINDOWED',      2048);  // LFS is running in a window
 define('ISS_SOUND_MUTE',    4096);  // sound is switched off
 define('ISS_VIEW_OVERRIDE', 8192);  // override user view
 define('ISS_VISIBLE',       16384); // InSim buttons visible
-$ISS = array(ISS_GAME => 'ISS_GAME', ISS_REPLAY => 'ISS_REPLAY', ISS_PAUSED => 'ISS_PAUSED', ISS_SHIFTU => 'ISS_SHIFTU', ISS_16 => 'ISS_16', ISS_SHIFTU_FOLLOW => 'ISS_SHIFTU_FOLLOW', ISS_SHIFTU_NO_OPT => 'ISS_SHIFTU_NO_OPT', ISS_SHOW_2D => 'ISS_SHOW_2D', ISS_FRONT_END => 'ISS_FRONT_END', ISS_MULTI => 'ISS_MULTI', ISS_MPSPEEDUP => 'ISS_MPSPEEDUP', ISS_WINDOWED => 'ISS_WINDOWED', ISS_SOUND_MUTE => 'ISS_SOUND_MUTE', ISS_VIEW_OVERRIDE => 'ISS_VIEW_OVERRIDE', ISS_VISIBLE => 'ISS_VISIBLE');
+define('ISS_TEXT_ENTRY',    32768); // in a text entry dialog
+$ISS = array(ISS_GAME => 'ISS_GAME', ISS_REPLAY => 'ISS_REPLAY', ISS_PAUSED => 'ISS_PAUSED', ISS_SHIFTU => 'ISS_SHIFTU', ISS_DIALOG => 'ISS_DIALOG', ISS_SHIFTU_FOLLOW => 'ISS_SHIFTU_FOLLOW', ISS_SHIFTU_NO_OPT => 'ISS_SHIFTU_NO_OPT', ISS_SHOW_2D => 'ISS_SHOW_2D', ISS_FRONT_END => 'ISS_FRONT_END', ISS_MULTI => 'ISS_MULTI', ISS_MPSPEEDUP => 'ISS_MPSPEEDUP', ISS_WINDOWED => 'ISS_WINDOWED', ISS_SOUND_MUTE => 'ISS_SOUND_MUTE', ISS_VIEW_OVERRIDE => 'ISS_VIEW_OVERRIDE', ISS_VISIBLE => 'ISS_VISIBLE', ISS_TEXT_ENTRY => 'ISS_TEXT_ENTRY');
 
 // To request a StatePack at any time, send this IS_TINY :
 
@@ -1021,6 +1027,39 @@ class IS_SCH extends Struct // Single CHaracter
     protected $Spare2 = null;
     protected $Spare3 = null;
 }; function IS_SCH() { return new IS_SCH; }
+
+
+// CAR SWITCHES
+// ============
+
+// To operate the local car's lights, horn or siren you can send this IS_SMALL :
+
+// ReqI : 0
+// SubT : SMALL_LCS     (Local Car Switches)
+// UVal : Switches      (see below)
+
+// Switches bits
+
+// Bits 0 to 7 are a set of flags specifying which values to set.  You can set as many
+// as you like at a time.  This is to allow you to set only the values you want to set
+// while leaving the others to be controlled by the user.
+
+define('LCS_SET_SIGNALS',   1);     // bit 0
+define('LCS_SET_FLASH',     2);     // bit 1
+define('LCS_SET_HEADLIGHTS',4);     // bit 2
+define('LCS_SET_HORN',      8);     // bit 3
+define('LCS_SET_SIREN',     0x10);  // bit 4
+$LCS = array(LCS_SET_SIGNALS => 'LCS_SET_SIGNALS', LCS_SET_FLASH => 'LCS_SET_FLASH', LCS_SET_HEADLIGHTS => 'LCS_SET_HEADLIGHTS', LCS_SET_HORN => 'LCS_SET_HORN', LCS_SET_SIREN => 'LCS_SET_SIREN');
+
+// Depending on the above values, InSim will read some of the following values and try
+// to set them as required, if a real player is found on the local computer.
+
+// bits 8-9   (Switches & 0x0300) - Signal    (0 off / 1 left / 2 right / 3 hazard)
+// bit  10    (Switches & 0x0400) - Flash
+// bit  11    (Switches & 0x0800) - Headlights
+
+// bits 16-18 (Switches & 0x070000) - Horn    (0 off / 1 to 5 horn type)
+// bits 20-21 (Switches & 0x300000) - Siren   (0 off / 1 fast / 2 slow)
 
 
 // MULTIPLAYER NOTIFICATION
