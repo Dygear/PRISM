@@ -212,7 +212,7 @@ abstract class Struct
 #define _ISPACKETS_H_
 /////////////////////
 
-// InSim for Live for Speed : 0.6K2
+// InSim for Live for Speed : 0.6N
 
 // InSim allows communication between up to 8 external programs and LFS.
 
@@ -222,13 +222,13 @@ abstract class Struct
 
 // NOTE : This text file was written with a TAB size equal to 4 spaces.
 
-// INSIM VERSION NUMBER (updated for version 0.6K12)
+// INSIM VERSION NUMBER (updated for version 0.6N)
 // ====================
 
 /* const int INSIM_VERSION = 7; */
 define('INSIM_VERSION', 7);
 
-// Version 0.6M8
+// Version 0.6N
 // -------------
 // Added ISS_DIALOG and ISS_TEXT_ENTRY to the ISS state flags
 // New packet SMALL_LCS - set local car switches (lights, horn, siren)
