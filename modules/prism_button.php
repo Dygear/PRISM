@@ -28,15 +28,15 @@ class Button extends IS_BTN
         if($this->UCID === $this->TO_ALL && is_array($id)) {
             foreach($id as $UCID => $newID) {
                 $this->UCID = $UCID;
-                $this->_setClickID_ReqI_Send($newID);
+                $this->_setClickID_ReqI_Send($newID, $hostId);
             }
             $this->UCID = $this->TO_ALL;
         } else {
-            $this->_setClickID_ReqI_Send($id);
+            $this->_setClickID_ReqI_Send($id, $hostId);
         }
     }
     
-    private function _setClickID_ReqI_Send ($id)
+    private function _setClickID_ReqI_Send ($id, $hostId)
     {
         if ($id !== false)
         {
