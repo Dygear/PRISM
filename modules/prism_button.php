@@ -25,6 +25,19 @@ class Button extends IS_BTN
     {
         $id = ButtonManager::registerButton($this, $hostId, $this->key, $this->group);
 
+        if($this->UCID === $this->TO_ALL && is_array($id)) {
+            foreach($id as $UCID => $newID) {
+                $this->UCID = $UCID;
+                $this->_setClickID_ReqI_Send($newID);
+            }
+            $this->UCID = $this->TO_ALL;
+        } else {
+            $this->_setClickID_ReqI_Send($id);
+        }
+    }
+    
+    private function _setClickID_ReqI_Send ($id)
+    {
         if ($id !== false)
         {
             if (is_numeric($id))

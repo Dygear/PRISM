@@ -59,7 +59,14 @@ class ButtonManager
         }
 
         if ($BTN->UCID == 255) {
-            // TODO special handling...
+            $ClickIDs = array();
+            foreach($this->buttons[$hostID] as $UCID => $btnArray)
+            {
+                $newBTN = $BTN;
+                $newBTN->UCID = $UCID;
+                $ClickIDs[$UCID] = $this->registerButton($newBTN, $hostId);
+            }
+            return $ClickIDs;
         }
         else {
             // make sure the button-reservation array exists
