@@ -78,6 +78,10 @@ class StateHandler extends PropertyMaster
             if (!isset($this->clients[$Packet->UCID])) {
                 return;
             }
+            
+            if ($Packet instanceof ISP_CNL) {
+                ButtonManager::clearButtonsForConn($Packet->UCID);
+            }
 
             $this->clients[$Packet->UCID]->{ClientHandler::$handles[$Packet->Type]}($Packet);
         }
