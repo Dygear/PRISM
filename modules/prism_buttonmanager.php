@@ -4,7 +4,8 @@
  * "Singleton" class to manage buttons!
  */
 
-define('BM_MAX_BUTTONS', 240);
+define('BM_MAX_USER_BUTTONS', 180); # 75% of max possible buttons
+define('BM_MAX_GLOBAL_BUTTONS', 60); # 25% of max possible buttons
 
 class ButtonManager
 {
@@ -59,19 +60,45 @@ class ButtonManager
         }
 
         if ($BTN->UCID == 255) {
-            // TODO special handling...
-        }
-        else {
             // make sure the button-reservation array exists
             if (!isset(self::$buttons[$hostId][$BTN->UCID]))
             {
-                self::$buttons[$hostId][$BTN->UCID] = array_fill(0, BM_MAX_BUTTONS, null);
+                self::$buttons[$hostId][$BTN->UCID] = array_fill(BM_MAX_USER_BUTTONS, BM_MAX_GLOBAL_BUTTONS, null);
             }
             $ids = self::$buttons[$hostId][$BTN->UCID];
 
             // get first free id
             $id = -1;
-            for ($i = 0; $i < BM_MAX_BUTTONS; $i++)
+            for ($i = BM_MAX_USER_BUTTONS; $i < (BM_MAX_USER_BUTTONS + BM_MAX_GLOBAL_BUTTONS); $i++)
+            {
+                if ($ids[$i] === null)
+                {
+                    $id = $i;
+                    break;
+                }
+            }
+
+            if ($id === -1)
+            {
+                echo "No free ButtonID found."; // add "paging" here...
+                return false;
+            }
+            else {
+                self::$buttons[$hostId][$BTN->UCID][$id] = $BTN;
+                return $id;
+            }
+        }
+        else {
+            // make sure the button-reservation array exists
+            if (!isset(self::$buttons[$hostId][$BTN->UCID]))
+            {
+                self::$buttons[$hostId][$BTN->UCID] = array_fill(0, BM_MAX_USER_BUTTONS, null);
+            }
+            $ids = self::$buttons[$hostId][$BTN->UCID];
+
+            // get first free id
+            $id = -1;
+            for ($i = 0; $i < BM_MAX_USER_BUTTONS; $i++)
             {
                 if ($ids[$i] === null)
                 {
@@ -142,9 +169,17 @@ class ButtonManager
 
         if (!isset(self::$buttons[$hostId][$BTC->UCID][$BTC->ClickID]))
         {
-            console('ERROR: Received click for unknown button!');
-            var_dump($BTC);
-            var_dump(self::$buttons);
+            if (isset(self::$buttons[$hostId][255][$BTC->ClickID]))
+            {
+                $button = self::$buttons[$hostId][255][$BTC->ClickID];
+                $button->click($BTC);
+            }
+            else
+            {
+                console('ERROR: Received click for unknown button!');
+                var_dump($BTC);
+                var_dump(self::$buttons);
+            }
         }
         else
         {
@@ -162,9 +197,17 @@ class ButtonManager
 
         if (!isset(self::$buttons[$hostId][$BTT->UCID][$BTT->ClickID]))
         {
-            console('ERROR: Received button text for unknown button!');
-            var_dump($BTC);
-            var_dump(self::$buttons);
+            if (isset(self::$buttons[$hostId][255][$BTT->ClickID]))
+            {
+                $button = self::$buttons[$hostId][255][$BTT->ClickID];
+                $button->enterText($BTT);
+            }
+            else
+            {
+                console('ERROR: Received button text for unknown button!');
+                var_dump($BTC);
+                var_dump(self::$buttons);
+            }
         }
         else
         {
