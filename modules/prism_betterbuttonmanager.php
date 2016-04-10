@@ -36,7 +36,7 @@ class betterButtonManager
      * @access public
      * @return void
      */
-    public function InitButton($Name, $Group, $T=0, $L=0, $W=1, $H=1, $BStyle=null, $Text='', $Expire = 0)
+    public function InitButton($Name, $Group, $T=0, $L=0, $W=1, $H=1, $BStyle=null, $Text='', $Expire = 0, $Repeat=true)
     {
         $OldButton = ButtonManager::getButtonForKey($this->UCID, $Name);
         if(get_class($OldButton) == 'Button') {
@@ -57,10 +57,14 @@ class betterButtonManager
 
         $this->bState[$Name]['ID'] = 0;
         $this->bState[$Name]['timestamp'] = time() - 1;
-        $this->bState[$Name]['expire'] = -1;
         $this->bState[$Name]['override'] = false;
-        if($Expire > 0)
+        if($Expire > 0) {
             $this->bState[$Name]['expire'] = time() + $Expire;
+        } else {
+            $this->bState[$Name]['expire'] = -1;
+        }
+        $this->bState[$Name]['repeatText'] = $Repeat;
+
     }
     /* }}} */
 
@@ -218,7 +222,12 @@ class betterButtonManager
         }
         $this->bState[$Name]['ID']++;
         if($this->bState[$Name]['ID'] >= count($this->bTexts[$Name])) {
-            $this->bState[$Name]['ID'] = 0;
+            if($this->bState[$Name]['repeatText']){
+                $this->bState[$Name]['ID'] = 0;
+            } else {
+                $this->bState[$Name]['ID']--;
+                return PLUGIN_CONTINUE;
+            }
         }
         $Next = $this->bTexts[$Name][$this->bState[$Name]['ID']];
         if($Button->Text != $Next || $this->bState[$Name]['override'] == true) {
