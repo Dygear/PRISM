@@ -46,6 +46,8 @@ class translateEngine {
     private static $langCache = array();
     
     public static function clearCache($lang_subdirectory){
+        console('TranslationEngine: ', false, 'red');
+        console("Clearing Cache of {$LANG[$languageID]} for {$lang_subdirectory}");
         unset(self::$langCache[$lang_subdirectory]);
     }
 
@@ -65,7 +67,9 @@ class translateEngine {
 
         if(!isset(self::$langCache[$lang_subdirectory][$languageID])) 
         {
-            console('Loading from file!');
+            console('TranslationEngine: ', false, 'red');
+            console("Loading {$LANG[$languageID]} for {$lang_subdirectory}");
+
             $lang_folder = ROOTPATH . "/data/langs/{$lang_subdirectory}";
             if(!is_readable($lang_folder)){
                 console("Language Folder for {$lang_subdirectory} is missing or not readable.");
