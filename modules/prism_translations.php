@@ -47,7 +47,7 @@ class translateEngine {
 
     public static function clearCache($lang_subdirectory){
         console('TranslationEngine: ', false, 'red');
-        console("Clearing Cache of for {$lang_subdirectory}");
+        console("Clearing Cache for '{$lang_subdirectory}' plugin");
         unset(self::$langCache[$lang_subdirectory]);
     }
 
