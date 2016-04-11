@@ -36,6 +36,7 @@ require_once(ROOTPATH . '/modules/prism_http.php');
 require_once(ROOTPATH . '/modules/prism_telnet.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_timers.php');
+require_once(ROOTPATH . '/modules/prism_translations.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
 
 
@@ -58,7 +59,7 @@ $PRISM->start();
 */
 class PHPInSimMod
 {
-    const VERSION = '0.5.1.0';
+    const VERSION = '0.6.0';
     const ROOTPATH = ROOTPATH;
 
     /* Run Time Arrays */

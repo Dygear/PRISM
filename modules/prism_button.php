@@ -38,7 +38,10 @@ class Button extends IS_BTN
 
     public function registerOnClick(Plugins $plugin, $methodName, $params = NULL)
     {
-        $this->onClick = array($plugin, $methodName, $params);
+        $this->onClick = array($plugin, $methodName);
+        if($params !== null) {
+            $this->onClick[] = $params;
+        }
         $this->BStyle |= ISB_CLICK;
     }
     public function click(IS_BTC $BTC)
