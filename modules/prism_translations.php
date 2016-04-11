@@ -10,6 +10,11 @@ class Translations extends Timers
         $this->lang_fallback = $fallback;
     }
 
+    protected function clearTranslationCache()
+    {
+        translateEngine::clearCache($this->lang_subdirectory);
+    }
+
     protected function translateGlobalMessage($messageID, $args = array(), $hostID = null)
     {
         if (($clients = $this->getHostState($hostID)->clients) && $clients !== null) {
@@ -40,7 +45,11 @@ class Translations extends Timers
 class translateEngine {
     private static $langCache = array();
     
-    static function translate($lang_subdirectory, $languageID, $messageID, $args = array(), $fallback = LANG_EN)
+    public static function clearCache($lang_subdirectory){
+        unset(self::$langCache[$lang_subdirectory]);
+    }
+
+    public static function translate($lang_subdirectory, $languageID, $messageID, $args = array(), $fallback = LANG_EN)
     {
         global $LANG;
 
@@ -56,6 +65,7 @@ class translateEngine {
 
         if(!isset(self::$langCache[$lang_subdirectory][$languageID])) 
         {
+            console('Loading from file!');
             $lang_folder = ROOTPATH . "/data/langs/{$lang_subdirectory}";
             if(!is_readable($lang_folder)){
                 console("Language Folder for {$lang_subdirectory} is missing or not readable.");
