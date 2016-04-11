@@ -53,11 +53,9 @@ class translateEngine {
 
     public static function translate($lang_subdirectory, $languageID, $messageID, $args = array(), $fallback = LANG_EN)
     {
-        global $LANG;
+       global $LANG;
 
-        var_dump(self::$langCache);
-        
-        if(!isset($LANG[$languageID])){
+       if(!isset($LANG[$languageID])){
             if($languageID != $fallback) {
                 return translateEngine($lang_subdirectory, $fallback, $messageID, $args, $fallback);
             } else {
