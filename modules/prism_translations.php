@@ -44,8 +44,9 @@ class Translations extends Timers
 
 class translateEngine {
     private static $langCache = array();
-    
+
     public static function clearCache($lang_subdirectory){
+        global $LANG;
         console('TranslationEngine: ', false, 'red');
         console("Clearing Cache of {$LANG[$languageID]} for {$lang_subdirectory}");
         unset(self::$langCache[$lang_subdirectory]);
