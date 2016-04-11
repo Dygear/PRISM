@@ -36,6 +36,7 @@ require_once(ROOTPATH . '/modules/prism_http.php');
 require_once(ROOTPATH . '/modules/prism_telnet.php');
 require_once(ROOTPATH . '/modules/prism_admins.php');
 require_once(ROOTPATH . '/modules/prism_timers.php');
+require_once(ROOTPATH . '/modules/prism_translations.php');
 require_once(ROOTPATH . '/modules/prism_plugins.php');
 
 
