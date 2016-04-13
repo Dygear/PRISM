@@ -205,13 +205,17 @@ abstract class Plugins extends Translations
         return $PRISM->hosts->sendPacket($packetClass);
     }
 
-    public function messageAllHosts($message)
+    public function messageAllHosts($message, $onlyOthers=false)
     {
         global $PRISM;
         $hosts = $PRISM->hosts->getHostsInfo();
+        $currHost = $this->hosts->getCurrentHost();
         foreach($hosts as $host)
         {
-            IS_MTC()->UCID(255)->Text($message)->send($host['id']);
+            if($host['id'] == $currHost && $onlyOthers) {
+                continue;
+            }
+                IS_MTC()->UCID(255)->Text($message)->send($host['id']);
         }
     }
 
