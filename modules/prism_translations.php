@@ -57,7 +57,7 @@ class translateEngine {
 
         var_dump($languageID);
 
-        if( (empty($languageID) && $languageID != 0) || !isset($LANG[$languageID])){
+        if( !isset($languageID) || !isset($LANG[$languageID])){
             if($languageID != $fallback) {
                 return self::translate($lang_subdirectory, $fallback, $messageID, $args, $fallback);
             } else {
