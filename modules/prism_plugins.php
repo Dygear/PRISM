@@ -209,7 +209,7 @@ abstract class Plugins extends Translations
     {
         global $PRISM;
         $hosts = $PRISM->hosts->getHostsInfo();
-        $currHost = $this->hosts->getCurrentHost();
+        $currHost = $PRISM->hosts->getCurrentHost();
         foreach($hosts as $host)
         {
             if($host['id'] == $currHost && $onlyOthers) {
