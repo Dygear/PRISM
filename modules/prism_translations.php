@@ -58,7 +58,7 @@ class translateEngine {
         var_dump($languageID);
 
         if(!isset($LANG[$languageID])){
-            if($languageID != $fallback) {
+            if($languageID !== $fallback) {
                 return self::translate($lang_subdirectory, $fallback, $messageID, $args, $fallback);
             } else {
                 return "Unable to translate due to unknown language being selected. '$languageID'";
