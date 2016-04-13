@@ -205,6 +205,16 @@ abstract class Plugins extends Translations
         return $PRISM->hosts->sendPacket($packetClass);
     }
 
+    public function messageAllHosts($message)
+    {
+        global $PRISM;
+        $hosts = $PRISM->hosts->getHostsInfo();
+        foreach($hosts as $host)
+        {
+            IS_MTC()->UCID(255)->Text($message)->send($host['id']);
+        }
+    }
+
     /** Handle Methods */
     // This is the yang to the registerSayCommand & registerLocalCommand function's Yin.
     public function handleCmd(IS_MSO $packet)
