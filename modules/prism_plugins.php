@@ -215,8 +215,7 @@ abstract class Plugins extends Translations
             if($host['id'] == $currHost && $onlyOthers) {
                 continue;
             }
-                IS_MTC()->UCID(255)->Text('Test: '. $message)->send($host['id']);
-
+                IS_MTC()->UCID(255)->Text($message)->send($host['id']);
         }
     }
 
