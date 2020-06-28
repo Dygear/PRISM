@@ -430,7 +430,10 @@ class ClientHandler extends PropertyMaster
 
     public function __destruct()
     {
-        unset($this);
+        foreach ($this as $key => $value)
+        {
+            unset($this->$key);
+        }
     }
 
     public function onRename(IS_CPR $CPR)
@@ -504,7 +507,10 @@ class PlayerHandler extends PropertyMaster
 
     public function __destruct()
     {
-        unset($this);
+        foreach ($this as $key => $value)
+        {
+            unset($this->$key);
+        }
     }
 
     private function onNPL(IS_NPL $NPL)
