@@ -212,7 +212,7 @@ abstract class Struct
 #define _ISPACKETS_H_
 /////////////////////
 
-// InSim for Live for Speed : 0.6N
+// InSim for Live for Speed
 
 // InSim allows communication between up to 8 external programs and LFS.
 
@@ -222,11 +222,22 @@ abstract class Struct
 
 // NOTE : This text file was written with a TAB size equal to 4 spaces.
 
-// INSIM VERSION NUMBER (updated for version 0.6N)
+// INSIM VERSION NUMBER (updated for version 0.6T)
 // ====================
 
-/* const int INSIM_VERSION = 7; */
-define('INSIM_VERSION', 7);
+/* const int INSIM_VERSION = 8; */
+define('INSIM_VERSION',	8);
+
+// CHANGES
+// =======
+
+// Version 0.6T (INSIM_VERSION increased to 8)
+// ------------
+// New value PMO_POSITION for IS_AXM packet to report a blank position
+// New packet IS_CIM reports a connection's interface mode
+// New values TTC_SEL_START and TTC_SEL_STOP for IS_TTC
+// New value PMO_GET_Z for IS_AXM packet to report Z values
+// New values PMO_SELECTION_REAL, PMO_MOVE_MODIFY, PMO_AVOID_CHECK
 
 // Version 0.6N
 // -------------
@@ -496,7 +507,8 @@ define('ISP_OCO',    60);   // 60 - instruction     : object control (currently 
 define('ISP_TTC',    61);   // 61 - instruction     : multi purpose - target to connection
 define('ISP_SLC',    62);   // 62 - info            : connection selected a car
 define('ISP_CSC',    63);   // 63 - info            : car state changed
-$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO', ISP_TTC => 'ISP_TTC', ISP_SLC => 'ISP_SLC', ISP_CSC => 'ISP_CSC');
+define('ISP_CIM',    64);   // 64 - info            : connection's interface mode
+$ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER', ISP_TINY => 'ISP_TINY', ISP_SMALL => 'ISP_SMALL', ISP_STA => 'ISP_STA', ISP_SCH => 'ISP_SCH', ISP_SFP => 'ISP_SFP', ISP_SCC => 'ISP_SCC', ISP_CPP => 'ISP_CPP', ISP_ISM => 'ISP_ISM', ISP_MSO => 'ISP_MSO', ISP_III => 'ISP_III', ISP_MST => 'ISP_MST', ISP_MTC => 'ISP_MTC', ISP_MOD => 'ISP_MOD', ISP_VTN => 'ISP_VTN', ISP_RST => 'ISP_RST', ISP_NCN => 'ISP_NCN', ISP_MTC => 'ISP_MTC', ISP_CNL => 'ISP_CNL', ISP_CPR => 'ISP_CPR', ISP_NPL => 'ISP_NPL', ISP_PLP => 'ISP_PLP', ISP_PLL => 'ISP_PLL', ISP_LAP => 'ISP_LAP', ISP_SPX => 'ISP_SPX', ISP_PIT => 'ISP_PIT', ISP_PSF => 'ISP_PSF', ISP_PLA => 'ISP_PLA', ISP_CCH => 'ISP_CCH', ISP_PEN => 'ISP_PEN', ISP_TOC => 'ISP_TOC', ISP_FLG => 'ISP_FLG', ISP_PFL => 'ISP_PFL', ISP_FIN => 'ISP_FIN', ISP_RES => 'ISP_RES', ISP_REO => 'ISP_REO', ISP_NLP => 'ISP_NLP', ISP_MCI => 'ISP_MCI', ISP_MSX => 'ISP_MSX', ISP_MSL => 'ISP_MSL', ISP_CRS => 'ISP_CRS', ISP_BFN => 'ISP_BFN', ISP_AXI => 'ISP_AXI', ISP_AXO => 'ISP_AXO', ISP_BTN => 'ISP_BTN', ISP_BTC => 'ISP_BTC', ISP_BTT => 'ISP_BTT', ISP_RIP => 'ISP_RIP', ISP_SSH => 'ISP_SSH', ISP_CON => 'ISP_CON', ISP_OBH => 'ISP_OBH', ISP_HLV => 'ISP_HLV', ISP_PLC => 'ISP_PLC', ISP_AXM => 'ISP_AXM', ISP_ACR => 'ISP_ACR', ISP_HCP => 'ISP_HCP', ISP_NCI => 'ISP_NCI', ISP_JRR => 'ISP_JRR', ISP_UCO => 'ISP_UCO', ISP_OCO => 'ISP_OCO', ISP_TTC => 'ISP_TTC', ISP_SLC => 'ISP_SLC', ISP_CSC => 'ISP_CSC', ISP_CIM => 'ISP_CIM');
 
 // the fourth byte of an IS_TINY packet is one of these
 define('TINY_NONE',     0);     //  0 - keep alive        : see "maintaining the connection"
@@ -542,9 +554,11 @@ define('SMALL_LCS',     9);    //  9 - instruction      : set local car switches
 $SMALL = array(SMALL_NONE => 'SMALL_NONE', SMALL_SSP => 'SMALL_SSP', SMALL_SSG => 'SMALL_SSG', SMALL_VTA => 'SMALL_VTA', SMALL_TMS => 'SMALL_TMS', SMALL_STP => 'SMALL_STP', SMALL_RTP => 'SMALL_RTP', SMALL_NLI => 'SMALL_NLI', SMALL_ALC => 'SMALL_ALC', SMALL_LCS => 'SMALL_LCS');
 
 // the fourth byte of an IS_TTC packet is one of these
-define('TTC_NONE',      0);    //  0                : not used
-define('TTC_SEL',       1);    //  1 - info request : send IS_AXM for a layout editor selection
-$TTC = array(TTC_NONE => 'TTC_NONE', TTC_SEL => 'TTC_SEL');
+define('TTC_NONE',		0);//  0					: not used
+define('TTC_SEL',		1);//  1 - info request		: send IS_AXM for a layout editor selection
+define('TTC_SEL_START',	2);//  2 - info request		: send IS_AXM every time the selection changes
+define('TTC_SEL_STOP',	3);//  3 - instruction		: switch off IS_AXM requested by TTC_SEL_START
+$TTC = array(TTC_NONE => 'TTC_NONE', TTC_SEL => 'TTC_SEL', TTC_SEL_START => 'TTC_SEL_START', TTC_SEL_STOP => 'TTC_SEL_STOP');
 
 // GENERAL PURPOSE PACKETS - IS_TINY (4 bytes) / IS_SMALL (8 bytes) / IS_TTC (8 bytes)
 // =======================
@@ -1433,6 +1447,64 @@ class IS_SLC extends Struct // SeLected Car - sent when a connection selects a c
 
     public $CName;              # car name
 }; function IS_SLC() { return new IS_SLC; }
+
+class IS_CIM extends Struct // Conn Interface Mode
+{
+	const PACK = 'CCCCCCCC';
+    const UNPACK = 'CSize/CType/CReqI/CUCID/CMode/CSubMode/CSelType/CSp3';
+	
+	protected $Size = 8;		# 8
+	protected $Type = ISP_CIM;	# ISP_CIM
+	protected $ReqI;			# 0
+	public $UCID;				# connection's unique id (0 = local)
+
+	public	$Mode;				// mode identifier (see below)
+	public	$SubMode;			// submode identifier (see below)
+	public	$SelType;			// selected object type (see below)
+	public	$Sp3;
+	
+}; function IS_CIM() { return new IS_CIM; }
+
+// Mode identifiers
+
+define('CIM_NORMAL',		0);		// 0 - not in a special mode
+define('CIM_OPTIONS',		1);     // 1
+define('CIM_HOST_OPTIONS',	2);     // 2
+define('CIM_GARAGE',		3);     // 3
+define('CIM_CAR_SELECT',	4);     // 4
+define('CIM_TRACK_SELECT',	5);     // 5
+define('CIM_SHIFTU',		6);     // 6 - free view mode
+define('CIM_NUM',			7);
+
+// Submode identifiers for CIM_NORMAL
+
+define('NRM_NORMAL',			1);
+define('NRM_WHEEL_TEMPS',		2);	// F9
+define('NRM_WHEEL_DAMAGE',		3); // F10
+define('NRM_LIVE_SETTINGS',		4); // F11
+define('NRM_PIT_INSTRUCTIONS', 	5); // F12
+define('NRM_NUM', 				6);
+
+// SubMode identifiers for CIM_GARAGE
+
+define('GRG_INFO',				1);
+define('GRG_COLOURS',			2);
+define('GRG_BRAKE_TC',			3);
+define('GRG_SUSP',				4);
+define('GRG_STEER',				5);
+define('GRG_DRIVE',				6);
+define('GRG_TYRES',				7);
+define('GRG_AERO',				8);
+define('GRG_PASS',				9);
+define('GRG_NUM',				10);
+
+// SubMode identifiers for CIM_SHIFTU
+
+define('FVM_PLAIN', 			1);	// no buttons displayed
+define('FVM_BUTTONS', 			2); // buttons displayed (not editing)
+define('FVM_EDIT', 				3); // edit mode
+define('FVM_NUM', 				4);
+$CIM = array(CIM_NORMAL => 'CIM_NORMAL', CIM_OPTIONS => 'CIM_OPTIONS', CIM_HOST_OPTIONS => 'CIM_HOST_OPTIONS', CIM_GARAGE => 'CIM_GARAGE', CIM_CAR_SELECT => 'CIM_CAR_SELECT', CIM_TRACK_SELECT => 'CIM_TRACK_SELECT', CIM_SHIFTU => 'CIM_SHIFTU', CIM_NUM => 'CIM_NUM', NRM_NORMAL => 'NRM_NORMAL', NRM_WHEEL_TEMPS => 'NRM_WHEEL_TEMPS', NRM_WHEEL_DAMAGE => 'NRM_WHEEL_DAMAGE', NRM_LIVE_SETTINGS => 'NRM_LIVE_SETTINGS', NRM_PIT_INSTRUCTIONS => 'NRM_PIT_INSTRUCTIONS', NRM_NUM => 'NRM_NUM', GRG_INFO => 'GRG_INFO', GRG_COLOURS => 'GRG_COLOURS', GRG_BRAKE_TC => 'GRG_BRAKE_TC', GRG_SUSP => 'GRG_SUSP', GRG_STEER => 'GRG_STEER', GRG_DRIVE => 'GRG_DRIVE', GRG_TYRES => 'GRG_TYRES', GRG_AERO => 'GRG_AERO', GRG_PASS => 'GRG_PASS', GRG_NUM => 'GRG_NUM', FVM_PLAIN => 'FVM_PLAIN', FVM_BUTTONS => 'FVM_BUTTONS', FVM_EDIT => 'FVM_EDIT', FVM_NUM => 'FVM_NUM');
 
 class IS_CNL extends Struct // ConN Leave
 {
@@ -2669,14 +2741,18 @@ define('PMO_DEL_OBJECTS',   2);     // 2 - delete objects (from InSim or editor)
 define('PMO_CLEAR_ALL',     3);     // 3 - clear all objects (NumO must be zero)
 define('PMO_TINY_AXM',      4);     // 4 - a reply to a TINY_AXM request
 define('PMO_TTC_SEL',       5);     // 5 - a reply to a TTC_SEL request
-define('PMO_SELECTION',     6);     // 6 - set the current editor selection
-define('PMO_NUM',           7);
-$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_TINY_AXM => 'PMO_TINY_AXM', PMO_TTC_SEL => 'PMO_TTC_SEL', PMO_SELECTION => 'PMO_SELECTION', PMO_NUM => 'PMO_NUM');
+define('PMO_SELECTION',     6);     // 6 - set a connection's layout editor selection
+define('PMO_POSITION',		7);		// 7 - user pressed O without anything selected
+define('PMO_GET_Z',			8);		// 8 - request Z values / reply with Z values
+define('PMO_NUM',			9);
+$PMO = array(PMO_LOADING_FILE => 'PMO_LOADING_FILE', PMO_ADD_OBJECTS => 'PMO_ADD_OBJECTS', PMO_DEL_OBJECTS => 'PMO_DEL_OBJECTS', PMO_CLEAR_ALL => 'PMO_CLEAR_ALL', PMO_TINY_AXM => 'PMO_TINY_AXM', PMO_TTC_SEL => 'PMO_TTC_SEL', PMO_SELECTION => 'PMO_SELECTION', PMO_POSITION => 'PMO_POSITION', PMO_GET_Z => 'PMO_GET_Z', PMO_NUM => 'PMO_NUM');
 
 // Info about the PMOFlags byte :
 
-define('PMO_FILE_END',          1);
-define('PMO_SUPPRESS_WARNINGS', 2);
+define('PMO_FILE_END',			1);
+define('PMO_MOVE_MODIFY',		2);
+define('PMO_SELECTION_REAL',	4);
+define('PMO_AVOID_CHECK',		8);
 
 // If PMO_FILE_END is set in a PMO_LOADING_FILE packet, LFS has reached the end of
 // a layout file which it is loading.  The added objects will then be optimised.
