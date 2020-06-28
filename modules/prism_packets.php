@@ -161,7 +161,7 @@ abstract class Struct
         $return = array();
 
         foreach (explode('/', $this::UNPACK) as $element) {
-            for ($i = 1; is_numeric($element{$i}); ++$i) {}
+            for ($i = 1; is_numeric($element[$i]); ++$i) {}
 
             $dataType = substr($element, 0, $i);
             $dataName = substr($element, $i);
@@ -178,24 +178,24 @@ abstract class Struct
 
         for ($i = 0, $j = 1, $k = strLen($format); $i < $k; ++$i, ++$j)
         {    # i = Current Character; j = Look ahead for numbers.
-            if (is_string($format{$i}) && !isset($format[$j]) || !is_numeric($format[$j]))
+            if (is_string($format[$i]) && !isset($format[$j]) || !is_numeric($format[$j]))
             {
-                $elements[] = $format{$i};
+                $elements[] = $format[$i];
             }
             else
             {
-                while (isset($format{$j}) && is_numeric($format{$j}))
+                while (isset($format[$j]) && is_numeric($format[$j]))
                 {
                     ++$j;    # Will be the last number of the current element.
                 }
 
                 $number = substr($format, $i + 1, $j - ($i + 1));
 
-                if ($format{$i} == 'a' || $format{$i} == 'A')
+                if ($format[$i] == 'a' || $format[$i] == 'A')
                 {    # In these cases it's a string type where dealing with.
-                    $elements[] = $format{$i}.$number;
+                    $elements[] = $format[$i].$number;
                 } else { # In these cases, we should get an array.
-                    $elements[] = array($format{$i}, $number);
+                    $elements[] = array($format[$i], $number);
                 }
 
                 $i = $j - 1; # Movies the pointer to the end of this element.
