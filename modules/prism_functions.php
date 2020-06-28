@@ -168,7 +168,7 @@ function flagsToInteger($flagsString = '')
     for ($chrPointer = 0, $strLen = strlen($flagsString); $chrPointer < $strLen; ++$chrPointer)
     {
         # Convert this charater to it's ASCII int value.
-        $char = ord($flagsString{$chrPointer});
+        $char = ord($flagsString[$chrPointer]);
 
         # We only want a (ASCII = 97) through z (ASCII 122), nothing else.
         if ($char < 97 || $char > 122)
