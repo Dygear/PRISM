@@ -39,7 +39,7 @@ class betterButtonManager
     public function InitButton($Name, $Group, $T=0, $L=0, $W=1, $H=1, $BStyle=null, $Text='', $Expire = 0, $Repeat=true)
     {
         $OldButton = ButtonManager::getButtonForKey($this->UCID, $Name);
-        if(get_class($OldButton) == 'Button') {
+        if ($OldButton && get_class($OldButton) == 'Button') {
             $Button = $OldButton;
         } else {
             $Button = new Button($this->UCID, $Name, $Group);
@@ -217,7 +217,7 @@ class betterButtonManager
     public function NextText($Name)
     {
         $Button = ButtonManager::getButtonForKey($this->UCID, $Name);
-        if(get_class($Button) != 'Button') {
+        if ($Button && get_class($Button) == 'Button') {
             return PLUGIN_CONTINUE;
         }
         $this->bState[$Name]['ID']++;
