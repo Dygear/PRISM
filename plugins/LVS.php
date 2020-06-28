@@ -43,8 +43,6 @@ class LVS extends Plugins
 		if (!file_exists($path))
 			return $this->pth = NULL; # We don't have a PTH file for this track.
 
-		$this->pth = new PTH($path);
-
 		console("Loaded {$this->Track}.pth");
 
 		return PLUGIN_CONTINUE;
