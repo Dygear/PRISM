@@ -220,7 +220,7 @@ abstract class Struct
 // things about its state, and the external program requesting info and
 // controlling LFS with special packets, text commands or keypresses.
 
-// NOTE : This text file was written with a TAB size equal to 4 spaces.
+// NOTE: This text file was written with a TAB size equal to 4 spaces.
 
 // INSIM VERSION NUMBER (updated for version 0.6T)
 // ====================
@@ -230,6 +230,24 @@ define('INSIM_VERSION',	8);
 
 // CHANGES
 // =======
+
+// CHANGES
+// =======
+
+// Version 0.6V
+// ------------
+// NLP / MCI minimum time interval reduced to 10 ms (was 40 ms)
+// IS_CPP FOV can now be used in-car but not smoothed (0 = no change)
+// IS_CPP Pos is now relative to "Centre view" not the user setting
+// IS_RES TTime now indicates time since qualifying started
+// IS_RES PLID is now zero if the player has left the race
+// IS_NPL Config  : setup configuration
+// IS_NPL Fuel    : initial fuel load
+// IS_NPL RWAdj   : tyre width reduction (rear)
+// IS_NPL FWAdj   : tyre width reduction (front)
+// IS_PIT FuelAdd : fuel added
+// IS_SPX Fuel200 : fuel remaining
+// IS_LAP Fuel200 : fuel remaining
 
 // Version 0.6T (INSIM_VERSION increased to 8)
 // ------------
@@ -293,43 +311,18 @@ define('INSIM_VERSION',	8);
 // OG_SHIFT and OG_CTRL (keys) bits added to OutGaugePack
 // New IS_RIP option RIPOPT_FULL_PHYS to use full physics when searching
 // ISS_SHIFTU_HIGH is no longer used (no high / low view distinction)
-// FIX : Clutch axis / button was not reported from Controls screen
-// FIX : TTime in IS_RIP was wrong in mid-joined Multiplayer Replays
-// FIX : IS_BTN did not allow the documented limit of 240 characters
-// FIX : OutGaugePack ID was always zero regardless of ID in cfg.txt
-// FIX : InSim camera with vertical pitch would cause LFS to crash
+// FIX: Clutch axis / button was not reported from Controls screen
+// FIX: TTime in IS_RIP was wrong in mid-joined Multiplayer Replays
+// FIX: IS_BTN did not allow the documented limit of 240 characters
+// FIX: OutGaugePack ID was always zero regardless of ID in cfg.txt
+// FIX: InSim camera with vertical pitch would cause LFS to crash
 
-
-// Version 0.5Z (compatible so no change to INSIM_VERSION)
-
+// Version 0.5Z (no change to INSIM_VERSION)
+// ------------
 // NLP / MCI packets are now output at regular intervals
-// CCI_LAG bit added to the CompCar Structure
+// CCI_LAG bit added to the CompCar structure
 
-// Version 0.5Z30 (INSIM_VERSION increased to 5)
-
-// NLP / MCI minimum time interval reduced to 40 ms (was 50 ms)
-// IS_CON (CONtact) reports contact between two cars (if ISF_CON is enabled)
-// IS_MTC (Msg To Connection) now has a variable length (up to 128 characters)
-// IS_MTC can be sent to all (UCID = 255) and sound effect can be specified
-// ISS_SHIFTU_HIGH is no longer used (no distinction between high and low view)
-// FIX : Clutch axis / button was not reported after a change in Controls screen
-
-// Version 0.5Z32
-
-// OG_SHIFT and OG_CTRL bits added to OutGaugePack
-// Lap timing info added to IS_RST (Timing byte)
-// IS_VTC now cancels game votes even if the majority has not been reached
-
-// Version 0.6A1
-
-// IS_OBH reports information about any object hit
-// IS_HLV reports incidents that would violate HLVC
-// IS_PLC sets allowed cars for individual players
-// IS_AXM to add / remove / clear autocross objects
-// IS_ACR to report (attempted) admin commands
-
-
-// TYPES : (all multi-byte types are PC style - lowest byte first)
+// TYPES: (all multi-byte types are PC style - lowest byte first)
 // =====
 
 // type         machine byte type            php pack / unpack type
@@ -355,27 +348,26 @@ define('INSIM_VERSION',	8);
 
 // All InSim packets use a four byte header
 
-// Size : total packet size - a multiple of 4
-// Type : packet identifier from the ISP_ enum (see below)
-// ReqI : non zero if the packet is a packet request or a reply to a request
-// Data : the first data byte
-
+// Size: total packet size - a multiple of 4
+// Type: packet identifier from the ISP_ enum (see below)
+// ReqI: non zero if the packet is a packet request or a reply to a request
+// Data: the first data byte
 
 // INITIALISING InSim
 // ==================
 
-// To initialise the InSim system, type into LFS : /insim xxxxx
+// To initialise the InSim system, type into LFS: /insim xxxxx
 // where xxxxx is the TCP and UDP port you want LFS to open.
 
-// OR start LFS with the command line option : LFS /insim=xxxxx
+// OR start LFS with the command line option: LFS /insim=xxxxx
 // This will make LFS listen for packets on that TCP and UDP port.
 
 
 // TO START COMMUNICATION
 // ======================
 
-// TCP : Connect to LFS using a TCP connection, then send this packet :
-// UDP : No connection required, just send this packet to LFS :
+// TCP: Connect to LFS using a TCP connection, then send this packet:
+// UDP: No connection required, just send this packet to LFS:
 
 class IS_ISI extends Struct // InSim Init - packet to initialise the InSim system
 {
@@ -398,17 +390,17 @@ class IS_ISI extends Struct // InSim Init - packet to initialise the InSim syste
     public $IName;              # A short name for your program
 }; function IS_ISI() { return new IS_ISI; }
 
-// NOTE 1) UDPPort field when you connect using UDP :
+// NOTE 1) UDPPort field when you connect using UDP:
 
 // zero     : LFS sends all packets to the port of the incoming packet
 // non-zero : LFS sends all packets to the specified UDPPort
 
-// NOTE 2) UDPPort field when you connect using TCP :
+// NOTE 2) UDPPort field when you connect using TCP:
 
 // zero     : LFS sends NLP / MCI packets using your TCP connection
 // non-zero : LFS sends NLP / MCI packets to the specified UDPPort
 
-// NOTE 3) Flags field (set the relevant bits to turn on the option) :
+// NOTE 3) Flags field (set the relevant bits to turn on the option):
 
 define('ISF_RES_0',     1);         // bit  0 : spare
 define('ISF_RES_1',     2);         // bit  1 : spare
@@ -433,7 +425,13 @@ $ISF = array(ISF_RES_0 => 'ISF_RES_0', ISF_RES_1 => 'ISF_RES_1', ISF_LOCAL => 'I
 // avoiding conflict with the host buttons and allowing the user
 // to switch them with SHIFT+B rather than SHIFT+I.
 
-// NOTE 4) Prefix field, if set when initialising InSim on a host :
+// NOTE 4) InSimVer field:
+
+// Provide the INSIM_VERSION that your program was designed for.
+// Later LFS versions will try to retain backward compatibility
+// if it can be provided, within reason.  Not guaranteed.
+
+// NOTE 5) Prefix field, if set when initialising InSim on a host:
 
 // Messages typed with this prefix will be sent to your InSim program
 // on the host (in IS_MSO) and not displayed on anyone's screen.
@@ -621,7 +619,7 @@ class IS_TTC extends Struct // General purpose 8 byte packet (Target To Connecti
 // avoid problems when connecting to a host with a later or earlier version.  You will
 // be sent a version packet on connection if you set ReqI in the IS_ISI packet.
 
-// This version packet can be sent on request :
+// This version packet is sent on request:
 
 class IS_VER extends Struct // VERsion
 {
@@ -634,23 +632,32 @@ class IS_VER extends Struct // VERsion
     protected $Zero;
 
     public $Version;                    # LFS version, e.g. 0.3G
-    public $Product;                    # Product : DEMO or S1
+    public $Product;                    # Product: DEMO / S1 / S2 / S3
     public $InSimVer = INSIM_VERSION;   # InSim Version : increased when InSim packets change
 }; function IS_VER() { return new IS_VER; }
 
-// To request an InSimVersion packet at any time, send this IS_TINY :
+// To request an IS_VER packet at any time, send this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_VER        (request an IS_VER)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_VER		(request an IS_VER)
+
+// NOTE: LFS tries to match InSimVer with the version requested in your program's IS_ISI
+// packet if it is lower than the latest version known to LFS.  If backward compatibility
+// is no longer possible then this version may be higher than your program requested.
+// In that case your program may not be able to read some packets sent to it by LFS.
+// If you connect to an older LFS version then InSimVer may be lower than requested.
+
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_PING		(request a TINY_REPLY)
 
 
 // CLOSING InSim
 // =============
 
-// You can send this IS_TINY to close the InSim connection to your program :
+// You can send this IS_TINY to close the InSim connection to your program:
 
-// ReqI : 0
-// SubT : TINY_CLOSE    (close this connection)
+// ReqI: 0
+// SubT: TINY_CLOSE	(close this connection)
 
 // Another InSimInit packet is then required to start operating again.
 
@@ -664,26 +671,26 @@ class IS_VER extends Struct // VERsion
 // If InSim does not receive a packet for 70 seconds, it will close your connection.
 // To open it again you would need to send another InSimInit packet.
 
-// LFS will send a blank IS_TINY packet like this every 30 seconds :
+// LFS will send a blank IS_TINY packet like this every 30 seconds:
 
-// ReqI : 0
-// SubT : TINY_NONE        (keep alive packet)
+// ReqI: 0
+// SubT: TINY_NONE		(keep alive packet)
 
-// You should reply with a blank IS_TINY packet :
+// You should reply with a blank IS_TINY packet:
 
-// ReqI : 0
-// SubT : TINY_NONE        (has no effect other than resetting the timeout)
+// ReqI: 0
+// SubT: TINY_NONE		(has no effect other than resetting the timeout)
 
-// NOTE : If you want to request a reply from LFS to check the connection
-// at any time, you can send this IS_TINY :
+// NOTE: If you want to request a reply from LFS to check the connection
+// at any time, you can send this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_PING        (request a TINY_REPLY)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_PING		(request a TINY_REPLY)
 
-// LFS will reply with this IS_TINY :
+// LFS will reply with this IS_TINY:
 
-// ReqI : non-zero        (as received in the request packet)
-// SubT : TINY_REPLY    (reply to ping)
+// ReqI: non-zero		(as received in the request packet)
+// SubT: TINY_REPLY	(reply to ping)
 
 
 // STATE REPORTING AND REQUESTS
@@ -710,7 +717,7 @@ class IS_STA extends Struct // STAte
     public $NumP;               # Number of players in race
     public $NumConns;           # Number of connections including host
     public $NumFinished;        # Number finished or qualified
-    public $RaceInProg;         # 0 - no race / 1 - race / 2 - qualifying
+    public $RaceInProg;         # 0 = no race / 1 = race / 2 = qualifying
 
     public $QualMins;
     public $RaceLaps;           # see "RaceLaps" near the top of this document
@@ -719,7 +726,7 @@ class IS_STA extends Struct // STAte
 
     public $Track;              # short name for track e.g. FE2R
     public $Weather;            # 0,1,2...
-    public $Wind;               # 0=off 1=weak 2=strong
+    public $Wind;               # 0 = off / 1 = weak / 2 = strong
 }; function IS_STA() { return new IS_STA; }
 
 // InGameCam is the in game selected camera mode (which is
@@ -746,19 +753,19 @@ define('ISS_VISIBLE',       16384); // InSim buttons visible
 define('ISS_TEXT_ENTRY',    32768); // in a text entry dialog
 $ISS = array(ISS_GAME => 'ISS_GAME', ISS_REPLAY => 'ISS_REPLAY', ISS_PAUSED => 'ISS_PAUSED', ISS_SHIFTU => 'ISS_SHIFTU', ISS_DIALOG => 'ISS_DIALOG', ISS_SHIFTU_FOLLOW => 'ISS_SHIFTU_FOLLOW', ISS_SHIFTU_NO_OPT => 'ISS_SHIFTU_NO_OPT', ISS_SHOW_2D => 'ISS_SHOW_2D', ISS_FRONT_END => 'ISS_FRONT_END', ISS_MULTI => 'ISS_MULTI', ISS_MPSPEEDUP => 'ISS_MPSPEEDUP', ISS_WINDOWED => 'ISS_WINDOWED', ISS_SOUND_MUTE => 'ISS_SOUND_MUTE', ISS_VIEW_OVERRIDE => 'ISS_VIEW_OVERRIDE', ISS_VISIBLE => 'ISS_VISIBLE', ISS_TEXT_ENTRY => 'ISS_TEXT_ENTRY');
 
-// To request a StatePack at any time, send this IS_TINY :
+// To request an IS_STA at any time, send this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_SST        (Send STate)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_SST		(Send STate)
 
 // Setting states
 
-// These states can be set by a special packet :
+// These states can be set by a special packet:
 
-// ISS_SHIFTU_NO_OPT    - SHIFT+U buttons hidden
-// ISS_SHOW_2D            - showing 2d display
-// ISS_MPSPEEDUP        - multiplayer speedup option
-// ISS_SOUND_MUTE        - sound is switched off
+// ISS_SHIFTU_NO_OPT	- SHIFT+U buttons hidden
+// ISS_SHOW_2D			- showing 2d display
+// ISS_MPSPEEDUP		- multiplayer speedup option
+// ISS_SOUND_MUTE		- sound is switched off
 
 class IS_SFP extends Struct // State Flags Pack
 {
@@ -781,7 +788,7 @@ class IS_SFP extends Struct // State Flags Pack
 // SCREEN MODE
 // ===========
 
-// You can send this packet to LFS to set the screen mode :
+// You can send this packet to LFS to set the screen mode:
 
 class IS_MOD extends Struct // MODe : send to LFS to change screen mode
 {
@@ -843,7 +850,7 @@ define('MSO_O',         3);        // 3 - hidden message typed on local pc with 
 define('MSO_NUM',       4);
 $MSO = array(MSO_SYSTEM => 'MSO_SYSTEM', MSO_USER => 'MSO_USER', MSO_PREFIX => 'MSO_PREFIX', MSO_O => 'MSO_O', MSO_NUM => 'MSO_NUM');
 
-// NOTE : Typing "/o MESSAGE" into LFS will send an IS_MSO with UserType = MSO_O
+// NOTE: Typing "/o MESSAGE" into LFS will send an IS_MSO with UserType = MSO_O
 
 class IS_III extends Struct // InsIm Info - /i message from user to host's InSim
 {
@@ -1037,7 +1044,7 @@ class IS_SCH extends Struct // Single CHaracter
     protected $Zero = null;
 
     public $CharB;              # key to press
-    public $Flags;              # bit 0 : SHIFT / bit 1 : CTRL
+    public $Flags;              # bit 0: SHIFT / bit 1: CTRL
     protected $Spare2 = null;
     protected $Spare3 = null;
 }; function IS_SCH() { return new IS_SCH; }
@@ -1046,11 +1053,11 @@ class IS_SCH extends Struct // Single CHaracter
 // CAR SWITCHES
 // ============
 
-// To operate the local car's lights, horn or siren you can send this IS_SMALL :
+// To operate the local car's lights, horn or siren you can send this IS_SMALL:
 
-// ReqI : 0
-// SubT : SMALL_LCS     (Local Car Switches)
-// UVal : Switches      (see below)
+// ReqI: 0
+// SubT: SMALL_LCS		(Local Car Switches)
+// UVal: Switches		(see below)
 
 // Switches bits
 
@@ -1079,7 +1086,7 @@ $LCS = array(LCS_SET_SIGNALS => 'LCS_SET_SIGNALS', LCS_SET_FLASH => 'LCS_SET_FLA
 // MULTIPLAYER NOTIFICATION
 // ========================
 
-// LFS will send this packet when a host is started or joined :
+// LFS will send this packet when a host is started or joined:
 
 class IS_ISM extends Struct // InSim Multi
 {
@@ -1088,7 +1095,7 @@ class IS_ISM extends Struct // InSim Multi
 
     protected $Size = 40;       # 40
     protected $Type = ISP_ISM;  # ISP_ISM
-    protected $ReqI = 0;        # usually 0 / or if a reply : ReqI as received in the TINY_ISM
+    protected $ReqI = 0;        # usually 0 / or if a reply: ReqI as received in the TINY_ISM
     protected $Zero = null;
 
     public $Host;               # 0 = guest / 1 = host
@@ -1099,17 +1106,17 @@ class IS_ISM extends Struct // InSim Multi
     public $HName;              # the name of the host joined or started
 }; function IS_ISM() { return new IS_ISM; }
 
-// On ending or leaving a host, LFS will send this IS_TINY :
+// On ending or leaving a host, LFS will send this IS_TINY:
 
-// ReqI : 0
-// SubT : TINY_MPE        (MultiPlayerEnd)
+// ReqI: 0
+// SubT: TINY_MPE		(MultiPlayerEnd)
 
-// To request an IS_ISM packet at any time, send this IS_TINY :
+// To request an IS_ISM packet at any time, send this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_ISM        (request an IS_ISM)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_ISM		(request an IS_ISM)
 
-// NOTE : If LFS is not in multiplayer mode, the host name in the ISM will be empty.
+// NOTE: If LFS is not in multiplayer mode, the host name in the ISM will be empty.
 
 
 // VOTE NOTIFY AND CANCEL
@@ -1117,7 +1124,7 @@ class IS_ISM extends Struct // InSim Multi
 
 // LFS notifies the external program of any votes to restart or qualify
 
-// The Vote Actions are defined as :
+// The Vote Actions are defined as:
 
 define('VOTE_NONE',       0);        // 0 - no vote
 define('VOTE_END',        1);        // 1 - end race
@@ -1144,46 +1151,46 @@ class IS_VTN extends Struct // VoTe Notify
 
 // When a vote is cancelled, LFS sends this IS_TINY
 
-// ReqI : 0
-// SubT : TINY_VTC        (VoTe Cancelled)
+// ReqI: 0
+// SubT: TINY_VTC		(VoTe Cancelled)
 
 // When a vote is completed, LFS sends this IS_SMALL
 
-// ReqI : 0
-// SubT : SMALL_VTA      (VoTe Action)
-// UVal : action         (VOTE_X - Vote Action as defined above)
+// ReqI: 0
+// SubT: SMALL_VTA  	(VoTe Action)
+// UVal: action 		(VOTE_X - Vote Action as defined above)
 
-// You can inStruct LFS host to cancel a vote using an IS_TINY
+// You can instruct LFS host to cancel a vote using an IS_TINY
 
-// ReqI : 0
-// SubT : TINY_VTC        (VoTe Cancel)
+// ReqI: 0
+// SubT: TINY_VTC		(VoTe Cancel)
 
 
 // ALLOWED CARS
 // ============
 
-// To set the allowed cars on the host (like /cars command) you can send this IS_SMALL :
+// To set the allowed cars on the host (like /cars command) you can send this IS_SMALL:
 
-// ReqI : 0
-// SubT : SMALL_ALC     (ALlowed Cars)
-// UVal : Cars          (see below)
+// ReqI: 0
+// SubT: SMALL_ALC		(ALlowed Cars)
+// UVal: Cars			(see below)
 
-// To find out the allowed cars at any time (on guest or host) send this IS_TINY :
+// To find out the allowed cars at any time (on guest or host) send this IS_TINY:
 
-// ReqI : non-zero      (returned in the reply)
-// SubT : TINY_ALC      (request a SMALL_ALC)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_ALC		(request a SMALL_ALC)
 
-// LFS will reply with this IS_SMALL :
+// LFS will reply with this IS_SMALL:
 
-// ReqI : non-zero      (as received in the request packet)
-// SubT : SMALL_ALC     (ALlowed Cars)
-// UVal : Cars          (see below)
+// ReqI: non-zero		(as received in the request packet)
+// SubT: SMALL_ALC		(ALlowed Cars)
+// UVal: Cars			(see below)
 
 // You can send a packet to limit the cars that can be used by a given connection
 // The resulting set of selectable cars is a subset of the cars set to be available
 // on the host (by the /cars command or SMALL_ALC)
 
-// For example :
+// For example:
 // Cars = 0          ... no cars can be selected on the specified connection
 // Cars = 0xffffffff ... all the host's available cars can be selected
 
@@ -1255,7 +1262,7 @@ class IS_HCP extends Struct // HandiCaPs
     public $ReqI;               # 0
     protected $Zero = null;
 
-    public $Info = array();     # H_Mass and H_TRes for each car : XF GTI = 0 / XR GT = 1 etc
+    public $Info = array();     # H_Mass and H_TRes for each car: XF GTI = 0 / XR GT = 1 etc
 
     public function unpack($rawPacket)
     {
@@ -1280,27 +1287,27 @@ class IS_HCP extends Struct // HandiCaPs
 // You should use the unique identifier UCID to identify a connection
 
 // Each player has a unique identifier PLID from the moment he joins the race, until he
-// leaves.  It's not possible for PLID and UCID to be the same thing, for two reasons :
+// leaves.  It's not possible for PLID and UCID to be the same thing, for two reasons:
 
 // 1) there may be more than one player per connection if AI drivers are used
 // 2) a player can swap between connections, in the case of a driver swap (IS_TOC)
 
 // When all players are cleared from race (e.g. /clear) LFS sends this IS_TINY
 
-// ReqI : 0
-// SubT : TINY_CLR        (CLear Race)
+// ReqI: 0
+// SubT: TINY_CLR		(CLear Race)
 
-// When a race ends (return to game setup screen) LFS sends this IS_TINY
+// When a race ends (return to race setup screen) LFS sends this IS_TINY
 
-// ReqI : 0
-// SubT : TINY_REN      (Race ENd)
+// ReqI: 0
+// SubT: TINY_REN		(Race ENd)
 
-// You can inStruct LFS host to cancel a vote using an IS_TINY
+// You can instruct LFS host to cancel a vote using an IS_TINY
 
-// ReqI : 0
-// SubT : TINY_VTC        (VoTe Cancel)
+// ReqI: 0
+// SubT: TINY_VTC		(VoTe Cancel)
 
-// The following packets are sent when the relevant events take place :
+// The following packets are sent when the relevant events take place:
 
 class IS_RST extends Struct // Race STart
 {
@@ -1331,18 +1338,18 @@ class IS_RST extends Struct // Race STart
 
 // Lap timing info (for Timing byte)
 
-// bits 6 and 7 (Timing & 0xc0) :
+// bits 6 and 7 (Timing & 0xc0):
 
-// 0x40 : standard timing
-// 0x80 : custom timing
-// 0xc0 : no lap timing
+// 0x40: standard lap timing is being used
+// 0x80: custom timing - user checkpoints have been placed
+// 0xc0: no lap timing - e.g. open config with no user checkpoints
 
-// bits 0 and 1 (Timing & 0x03) : number of checkpoints if lap timing is enabled
+// bits 0 and 1 (Timing & 0x03): number of checkpoints if lap timing is enabled
 
-// To request an IS_RST packet at any time, send this IS_TINY :
+// To request an IS_RST packet at any time, send this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_RST        (request an IS_RST)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_RST		(request an IS_RST)
 
 class IS_NCN extends Struct // New ConN
 {
@@ -1359,7 +1366,7 @@ class IS_NCN extends Struct // New ConN
 
     public $Admin;              # 1 if admin
     public $Total;              # number of connections including host
-    public $Flags;              # bit 2 : remote
+    public $Flags;              # bit 2: remote
     protected $Sp3;
 }; function IS_NCN() { return new IS_NCN; }
 
@@ -1448,6 +1455,8 @@ class IS_SLC extends Struct // SeLected Car - sent when a connection selects a c
     public $CName;              # car name
 }; function IS_SLC() { return new IS_SLC; }
 
+// NOTE: If a new guest joins and does have a car selected then an IS_SLC will be sent
+
 class IS_CIM extends Struct // Conn Interface Mode
 {
 	const PACK = 'CCCCCCCC';
@@ -1506,6 +1515,16 @@ define('FVM_EDIT', 				3); // edit mode
 define('FVM_NUM', 				4);
 $CIM = array(CIM_NORMAL => 'CIM_NORMAL', CIM_OPTIONS => 'CIM_OPTIONS', CIM_HOST_OPTIONS => 'CIM_HOST_OPTIONS', CIM_GARAGE => 'CIM_GARAGE', CIM_CAR_SELECT => 'CIM_CAR_SELECT', CIM_TRACK_SELECT => 'CIM_TRACK_SELECT', CIM_SHIFTU => 'CIM_SHIFTU', CIM_NUM => 'CIM_NUM', NRM_NORMAL => 'NRM_NORMAL', NRM_WHEEL_TEMPS => 'NRM_WHEEL_TEMPS', NRM_WHEEL_DAMAGE => 'NRM_WHEEL_DAMAGE', NRM_LIVE_SETTINGS => 'NRM_LIVE_SETTINGS', NRM_PIT_INSTRUCTIONS => 'NRM_PIT_INSTRUCTIONS', NRM_NUM => 'NRM_NUM', GRG_INFO => 'GRG_INFO', GRG_COLOURS => 'GRG_COLOURS', GRG_BRAKE_TC => 'GRG_BRAKE_TC', GRG_SUSP => 'GRG_SUSP', GRG_STEER => 'GRG_STEER', GRG_DRIVE => 'GRG_DRIVE', GRG_TYRES => 'GRG_TYRES', GRG_AERO => 'GRG_AERO', GRG_PASS => 'GRG_PASS', GRG_NUM => 'GRG_NUM', FVM_PLAIN => 'FVM_PLAIN', FVM_BUTTONS => 'FVM_BUTTONS', FVM_EDIT => 'FVM_EDIT', FVM_NUM => 'FVM_NUM');
 
+// SelType is the selected object type or zero if unselected
+// It may be an AXO_x as in ObjectInfo or one of these:
+
+define('MARSH_IS_CP',		252); // insim checkpoint
+define('MARSH_IS_AREA',		253); // insim circle
+define('MARSH_MARSHAL',		254); // restricted area
+define('MARSH_ROUTE',		255); // route checker
+
+//
+
 class IS_CNL extends Struct // ConN Leave
 {
     const PACK = 'CCxCCCxx';
@@ -1538,16 +1557,16 @@ class IS_CPR extends Struct // Conn Player Rename
 
 class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, then leaving pits)
 {
-    const PACK = 'CCCCCCva24a8a4a16C4CCCCVCCxx';
-    const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/A8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/VSpare/CSetF/CNumP/CSp2/CSp3';
-
+	const PACK = 'CCCCCCva24a8a4a16C4CCCCCCCC';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/CUCID/CPType/vFlags/a24PName/A8Plate/a4CName/a16SName/C4Tyres/CH_Mass/CH_TRes/CModel/CPass/CRWAdj/CRWAdj/CSp2/CSp3/CSetF/CNumP/CConfig/CFuel';
+   
     protected $Size = 76;       # 76
     protected $Type = ISP_NPL;  # ISP_NPL
     public $ReqI;               # 0 unless this is a reply to an TINY_NPL request
     public $PLID;               # player's newly assigned unique id
 
     public $UCID;               # connection's unique id
-    public $PType;              # bit 0 : female / bit 1 : AI / bit 2 : remote
+    public $PType;              # bit 0: female / bit 1: AI / bit 2: remote
     public $Flags;              # player flags
 
     public $PName;              # nickname
@@ -1560,14 +1579,17 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
     public $H_Mass;             # added mass (kg)
     public $H_TRes;             # intake restriction
     public $Model;              # driver model
-    public $Pass;               # passengers byte
+	public $Pass;				# passengers byte
 
-    protected $Spare;
+	public $RWAdj;				# low 4 bits: tyre width reduction (rear)
+	public $FWAdj;				# low 4 bits: tyre width reduction (front)
+	protected $Sp2;
+	protected $Sp3;
 
-    public $SetF;               # setup flags (see below)
-    public $NumP;               # number in race (same when leaving pits, 1 more if new)
-    protected $Sp2;
-    protected $Sp3;
+	public $SetF;				# setup flags (see below)
+	public $NumP;				# number in race - ZERO if this is a join request
+	public $Config;				# configuration (see below)
+	public $Fuel;				# /showfuel yes: fuel percent / no: 255
 
     public function unpack($rawPacket)
     {
@@ -1593,7 +1615,7 @@ class IS_NPL extends Struct // New PLayer joining race (if PLID already exists, 
     public function isRemote(){ return ($this->PType & 4); }
 }; function IS_NPL() { return new IS_NPL; }
 
-// NOTE : PType bit 0 (female) is not reported on dedicated host as humans are not loaded
+// NOTE: PType bit 0 (female) is not reported on dedicated host as humans are not loaded
 // You can use the driver model byte instead if required (and to force the use of helmets)
 
 // Setup flags (for SetF byte)
@@ -1602,6 +1624,11 @@ define('SETF_SYMM_WHEELS',  1);
 define('SETF_TC_ENABLE',    2);
 define('SETF_ABS_ENABLE',   4);
 $SETF = array(SETF_SYMM_WHEELS => 'SETF_SYMM_WHEELS', SETF_TC_ENABLE => 'SETF_TC_ENABLE', SETF_ABS_ENABLE => 'SETF_ABS_ENABLE');
+
+// Configuration (Config byte)
+
+// UF1 / LX4 / LX6: 0 = DEFAULT / 1 = OPEN ROOF
+// GTR racing cars: 0 = DEFAULT / 1 = ALTERNATE
 
 // More...
 
@@ -1641,7 +1668,7 @@ class IS_CRS extends Struct // Car ReSet
 class IS_LAP extends Struct // LAP time
 {
     const PACK = 'CCxCVVvvxCCx';
-    const UNPACK = 'CSize/CType/CReqI/CPLID/VLTime/VETime/vLapsDone/vFlags/CSp0/CPenalty/CNumStops/CSp3';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/VLTime/VETime/vLapsDone/vFlags/CSp0/CPenalty/CNumStops/CFuel200';
 
     protected $Size = 20;       # 20
     protected $Type = ISP_LAP;  # ISP_LAP
@@ -1657,13 +1684,13 @@ class IS_LAP extends Struct // LAP time
     protected $Sp0;
     public $Penalty;            # current penalty value (see below)
     public $NumStops;           # number of pit stops
-    protected $Sp3;
+    public $Fuel200;			# /showfuel yes: double fuel percent / no: 255
 }; function IS_LAP() { return new IS_LAP; }
 
 class IS_SPX extends Struct // SPlit X time
 {
     const PACK = 'CCxCVVCCCx';
-    const UNPACK = 'CSize/CType/CReqI/CPLID/VSTime/VETime/CSplit/CPenalty/CNumStops/CSp3';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/VSTime/VETime/CSplit/CPenalty/CNumStops/CFuel200';
 
     protected $Size = 16;       # 16
     protected $Type = ISP_SPX;  # ISP_SPX
@@ -1676,13 +1703,13 @@ class IS_SPX extends Struct // SPlit X time
     public $Split;              # split number 1, 2, 3
     public $Penalty;            # current penalty value (see below)
     public $NumStops;           # number of pit stops
-    protected $Sp3;
+    public $Fuel200;			# /showfuel yes: double fuel percent / no: 255
 }; function IS_SPX() { return new IS_SPX; }
 
 class IS_PIT extends Struct // PIT stop (stop at pit garage)
 {
     const PACK = 'CCxCvvxCCxC4VV';
-    const UNPACK = 'CSize/CType/CReqI/CPLID/vLapsDone/vFlags/CSp0/CPenalty/CNumStops/CSp3/C4Tyres/VWork/VSpare';
+    const UNPACK = 'CSize/CType/CReqI/CPLID/vLapsDone/vFlags/CFuelAdd/CPenalty/CNumStops/CSp3/C4Tyres/VWork/VSpare';
 
     protected $Size = 24;       # 24
     protected $Type = ISP_PIT;  # ISP_PIT
@@ -1692,7 +1719,7 @@ class IS_PIT extends Struct // PIT stop (stop at pit garage)
     public $LapsDone;           # laps completed
     public $Flags;              # player flags
 
-    protected $Sp0;
+    public $FuelAdd;			# /showfuel yes: fuel added percent / no: 255
     public $Penalty;            # current penalty value (see below)
     public $NumStops;           # number of pit stops
     protected $Sp3;
@@ -1747,13 +1774,13 @@ class IS_PLA extends Struct // Pit LAne
     protected $Sp3;
 }; function IS_PLA() { return new IS_PLA; }
 
-// IS_CCH : Camera CHange
+// IS_CCH: Camera CHange
 
 // To track cameras you need to consider 3 points
 
-// 1) The default camera : VIEW_DRIVER
-// 2) Player flags : CUSTOM_VIEW means VIEW_CUSTOM at start or pit exit
-// 3) IS_CCH : sent when an existing driver changes camera
+// 1) The default camera: VIEW_DRIVER
+// 2) Player flags: CUSTOM_VIEW means VIEW_CUSTOM at start or pit exit
+// 3) IS_CCH: sent when an existing driver changes camera
 
 class IS_CCH extends Struct // Camera CHange
 {
@@ -1848,11 +1875,11 @@ class IS_FIN extends Struct // FINished race notification (not a final result - 
 
     protected $SpA;
     public $NumStops;           # number of pit stops
-    public $Confirm;            # confirmation flags : disqualified etc - see below
+    public $Confirm;            # confirmation flags: disqualified etc - see below
     protected $SpB;
 
     public $LapsDone;           # laps completed
-    public $Flags;              # player flags : help settings etc - see below
+    public $Flags;              # player flags: help settings etc - see below
 }; function IS_FIN() { return new IS_FIN; }
 
 class IS_RES extends Struct // RESult (qualify or confirmed finish)
@@ -1870,31 +1897,32 @@ class IS_RES extends Struct // RESult (qualify or confirmed finish)
     public $Plate;              # number plate - NO ZERO AT END!
     public $CName;              # skin prefix
 
-    public $TTime;              # race time (ms)
-    public $BTime;              # best lap (ms)
+    public $TTime;              # (ms) race or autocross: total time / qualify: session time
+    public $BTime;              # (ms) best lap
 
     protected $SpA;
     public $NumStops;           # number of pit stops
-    public $Confirm;            # confirmation flags : disqualified etc - see below
+    public $Confirm;            # confirmation flags: disqualified etc - see below
     protected $SpB;
 
     public $LapsDone;           # laps completed
-    public $Flags;              # player flags : help settings etc - see below
+    public $Flags;              # player flags: help settings etc - see below
 
     public $ResultNum;          # finish or qualify pos (0 = win / 255 = not added to table)
     public $NumRes;             # total number of results (qualify doesn't always add a new one)
     public $PSeconds;           # penalty time in seconds (already included in race time)
 }; function IS_RES() { return new IS_RES; }
 
-// IS_REO : REOrder - this packet can be sent in either direction
+// IS_REO: REOrder - this packet can be sent in either direction
 
 // LFS sends one at the start of every race or qualifying session, listing the start order
 
-// You can send one to LFS before a race start, to specify the starting order.
-// It may be a good idea to avoid conflict by using /start=fixed (LFS setting).
-// Alternatively, you can leave the LFS setting, but make sure you send your IS_REO
-// AFTER you receive the SMALL_VTA (VoTe Action).  LFS does its default grid reordering at
-// the same time as it sends the SMALL_VTA and you can override this by sending an IS_REO.
+// You can send one to LFS in two different ways, to specify the starting order:
+// 1) In the race setup screen, to immediately rearrange the grid when the packet arrives
+// 2) In game, just before a restart or exit, to specify the order on the restart or exit
+// If you are sending an IS_REO in game, you should send it when you receive the SMALL_VTA
+// informing you that the Vote Action (VOTE_END / VOTE_RESTART / VOTE_QUALIFY) is about
+// to take place.  Any IS_REO received before the SMALL_VTA is sent will be ignored.
 
 class IS_REO extends Struct // REOrder (when race restarts after qualifying)
 {
@@ -1931,10 +1959,10 @@ class IS_REO extends Struct // REOrder (when race restarts after qualifying)
     }
 }; function IS_REO() { return new IS_REO; }
 
-// To request an IS_REO packet at any time, send this IS_TINY :
+// To request an IS_REO packet at any time, send this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_REO        (request an IS_REO)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_REO		(request an IS_REO)
 
 // Pit Lane Facts
 
@@ -2037,7 +2065,7 @@ define('PIF_KB_STABILISED', 4096);
 define('PIF_CUSTOM_VIEW',   8192);
 $PIF = array(PIF_SWAPSIDE => 'PIF_SWAPSIDE', PIF_RESERVED_2 => 'PIF_RESERVED_2', PIF_RESERVED_4 => 'PIF_RESERVED_4', PIF_AUTOGEARS => 'PIF_AUTOGEARS', PIF_SHIFTER => 'PIF_SHIFTER', PIF_RESERVED_32 => 'PIF_RESERVED_32', PIF_HELP_B => 'PIF_HELP_B', PIF_AXIS_CLUTCH => 'PIF_AXIS_CLUTCH', PIF_INPITS => 'PIF_INPITS', PIF_AUTOCLUTCH => 'PIF_AUTOCLUTCH', PIF_MOUSE => 'PIF_MOUSE', PIF_KB_NO_HELP => 'PIF_KB_NO_HELP', PIF_KB_STABILISED => 'PIF_KB_STABILISED', PIF_CUSTOM_VIEW => 'PIF_CUSTOM_VIEW');
 
-// Tyre compounds (4 byte order : rear L, rear R, front L, front R)
+// Tyre compounds (4 byte order: rear L, rear R, front L, front R)
 
 define('TYRE_R1',           0);    // 0
 define('TYRE_R2',           1);    // 1
@@ -2094,11 +2122,11 @@ $HOSTF = array(HOSTF_CAN_VOTE => 'HOSTF_CAN_VOTE', HOSTF_CAN_SELECT => 'HOSTF_CA
 
 // In each case, ReqI must be non-zero, and will be returned in the reply packet
 
-// SubT : TINT_NCN - request all connections
-// SubT : TINY_NPL - request all players
-// SubT : TINY_RES - request all results
-// SubT : TINY_NLP - request a single IS_NLP
-// SubT : TINY_MCI - request a set of IS_MCI
+// SubT: TINT_NCN - request all connections
+// SubT: TINY_NPL - request all players
+// SubT: TINY_RES - request all results
+// SubT: TINY_NLP - request a single IS_NLP
+// SubT: TINY_MCI - request a set of IS_MCI
 
 // OBJECT INFO - for autocross objects - used in some packets and the layout file
 // ===========
@@ -2140,14 +2168,14 @@ class IS_JRR extends Struct // Join Request Reply - send one of these back to LF
     protected $Size = 16;       # 16
     protected $Type = ISP_JRR;  # ISP_JRR
     public $ReqI;               # 0
-    public $PLID;            # ZERO when this is a reply to a join request - SET to move a car
+    public $PLID;				# ZERO when this is a reply to a join request - SET to move a car
 
     public $UCID;               # set when this is a reply to a join request - ignored when moving a car
     public $JRRAction;          # 1 - allow / 0 - reject (should send message to user)
     public $Sp2;
     public $Sp3;
 
-    public $StartPos; // 0 : use default start point / Flags = 0x80 : set start point
+    public $StartPos;			# 0: use default start point / Flags = 0x80: set start point
     
     public function pack() {
         $return = '';
@@ -2200,17 +2228,17 @@ $JRR = array(JRR_REJECT => 'JRR_REJECT', JRR_SPAWN => 'JRR_SPAWN', JRR_2 => 'JRR
 // AUTOCROSS
 // =========
 
-// When all objects are cleared from a layout, LFS sends this IS_TINY :
+// When all objects are cleared from a layout, LFS sends this IS_TINY:
 
-// ReqI : 0
-// SubT : TINY_AXC        (AutoX Cleared)
+// ReqI: 0
+// SubT: TINY_AXC		(AutoX Cleared)
 
-// You can request information about the current layout with this IS_TINY :
+// You can request information about the current layout with this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_AXI        (AutoX Info)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_AXI		(AutoX Info)
 
-// The information will be sent back in this packet (also sent when a layout is loaded) :
+// The information will be sent back in this packet (also sent when a layout is loaded):
 
 class IS_AXI extends Struct  // AutoX Info
 {
@@ -2229,12 +2257,12 @@ class IS_AXI extends Struct  // AutoX Info
     public $LName;              # the name of the layout last loaded (if loaded locally)
 }; function IS_AXI() { return new IS_AXI; }
 
-// On false start or wrong route / restricted area, an IS_PEN packet is sent :
+// On false start or wrong route / restricted area, an IS_PEN packet is sent:
 
-// False start : OldPen = 0 / NewPen = PENALTY_30 / Reason = PENR_FALSE_START
-// Wrong route : OldPen = 0 / NewPen = PENALTY_45 / Reason = PENR_WRONG_WAY
+// False start: OldPen = 0 / NewPen = PENALTY_30 / Reason = PENR_FALSE_START
+// Wrong route: OldPen = 0 / NewPen = PENALTY_45 / Reason = PENR_WRONG_WAY
 
-// If an autocross object is hit (2 second time penalty) this packet is sent :
+// If an autocross object is hit (2 second time penalty) this packet is sent:
 
 class IS_AXO extends Struct // AutoX Object
 {
@@ -2254,9 +2282,9 @@ class IS_AXO extends Struct // AutoX Object
 // IS_NLP - compact, all cars in 1 variable sized packet
 // IS_MCI - detailed, max 8 cars per variable sized packet
 
-// To receive IS_NLP or IS_MCI packets at a specified interval :
+// To receive IS_NLP or IS_MCI packets at a specified interval:
 
-// 1) Set the Interval field in the IS_ISI (InSimInit) packet (40, 50, 60... 8000 ms)
+// 1) Set the Interval field in the IS_ISI (InSimInit) packet (10, 20, 30... 8000 ms)
 // 2) Set one of the flags ISF_NLP or ISF_MCI in the IS_ISI packet
 
 // If ISF_NLP flag is set, one IS_NLP packet is sent...
@@ -2266,10 +2294,10 @@ class NodeLap extends Struct // Car info in 6 bytes - there is an array of these
     const PACK = 'vvCC';
     const UNPACK = 'vNode/vLap/CPLID/CPosition';
 
-    public $Node;                        # current path node
-    public $Lap;                        # current lap
-    public $PLID;                        # player's unique id
-    public $Position;                    # current race position : 0 = unknown, 1 = leader, etc...
+    public $Node;						# current path node
+    public $Lap;						# current lap
+    public $PLID;						# player's unique id
+    public $Position;					# current race position : 0 = unknown, 1 = leader, etc...
 };
 
 class IS_NLP extends Struct // Node and Lap Packet - variable size
@@ -2277,12 +2305,12 @@ class IS_NLP extends Struct // Node and Lap Packet - variable size
     const PACK = 'CCCC';
     const UNPACK = 'CSize/CType/CReqI/CNumP';
 
-    protected $Size;                    # 4 + NumP * 6 (PLUS 2 if needed to make it a multiple of 4)
-    protected $Type = ISP_NLP;            # ISP_NLP
-    public $ReqI;                        # 0 unless this is a reply to an TINY_NLP request
-    public $NumP;                        # number of players in race
+    protected $Size;					# 4 + NumP * 6 (PLUS 2 if needed to make it a multiple of 4)
+    protected $Type = ISP_NLP;			# ISP_NLP
+    public $ReqI;						# 0 unless this is a reply to an TINY_NLP request
+    public $NumP;						# number of players in race
 
-    public $Info = array();                # node and lap of each player, 1 to 32 of these (NumP)
+    public $Info = array();				# node and lap of each player, 1 to 32 of these (NumP)
 
     public function unpack($rawPacket)
     {
@@ -2307,19 +2335,19 @@ class CompCar extends Struct // Car info in 28 bytes - there is an array of thes
     public $Node;       # current path node
     public $Lap;        # current lap
     public $PLID;       # player's unique id
-    public $Position;   # current race position : 0 = unknown, 1 = leader, etc...
+    public $Position;   # current race position:  0 = unknown, 1 = leader, etc...
     public $Info;       # flags and other info - see below
     protected $Sp3;
     public $X;          # X map (65536 = 1 metre)
     public $Y;          # Y map (65536 = 1 metre)
     public $Z;          # Z alt (65536 = 1 metre)
     public $Speed;      # speed (32768 = 100 m/s)
-    public $Direction;  # car's motion if Speed > 0 : 0 = world y direction, 32768 = 180 deg
-    public $Heading;    # direction of forward axis : 0 = world y direction, 32768 = 180 deg
-    public $AngVel;     # signed, rate of change of heading : (16384 = 360 deg/s)
+    public $Direction;  # car's motion if Speed > 0:  0 = world y direction, 32768 = 180 deg
+    public $Heading;    # direction of forward axis:  0 = world y direction, 32768 = 180 deg
+    public $AngVel;     # signed, rate of change of heading:  (16384 = 360 deg/s)
 };
 
-// NOTE 1) Info byte - the bits in this byte have the following meanings :
+// NOTE 1) Info byte - the bits in this byte have the following meanings:
 
 define('CCI_BLUE',      1);        // this car is in the way of a driver who is a lap ahead
 define('CCI_YELLOW',    2);        // this car is slow or stopped and in a dangerous place
@@ -2355,11 +2383,11 @@ class IS_MCI extends Struct // Multi Car Info - if more than 8 in race then more
     }
 }; function IS_MCI() { return new IS_MCI; }
 
-// You can change the rate of NLP or MCI after initialisation by sending this IS_SMALL :
+// You can change the rate of NLP or MCI after initialisation by sending this IS_SMALL:
 
-// ReqI : 0
-// SubT : SMALL_NLI         (Node Lap Interval)
-// UVal : interval          (0 means stop, otherwise time interval : 40, 50, 60... 8000 ms)
+// ReqI: 0
+// SubT: SMALL_NLI		(Node Lap Interval)
+// UVal: interval		(0 means stop, otherwise time interval: 40, 50, 60... 8000 ms)
 
 // CONTACT - reports contacts between two cars if the closing speed is above 0.25 m/s
 // =======
@@ -2374,13 +2402,13 @@ class CarContact extends Struct    // Info about one car in a contact - two of t
     public $Sp2;        # spare
     public $Steer;      # front wheel steer in degrees (right positive)
 
-    public $ThrBrk;     # high 4 bits : throttle    / low 4 bits : brake (0 to 15)
-    public $CluHan;     # high 4 bits : clutch      / low 4 bits : handbrake (0 to 15)
-    public $GearSp;     # high 4 bits : gear (15=R) / low 4 bits : spare
+    public $ThrBrk;     # high 4 bits:  throttle    / low 4 bits : brake (0 to 15)
+    public $CluHan;     # high 4 bits:  clutch      / low 4 bits : handbrake (0 to 15)
+    public $GearSp;     # high 4 bits:  gear (15=R) / low 4 bits : spare
     public $Speed;      # m/s
 
-    public $Direction;  # car's motion if Speed > 0 : 0 = world y direction, 128 = 180 deg
-    public $Heading;    # direction of forward axis : 0 = world y direction, 128 = 180 deg
+    public $Direction;  # car's motion if Speed > 0:  0 = world y direction, 128 = 180 deg
+    public $Heading;    # direction of forward axis:  0 = world y direction, 128 = 180 deg
     public $AccelF;     # m/s^2 longitudinal acceleration (forward positive)
     public $AccelR;     # m/s^2 lateral acceleration (right positive)
 
@@ -2422,7 +2450,7 @@ class IS_CON extends Struct // CONtact - between two cars (A and B are sorted by
     protected $ReqI = 0;        # 0
     protected $Zero;
 
-    public $SpClose;            # high 4 bits : reserved / low 12 bits : closing speed (10 = 1 m/s)
+    public $SpClose;            # high 4 bits: reserved / low 12 bits: closing speed (10 = 1 m/s)
     public $Time;               # looping time stamp (hundredths - time since reset - like TINY_GTH)
 
     public $A = array();
@@ -2479,7 +2507,7 @@ class IS_OBH extends Struct // OBject Hit - car hit an autocross object or an un
     public $X;                  # as in ObjectInfo
     public $Y;                  # as in ObjectInfo
 
-    public $Zbyte;              # if OBH_LAYOUT is set : Zbyte as in ObjectInfo
+    public $Zbyte;              # if OBH_LAYOUT is set: Zbyte as in ObjectInfo
     private $Sp1;
     public $Index;              # AXO_x as in ObjectInfo or zero if it is an unknown object
     public $OBHFlags;           # see below
@@ -2514,7 +2542,7 @@ class IS_HLV extends Struct // Hot Lap Validity - off track / hit wall / speedin
     protected $ReqI = null;     # 0
     public $PLID;               # player's unique id
 
-    public $HLVC;               # 0 : ground / 1 : wall / 4 : speeding / 5 : out of bounds
+    public $HLVC;               # 0: ground / 1: wall / 4: speeding / 5: out of bounds
     private    $Sp1;
     public $Time;               # looping time stamp (hundredths - time since reset - like TINY_GTH)
 
@@ -2573,7 +2601,7 @@ define('UCO_CP_FWD',        2);     // crossed cp in forward direction
 define('UCO_CP_REV',        3);     // crossed cp in reverse direction
 $UCO = array(UCO_CIRCLE_ENTER => 'UCO_CIRCLE_ENTER', UCO_CIRCLE_LEAVE => 'UCO_CIRCLE_LEAVE', UCO_CP_FWD => 'UCO_CP_FWD', UCO_CP_REV => 'UCO_CP_REV');
 
-// Identifying an InSim checkpoint from the ObjectInfo :
+// Identifying an InSim checkpoint from the ObjectInfo:
 
 // Index is 252.  Checkpoint index (seen in the autocross editor) is stored in Flags bits 0 and 1
 
@@ -2585,7 +2613,7 @@ $UCO = array(UCO_CIRCLE_ENTER => 'UCO_CIRCLE_ENTER', UCO_CIRCLE_LEAVE => 'UCO_CI
 // Note that the checkpoint index has no meaning in LFS and is provided only for your convenience.
 // If you use many InSim checkpoints you may need to identify them with the X and Y values.
 
-// Identifying an InSim circle from the ObjectInfo :
+// Identifying an InSim circle from the ObjectInfo:
 
 // Index is 253.  The circle index (seen in the autocross editor) is stored in the Heading byte.
 
@@ -2658,7 +2686,7 @@ $OCO = array(OCO_ZERO => 'OCO_ZERO', OCO_1 => 'OCO_1', OCO_2 => 'OCO_2', OCO_3 =
 
 // Index byte specifies which lights you want to override
 
-// Currently the following values are supported :
+// Currently the following values are supported:
 
 // AXO_START_LIGHTS (149)           // overrides temporary start lights in the layout
 define('OCO_INDEX_MAIN',    240);   // special value to override the main start light system
@@ -2669,14 +2697,14 @@ define('OCO_INDEX_MAIN',    240);   // special value to override the main start 
 
 // Data byte specifies particular bulbs using the low 4 bits
 
-// Bulb bit values for the currently available lights :
+// Bulb bit values for the currently available lights:
 
-// OCO_INDEX_MAIN       AXO_START_LIGHTS
+// OCO_INDEX_MAIN		AXO_START_LIGHTS
 
-// bit 0 (1) : red1     bit 0 (1) : red
-// bit 1 (2) : red2     bit 1 (2) : amber
-// bit 2 (4) : red3     -
-// bit 3 (8) : green    bit 3 (8) : green
+// bit 0 (1): red1		bit 0 (1): red
+// bit 1 (2): red2		bit 1 (2): amber
+// bit 2 (4): red3		-
+// bit 3 (8): green		bit 3 (8): green
 
 
 // AUTOCROSS OBJECTS - reporting / adding / removing
@@ -2754,6 +2782,8 @@ define('PMO_MOVE_MODIFY',		2);
 define('PMO_SELECTION_REAL',	4);
 define('PMO_AVOID_CHECK',		8);
 
+// PMO_FILE_END
+
 // If PMO_FILE_END is set in a PMO_LOADING_FILE packet, LFS has reached the end of
 // a layout file which it is loading.  The added objects will then be optimised.
 
@@ -2777,34 +2807,69 @@ define('PMO_AVOID_CHECK',		8);
 // If you are using InSim to send many packets of objects (for example loading an
 // entire layout through InSim) then you must take care of the bandwidth and buffer
 // overflows.  You must not try to send all the objects at once.  It's probably good
-// to use LFS's method of doing this : send the first packet of objects then wait for
+// to use LFS's method of doing this: send the first packet of objects then wait for
 // the corresponding IS_AXM that will be output when the packet is processed.  Then
 // you can send the second packet and again wait for the IS_AXM and so on.
 
-// To request IS_AXM packets for all layout objects and circles send this IS_TINY :
+// PMO_MOVE_MODIFY
 
-// ReqI : non-zero      (returned in the reply)
-// SubT : TINY_AXM      (request IS_AXM packets for the entire layout)
+// When objects are moved or modified in the layout editor, two IS_AXM packets are
+// sent.  A PMO_DEL_OBJECTS followed by a PMO_ADD_OBJECTS.  In this case the flag
+// PMO_MOVE_MODIFY is set in the PMOFlags byte of both packets.
+
+// PMO_SELECTION_REAL
+
+// If you send an IS_AXM with PMOAction of PMO_SELECTION it is possible for it to be
+// either a selection of real objects (as if the user selected several objects while
+// holding the CTRL key) or a clipboard selection (as if the user pressed CTRL+C after
+// selecting objects).  Clipboard is the default selection mode.  A real selection can
+// be set by using the PMO_SELECTION_REAL bit in the PMOFlags byte.
+
+// PMO_AVOID_CHECK
+
+// If you send an IS_AXM with PMOAction of PMO_ADD_OBJECTS you may wish to set the
+// UCID to one of the guest connections (for example if that user's action caused the
+// objects to be added).  In this case some validity checks are done on the guest's
+// computer which may report "invalid position" or "intersecting object" and delete
+// the objects.  This can be avoided by setting the PMO_AVOID_CHECK bit.
+
+
+// To request IS_AXM packets for all layout objects and circles send this IS_TINY:
+
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_AXM		(request IS_AXM packets for the entire layout)
 
 // LFS will send as many IS_AXM packets as needed to describe the whole layout.
 // If there are no objects or circles, there will be one IS_AXM with zero NumO.
 // The final IS_AXM packet will have the PMO_FILE_END flag set.
 
-// To request an IS_AXM for a connection's layout editor selection send this IS_TTC :
 
-// ReqI : non-zero      (returned in the reply)
-// SubT : TTC_SEL       (request an IS_AXM for the current selection)
-// UCID : connection    (0 = local / non-zero = guest)
+// To request an IS_AXM for a connection's layout editor selection send this IS_TTC:
+
+// ReqI: non-zero		(returned in the reply)
+// SubT: TTC_SEL		(request an IS_AXM for the current selection)
+// UCID: connection		(0 = local / non-zero = guest)
+
+// An IS_AXM with PMO_POSITION is sent with a single object in the packet if a user
+// presses O without any object type selected.  Information only - no object is added.
+// The only valid values in Info are X, Y, Zbyte and Heading.
+
+// PMO_GET_Z can be used to request the resulting Zbyte values for given X, Y, Zbyte
+// positions listed in the IS_AXM.  A similar reply (information only) will be sent
+// with adjusted Zbyte values.  Index and Heading are ignored and set to zero in the
+// reply.  Flags is set to 0x80 if Zbyte was successfully adjusted, zero if not.
+// Suggested input values for Zbyte are either 240 to get the highest point at X, Y
+// or you may use the approximate altitude (see layout file format).
 
 
 // CAR POSITION PACKETS (Initialising OutSim from InSim - See "OutSim" below)
 // ====================
 
-// To request Car Positions from the currently viewed car, send this IS_SMALL :
+// To request Car Positions from the currently viewed car, send this IS_SMALL:
 
-// ReqI : 0
-// SubT : SMALL_SSP        (Start Sending Positions)
-// UVal : interval        (time between updates - zero means stop sending)
+// ReqI: 0
+// SubT: SMALL_SSP		(Start Sending Positions)
+// UVal: interval		(time between updates - zero means stop sending)
 
 // If OutSim has not been setup in cfg.txt, the SSP packet makes LFS send UDP packets
 // if in game, using the OutSim system as documented near the end of this text file.
@@ -2814,17 +2879,17 @@ define('PMO_AVOID_CHECK',		8);
 
 // The OutSim packets will be sent to the UDP port specified in the InSimInit packet.
 
-// NOTE : OutSim packets are not InSim packets and don't have a 4-byte header.
+// NOTE: OutSim packets are not InSim packets and don't have a 4-byte header.
 
 
 // DASHBOARD PACKETS (Initialising OutGauge from InSim - See "OutGauge" below)
 // =================
 
-// To request Dashboard Packets from the currently viewed car, send this IS_SMALL :
+// To request Dashboard Packets from the currently viewed car, send this IS_SMALL:
 
-// ReqI : 0
-// SubT : SMALL_SSG        (Start Sending Gauges)
-// UVal : interval        (time between updates - zero means stop sending)
+// ReqI: 0
+// SubT: SMALL_SSG		(Start Sending Gauges)
+// UVal: interval		(time between updates - zero means stop sending)
 
 // If OutGauge has not been setup in cfg.txt, the SSG packet makes LFS send UDP packets
 // if in game, using the OutGauge system as documented near the end of this text file.
@@ -2834,7 +2899,7 @@ define('PMO_AVOID_CHECK',		8);
 
 // The OutGauge packets will be sent to the UDP port specified in the InSimInit packet.
 
-// NOTE : OutGauge packets are not InSim packets and don't have a 4-byte header.
+// NOTE: OutGauge packets are not InSim packets and don't have a 4-byte header.
 
 
 // CAMERA CONTROL
@@ -2862,7 +2927,7 @@ class IS_SCC extends Struct // Set Car Camera - Simplified camera packet (not SH
     protected $Sp3;
 }; function IS_SCC() { return new IS_SCC; }
 
-// NOTE : Set InGameCam or ViewPLID to 255 to leave that option unchanged.
+// NOTE: Set InGameCam or ViewPLID to 255 to leave that option unchanged.
 
 // DIRECT camera control
 // ---------------------
@@ -2870,7 +2935,7 @@ class IS_SCC extends Struct // Set Car Camera - Simplified camera packet (not SH
 // A Camera Position Packet can be used for LFS to report a camera position and state.
 // An InSim program can also send one to set LFS camera position in game or SHIFT+U mode.
 
-// Type : "Vec" : 3 ints (X, Y, Z) - 65536 means 1 metre
+// Type: "Vec": 3 ints (X, Y, Z) - 65536 means 1 metre
 
 class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIFT+U mode)
 {
@@ -2879,7 +2944,7 @@ class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIF
 
     protected $Size = 32;       # 32
     protected $Type = ISP_CPP;  # ISP_CPP
-    public $ReqI;               # inStruction : 0 / or reply : ReqI as received in the TINY_SCP
+    public $ReqI;               # inStruction: 0 / or reply: ReqI as received in the TINY_SCP
     protected $Zero;
 
     public $Pos;                # Position vector
@@ -2891,30 +2956,30 @@ class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIF
     public $ViewPLID;           # Unique ID of viewed player (0 = none)
     public $InGameCam;          # InGameCam (as reported in StatePack)
 
-    public $FOV;                # 4-byte float : FOV in degrees
+    public $FOV;                # 4-byte float: FOV in degrees
 
     public $Time;               # Time in ms to get there (0 means instant)
     public $Flags;              # ISS state flags (see below)
 }; function IS_CPP() { return new IS_CPP; }
 
-// The ISS state flags that can be set are :
+// The ISS state flags that can be set are:
 
-// ISS_SHIFTU            - in SHIFT+U mode
-// ISS_SHIFTU_FOLLOW    - FOLLOW view
-// ISS_VIEW_OVERRIDE    - override user view
+// ISS_SHIFTU			- in SHIFT+U mode
+// ISS_SHIFTU_FOLLOW	- FOLLOW view
+// ISS_VIEW_OVERRIDE	- override user view
 
 // On receiving this packet, LFS will set up the camera to match the values in the packet,
 // including switching into or out of SHIFT+U mode depending on the ISS_SHIFTU flag.
 
-// If ISS_VIEW_OVERRIDE is set, the in-car view Heading Pitch and Roll will be taken
-// from the values in this packet.  Otherwise normal in game control will be used.
+// If ISS_VIEW_OVERRIDE is set, the in-car view Heading, Pitch, Roll and FOV [not smooth]
+// can be set using this packet.  Otherwise normal in game control will be used.
 
 // Position vector (Vec Pos) - in SHIFT+U mode, Pos can be either relative or absolute.
 
 // If ISS_SHIFTU_FOLLOW is set, it's a following camera, so the position is relative to
 // the selected car.  Otherwise, the position is absolute, as used in normal SHIFT+U mode.
 
-// NOTE : Set InGameCam or ViewPLID to 255 to leave that option unchanged.
+// NOTE: Set InGameCam or ViewPLID to 255 to leave that option unchanged.
 
 // SMOOTH CAMERA POSITIONING
 // --------------------------
@@ -2924,7 +2989,7 @@ class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIF
 // the requested position in that time.  This is most useful in SHIFT+U camera modes or
 // for smooth changes of internal view when using the ISS_VIEW_OVERRIDE flag.
 
-// NOTE : You can use frequently updated camera positions with a longer Time value than
+// NOTE: You can use frequently updated camera positions with a longer Time value than
 // the update frequency.  For example, sending a camera position every 100 ms, with a
 // Time value of 1000 ms.  LFS will make a smooth motion from the rough inputs.
 
@@ -2934,10 +2999,10 @@ class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIF
 // GETTING A CAMERA PACKET
 // -----------------------
 
-// To GET a CamPosPack from LFS, send this IS_TINY :
+// To GET a CamPosPack from LFS, send this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_SCP        (Send Cam Pos)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_SCP		(Send Cam Pos)
 
 // LFS will reply with a CamPosPack as described above.  You can store this packet
 // and later send back exactly the same packet to LFS and it will try to replicate
@@ -2947,34 +3012,34 @@ class IS_CPP extends Struct // Cam Pos Pack - Full camera packet (in car OR SHIF
 // TIME CONTROL
 // ============
 
-// Request the current time at any point with this IS_TINY :
+// Request the current time at any point with this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_GTH        (Get Time in Hundredths)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_GTH		(Get Time in Hundredths)
 
-// The time will be sent back in this IS_SMALL :
+// The time will be sent back in this IS_SMALL:
 
-// ReqI : non-zero        (as received in the request packet)
-// SubT : SMALL_RTP        (Race Time Packet)
-// UVal    : Time            (hundredths of a second since start of race or replay)
+// ReqI: non-zero		(as received in the request packet)
+// SubT: SMALL_RTP		(Race Time Packet)
+// UVal: Time			(hundredths of a second since start of race or replay)
 
 // You can stop or start time in LFS and while it is stopped you can send packets to move
 // time in steps.  Time steps are specified in hundredths of a second.
-// Warning : unlike pausing, this is a "trick" to LFS and the program is unaware of time
+// Warning: unlike pausing, this is a "trick" to LFS and the program is unaware of time
 // passing so you must not leave it stopped because LFS is unusable in that state.
 // This packet is not available in live multiplayer mode.
 
-// Stop and Start with this IS_SMALL :
+// Stop and Start with this IS_SMALL:
 
-// ReqI : 0
-// SubT : SMALL_TMS        (TiMe Stop)
-// UVal    : stop            (1 - stop / 0 - carry on)
+// ReqI: 0
+// SubT: SMALL_TMS		(TiMe Stop)
+// UVal: stop			(1 - stop / 0 - carry on)
 
-// When STOPPED, make time step updates with this IS_SMALL :
+// When STOPPED, make time step updates with this IS_SMALL:
 
-// ReqI : 0
-// SubT : SMALL_STP        (STeP)
-// UVal : number        (number of hundredths of a second to update)
+// ReqI: 0
+// SubT: SMALL_STP		(STeP)
+// UVal: number			(number of hundredths of a second to update)
 
 
 // REPLAY CONTROL
@@ -3005,19 +3070,19 @@ class IS_RIP extends Struct // Replay Information Packet
     public $RName;              # zero or replay name - last byte must be zero
 }; function IS_RIP() { return new IS_RIP; }
 
-// NOTE about RName :
+// NOTE about RName:
 // In a request, replay RName will be loaded.  If zero then the current replay is used.
 // In a reply, RName is the name of the current replay, or zero if no replay is loaded.
 
-// You can request an IS_RIP packet at any time with this IS_TINY :
+// You can request an IS_RIP packet at any time with this IS_TINY:
 
-// ReqI : non-zero        (returned in the reply)
-// SubT : TINY_RIP        (Replay Information Packet)
+// ReqI: non-zero		(returned in the reply)
+// SubT: TINY_RIP		(Replay Information Packet)
 
-// Error codes returned in IS_RIP replies :
+// Error codes returned in IS_RIP replies:
 
-define('RIP_OK',            0);    //  0 - OK : completed inStruction
-define('RIP_ALREADY',       1);    //  1 - OK : already at the destination
+define('RIP_OK',            0);    //  0 - OK: completed inStruction
+define('RIP_ALREADY',       1);    //  1 - OK: already at the destination
 define('RIP_DEDICATED',     2);    //  2 - can't run a replay - dedicated host
 define('RIP_WRONG_MODE',    3);    //  3 - can't start a replay - not in a suitable mode
 define('RIP_NOT_REPLAY',    4);    //  4 - RName is zero but no replay is currently loaded
@@ -3030,18 +3095,22 @@ define('RIP_USER',          10);    // 10 - replay search was terminated by user
 define('RIP_OOS',           11);    // 11 - can't reach destination - SPR is out of sync
 $RIP = array(RIP_OK => 'RIP_OK', RIP_ALREADY => 'RIP_ALREADY', RIP_DEDICATED => 'RIP_DEDICATED', RIP_WRONG_MODE => 'RIP_WRONG_MODE', RIP_NOT_REPLAY => 'RIP_NOT_REPLAY', RIP_CORRUPTED => 'RIP_CORRUPTED', RIP_NOT_FOUND => 'RIP_NOT_FOUND', RIP_UNLOADABLE => 'RIP_UNLOADABLE', RIP_DEST_OOB => 'RIP_DEST_OOB', RIP_UNKNOWN => 'RIP_UNKNOWN', RIP_USER => 'RIP_USER', RIP_OOS => 'RIP_OOS');
 
-// Options byte : some options
+// Options byte: some options
 
 define('RIPOPT_LOOP',   1);     // replay will loop if this bit is set
 define('RIPOPT_SKINS',  2);     // set this bit to download missing skins
 $RIPOPT = array(RIPOPT_LOOP => 'RIPOPT_LOOP', RIPOPT_SKINS => 'RIPOPT_SKINS');
 
+// NOTE: RIPOPT_FULL_PHYS makes MPR searching much slower so should not normally be used.
+// This flag was added to allow high accuracy MCI packets to be output when fast forwarding.
+
+
 // SCREENSHOTS
 // ===========
 
-// You can instuct LFS to save a screenshot using the IS_SSH packet.
-// The screenshot will be saved as an uncompressed BMP in the data\shots folder.
-// BMP can be a filename (excluding .bmp) or zero - LFS will create a file name.
+// You can instuct LFS to save a screenshot in data\shots using the IS_SSH packet.
+// It will be saved as bmp / jpg / png as set in Misc Options.
+// Name can be a filename (excluding extension) or zero - LFS will create a name.
 // LFS will reply with another IS_SSH when the request is completed.
 
 class IS_SSH extends Struct // ScreenSHot
@@ -3051,7 +3120,7 @@ class IS_SSH extends Struct // ScreenSHot
 
     protected $Size = 40;       # 40
     protected $Type = ISP_SSH;  # ISP_SSH
-    public $ReqI;               # request : non-zero / reply : same value returned
+    public $ReqI;               # request: non-zero / reply: same value returned
     public $Error;              # 0 = OK / other values are listed below
 
     protected $Sp0;             # 0
@@ -3062,9 +3131,9 @@ class IS_SSH extends Struct // ScreenSHot
     public $Name;                # name of screenshot file - last byte must be zero
 }; function IS_SSH() { return new IS_SSH; }
 
-// Error codes returned in IS_SSH replies :
+// Error codes returned in IS_SSH replies:
 
-define('SSH_OK',        0);    //  0 - OK : completed inStruction
+define('SSH_OK',        0);    //  0 - OK: completed inStruction
 define('SSH_DEDICATED', 1);    //  1 - can't save a screenshot - dedicated host
 define('SSH_CORRUPTED', 2);    //  2 - IS_SSH corrupted (e.g. BMP does not end with zero)
 define('SSH_NO_SAVE',   3);    //  3 - could not save the screenshot
@@ -3077,14 +3146,14 @@ $SSH = array(SSH_OK => 'SSH_OK', SSH_DEDICATED => 'SSH_DEDICATED', SSH_CORRUPTED
 // You should set the ISF_LOCAL flag (in IS_ISI) if your program is not a host control
 // system, to make sure your buttons do not conflict with any buttons sent by the host.
 
-// LFS can display normal buttons in these four screens :
+// LFS can display normal buttons in these four screens:
 
 // - main entry screen
 // - game setup screen
 // - in game
 // - SHIFT+U mode
 
-// The recommended area for most buttons is defined by :
+// The recommended area for most buttons is defined by:
 
 define('IS_X_MIN',  0);
 define('IS_X_MAX',  110);
@@ -3097,7 +3166,7 @@ $IS = array(IS_X_MIN => 'IS_X_MIN', IS_X_MAX => 'IS_X_MAX', IS_Y_MIN => 'IS_Y_MI
 // Buttons outside that area will not have a space kept clear.
 // You can also make buttons visible in all screens - see below.
 
-// To delete one button or clear all buttons, send this packet :
+// To delete one button or clear all buttons, send this packet:
 
 class IS_BFN extends Struct  // Button FunctioN - delete buttons / receive button requests
 {
@@ -3122,7 +3191,7 @@ define('BFN_USER_CLEAR',    2);     //  2 - info            : user cleared this 
 define('BFN_REQUEST',       3);     //  3 - user request    : SHIFT+B or SHIFT+I - request for buttons
 $BFN = array(BFN_DEL_BTN => 'BFN_DEL_BTN', BFN_CLEAR => 'BFN_CLEAR', BFN_USER_CLEAR => 'BFN_USER_CLEAR', BFN_REQUEST => 'BFN_REQUEST');
 
-// NOTE : BFN_REQUEST allows the user to bring up buttons with SHIFT+B or SHIFT+I
+// NOTE: BFN_REQUEST allows the user to bring up buttons with SHIFT+B or SHIFT+I
 
 // SHIFT+I clears all host buttons if any - or sends a BFN_REQUEST to host instances
 // SHIFT+B is the same but for local buttons and local instances
@@ -3161,7 +3230,7 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
     }
 }; function IS_BTN() { return new IS_BTN; }
 
-// ClickID byte : this value is returned in IS_BTC and IS_BTT packets.
+// ClickID byte: this value is returned in IS_BTC and IS_BTT packets.
 
 // Host buttons and local buttons are stored separately, so there is no chance of a conflict between
 // a host control system and a local system (although the buttons could overlap on screen).
@@ -3169,7 +3238,7 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
 // Programmers of local InSim programs may wish to consider using a configurable button range and
 // possibly screen position, in case their users will use more than one local InSim program at once.
 
-// TypeIn byte : if set, the user can click this button to type in text.
+// TypeIn byte: if set, the user can click this button to type in text.
 
 // Lowest 7 bits are the maximum number of characters to type in (0 to 95)
 // Highest bit (128) can be set to initialise dialog with the button's text
@@ -3179,11 +3248,11 @@ class IS_BTN extends Struct // BuTtoN - button header - followed by 0 to 240 cha
 // Text in the IS_BTN packet.  If the first character of IS_BTN's Text field is zero, LFS will read
 // the caption up to the second zero.  The visible button text then follows that second zero.
 
-// Text : 65-66-67-0 would display button text "ABC" and no caption
+// Text: 65-66-67-0 would display button text "ABC" and no caption
 
-// Text : 0-65-66-67-0-68-69-70-71-0-0-0 would display button text "DEFG" and caption "ABC"
+// Text: 0-65-66-67-0-68-69-70-71-0-0-0 would display button text "DEFG" and caption "ABC"
 
-// Inst byte : mainly used internally by InSim but also provides some extra user flags
+// Inst byte: mainly used internally by InSim but also provides some extra user flags
 
 define('INST_ALWAYS_ON',    128);       // if this bit is set the button is visible in all screens
 $INST = array(INST_ALWAYS_ON => 'INST_ALWAYS_ON');
@@ -3194,7 +3263,7 @@ $INST = array(INST_ALWAYS_ON => 'INST_ALWAYS_ON');
 // overwriting LFS buttons.  Most buttons should be defined without this flag, and positioned
 // in the recommended area so LFS can keep a space clear in the main screens.
 
-// BStyle byte : style flags for the button
+// BStyle byte: style flags for the button
 
 define('ISB_C1',    1);     // you can choose a standard
 define('ISB_C2',    2);     // interface colour using
@@ -3214,12 +3283,12 @@ define('ISB_RIGHT', 128);   // align text to right
 // colour 6 : text string       (default:pale blue)
 // colour 7 : unavailable       (default:grey)
 
-// NOTE : If width or height are zero, this would normally be an invalid button.  But in that case if
+// NOTE: If width or height are zero, this would normally be an invalid button.  But in that case if
 // there is an existing button with the same ClickID, all the packet contents are ignored except the
 // Text field.  This can be useful for updating the text in a button without knowing its position.
 // For example, you might reply to an IS_BTT using an IS_BTN with zero W and H to update the text.
 
-// Replies : If the user clicks on a clickable button, this packet will be sent :
+// Replies: If the user clicks on a clickable button, this packet will be sent :
 
 class IS_BTC extends Struct // BuTton Click - sent back when user clicks a button
 {
@@ -3237,7 +3306,7 @@ class IS_BTC extends Struct // BuTton Click - sent back when user clicks a butto
     protected $Sp3;
 }; function IS_BTC() { return new IS_BTC; }
 
-// CFlags byte : click flags
+// CFlags byte: click flags
 
 define('ISB_LMB',   1);     // left click
 define('ISB_RMB',   2);     // right click
@@ -3267,22 +3336,24 @@ class IS_BTT extends Struct // BuTton Type - sent back when user types into a te
 }; function IS_BTT() { return new IS_BTT; }
 
 
-// OutSim - MOTION SIMULATOR SUPPORT
+// OutSim - MOTION SIMULATOR SUPPORT AND TELEMETRY OUTPUT
 // ======
 
-// The user's car in multiplayer or the viewed car in single player or
-// single player replay can output information to a motion system while
-// viewed from an internal view.
+// The user's car in multiplayer or the viewed car in single player or single player
+// replay can output data to an external program while in VIEW_DRIVER or VIEW_CUSTOM.
 
-// This can be controlled by 5 lines in the cfg.txt file :
+// This can be controlled by 6 lines in the cfg.txt file:
 
-// OutSim Mode 0        :0-off 1-driving 2-driving+replay
-// OutSim Delay 1       :minimum delay between packets (100ths of a sec)
-// OutSim IP 0.0.0.0    :IP address to send the UDP packet
-// OutSim Port 0        :IP port
-// OutSim ID 0          :if not zero, adds an identifier to the packet
+// OutSim Mode 0		: 0 = off / 1 = driving / 2 = driving + replay
+// OutSim Delay 1		: minimum delay between packets (100ths of a sec)
+// OutSim IP 0.0.0.0	: IP address to send the UDP packet
+// OutSim Port 0		: IP port
+// OutSim ID 0			: if not zero, adds an identifier to the packet
+// OutSim Opts 0		: see docs\OutSimPack.txt for the available options
 
-// Each update sends the following UDP packet :
+
+// If OutSim Opts is zero, each update sends the following UDP packet:
+
 class OutSimPack extends Struct
 {
     const PACK = 'Vf12V3';
@@ -3330,15 +3401,15 @@ class OutSimPack extends Struct
 // single player replay can output information to a dashboard system
 // while viewed from an internal view.
 
-// This can be controlled by 5 lines in the cfg.txt file :
+// This can be controlled by 5 lines in the cfg.txt file:
 
-// OutGauge Mode 0        :0-off 1-driving 2-driving+replay
-// OutGauge Delay 1       :minimum delay between packets (100ths of a sec)
-// OutGauge IP 0.0.0.0    :IP address to send the UDP packet
-// OutGauge Port 0        :IP port
-// OutGauge ID 0          :if not zero, adds an identifier to the packet
+// OutGauge Mode 0		: 0-off 1-driving 2-driving+replay
+// OutGauge Delay 1		: minimum delay between packets (100ths of a sec)
+// OutGauge IP 0.0.0.0	: IP address to send the UDP packet
+// OutGauge Port 0		: IP port
+// OutGauge ID 0		: if not zero, adds an identifier to the packet
 
-// Each update sends the following UDP packet :
+// Each update sends the following UDP packet:
 
 class OutGaugePack extends Struct
 {
