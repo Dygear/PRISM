@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * "Singleton" class to manage buttons!
@@ -7,6 +8,9 @@
 define('BM_MAX_USER_BUTTONS', 180); # 75% of max possible buttons
 define('BM_MAX_GLOBAL_BUTTONS', 60); # 25% of max possible buttons
 
+/**
+	* Class ButtonManager
+	*/
 class ButtonManager
 {
     // poor man's debugging
@@ -23,7 +27,7 @@ class ButtonManager
             console("\t".$hostId . ' {');
             foreach ($users as $UCID => $buttons)
             {
-                $out = "Conn ".$UCID.': ';
+                $out = 'Conn ' .$UCID.': ';
                 foreach ($buttons as $clickID => $BTN)
                 {
                     if ($BTN != null)
@@ -35,7 +39,7 @@ class ButtonManager
         }
     }
 
-    private static $buttons = array();
+    private static $buttons = [];
 
     /** Called by Button->send(). Assigns unique clickId. */
     public static function registerButton(Button $BTN, $hostId = null)
@@ -56,7 +60,7 @@ class ButtonManager
         // make sure hostid is set in array
         if (!isset(self::$buttons[$hostId]))
         {
-            self::$buttons[$hostId] = array();
+            self::$buttons[$hostId] = [];
         }
 
         if ($BTN->UCID == 255) {
@@ -80,7 +84,7 @@ class ButtonManager
 
             if ($id === -1)
             {
-                echo "No free ButtonID found."; // add "paging" here...
+                echo 'No free ButtonID found.'; // add "paging" here...
                 return false;
             }
             else {
@@ -109,7 +113,7 @@ class ButtonManager
 
             if ($id === -1)
             {
-                echo "No free ButtonID found."; // add "paging" here...
+                echo 'No free ButtonID found.'; // add "paging" here...
                 return false;
             }
             else {
@@ -122,7 +126,13 @@ class ButtonManager
     }
 
 // removal
-    public static function removeButtonByKey($UCID, $key, $hostId = NULL)
+
+				/**
+					* @param $UCID
+					* @param $key
+					* @param null $hostId
+					*/
+				public static function removeButtonByKey($UCID, $key, $hostId = NULL)
     {
         $button = self::getButtonForKey($UCID, $key, $hostId);
         if ($button != null)
@@ -131,7 +141,12 @@ class ButtonManager
         }
     }
 
-    public static function removeButtonsByGroup($UCID, $group, $hostId = NULL)
+				/**
+					* @param $UCID
+					* @param $group
+					* @param null $hostId
+					*/
+				public static function removeButtonsByGroup($UCID, $group, $hostId = NULL)
     {
         $buttons = self::getButtonsForGroup($UCID, $group, $hostId);
         foreach ($buttons as $button)
@@ -140,7 +155,11 @@ class ButtonManager
         }
     }
 
-    public static function removeButton(Button $BTN, $hostId = NULL)
+				/**
+					* @param Button $BTN
+					* @param null $hostId
+					*/
+				public static function removeButton(Button $BTN, $hostId = NULL)
     {
         self::debug();
         if ($hostId === NULL)
@@ -150,7 +169,7 @@ class ButtonManager
         }
 
         // send delete command
-        $bfn = new IS_BFN;
+        $bfn = new IS_BFN();
         $bfn->SubT(BFN_DEL_BTN)->UCID($BTN->UCID)->ClickID($BTN->ClickID)->Send();
 
         // remove button from button array
@@ -161,7 +180,11 @@ class ButtonManager
 
 
 // interaction
-    public static function onButtonClick(IS_BTC $BTC)
+
+				/**
+					* @param IS_BTC $BTC
+					*/
+				public static function onButtonClick(IS_BTC $BTC)
     {
         self::debug();
         global $PRISM;
@@ -189,7 +212,11 @@ class ButtonManager
 
         self::debug();
     }
-    public static function onButtonText(IS_BTT $BTT)
+
+				/**
+					* @param IS_BTT $BTT
+					*/
+				public static function onButtonText(IS_BTT $BTT)
     {
         self::debug();
         global $PRISM;
@@ -219,7 +246,14 @@ class ButtonManager
 
 
 //Getter methods
-    public static function getButtonForKey($UCID, $key, $hostId = NULL)
+
+				/**
+					* @param $UCID
+					* @param $key
+					* @param null $hostId
+					* @return mixed|null
+					*/
+				public static function getButtonForKey($UCID, $key, $hostId = NULL)
     {
         if ($hostId === NULL)
         {
@@ -241,7 +275,13 @@ class ButtonManager
         return null;
     }
 
-    public static function getButtonsForGroup($UCID, $group, $hostId = NULL)
+				/**
+					* @param $UCID
+					* @param $group
+					* @param null $hostId
+					* @return array
+					*/
+				public static function getButtonsForGroup($UCID, $group, $hostId = NULL)
     {
         if ($hostId === NULL)
         {
@@ -249,7 +289,7 @@ class ButtonManager
             $hostId = $PRISM->hosts->curHostID;
         }
 
-        $buttons = array();
+        $buttons = [];
 
         if (isset(self::$buttons[$hostId][$UCID]))
         {
@@ -266,8 +306,11 @@ class ButtonManager
     }
 
 
-
-    public static function clearButtonsForConn($UCID, $hostId = NULL)
+				/**
+					* @param $UCID
+					* @param null $hostId
+					*/
+				public static function clearButtonsForConn($UCID, $hostId = NULL)
     {
         $hostButtons = self::buttonsForHost($hostId);
         unset($hostButtons[$UCID]);
@@ -298,7 +341,11 @@ class ButtonManager
     }
     */
 
-    private static function buttonsForHost($hostId = NULL)
+				/**
+					* @param null $hostId
+					* @return array|mixed
+					*/
+				private static function buttonsForHost($hostId = NULL)
     {
         if ($hostId === NULL)
         {
@@ -308,7 +355,7 @@ class ButtonManager
 
         if (!isset(self::$buttons[$hostId]))
         {
-            self::$buttons[$hostId] = array();
+            self::$buttons[$hostId] = [];
         }
 
         return self::$buttons[$hostId];
@@ -334,7 +381,7 @@ class ButtonManager
 
 // Area reserving
 
-    private static $reservedAreas = array();
+    private static $reservedAreas = [];
 
     /**
      * Reserves an area for button display.
@@ -365,17 +412,17 @@ class ButtonManager
                 ($area['T'] + $area['H']) > $T
             )
             {
-                console('Area already reserved. L:'.$area['L'].", T:".$area['T'].", W:".$area['W'].", H:".$area['H']);
+                console('Area already reserved. L:'.$area['L']. ', T:' .$area['T']. ', W:' .$area['W']. ', H:' .$area['H']);
                 return false;
             }
         }
 
-        self::$reservedAreas[] = array(
+        self::$reservedAreas[] = [
             'L' => $L,
             'T' => $T,
             'W' => $W,
             'H' => $H
-        );
+								];
 
         return true;
     }
