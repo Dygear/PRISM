@@ -1,13 +1,6 @@
 <?php
-declare(strict_types=1);
 
-/**
- * @param $line
- * @param bool $EOL
- * @param string $fgcolor
- * @param string $bgcolor
- */
-function console($line, bool $EOL = true, string $fgcolor = 'light_gray', string $bgcolor = 'black')
+function console($line, $EOL = true, $fgcolor = "light_gray", $bgcolor = "black")
 {
     // example:
     // console("this is my exampletext", true, "light_green", "black");
@@ -17,46 +10,40 @@ function console($line, bool $EOL = true, string $fgcolor = 'light_gray', string
     //
     // In Linux use a ANSI supported terminal like for example SecureCRT
 
-    $ansi_fgcolor_arr = [
-                            'black' => '0;30',
-                            'dark_gray' => '1;30',
-                            'red' => '0;31',
-                            'light_red' => '1;31',
-                            'green' => '0;32',
-                            'light_green' => '1;32',
-                            'brown' => '0;33',
-                            'yellow' => '1;33',
-                            'blue' => '0;34',
-                            'light_blue' => '1;34',
-                            'purple' => '0;35',
-                            'light_purple' => '1;35',
-                            'cyan' => '0;36',
-                            'light_cyan' => '1;36',
-                            'light_gray' => '0;37',
-                            'white' => '1;37'
-    ];
+    $ansi_fgcolor_arr = array(
+                            "black"         => "0;30",
+                            "dark_gray"     => "1;30",
+                            "red"           => "0;31",
+                            "light_red"     => "1;31",
+                            "green"         => "0;32",
+                            "light_green"   => "1;32",
+                            "brown"         => "0;33",
+                            "yellow"        => "1;33",
+                            "blue"          => "0;34",
+                            "light_blue"    => "1;34",
+                            "purple"        => "0;35",
+                            "light_purple"  => "1;35",
+                            "cyan"          => "0;36",
+                            "light_cyan"    => "1;36",
+                            "light_gray"    => "0;37",
+                            "white"         => "1;37"
+                            );
 
-    $ansi_bgcolor_arr = [
-                            'black' => '40',
-                            'red' => '41',
-                            'green' => '42',
-                            'yellow' => '43',
-                            'blue' => '44',
-                            'magenta' => '45',
-                            'cyan' => '46',
-                            'light_gray' => '47'
-    ];
+    $ansi_bgcolor_arr = array(
+                            "black"         => "40",
+                            "red"           => "41",
+                            "green"         => "42",
+                            "yellow"        => "43",
+                            "blue"          => "44",
+                            "magenta"       => "45",
+                            "cyan"          => "46",
+                            "light_gray"    => "47"
+                            );
 
-    echo "\033[" . $ansi_fgcolor_arr[$fgcolor] . "m\033[" . $ansi_bgcolor_arr[$bgcolor] . 'm' . $line . "\033[0m" . (($EOL) ? PHP_EOL : '');
+    echo "\033[" . $ansi_fgcolor_arr[$fgcolor] . "m\033[" . $ansi_bgcolor_arr[$bgcolor] . "m" . $line . "\033[0m" . (($EOL) ? PHP_EOL : '');
 }
 
-/**
- * @param $path
- * @param bool $recursive
- * @param null $ext
- * @return array|false
- */
-function get_dir_structure($path, bool $recursive = TRUE, $ext = NULL): bool|array
+function get_dir_structure($path, $recursive = TRUE, $ext = NULL)
 {
     $return = NULL;
     if (!is_dir($path))
@@ -78,7 +65,7 @@ function get_dir_structure($path, bool $recursive = TRUE, $ext = NULL): bool|arr
                     }
                     else
                     {
-                        $return[$item] = [];
+                        $return[$item] = array();
                     }
                 }
                 else
@@ -96,12 +83,7 @@ function get_dir_structure($path, bool $recursive = TRUE, $ext = NULL): bool|arr
 }
 
 // check if path1 is part of path2 (ie. if path1 is a base path of path2)
-/**
- * @param $path1
- * @param $path2
- * @return bool
- */
-function isDirInDir($path1, $path2): bool
+function isDirInDir($path1, $path2)
 {
     $p1 = explode('/', $path1);
     $p2 = explode('/', $path2);
@@ -117,11 +99,7 @@ function isDirInDir($path1, $path2): bool
     return true;
 }
 
-/**
- * @param false $windows
- * @return string
- */
-function findPHPLocation(bool $windows = false): string
+function findPHPLocation($windows = false)
 {
     $phpLocation = '';
 
@@ -158,16 +136,12 @@ function findPHPLocation(bool $windows = false): string
     return $phpLocation;
 }
 
-/**
- * @param $file
- * @return array
- */
-function validatePHPFile($file): array
+function validatePHPFile($file)
 {
     // Validate script
     $fileContents = file_get_contents($file);
-    if (!eval('return true;'.preg_replace(['/^<\?(php)?/', '/\?>$/'], '', $fileContents)))
-        return [false, ['Errors parsing '.$file]];
+    if (!eval('return true;'.preg_replace(array('/^<\?(php)?/', '/\?>$/'), '', $fileContents)))
+        return array(false, array('Errors parsing '.$file));
 
     // Validate any require_once or include_once files.
 //    $matches = array();
@@ -181,14 +155,10 @@ function validatePHPFile($file): array
 //            return $result;
 //    }
 
-    return [true, []];
+    return array(true, array());
 }
 
-/**
- * @param string $flagsString
- * @return false|int
- */
-function flagsToInteger(string $flagsString = ''): bool|int
+function flagsToInteger($flagsString = '')
 {
     # We don't have anything to parse.
     if ($flagsString == '')
@@ -214,11 +184,7 @@ function flagsToInteger(string $flagsString = ''): bool|int
     return $flagsBitwise;
 }
 
-/**
- * @param int $flagsBitwise
- * @return string
- */
-function flagsToString(int $flagsBitwise = 0): string
+function flagsToString($flagsBitwise = 0)
 {
     $flagsString = '';
     if ($flagsBitwise == 0)
@@ -239,12 +205,7 @@ define('RAND_ALPHA', 2);
 define('RAND_NUMERIC', 4);
 define('RAND_HEX', 8);
 define('RAND_BINARY', 16);
-/**
- * @param $len
- * @param int $type
- * @return string
- */
-function createRandomString($len, int $type = RAND_ASCII): string
+function createRandomString($len, $type = RAND_ASCII)
 {
     $out = '';
     for ($a=0; $a<$len; $a++)
@@ -273,12 +234,7 @@ function createRandomString($len, int $type = RAND_ASCII): string
     return $out;
 }
 
-/**
- * @param $string
- * @param $delimiter
- * @return string
- */
-function ucwordsByChar($string, $delimiter): string
+function ucwordsByChar($string, $delimiter)
 {
     $out = '';
     foreach (explode($delimiter, $string) as $k => $v)
@@ -290,11 +246,7 @@ function ucwordsByChar($string, $delimiter): string
     return $out;
 }
 
-/**
- * @param $ip
- * @return false|mixed|string
- */
-#[Pure] function getIP($ip): mixed
+function getIP(&$ip)
 {
     if (verifyIP($ip))
         return $ip;
@@ -308,21 +260,12 @@ function ucwordsByChar($string, $delimiter): string
     return FALSE;
 }
 
-/**
- * @param $ip
- * @return mixed
- */
-function verifyIP($ip): mixed
+function verifyIP(&$ip)
 {
     return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
 }
 
-/**
- * @param $int
- * @param int $fraction
- * @return string
- */
-function timeToString($int, int $fraction=1000): string
+function timeToString($int, $fraction=1000)
 {
     $seconds = floor($int / $fraction);
     $fractions = $int - floor($seconds * $fraction);
@@ -339,21 +282,12 @@ function timeToString($int, int $fraction=1000): string
     }
 }
 
-/**
- * @param $time
- * @param int $fraction
- * @return array|string|string[]|null
- */
-function timeToStr($time, int $fraction=1000): array|string|null
+function timeToStr($time, $fraction=1000)
 {
     return preg_replace('/^(0+:)+/', '', timeToString($time, $fraction));
 }
 
-/**
- * @param $key
- * @return Closure
- */
-function sortByKey($key): Closure
+function sortByKey($key)
 {
     return function ($left, $right) use ($key)
     {
@@ -364,11 +298,7 @@ function sortByKey($key): Closure
     };
 }
 
-/**
- * @param $property
- * @return Closure
- */
-function sortByProperty($property): Closure
+function sortByProperty($property)
 {
     return function ($left, $right) use ($property)
     {
@@ -379,31 +309,19 @@ function sortByProperty($property): Closure
     };
 }
 
-/**
- * Class Msg2Lfs
- */
 class Msg2Lfs
 {
-    public int $PLID = 0;
-    public int $UCID = 0;
-    public mixed $Text = '';
-    public int $Sound = SND_SILENT;
+    public $PLID = 0;
+    public $UCID = 0;
+    public $Text = '';
+    public $Sound = SND_SILENT;
 
-    /**
-     * Msg2Lfs constructor.
-     * @param string $text
-     */
-    public function __construct(string $text = '')
+    public function __construct($text = '')
     {
         $this->Text = $text;
         return $this;
     }
 
-    /**
-     * @param $name
-     * @param array $arguments
-     * @return $this
-     */
     public function &__call($name, array $arguments)
     {
         if (property_exists(get_class($this), $name))
@@ -411,10 +329,6 @@ class Msg2Lfs
         return $this;
     }
 
-    /**
-     * @param null $hostId
-     * @return $this|void
-     */
     public function send($hostId = NULL)
     {
         if ($this->Text == '') { return; }
@@ -440,11 +354,5 @@ class Msg2Lfs
 
         return $this;
     }
-}
-
-/**
- * @return Msg2Lfs
- */
-#[Pure] function Msg2Lfs(): Msg2Lfs
-{ return new Msg2Lfs(); }
-
+}; function Msg2Lfs() { return new Msg2Lfs; }
+?>
