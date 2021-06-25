@@ -29,7 +29,7 @@
 					<th width="10%">Type</th>
 					<th width="10%">IP:Port (UDP Port)</th>
 					<th width="16%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Transmitted">TX</abbr></th>
-					<th width="16%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Recived">RX</abbr></th>
+					<th width="16%"><abbr title="Packets Per Second">PPS</abbr> <abbr title="Received">RX</abbr></th>
 					<th width="24%">Clients (Players) / Slots</th>
 				</tr>
 <?php	forEach ($PRISM->hosts->getHostsInfo() as $info):	?>
@@ -59,7 +59,7 @@
 			<tbody>
 				<tr>
 					<th>Command</th>
-					<th>Descriptoin</th>
+					<th>Description</th>
 				</tr>
 <?php
 	forEach ($PRISM->plugins->getPlugins() as $plugin => $details):
@@ -81,7 +81,7 @@
 					<th>Name</th>
 					<th>Version</th>
 					<th>Author</th>
-					<th>Descriptiom</th>
+					<th>Description</th>
 				</tr>
 <?php	forEach ($PRISM->plugins->getPlugins() as $plugin => $details):	?>
 				<tr>

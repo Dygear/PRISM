@@ -33,7 +33,7 @@ define('STREAM_WRITE_BYTES',    1400);
  * HostHandler public functions :
  * ->initialise()                                    # (re)loads the config files and (re)connects to the host(s)
  * ->sendPacket($packetClass, $hostId = NULL)        # send a packet to either the last incoming host, or to $hostID
- * ->getHostsInfo()                                    # retreive an array of information about all the hosts
+ * ->getHostsInfo()                                    # retrieve an array of information about all the hosts
  * ->getHostById(string $hostId)                    # get a host object by its hostID
  * ->getHostsByIp(string $ip)                        # get all hosts with a certain IP
 **/
@@ -261,7 +261,7 @@ class HostHandler extends SectionHandler
                 }
             }
 
-            // Treat secundary socketMCI separately. This socket is always open.
+            // Treat secondary socketMCI separately. This socket is always open.
             if ($host->getUdpPort() > 0 && is_resource($host->getSocketMCI()))
                 $sockReads[] = $host->getSocketMCI();
 
@@ -463,7 +463,7 @@ class HostHandler extends SectionHandler
             return;
         }
 
-        $this->curHostId = $hostID; # To make sure we always know what host we are talking to, makeing the sendPacket function useful everywhere.
+        $this->curHostId = $hostID; # To make sure we always know what host we are talking to, making the sendPacket function useful everywhere.
 
         # Parse Packet Header
         $pH = unpack('CSize/CType/CReqI/CSubT', $rawPacket);
@@ -737,7 +737,7 @@ class InsimConnection
     private $connectIP        = '';            # the actual ip used to connect
     private $port            = 0;            # the port
     private $flags            = 72;            # Defaults to ISF_MSO_COLS (8) & ISF_CON (64) options on.
-    private $udpPort        = 0;            # the secundary udp port to listen on for NLP/MCI packets, in case the main port is tcp
+    private $udpPort        = 0;            # the secondary udp port to listen on for NLP/MCI packets, in case the main port is tcp
     private $outgaugePort    = 0;            # the outgauge udp port to listen on
     private $adminPass        = '';            # adminpass for both relay and direct usage
     private $specPass        = '';            # specpass for relay usage
@@ -1039,7 +1039,7 @@ class InsimConnection
             return FALSE;
         }
 
-        console('Listening for NLP/MCI on secundary UDP port '.$this->udpPort);
+        console('Listening for NLP/MCI on secondary UDP port '.$this->udpPort);
 
         return TRUE;
     }

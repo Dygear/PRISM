@@ -33,7 +33,7 @@ class LayoutObject {
 
     /**
      * Constructor.
-     * Either pass an 8 Byte data struture provided by insim or in the layout file or all other params as well.
+     * Either pass an 8 Byte data structure provided by insim or in the layout file or all other params as well.
      * @param dataOrX 8 byte data or value for X coordinate
      * @param y Y coordinate
      * @param z Z coordinate

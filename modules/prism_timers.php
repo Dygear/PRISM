@@ -7,7 +7,7 @@ class Timers
     // Registers a callback method.
     protected function createTimer($callback, $interval = 1.0, $flags = Timer::CLOSE, $args = array())
     {
-        # Uniqe Timer ID based on time in microseconds prepended by a random number
+        # Unique Timer ID based on time in microseconds prepended by a random number
         $name = uniqid(mt_rand(), true);
         $this->createNamedTimer($name, $callback, $interval, $flags, $args);
     }
@@ -38,7 +38,7 @@ class Timers
         foreach ($this->timers as $name => &$timer)
         {
              $timerTS = $timer->getTimeStamp();
-            # Check to see if the first timestamp has elpased.
+            # Check to see if the first timestamp has elapsed.
             if ($timeNow < $timerTS)
                 continue; # If we are not past this timestamp, we go no further for this timer.
 

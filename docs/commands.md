@@ -61,7 +61,7 @@ class example extends Plugins {
 ```
 
 ## Creating Admin Commands
-The only diffrence from creating an admin command verse that of a regular command is one more argument to the registerSayCommand method. This argument can be omitted if you want the command available to all clients. However, should you chose to use it, it must be an int value, or a bit mask combonation from the ADMIN_* defines.
+The only difference from creating an admin command verse that of a regular command is one more argument to the registerSayCommand method. This argument can be omitted if you want the command available to all clients. However, should you chose to use it, it must be an int value, or a bit mask combination from the ADMIN_* defines.
 
 Let's create a simple admin command which kicks another client by their user name.
 ```php
@@ -100,9 +100,9 @@ In our previous example, we did not take immunity into account. Two functions ar
 When checking for immunity, the following heuristics are performed in this exact order:
 
 * If the targeting client is not an admin, targeting fails.
-* If the targetted client is not an admin, targeting succeeds.
+* If the targeted client is not an admin, targeting succeeds.
 * If the targeting client has ADMIN_ROOT, targeting succeeds.
-* If the targetted client has ADMIN_IMMUNITY AND the targeting client does not have ADMIN_UNIMUNIZE, targeting fails.
+* If the targeted client has ADMIN_IMMUNITY AND the targeting client does not have ADMIN_UNIMUNIZE, targeting fails.
 * If no conclusion is reached via the previous steps, targeting succeeds.
 
 So, how can we adapt our function about to use immunity?
@@ -110,7 +110,7 @@ So, how can we adapt our function about to use immunity?
 ```php
 public function cmdKick($Msg, $UName) {
 	if (($argc = count($argv = explode(' ', $Msg))) < 3) {
-		$this->clientPrint('Useage: \`prism kick <UName>\`', PRINT_CHAT, $UName);
+		$this->clientPrint('Usage: \`prism kick <UName>\`', PRINT_CHAT, $UName);
 		return PLUGIN_HANDLED;
 	}
 

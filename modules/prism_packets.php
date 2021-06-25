@@ -340,7 +340,7 @@ define('INSIM_VERSION',	8);
 // unsigned     4-byte unsigned integer      V
 // int          4-byte signed integerz       l
 // float        4-byte float                 f
-// string       var-byte array of charaters  a
+// string       var-byte array of characters  a
 
 // RaceLaps (rl) : (various meanings depending on range)
 
@@ -514,7 +514,7 @@ $ISP = array(ISP_NONE => 'ISP_NONE', ISP_ISI => 'ISP_ISI', ISP_VER => 'ISP_VER',
 define('TINY_NONE',     0);     //  0 - keep alive        : see "maintaining the connection"
 define('TINY_VER',      1);     //  1 - info request    : get version
 define('TINY_CLOSE',    2);     //  2 - inStruction        : close insim
-define('TINY_PING',     3);     //  3 - ping request    : external progam requesting a reply
+define('TINY_PING',     3);     //  3 - ping request    : external program requesting a reply
 define('TINY_REPLY',    4);     //  4 - ping reply        : reply to a ping request
 define('TINY_VTC',      5);     //  5 - both ways        : game vote cancel (info or request)
 define('TINY_SCP',      6);     //  6 - info request    : send camera pos

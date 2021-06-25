@@ -105,7 +105,7 @@ class admin extends Plugins
 		
 		if (($cmd == 'ban' && $argc < 4) || $argc < 3)
 		{
-			IS_MTC()->UCID($ucid)->Text("Useage: `prism {$cmd}" . (($cmd == 'ban') ? ' <time>' : '') . ' <targets> ...`')->Send();
+			IS_MTC()->UCID($ucid)->Text("Usage: `prism {$cmd}" . (($cmd == 'ban') ? ' <time>' : '') . ' <targets> ...`')->Send();
 			return PLUGIN_HANDLED;
 		}
 		
@@ -191,7 +191,7 @@ class admin extends Plugins
 		
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
 		{
-			$MTC->Text('Useage: `prism plugins load <plugin>`')->Send();
+			$MTC->Text('Usage: `prism plugins load <plugin>`')->Send();
 			$MTC->Text('Loads plugin(s) at runtime.')->Send();
 			
 			$PluginsAll = get_dir_structure(PHPInSimMod::ROOTPATH . '/plugins/');
@@ -222,7 +222,7 @@ class admin extends Plugins
 		
 		if (($argc = count($argv = str_getcsv($cmd, ' '))) < 4)
 		{
-			$MTC->Text('Useage: `prism plugins unload <plugin>`')->Send();
+			$MTC->Text('Usage: `prism plugins unload <plugin>`')->Send();
 			$MTC->Text('Unloads plugin(s) at runtime.')->Send();
 			
 			$PluginsLoaded = array_keys($PRISM->plugins->getPlugins());

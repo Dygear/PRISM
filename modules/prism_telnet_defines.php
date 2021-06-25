@@ -8,7 +8,7 @@
 // IAC ACTION OPTION (3 bytes)
 define('TELNET_OPT_BINARY',			chr(0x00));	// Binary (RCF 856)
 define('TELNET_OPT_ECHO',			chr(0x01));	// (server) Echo (RFC 857)
-define('TELNET_OPT_SGA',			chr(0x03));	// Suppres Go Ahead (RFC 858)
+define('TELNET_OPT_SGA',			chr(0x03));	// Suppress Go Ahead (RFC 858)
 define('TELNET_OPT_TTYPE',			chr(0x18));	// Terminal Type (RFC 1091)
 define('TELNET_OPT_NAWS',			chr(0x1F));	// Window Size (RFC 1073)
 define('TELNET_OPT_TERMINAL_SPEED',	chr(0x20));	// Terminal Speed (RFC 1079)
@@ -22,7 +22,7 @@ define('TELNET_OPT_EOF',			chr(0xEC));
 define('TELNET_OPT_SUSP',			chr(0xED));
 define('TELNET_OPT_ABORT',			chr(0xEE));
 define('TELNET_OPT_DM',				chr(0xF2));	// Indicates the position of a Synch event within the data stream. This should always be accompanied by a TCP urgent notification.
-define('TELNET_OPT_BRK',			chr(0xF3));	// Break. Indicates that the “break” or “attention” key was hit.
+define('TELNET_OPT_BRK',			chr(0xF3));	// Break. Indicates that the ï¿½breakï¿½ or ï¿½attentionï¿½ key was hit.
 define('TELNET_OPT_IP',				chr(0xF4));	// suspend/abort process.
 define('TELNET_OPT_AO',				chr(0xF5));	// process can complete, but send no more output to users terminal.
 define('TELNET_OPT_AYT',			chr(0xF6));	// check to see if system is still running.

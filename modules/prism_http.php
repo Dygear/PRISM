@@ -393,7 +393,7 @@ ININOTES;
                 continue;
             }
 
-            // Ok we recieved some input from the http client.
+            // Ok we received some input from the http client.
             // Pass the data to the HttpClient so it can handle it.
             if (!$this->httpClients[$k]->handleInput($data, $errNo))
             {
@@ -676,7 +676,7 @@ class HttpClient
         // Pass the incoming data to the HttpRequest class, so it can handle it.
         if (!$this->httpRequest->handleInput($data))
         {
-            // An error was encountered while receiving the requst.
+            // An error was encountered while receiving the request.
             // Send reply (unless 444, a special 'direct reject' code) and return false to close this connection.
             if ($this->httpRequest->errNo != 444)
             {

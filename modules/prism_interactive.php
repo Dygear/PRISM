@@ -59,7 +59,7 @@ class Interactive
             $tmp['flags']            += (self::query('Are you connecting to dedicated or listen server?', array('dedi', 'listen')) == 'dedi') ? 0 : ISF_LOCAL;
             $tmp['flags']            += (self::query('Keep colours in MSO text?', array('yes', 'no')) == 'yes') ? ISF_MSO_COLS : 0;
             $tmp['flags']            += (self::query('Receive Node Lap Player (Less Detailed then MCI) packets?', array('yes', 'no')) == 'yes') ? ISF_NLP : 0;
-            $tmp['flags']            += (self::query('Receive Muli Car Info (Most detailed real time packet) packets?', array('yes', 'no')) == 'yes') ? ISF_MCI : 0;
+            $tmp['flags']            += (self::query('Receive Multi Car Info (Most detailed real time packet) packets?', array('yes', 'no')) == 'yes') ? ISF_MCI : 0;
             $tmp['flags']            += (self::query('Receive Contact packets?', array('yes', 'no')) == 'yes') ? ISF_CON : 0;
             $tmp['flags']            += (self::query('Receive Object Hit packets?', array('yes', 'no')) == 'yes') ? ISF_OBH : 0;
             $tmp['flags']            += (self::query('Receive Hot Lap Verification packets?', array('yes', 'no')) == 'yes') ? ISF_HLV : 0;

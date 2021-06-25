@@ -5,7 +5,7 @@ class TimingAndScoring extends Plugins
 	const NAME = 'Timing & Scoring';
 	const AUTHOR = 'Mark \'Dygear\' Tomlin';
 	const VERSION = '0.3.0';
-	const DESCRIPTION = 'Formula One™ Managaement Style Timeing & Scoring';
+	const DESCRIPTION = 'Formula One™ Management Style Timeing & Scoring';
 
 	public function __construct()
 	{
