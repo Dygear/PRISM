@@ -1,6 +1,4 @@
 <?php
-declare(strict_types=1);
-
 /**
  * Overwriting some methods. Should probably be merged into ISP_BTN.
  */
@@ -15,13 +13,7 @@ class Button extends IS_BTN
     public static $TO_ALL = 255;
     public static $TO_LOCAL = 0;
 
-				/**
-					* Button constructor.
-					* @param int $UCID
-					* @param null $key
-					* @param null $group
-					*/
-				public function __construct($UCID = 0, $key = NULL, $group = NULL)
+    public function __construct($UCID = 0, $key = NULL, $group = NULL)
     {
         $this->key = $key;
         $this->group = $group;
@@ -29,11 +21,7 @@ class Button extends IS_BTN
         $this->ClickID = -1;
     }
 
-				/**
-					* @param null $hostId
-					* @return Button|void
-					*/
-				public function send($hostId = NULL)
+    public function send($hostId = NULL)
     {
         $id = ButtonManager::registerButton($this, $hostId, $this->key, $this->group);
 
@@ -48,24 +36,15 @@ class Button extends IS_BTN
         }
     }
 
-				/**
-					* @param Plugins $plugin
-					* @param $methodName
-					* @param null $params
-					*/
-				public function registerOnClick(Plugins $plugin, $methodName, $params = NULL)
+    public function registerOnClick(Plugins $plugin, $methodName, $params = NULL)
     {
-        $this->onClick = [$plugin, $methodName];
+        $this->onClick = array($plugin, $methodName);
         if($params !== null) {
             $this->onClick[] = $params;
         }
         $this->BStyle |= ISB_CLICK;
     }
-
-				/**
-					* @param IS_BTC $BTC
-					*/
-				public function click(IS_BTC $BTC)
+    public function click(IS_BTC $BTC)
     {
         if (!is_array($this->onClick))
             return;
@@ -73,7 +52,7 @@ class Button extends IS_BTN
         switch (count($this->onClick))
         {
             case 3:
-                call_user_func_array([$this->onClick[0], $this->onClick[1]], $this->onClick[2]);
+                call_user_func_array(array($this->onClick[0], $this->onClick[1]), $this->onClick[2]);
             break;
             case 2:
             default:
@@ -81,13 +60,7 @@ class Button extends IS_BTN
             break;
         }
     }
-
-				/**
-					* @param Plugins $plugin
-					* @param $methodName
-					* @param int $maxLength
-					*/
-				public function registerOnText(Plugins $plugin, $methodName, $maxLength = 95)
+    public function registerOnText(Plugins $plugin, $methodName, $maxLength = 95)
     {
         if ($maxLength < 0 || $maxLength > 95) {
             $this->TypeIn = 95;
@@ -95,67 +68,41 @@ class Button extends IS_BTN
         else {
             $this->TypeIn = $maxLength;
         }
-        $this->onText = [$plugin, $methodName];
+        $this->onText = array($plugin, $methodName);
         $this->BStyle |= ISB_CLICK;
     }
-
-				/**
-					* @param IS_BTT $BTT
-					*/
-				public function enterText(IS_BTT $BTT)
+    public function enterText(IS_BTT $BTT)
     {
         if (is_array($this->onText)) {
             call_user_func($this->onText, $BTT, $this);
         }
     }
 
-				/**
-					* @param null $hostId
-					*/
-				public function delete($hostId = NULL)
+    public function delete($hostId = NULL)
     {
         return ButtonManager::removeButton($this, $hostId);
     }
 
-				/**
-					* @return $this
-					*/
-				public function UCID()
+    public function UCID($val)
     {
-        console('ERROR: UCID may only be set in constructor!');
+        console("ERROR: UCID may only be set in constructor!");
         return $this;
     }
-
-				/**
-					* @return $this
-					*/
-				public function ReqI()
+    public function ReqI($val)
     {
-        console('ERROR: Do not set ReqI manually!');
+        console("ERROR: Do not set ReqI manually!");
         return $this;
     }
-
-				/**
-					* @return $this
-					*/
-				public function ClickID()
+    public function ClickID($val)
     {
-        console('ERROR: Do not set ClickID manually!');
+        console("ERROR: Do not set ClickID manually!");
         return $this;
     }
-
-				/**
-					* @return null
-					*/
-				public function key()
+    public function key()
     {
         return $this->key;
     }
-
-				/**
-					* @return null
-					*/
-				public function group()
+    public function group()
     {
         return $this->group;
     }
