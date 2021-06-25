@@ -56,21 +56,18 @@ define('ADMIN_ROOT', ADMIN_ALL); # Root level access. (Full Access)
 */
 class AdminHandler extends SectionHandler
 {
-    private array $admins        = [];
+    private $admins        = array();
 
     public function __construct()
     {
         $this->iniFile = 'admins.ini';
     }
 
-				/**
-					* @return bool
-					*/
-				public function initialise()
+    public function initialise()
     {
         global $PRISM;
 
-        $this->admins = [];
+        $this->admins = array();
 
         if ($this->loadIniFile($this->admins)) {
             if ($PRISM->config->cvars['debugMode'] & PRISM_DEBUG_CORE) {
@@ -154,11 +151,10 @@ ININOTES;
         }
 
         # Crazy stuff we have to do to make sure that usernames are lowercase.
-        $tempAdmins = [];
+        $tempAdmins = array();
 
-								unset($details);
-								foreach ($this->admins as $username => $details) {
-            $tempAdmins[strtolower($username)] = $details;
+        foreach ($this->admins as $username => &$details) {
+            $tempAdmins[strToLower($username)] = $details;
         }
 
         $this->admins = $tempAdmins;
@@ -166,50 +162,39 @@ ININOTES;
         return TRUE;
     }
 
-				/**
-					* @return array
-					*/
-				public function &getAdminsInfo()
+    public function &getAdminsInfo()
     {
-        $info = [];
+        $info = array();
 
         foreach ($this->admins as $user => $details) {
-            $info[$user] = [
+            $info[$user] = array(
                 'accessFlags' => $details['accessFlags'],
                 'connection' => $details['connection'],
-                'temporary' => $details['temporary'] ?? false,
-												];
+                'temporary' => isset($details['temporary']) ? $details['temporary'] : false,
+            );
         }
 
         return $info;
     }
 
-				/**
-					* @param $username
-					* @return array|false
-					*/
-				public function getAdminInfo(&$username)
+    public function getAdminInfo(&$username)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (!isset($this->admins[$username])) {
             return false;
         }
 
-        return [
+        return array(
             'accessFlags' => $this->admins[$username]['accessFlags'],
             'connection' => $this->admins[$username]['connection'],
-            'temporary' => $this->admins[$username]['temporary'] ?? false,
-								];
+            'temporary' => isset($this->admins[$username]['temporary']) ? $this->admins[$username]['temporary'] : false,
+        );
     }
 
-				/**
-					* @param $username
-					* @return false|mixed
-					*/
-				public function getRealmDigest(&$username)
+    public function getRealmDigest(&$username)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (!isset($this->admins[$username])) {
             return false;
@@ -218,24 +203,15 @@ ININOTES;
         return $this->admins[$username]['realmDigest'];
     }
 
-				/**
-					* @param $username
-					* @return bool
-					*/
-				public function adminExists(&$username)
+    public function adminExists(&$username)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
         return isset($this->admins[$username]);
     }
 
-				/**
-					* @param $username
-					* @param $password
-					* @return bool
-					*/
-				public function isPasswordCorrect(&$username, $password)
+    public function isPasswordCorrect(&$username, &$password)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
         global $PRISM;
 
         return (
@@ -244,31 +220,23 @@ ININOTES;
         );
     }
 
-				/**
-					* @param $username
-					* @param $password
-					* @param int $accessFlags
-					* @param string $connection
-					* @param bool $store
-					* @return bool
-					*/
-				public function addAccount($username, $password, $accessFlags = 0, $connection = '', $store = true)
+    public function addAccount($username, $password, $accessFlags = 0, $connection = '', $store = true)
     {
         global $PRISM;
 
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (isset($this->admins[$username])) {
             return false;
         }
 
         // Add new user to $this->admins
-        $this->admins[$username] = [
+        $this->admins[$username] = array(
             'password'        => sha1($password.$PRISM->config->cvars['secToken']),
             'connection'    => $connection,
             'accessFlags'    => $accessFlags,
             'realmDigest'    => md5($username.':'.HTTP_AUTH_REALM.':'.$password),
-								];
+        );
 
         // Add new user section to admin.ini
         if ($store)    {
@@ -280,13 +248,9 @@ ININOTES;
         return true;
     }
 
-				/**
-					* @param $username
-					* @return bool
-					*/
-				public function makePermanent($username)
+    public function makePermanent($username)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (!isset($this->admins[$username]) || !isset($this->admins[$username]['temporary']) || !$this->admins[$username]['temporary']) {
             return false;
@@ -298,14 +262,9 @@ ININOTES;
         return true;
     }
 
-				/**
-					* @param $username
-					* @param bool $store
-					* @return bool
-					*/
-				public function deleteAccount($username, $store = true)
+    public function deleteAccount($username, $store = true)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (!isset($this->admins[$username])) {
             return false;
@@ -322,15 +281,9 @@ ININOTES;
         return true;
     }
 
-				/**
-					* @param $username
-					* @param $password
-					* @param bool $store
-					* @return bool
-					*/
-				public function changePassword($username, $password, $store = true)
+    public function changePassword($username, $password, $store = true)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
         global $PRISM;
 
         console('Writing new password for '.$username);
@@ -352,15 +305,9 @@ ININOTES;
         return true;
     }
 
-				/**
-					* @param $username
-					* @param $flags
-					* @param bool $store
-					* @return bool
-					*/
-				public function setAccessFlags($username, $flags, $store = true)
+    public function setAccessFlags($username, $flags, $store = true)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (!isset($this->admins[$username])) {
             return false;
@@ -377,15 +324,9 @@ ININOTES;
         return true;
     }
 
-				/**
-					* @param $username
-					* @param $flags
-					* @param bool $store
-					* @return bool
-					*/
-				public function addAccessFlags($username, $flags, $store = true)
+    public function addAccessFlags($username, $flags, $store = true)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (!isset($this->admins[$username])) {
             return false;
@@ -402,15 +343,9 @@ ININOTES;
         return true;
     }
 
-				/**
-					* @param $username
-					* @param $flags
-					* @param bool $store
-					* @return bool
-					*/
-				public function revokeAccessFlags($username, $flags, $store = true)
+    public function revokeAccessFlags($username, $flags, $store = true)
     {
-        $username = strtolower($username);
+        $username = strToLower($username);
 
         if (!isset($this->admins[$username])) {
             return false;
