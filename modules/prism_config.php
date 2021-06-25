@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * PHPInSimMod - Config Module
  * @package PRISM
@@ -7,10 +8,13 @@
 
 require_once(ROOTPATH . '/modules/prism_sectionhandler.php');
 
+/**
+ * Class ConfigHandler
+ */
 class ConfigHandler extends SectionHandler
 {
-    public $cvars    = array
-        (
+    public array $cvars    =
+        [
             'prefix'        => '!',
             'debugMode'        => PRISM_DEBUG_ALL,
             'logMode'        => 7,
@@ -23,14 +27,17 @@ class ConfigHandler extends SectionHandler
             'logFormat'        => 'm-d-y@H:i:s',
             'logNameFormat'    => 'Ymd',
             'secToken'        => 'X-0ZbIY)TN>.@sr}',
-        );
+        ];
 
     public function __construct()
     {
         $this->iniFile = 'cvars.ini';
     }
 
-    public function initialise()
+    /**
+     * @return bool
+     */
+    public function initialise(): bool
     {
         global $PRISM;
 
@@ -41,10 +48,10 @@ class ConfigHandler extends SectionHandler
         }
         else
         {
-            $this->cvars['secToken'] = str_replace(array('"', '\'', ' '), '.', createRandomString(16));
+            $this->cvars['secToken'] = str_replace(['"', '\'', ' '], '.', createRandomString(16));
 
             console('Using cvars defaults.');
-            if ($this->createIniFile('PHPInSimMod Configuration Variables', array('prism' => &$this->cvars)))
+            if ($this->createIniFile('PHPInSimMod Configuration Variables', ['prism' => &$this->cvars]))
                 console('Generated config/'.$this->iniFile);
         }
 
@@ -52,4 +59,4 @@ class ConfigHandler extends SectionHandler
     }
 }
 
-?>
+
