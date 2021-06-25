@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * PHPInSimMod - File Module
  * @package PRISM
@@ -6,7 +8,7 @@
 */
 
 class file {
-    const EXTENSIONS = array(
+    const EXTENSIONS = [
         '3gp' => 'video/3gpp',
         'a' => 'application/octet-stream',
         'ai' => 'application/postscript',
@@ -172,18 +174,31 @@ class file {
         'yaml' => 'text/yaml',
         'yml' => 'text/yaml',
         'zip' => 'application/zip'
-    );
+    ];
 
+    /**
+     * @param $extension
+     * @param string $fallback
+     * @return mixed|string
+     */
     public static function extensionLookup($extension, $fallback = 'application/octet-stream') {
         return (isset(SELF::EXTENSIONS[$extension])) ? SELF::EXTENSIONS[$extension] : $fallback;
     }
 
-    public static function getKnownExtensions() {
+    /**
+     * @return int[]|string[]
+     */
+    public static function getKnownExtensions(): array
+    {
         return array_keys(SELF::EXTENSIONS);
     }
 
-    public static function getKnownStreams() {
+    /**
+     * @return string[]
+     */
+    public static function getKnownStreams(): array
+    {
         return array_values(SELF::EXTENSIONS);
     }
 }
-?>
+
