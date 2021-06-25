@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /**
  * PHPInSimMod - Geometry Module
  * @package PRISM
@@ -7,9 +9,14 @@
 
 class Point2D
 {
-    public $x = 0;
-    public $y = 0;
+    public mixed $x = 0;
+    public mixed $y = 0;
 
+    /**
+     * Point2D constructor.
+     * @param int $x
+     * @param int $y
+     */
     public function __construct($x = 0, $y = 0)
     {
         $this->x = $x;
@@ -17,12 +24,15 @@ class Point2D
     }
 }
 
+/**
+ * Class Polygon2D
+ */
 class Polygon2D
 {
-    public $points      = array();
-    public $numPoints   = 0;
+    public array $points      = [];
+    public int $numPoints   = 0;
 
-    public function __construct(array $points = array())
+    public function __construct(array $points = [])
     {
         $this->points       = $points;
         $this->numPoints    = count($points);
@@ -33,7 +43,11 @@ class Polygon2D
         array_splice($this->points, 0, $this->numPoints);
     }
 
-    public function contains(Point2D $point)
+    /**
+     * @param Point2D $point
+     * @return bool
+     */
+    public function contains(Point2D $point): bool
     {
         // Simple check for convex poly
         for ($i = 0; $i < $this->numPoints; $i++)
@@ -50,4 +64,4 @@ class Polygon2D
     }
 }
 
-?>
+
