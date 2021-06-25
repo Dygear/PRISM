@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * PHPInSimMod - CRON Module
  * @package PRISM
@@ -15,9 +14,8 @@ class cron
         $crontab;
 
     protected
-    array $jobs = [];
-    protected
-    int $time = 0;
+        $time = 0,
+        $jobs = array();
 
     public function __construct()
     {
@@ -56,7 +54,7 @@ class cron
                 if (FALSE === (bool) preg_match('/'.$job['regex'].'/', $now))
                     continue;
 
-                switch ($job['cmd'][0])
+                switch ($job['cmd']{0})
                 {
                     case '/':
                         IS_MST()->Msg($job['cmd'])->Send();
@@ -69,22 +67,12 @@ class cron
         }
     }
 
-    /**
-     * @param $s
-     */
     protected function write($s)
     {
         $logfile = $this->crontab . '.log';
         file_put_contents($logfile, @file_get_contents($logfile) . '['.date('y-m-d H:i:s').'] ' . $s . PHP_EOL);
     }
 
-    /**
-     * @throws Exception
-     */
-    /**
-     * @param $file
-     * @throws Exception
-     */
     protected function loadTable($file)
     {
         if (FALSE === file_exists($file) || FALSE === is_file($file) ||  FALSE === ($file_contents = file_get_contents($file)))
@@ -92,7 +80,7 @@ class cron
 
         foreach (preg_split('/\r?\n/', $file_contents, -1, PREG_SPLIT_NO_EMPTY) as $line)
         {
-            if ($line[0] === '#')
+            if ($line{0} === '#')
                 continue;
 
             list($seconds, $minutes, $hours, $mday, $month, $day, $command) = preg_split('/\s+/', $line, 7, PREG_SPLIT_NO_EMPTY);
@@ -100,20 +88,14 @@ class cron
             if ($seconds == '' || $minutes == '' || $hours == '' || $mday == '' || $month == '' || $day == '' || $command == '')
                 continue;
 
-            $this->jobs[] = [
+            $this->jobs[] = array (
                 'regex'    => $this->format($seconds, 59) . $this->format($minutes, 59) . $this->format($hours, 23) . $this->format($mday, 31) . $this->format($month, 12) . $this->format($day, 6, 1),
                 'cmd'    => $command
-            ];
+            );
         }
     }
 
-    /**
-     * @param $value
-     * @param $rangemax
-     * @param int $digits
-     * @return string
-     */
-    protected function format($value, $rangemax, $digits=2): string
+    protected function format($value, $rangemax, $digits=2)
     {
         if ($value === '*')
         {
@@ -126,11 +108,6 @@ class cron
         return '('.join($value, '|').')';
     }
 
-    /**
-     * @param $array
-     * @param $size
-     * @return mixed
-     */
     protected function zeroPadArray($array, $size)
     {
         foreach ($array as $key => &$value)
@@ -141,9 +118,6 @@ class cron
         return $array;
     }
 
-    /**
-     * @param $filename
-     */
     protected function writeTemplate($filename)
     {
         file_put_contents($filename,
@@ -167,4 +141,4 @@ class cron
     }
 }
 
-
+?>
