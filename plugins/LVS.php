@@ -149,10 +149,20 @@ class LVS extends Plugins
 
 		$plid = (isset($argv[1])) ? $argv[1] : $this->getClientByUCID($ucid)->PLID;
 
+		if ($argc < 3)
+		{
+			IS_MTC()->UCID($ucid)->Text("Usage: `check <PLID> <LAP>")->Send();
+			return PLUGIN_HANDLED;
+		}
+		
 		if ($this->isValid($plid, $argv[2]))
+		{
 			Msg2Lfs()->UCID($ucid)->Text('Lap is valid.')->Send();
+		}
 		else
+		{
 			Msg2Lfs()->UCID($ucid)->Text('Lap is not valid.')->Send();
+		}
 
 		return PLUGIN_HANDLED;
 	}
