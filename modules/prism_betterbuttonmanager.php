@@ -1,12 +1,10 @@
 <?php
-declare(strict_types=1);
-
 class betterButtonManager
 {
     protected $UCID;
-    protected $bTexts = [];
-    protected $bState = [];
-    protected $cData = [];
+    protected $bTexts = array();
+    protected $bState = array();
+    protected $cData = array();
 
     /* public __construct($UCID) {{{ */
     /**
@@ -55,7 +53,7 @@ class betterButtonManager
             $Button->Text($Text);
             $this->bTexts[$Name][0] = $Text;
         }
-        $Button->send();
+        $Button->Send();
 
         $this->bState[$Name]['ID'] = 0;
         $this->bState[$Name]['timestamp'] = time() - 1;
@@ -77,8 +75,8 @@ class betterButtonManager
      * @param mixed $Cluster
      * @param int $Offset
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function MoveGUIClusterV($Cluster, $Offset=0)
     {
         if(!isset($this->cData[$Cluster])) {
@@ -96,8 +94,8 @@ class betterButtonManager
      * @param mixed $Cluster
      * @param int $Offset
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function MoveGUIClusterH($Cluster, $Offset=0)
     {
         if(!isset($this->cData[$Cluster])) {
@@ -116,8 +114,8 @@ class betterButtonManager
      * @param int $OffsetT
      * @param int $OffsetL
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function MoveGUIClusterD($Cluster, $OffsetT=0, $OffsetL=0)
     {
         if(!isset($this->cData[$Cluster])) {
@@ -138,8 +136,8 @@ class betterButtonManager
      * @param bool $OffsetT
      * @param bool $OffsetL
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function LoadGUICluster($Cluster, $Layout='default', $OffsetT=null, $OffsetL=null)
     {
         $Design = parse_ini_file("data/GUI/{$Cluster}/{$Layout}.ini", true);
@@ -179,8 +177,8 @@ class betterButtonManager
      *
      * @param mixed $Cluster
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function ReloadGUICluster($Cluster){
         if(!isset($this->cData[$Cluster])) {
             return PLUGIN_CONTINUE; #Cluster Not Loaded
@@ -198,13 +196,13 @@ class betterButtonManager
      *
      * @param mixed $Cluster
      * @access public
-     * @return array
-					*/
+     * @return void
+     */
     public function GetGUIClusterInfo($Cluster){
         if(!isset($this->cData[$Cluster])) {
             return PLUGIN_CONTINUE; #Cluster Not Loaded
         }
-        return [$this->cData[$Cluster]];
+        return array($this->cData[$Cluster]);
     }
     /* }}} */
 
@@ -214,8 +212,8 @@ class betterButtonManager
      *
      * @param mixed $Name
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function NextText($Name)
     {
         $Button = ButtonManager::getButtonForKey($this->UCID, $Name);
@@ -259,8 +257,8 @@ class betterButtonManager
      *
      * @param mixed $Name
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function OverRideButton($Name)
     {
         if(!isset($this->bState[$Name])) {
@@ -276,8 +274,8 @@ class betterButtonManager
      *
      * @param mixed $Name
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function RemoveButton($Name)
     {
         if(!isset($this->bState[$Name])) {
@@ -311,8 +309,8 @@ class betterButtonManager
      * @param mixed $Name
      * @param mixed $Text
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function AddTextToBtn($Name, $Text)
     {
         if(!isset($this->bTexts[$Name])) {
@@ -332,8 +330,8 @@ class betterButtonManager
      * @param int $ID
      * @param bool $Override
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function UpdateTextOnBtn($Name, $Text='', $ID=0, $Override=false)
     {
         if(!isset($this->bState[$Name])) {
@@ -353,8 +351,8 @@ class betterButtonManager
      * @param mixed $Function
      * @param mixed $Params
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function AddClickEventToBtn($Name, $Class, $Function, $Params=null)
     {
         if($Function == null) {
@@ -375,8 +373,8 @@ class betterButtonManager
      * @param bool $Event
      * @param int $Length
      * @access public
-     * @return int
-					*/
+     * @return void
+     */
     public function AddTextEventToBtn($Name, $Class, $Event=null, $Length=95)
     {
         if($Event == null) {
@@ -397,9 +395,9 @@ class betterButtonManager
      */
     public function __destruct()
     {
-        $this->bTexts = [];
-        $this->bState = [];
-        $this->cData = [];
+        $this->bTexts = array();
+        $this->bState = array();
+        $this->cData = array();
         ButtonManager::clearButtonsForConn($this->UCID);
     }
     /* }}} */
