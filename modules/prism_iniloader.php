@@ -58,7 +58,7 @@ abstract class IniLoader
             return FALSE;
 
         // Generate file contents
-        $text = '; '.$desc.' (automatically genereated)'.PHP_EOL;
+        $text = '; '.$desc.' (automatically generated)'.PHP_EOL;
         $text .= '; File location: ./PHPInSimMod/configs/'.$this->iniFile.PHP_EOL;
         $text .= $extraInfo;
 

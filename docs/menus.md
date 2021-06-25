@@ -15,7 +15,7 @@ Since End signifies the end of a full display cycle, it is usually used to destr
 A detailed explanation of these events is below. For PRISM, a menuHandle is returned in the constructor and a MenuAction are always set in the menuHandler constructor as the callback.
 
 * **Start** - the menu has been acknowledged. This does not mean it will be displayed; however, it guarantees that "onMenuEnd" will be called.
-	* onMenuStart, this action is triggered intrinsicly upon startup.
+	* onMenuStart, this action is triggered intrinsically upon startup.
 * **Display** - the menu is being displayed to a client.
 	* onMenuDisplay, An IMenuPanel pointer and client index are available.
 		* param1: A client index.
@@ -70,7 +70,7 @@ class basicMenu extends Plugins, Menus {
 			$this->clientPrint($param1, PRINT_CHAT, "Client menu was cancelled.  Reason: {$param2}"));
 		}
 		else if (action == MENU_ACTION_END)
-		{	# Distorys our menu.
+		{	# Distorts our menu.
 			$menu->close();
 		}
 	}
@@ -229,7 +229,7 @@ Displaying and designing this Menu with a raw ShowMenu message or Panel API woul
 PRISM also has API for displaying menus as votable choices to more than one client. PRISM automatically handles selecting an item and randomly picking a tie-breaker. The voting API adds two new MENU_ACTION values, which for vote displays, are **always** passed:
 
 * MENU_ACTION_VOTE_START: Fired after MENU_ACTION_START when the voting has officially started.
-* MENU_ACTION_VOTE_END: Fired when all clients have either voted or cancelled their vote menu. The chosen item is passed through param1. This is fired before MENU_ACTION_END. It is important to note that it does not supercede MENU_ACTION_END, nor is it the same thing. Menus should never be destroyed in MENU_ACTION_VOTE_END. Note: This is not called if VoteMenu::setVoteResultCallback() is used.
+* MENU_ACTION_VOTE_END: Fired when all clients have either voted or cancelled their vote menu. The chosen item is passed through param1. This is fired before MENU_ACTION_END. It is important to note that it does not supersede MENU_ACTION_END, nor is it the same thing. Menus should never be destroyed in MENU_ACTION_VOTE_END. Note: This is not called if VoteMenu::setVoteResultCallback() is used.
 * MENU_ACTION_VOTE_CANCEL: Fired if the menu is cancelled while the vote is in progress. If this is called, MENU_ACTION_VOTE_END or the result callback will not be called, but MENU_ACTION_END will be afterwards. A vote cancellation reason is passed in param1.
 
 The voting system extends overall menus with two additional properties:

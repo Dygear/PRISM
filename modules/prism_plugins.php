@@ -90,7 +90,7 @@ class PluginHandler extends SectionHandler
             return true;
         }
 
-        # Find what plugin files have ini entrys
+        # Find what plugin files have ini entries
         foreach ($this->pluginvars as $pluginSection => $pluginHosts) {
             $pluginFileHasPluginSection = false;
 
@@ -100,7 +100,7 @@ class PluginHandler extends SectionHandler
                 }
             }
 
-            # Remove any pluginini value who does not have a file associated with it.
+            # Remove any plugin.ini value who does not have a file associated with it.
             if ($pluginFileHasPluginSection === false) {
                 unset($this->pluginvars[$pluginSection]);
                 continue;
@@ -262,7 +262,7 @@ abstract class Plugins extends Translations
     protected function canUserAccessCommand($UCID, $cmd)
     {
         # Hosts are automatic admins so due to their nature, they have full access.
-        # Commands that have no premission level don't require this check.
+        # Commands that have no permission level don't require this check.
         if ($UCID == 0 OR $cmd['accessLevel'] == -1) {
             return true;
         }
@@ -291,7 +291,7 @@ abstract class Plugins extends Translations
         }
     }
 
-    // Setup the callbackMethod trigger to accapt a command that could come from anywhere.
+    // Setup the callbackMethod trigger to accept a command that could come from anywhere.
     protected function registerCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
     {
         $this->registerInsimCommand($cmd, $callbackMethod, $info, $defaultAdminLevelToAccess);
@@ -332,7 +332,7 @@ abstract class Plugins extends Translations
         $this->localCommands[$cmd] = array('method' => $callbackMethod, 'info' => $info, 'accessLevel' => $defaultAdminLevelToAccess);
     }
 
-    // Any say event with prefix charater (ISI->Prefix) with this command type. (MSO->Flags = MSO_PREFIX)
+    // Any say event with prefix character (ISI->Prefix) with this command type. (MSO->Flags = MSO_PREFIX)
     protected function registerSayCommand($cmd, $callbackMethod, $info = '', $defaultAdminLevelToAccess = -1)
     {
         if (!isset($this->callbacks[ISP_MSO]) && !isset($this->callbacks[ISP_MSO]['handleCmd'])) {

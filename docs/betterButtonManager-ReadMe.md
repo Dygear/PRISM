@@ -1,5 +1,5 @@
 ## This is a user based Button manager, this adds support for
-  * dynamic GUIs that can be moved around on screen (not dragable)
+  * dynamic GUIs that can be moved around on screen (not draggable)
   * alternating text
   * buttons that expire after certain amount of time
 

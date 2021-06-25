@@ -34,8 +34,8 @@ class Translations extends Timers
     protected function translateText($UCID, $messageID, $args = array(), $hostID = null)
     {
         if(!isset($this->lang_subdirectory)){
-            console('Calling plugin does not have it\'s language directory specifed.');
-            return 'Calling plugin does not have it\'s language directory specifed.';
+            console('Calling plugin does not have it\'s language directory specified.');
+            return 'Calling plugin does not have it\'s language directory specified.';
         }
         $languageID = $this->getClientByUCID($UCID, $hostID)->Language;
         return translateEngine::translate($this->lang_subdirectory, $languageID, $messageID, $args, $this->lang_fallback);

@@ -45,16 +45,16 @@ class myplugin extends Plugins {
 			'Sets a ratio',		# Info
 			NULL,				# Flags will be discussed later
 			TRUE,				# Has a minimum
-			0.1,				# Lowest value permissable
+			0.1,				# Lowest value permissible
 			TRUE,				# Has a maximum
-			1.0					# Highest value permissable
+			1.0					# Highest value permissible
 		);
 	}
 }
 ```
 
 The default value can be of any valid datatype noted above, and it does not restrict future data types that can be used. However, the minimum and maximum constraints always interpret the value as a float.
-If you create a CVAR that already exists, you will receive a refrence to that CVAR. Furthermore, the refrence itself will be identical, as neither plugin will own the refrence. The description, default value, or constraints will not be changed.
+If you create a CVAR that already exists, you will receive a refrence to that CVAR. Furthermore, the reference itself will be identical, as neither plugin will own the reference. The description, default value, or constraints will not be changed.
 
 ## Using/Changing Values
 

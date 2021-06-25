@@ -240,7 +240,7 @@ class PHPInSimMod
                     // Process the command (the first char or word of the line)
                     switch ($exp[0]) {
                         case 'c':
-                            console(sprintf('%32s - %64s', 'COMMAND', 'DESCRIPTOIN'));
+                            console(sprintf('%32s - %64s', 'COMMAND', 'DESCRIPTION'));
                             foreach ($this->plugins->getPlugins() as $plugin => $details) {
                                 foreach ($details->sayCommands as $command => $detail) {
                                     console(sprintf('%32s - %64s', $command, $detail['info']));
