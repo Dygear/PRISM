@@ -51,7 +51,7 @@ class debugger extends Plugins
      */
     public function onPrismClose()
     {
-        if(error_get_last()['type'] === E_ERROR)
+        if(isset(error_get_last()['type']) === E_ERROR)
         {
             foreach($this->conns as $host){
                 IS_MTC()->Sound(4)->UCID(255)->Text('^1> FATAL ERROR. ^7Insim will restart in 3 seconds!')->Send($host); # readd $host

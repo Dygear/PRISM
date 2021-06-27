@@ -32,7 +32,7 @@ class reorder extends Plugins
 
         foreach ($argv as $UName){
             $Player = $this->getPlayerByUName($UName);
-            $this->PLID[] = $Player->PLID;
+            $this->PLID[] = isset($Player->PLID);
         }
 
 

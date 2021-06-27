@@ -3,3 +3,4 @@ logs/*
 Thumbs.db
 Desktop.ini
 .idea/*
+*.log
