@@ -318,6 +318,7 @@ class StateHandler extends PropertyMaster
     }
 
     # IS_REO (36)
+	protected $PLID;
     public function onReorder(IS_REO $REO)
     {
         $this->NumP = $REO->NumP;
@@ -375,6 +376,9 @@ class StateHandler extends PropertyMaster
 
 class ClientHandler extends PropertyMaster
 {
+	protected $PRISM;
+	protected $parent;
+	
     public static $handles = array
     (
         ISP_NCN => '__construct',    # 18

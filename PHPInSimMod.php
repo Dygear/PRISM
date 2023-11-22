@@ -105,7 +105,7 @@ class PHPInSimMod
         require_once(ROOTPATH . "/modules/prism_" . strtolower($className) . ".php");
     }
 
-    public static function _errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
+    public static function _errorHandler($errno, $errstr, $errfile, $errline)
     {
         # This error code is not included in error_reporting
         if (!(error_reporting() & $errno))

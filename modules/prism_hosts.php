@@ -463,7 +463,7 @@ class HostHandler extends SectionHandler
             return;
         }
 
-        $this->curHostId = $hostID; # To make sure we always know what host we are talking to, making the sendPacket function useful everywhere.
+        $this->curHostID = $hostID; # To make sure we always know what host we are talking to, making the sendPacket function useful everywhere.
 
         # Parse Packet Header
         $pH = unpack('CSize/CType/CReqI/CSubT', $rawPacket);
@@ -474,13 +474,13 @@ class HostHandler extends SectionHandler
                 switch ($pH['Type'])
                 {
                     case ISP_TINY:
-                        console("< ${TINY[$pH['SubT']]} Packet from {$hostID}.");
+                        console("< {$TINY[$pH['SubT']]} Packet from {$hostID}.");
                     break;
                     case ISP_SMALL:
-                        console("< ${SMALL[$pH['SubT']]} Packet from {$hostID}.");
+                        console("< {$SMALL[$pH['SubT']]} Packet from {$hostID}.");
                     break;
                     default:
-                        console("< ${TYPEs[$pH['Type']]} Packet from {$hostID}.");
+                        console("< {$TYPEs[$pH['Type']]} Packet from {$hostID}.");
                 }
             }
             $packet = new $TYPEs[$pH['Type']]($rawPacket);
@@ -488,7 +488,7 @@ class HostHandler extends SectionHandler
         }
         else
         {
-            console("Unknown Type Byte of ${pH['Type']}, with reported size of ${pH['Size']} Bytes and actual size of " . strlen($rawPacket) . ' Bytes.');
+		console("Unknown Type Byte of {$pH['Type']}, with reported size of {$pH['Size']} Bytes and actual size of " . strlen($rawPacket) . ' Bytes.');
         }
     }
 
@@ -634,13 +634,13 @@ class HostHandler extends SectionHandler
             switch ($packetClass->Type)
             {
                 case ISP_TINY:
-                    console("> ${TINY[$packetClass->SubT]} Packet to {$hostId}.");
+                    console("> {$TINY[$packetClass->SubT]} Packet to {$hostId}.");
                 break;
                 case ISP_SMALL:
-                    console("> ${SMALL[$packetClass->SubT]} Packet to {$hostId}.");
+                    console("> {$SMALL[$packetClass->SubT]} Packet to {$hostId}.");
                 break;
                 default:
-                    console("> ${TYPEs[$packetClass->Type]} Packet to {$hostId}.");
+                    console("> {$TYPEs[$packetClass->Type]} Packet to {$hostId}.");
             }
         }
 
@@ -730,6 +730,7 @@ class InsimConnection
     private $sendQ            = '';
     private $sendQLen        = 0;
     private $sendWindow        = STREAM_WRITE_BYTES;    // dynamic window size
+	private $lastActivity	= 0;
 
     // connection & host info
     private $id                = '';            # the section id from the ini file
@@ -743,7 +744,8 @@ class InsimConnection
     private $specPass        = '';            # specpass for relay usage
     private $pps            = 3;
     private $hostName        = '';            # the hostname. Can be populated by user in case of relay.
-
+	private $prefix			= '';
+	
     public function __construct(array &$icVars)
     {
     global $PRISM;
