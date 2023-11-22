@@ -473,6 +473,8 @@ class ClientHandler extends PropertyMaster
 
 class PlayerHandler extends PropertyMaster
 {
+	protected $parent;
+	
     public static $handles = array(
         ISP_NPL => '__construct',    # 21
         ISP_PLL => '__destruct',    # 23
